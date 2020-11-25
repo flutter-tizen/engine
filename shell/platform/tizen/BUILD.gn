@@ -1,0 +1,114 @@
+# Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
+# Copyright 2013 The Flutter Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+_public_headers = [ "public/flutter_tizen.h" ]
+
+# Any files that are built by clients (client_wrapper code, library headers for
+# implementations using this shared code, etc.) include the public headers
+# assuming they are in the include path. This configuration should be added to
+# any such code that is also built by GN to make the includes work.
+config("relative_flutter_tizen_headers") {
+  include_dirs = [ "public" ]
+}
+
+# The headers are a separate source set since the client wrapper is allowed
+# to depend on the public headers, but none of the rest of the code.
+source_set("flutter_tizen_headers") {
+  public = _public_headers
+
+  public_deps =
+      [ "//flutter/shell/platform/common/cpp:common_cpp_library_headers" ]
+
+  configs +=
+      [ "//flutter/shell/platform/common/cpp:desktop_library_implementation" ]
+
+  public_configs =
+      [ "//flutter/shell/platform/common/cpp:relative_flutter_library_headers" ]
+}
+
+source_set("flutter_tizen") {
+  sources = [
+    "channels/key_event_channel.cc",
+    "channels/lifecycle_channel.cc",
+    "channels/localization_channel.cc",
+    "channels/navigation_channel.cc",
+    "channels/platform_channel.cc",
+    "channels/platform_view_channel.cc",
+    "channels/settings_channel.cc",
+    "channels/text_input_channel.cc",
+    "external_texture_gl.cc",
+    "flutter_tizen.cc",
+    "key_event_handler.cc",
+    "tizen_embedder_engine.cc",
+    "tizen_event_loop.cc",
+    "tizen_surface.cc",
+    "tizen_surface_gl.cc",
+    "tizen_vsync_waiter.cc",
+    "touch_event_handler.cc",
+  ]
+
+  configs +=
+      [ "//flutter/shell/platform/common/cpp:desktop_library_implementation" ]
+
+  deps = [
+    ":flutter_tizen_headers",
+    "//flutter/shell/platform/common/cpp:common_cpp",
+    "//flutter/shell/platform/common/cpp:common_cpp_input",
+    "//flutter/shell/platform/common/cpp/client_wrapper:client_wrapper",
+    "//flutter/shell/platform/embedder:embedder_as_internal_library",
+    "//third_party/rapidjson",
+  ]
+
+  include_dirs = [
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/base",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/dlog",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-evas-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-imf-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-imf-evas-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-input-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/ecore-wl2-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/efl-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/eina-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/eina-1/eina",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/emile-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/eo-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/evas-1",
+    "//third_party/tizen_tools/sysroot/$target_cpu/usr/include/system",
+  ]
+  
+  lib_dirs = [ "//third_party/tizen_tools/sysroot/$target_cpu/usr/lib" ]
+
+  cflags_cc = [
+    "-Wno-newline-eof",
+    "-Wno-macro-redefined",
+  ]
+
+  libs = [
+    "base-utils-i18n",
+    "capi-system-info",
+    "capi-system-system-settings",
+    "dlog",
+    "ecore",
+    "ecore_imf",
+    "ecore_input",
+    "ecore_wl2",
+    "EGL",
+    "evas",
+    "GLESv2",
+    "tbm",
+    "tdm-client",
+    "wayland-client",
+  ]
+}
+
+copy("publish_headers_tizen") {
+  sources = _public_headers
+  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+
+  # The Tizen header assumes the presence of the common headers.
+  deps = [ "//flutter/shell/platform/common/cpp:publish_headers" ]
+}
