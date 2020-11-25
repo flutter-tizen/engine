@@ -109,6 +109,10 @@ void TizenVsyncWaiter::TdmClientVblankCallback(
 }
 
 bool TizenVsyncWaiter::AsyncWaitForVsync() {
+  if (nullptr == flutter_engine_) {
+    LoggerD("flutter_engine_ is null");
+    return false;
+  }
   if (vblank_ecore_pipe_) {
     int event_type = VBLANK_LOOP_REQUEST;
     ecore_pipe_write(vblank_ecore_pipe_, &event_type, sizeof(event_type));
