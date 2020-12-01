@@ -38,7 +38,8 @@ class TizenSurfaceGL : public TizenSurface {
  private:
   bool display_valid_ = false;
   EGLDisplay egl_display_ = EGL_NO_DISPLAY;
-  EGLSurface egl_surface_ = nullptr;
+  EGLSurface egl_surface_ = EGL_NO_SURFACE;
+  EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
   EGLContext egl_context_ = EGL_NO_CONTEXT;
   EGLContext egl_resource_context_ = EGL_NO_CONTEXT;
   Ecore_Wl2_Egl_Window* egl_window_ = nullptr;

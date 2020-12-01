@@ -3,7 +3,8 @@
 // found in the LICENSE file.
 
 #include "tizen_surface_gl.h"
-
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include "flutter/shell/platform/tizen/logger.h"
 
 TizenSurfaceGL::TizenSurfaceGL(int32_t x, int32_t y, int32_t width,
@@ -33,9 +34,9 @@ bool TizenSurfaceGL::OnMakeResourceCurrent() {
     LoggerE("Invalid Display");
     return false;
   }
-  if (eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
+  if (eglMakeCurrent(egl_display_, egl_resource_surface_, egl_resource_surface_,
                      egl_resource_context_) != EGL_TRUE) {
-    LoggerE("Could not make the onscreen context current");
+    LoggerE("Could not make the offscreen context current");
     return false;
   }
   return true;
@@ -77,14 +78,127 @@ uint32_t TizenSurfaceGL::OnGetFBO() {
   return 0;  // FBO0
 }
 
+#define GL_FUNC(FunctionName)              \
+  else if (strcmp(name, #FunctionName) == 0) {    \
+    return reinterpret_cast<void*>(FunctionName); \
+  }
 void* TizenSurfaceGL::OnProcResolver(const char* name) {
   auto address = eglGetProcAddress(name);
   if (address != nullptr) {
     return reinterpret_cast<void*>(address);
   }
+  GL_FUNC(eglGetCurrentDisplay)
+  GL_FUNC(eglQueryString)
+  GL_FUNC(glActiveTexture)
+  GL_FUNC(glAttachShader)
+  GL_FUNC(glBindAttribLocation)
+  GL_FUNC(glBindBuffer)
+  GL_FUNC(glBindFramebuffer)
+  GL_FUNC(glBindRenderbuffer)
+  GL_FUNC(glBindTexture)
+  GL_FUNC(glBlendColor)
+  GL_FUNC(glBlendEquation)
+  GL_FUNC(glBlendFunc)
+  GL_FUNC(glBufferData)
+  GL_FUNC(glBufferSubData)
+  GL_FUNC(glCheckFramebufferStatus)
+  GL_FUNC(glClear)
+  GL_FUNC(glClearColor)
+  GL_FUNC(glClearStencil)
+  GL_FUNC(glColorMask)
+  GL_FUNC(glCompileShader)
+  GL_FUNC(glCompressedTexImage2D)
+  GL_FUNC(glCompressedTexSubImage2D)
+  GL_FUNC(glCopyTexSubImage2D)
+  GL_FUNC(glCreateProgram)
+  GL_FUNC(glCreateShader)
+  GL_FUNC(glCullFace)
+  GL_FUNC(glDeleteBuffers)
+  GL_FUNC(glDeleteFramebuffers)
+  GL_FUNC(glDeleteProgram)
+  GL_FUNC(glDeleteRenderbuffers)
+  GL_FUNC(glDeleteShader)
+  GL_FUNC(glDeleteTextures)
+  GL_FUNC(glDepthMask)
+  GL_FUNC(glDisable)
+  GL_FUNC(glDisableVertexAttribArray)
+  GL_FUNC(glDrawArrays)
+  GL_FUNC(glDrawElements)
+  GL_FUNC(glEnable)
+  GL_FUNC(glEnableVertexAttribArray)
+  GL_FUNC(glFinish)
+  GL_FUNC(glFlush)
+  GL_FUNC(glFramebufferRenderbuffer)
+  GL_FUNC(glFramebufferTexture2D)
+  GL_FUNC(glFrontFace)
+  GL_FUNC(glGenBuffers)
+  GL_FUNC(glGenerateMipmap)
+  GL_FUNC(glGenFramebuffers)
+  GL_FUNC(glGenRenderbuffers)
+  GL_FUNC(glGenTextures)
+  GL_FUNC(glGetBufferParameteriv)
+  GL_FUNC(glGetError)
+  GL_FUNC(glGetFramebufferAttachmentParameteriv)
+  GL_FUNC(glGetIntegerv)
+  GL_FUNC(glGetProgramInfoLog)
+  GL_FUNC(glGetProgramiv)
+  GL_FUNC(glGetRenderbufferParameteriv)
+  GL_FUNC(glGetShaderInfoLog)
+  GL_FUNC(glGetShaderiv)
+  GL_FUNC(glGetShaderPrecisionFormat)
+  GL_FUNC(glGetString)
+  GL_FUNC(glGetUniformLocation)
+  GL_FUNC(glIsTexture)
+  GL_FUNC(glLineWidth)
+  GL_FUNC(glLinkProgram)
+  GL_FUNC(glPixelStorei)
+  GL_FUNC(glReadPixels)
+  GL_FUNC(glRenderbufferStorage)
+  GL_FUNC(glScissor)
+  GL_FUNC(glShaderSource)
+  GL_FUNC(glStencilFunc)
+  GL_FUNC(glStencilFuncSeparate)
+  GL_FUNC(glStencilMask)
+  GL_FUNC(glStencilMaskSeparate)
+  GL_FUNC(glStencilOp)
+  GL_FUNC(glStencilOpSeparate)
+  GL_FUNC(glTexImage2D)
+  GL_FUNC(glTexParameterf)
+  GL_FUNC(glTexParameterfv)
+  GL_FUNC(glTexParameteri)
+  GL_FUNC(glTexParameteriv)
+  GL_FUNC(glTexSubImage2D)
+  GL_FUNC(glUniform1f)
+  GL_FUNC(glUniform1fv)
+  GL_FUNC(glUniform1i)
+  GL_FUNC(glUniform1iv)
+  GL_FUNC(glUniform2f)
+  GL_FUNC(glUniform2fv)
+  GL_FUNC(glUniform2i)
+  GL_FUNC(glUniform2iv)
+  GL_FUNC(glUniform3f)
+  GL_FUNC(glUniform3fv)
+  GL_FUNC(glUniform3i)
+  GL_FUNC(glUniform3iv)
+  GL_FUNC(glUniform4f)
+  GL_FUNC(glUniform4fv)
+  GL_FUNC(glUniform4i)
+  GL_FUNC(glUniform4iv)
+  GL_FUNC(glUniformMatrix2fv)
+  GL_FUNC(glUniformMatrix3fv)
+  GL_FUNC(glUniformMatrix4fv)
+  GL_FUNC(glUseProgram)
+  GL_FUNC(glVertexAttrib1f)
+  GL_FUNC(glVertexAttrib2fv)
+  GL_FUNC(glVertexAttrib3fv)
+  GL_FUNC(glVertexAttrib4fv)
+  GL_FUNC(glVertexAttribPointer)
+  GL_FUNC(glViewport)
+
   LoggerW("Could not resolve: %s", name);
   return nullptr;
 }
+#undef GL_FUNC
 
 TizenSurfaceGL::~TizenSurfaceGL() {
   if (IsValid()) {
@@ -209,7 +323,7 @@ bool TizenSurfaceGL::InitalizeDisplay() {
   }
 
   egl_resource_context_ =
-      eglCreateContext(egl_display_, egl_config, egl_context_, attribs);
+      eglCreateContext(egl_display_, egl_config, EGL_NO_CONTEXT, attribs);
   if (egl_resource_context_ == EGL_NO_CONTEXT) {
     LoggerE("Could not create an resource  context");
     return false;
@@ -222,6 +336,13 @@ bool TizenSurfaceGL::InitalizeDisplay() {
         nullptr);
 
     if (egl_surface_ == EGL_NO_SURFACE) {
+      return false;
+    }
+
+    const EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+    egl_resource_surface_ =
+        eglCreatePbufferSurface(egl_display_, egl_config, attribs);
+    if (egl_resource_surface_ == EGL_NO_SURFACE) {
       return false;
     }
   }
