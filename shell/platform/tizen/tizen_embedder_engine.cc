@@ -35,9 +35,10 @@ static double GetDeviceDpi() {
 TizenEmbedderEngine::TizenEmbedderEngine(
     const FlutterWindowProperties& window_properties)
     : device_profile(GetDeviceProfile()), device_dpi(GetDeviceDpi()) {
-  tizen_surface = std::make_unique<TizenSurfaceGL>(
+  tizen_native_window = std::make_unique<TizenNativeWindow>(
       window_properties.x, window_properties.y, window_properties.width,
       window_properties.height);
+  tizen_surface = std::make_unique<TizenSurfaceGL>(tizen_native_window.get());
 
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
@@ -58,7 +59,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>();
 }
 
-TizenEmbedderEngine::~TizenEmbedderEngine() {}
+TizenEmbedderEngine::~TizenEmbedderEngine() { LoggerD("Destroy"); }
 
 // Attempts to load AOT data from the given path, which must be absolute and
 // non-empty. Logs and returns nullptr on failure.
@@ -262,8 +263,9 @@ void TizenEmbedderEngine::SetWindowOrientation(int32_t degree) {
 
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - degree) * M_PI / 180;
-  double width = tizen_surface->GetWidth();
-  double height = tizen_surface->GetHeight();
+  auto geometry = tizen_native_window->GetGeometry();
+  double width = geometry.w;
+  double height = geometry.h;
 
   if (text_input_channel->isSoftwareKeyboardShowing()) {
     height -= text_input_channel->GetCurrentKeyboardGeometry().h;

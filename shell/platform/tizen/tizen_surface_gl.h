@@ -18,34 +18,62 @@
 #include <Ecore_Wl2.h>
 
 #include "flutter/shell/platform/embedder/embedder.h"
+#include "flutter/shell/platform/tizen/tizen_native_window.h"
 #include "flutter/shell/platform/tizen/tizen_surface.h"
+
+class TizenEGLSurface {
+ public:
+  TizenEGLSurface(TizenNativeEGLWindow* tizen_native_egl_window,
+                  EGLSurface egl_surface)
+      : tizen_native_egl_window_(tizen_native_egl_window),
+        egl_surface_(egl_surface){};
+  ~TizenEGLSurface();
+  bool IsValid() { return egl_surface_ != EGL_NO_SURFACE; }
+  EGLSurface GetEGLSurfaceHandle() { return egl_surface_; };
+
+ private:
+  TizenNativeEGLWindow* tizen_native_egl_window_;
+  EGLSurface egl_surface_{EGL_NO_SURFACE};
+};
+
+class TizenEGLContext {
+ public:
+  TizenEGLContext(TizenNativeEGLWindow* tizen_native_egl_window);
+  ~TizenEGLContext();
+  bool IsValid();
+  std::unique_ptr<TizenEGLSurface> CreateTizenEGLWindowSurface();
+  std::unique_ptr<TizenEGLSurface> CreateTizenEGLPbufferSurface();
+  EGLContext GetEGLContextHandle() { return egl_context_; }
+  EGLContext GetEGLResourceContextHandle() { return egl_resource_context_; }
+
+ public:
+  TizenNativeEGLWindow* tizen_native_egl_window_;
+  EGLConfig egl_config_{nullptr};
+  EGLContext egl_context_{EGL_NO_CONTEXT};
+  EGLContext egl_resource_context_{EGL_NO_CONTEXT};
+};
 
 class TizenSurfaceGL : public TizenSurface {
  public:
-  TizenSurfaceGL(int32_t x, int32_t y, int32_t width, int32_t height);
+  TizenSurfaceGL(TizenNativeWindow* tizen_native_window);
   ~TizenSurfaceGL();
-  bool OnMakeCurrent();
-  bool OnClearCurrent();
-  bool OnMakeResourceCurrent();
-  bool OnPresent();
-  uint32_t OnGetFBO();
-  void* OnProcResolver(const char* name);
-  bool IsValid();
-  bool InitalizeDisplay();
+  bool OnMakeCurrent() override;
+  bool OnClearCurrent() override;
+  bool OnMakeResourceCurrent() override;
+  bool OnPresent() override;
+  uint32_t OnGetFBO() override;
+  void* OnProcResolver(const char* name) override;
+  bool IsValid() override { return is_valid_; };
+  void SetSize(int32_t width, int32_t height) override;
+
   void Destroy();
-  void SetSize(int32_t width, int32_t height);
-  Ecore_Wl2_Window* wl2_window() { return wl2_window_; }
 
  private:
-  bool display_valid_ = false;
-  EGLDisplay egl_display_ = EGL_NO_DISPLAY;
-  EGLSurface egl_surface_ = EGL_NO_SURFACE;
-  EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
-  EGLContext egl_context_ = EGL_NO_CONTEXT;
-  EGLContext egl_resource_context_ = EGL_NO_CONTEXT;
-  Ecore_Wl2_Egl_Window* egl_window_ = nullptr;
-  Ecore_Wl2_Display* wl2_display_ = nullptr;
-  Ecore_Wl2_Window* wl2_window_ = nullptr;
+  bool is_valid_{false};
+  TizenNativeWindow* tizen_native_window_;
+  std::unique_ptr<TizenEGLContext> tizen_context_gl_;
+  std::unique_ptr<TizenEGLSurface> tizen_egl_window_surface_;
+  std::unique_ptr<TizenEGLSurface> tizen_egl_pbuffer_surface_;
 };
 
 #endif  // EMBEDDER_TIZEN_SURFACE_GL_H_

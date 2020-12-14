@@ -105,9 +105,11 @@ void TextInputChannel::InputPanelStateChangedCallback(
             0.25,
             [](void* data) -> Eina_Bool {
               TextInputChannel* self = (TextInputChannel*)data;
-              int32_t surface_w = self->engine_->tizen_surface->GetWidth();
-              int32_t surface_h = self->engine_->tizen_surface->GetHeight() -
-                                  self->current_keyboard_geometry_.h;
+              auto window_geometry =
+                  self->engine_->tizen_native_window->GetGeometry();
+              int32_t surface_w = window_geometry.w;
+              int32_t surface_h =
+                  window_geometry.h - self->current_keyboard_geometry_.h;
               self->engine_->tizen_surface->SetSize(surface_w, surface_h);
               if (self->rotation == 90 || self->rotation == 270) {
                 self->engine_->SendWindowMetrics(surface_h, surface_w, 0);
@@ -293,7 +295,7 @@ TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
   }
   if (imfContext_) {
     Ecore_Wl2_Window* ecoreWindow =
-        ((TizenSurfaceGL*)engine_->tizen_surface.get())->wl2_window();
+        engine_->tizen_native_window->GetWindowHandle();
     ecore_imf_context_client_window_set(
         imfContext_, (void*)ecore_wl2_window_id_get(ecoreWindow));
     RegisterIMFCallback(ecoreWindow);
@@ -604,15 +606,14 @@ void TextInputChannel::HideSoftwareKeyboard() {
 
     if (engine_->device_profile ==
         "mobile") {  // FIXME : Needs improvement on other devices.
-      auto w = engine_->tizen_surface->GetWidth();
-      auto h = engine_->tizen_surface->GetHeight();
+      auto window_geometry = engine_->tizen_native_window->GetGeometry();
 
       if (rotation == 90 || rotation == 270) {
-        engine_->SendWindowMetrics(h, w, 0);
+        engine_->SendWindowMetrics(window_geometry.h, window_geometry.w, 0);
       } else {
-        engine_->SendWindowMetrics(w, h, 0);
+        engine_->SendWindowMetrics(window_geometry.w, window_geometry.h, 0);
       }
-      engine_->tizen_surface->SetSize(w, h);
+      engine_->tizen_surface->SetSize(window_geometry.w, window_geometry.h);
       ecore_timer_add(
           0.05,
           [](void* data) -> Eina_Bool {

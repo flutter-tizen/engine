@@ -41,8 +41,9 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   }
 
   // Correct errors caused by window rotation.
-  double width = engine_->tizen_surface->GetWidth();
-  double height = engine_->tizen_surface->GetHeight();
+  auto window_geometry = engine_->tizen_native_window->GetGeometry();
+  double width = window_geometry.w;
+  double height = window_geometry.h;
   double new_x = x, new_y = y;
   if (rotation == 90) {
     new_x = height - y;

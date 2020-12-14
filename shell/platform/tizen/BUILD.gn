@@ -46,6 +46,7 @@ source_set("flutter_tizen") {
     "tizen_surface.cc",
     "tizen_surface_gl.cc",
     "tizen_vsync_waiter.cc",
+    "tizen_native_window.cc",
     "touch_event_handler.cc",
   ]
 

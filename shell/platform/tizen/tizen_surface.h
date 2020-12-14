@@ -9,7 +9,6 @@
 
 class TizenSurface {
  public:
-  TizenSurface(int32_t x, int32_t y, int32_t width, int32_t height);
   virtual ~TizenSurface();
   virtual bool OnMakeCurrent() = 0;
   virtual bool OnClearCurrent() = 0;
@@ -19,14 +18,6 @@ class TizenSurface {
   virtual void* OnProcResolver(const char* name) = 0;
   virtual bool IsValid() = 0;
   virtual void SetSize(int32_t width, int32_t height) = 0;
-  int32_t GetWidth();
-  int32_t GetHeight();
-
- protected:
-  const int32_t window_width_;
-  const int32_t window_height_;
-  int32_t x_;
-  int32_t y_;
 };
 
 #endif  // EMBEDDER_TIZEN_SURFACE_H_

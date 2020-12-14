@@ -4,11 +4,4 @@
 
 #include "tizen_surface.h"
 
-TizenSurface::TizenSurface(int32_t x, int32_t y, int32_t width, int32_t height)
-    : window_width_(width), window_height_(height), x_(x), y_(y) {}
-
-TizenSurface::~TizenSurface() {}
-
-int32_t TizenSurface::GetWidth() { return window_width_; }
-
-int32_t TizenSurface::GetHeight() { return window_height_; }
+TizenSurface::~TizenSurface() = default;

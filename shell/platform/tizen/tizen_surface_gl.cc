@@ -9,22 +9,154 @@
 
 #include "flutter/shell/platform/tizen/logger.h"
 
-TizenSurfaceGL::TizenSurfaceGL(int32_t x, int32_t y, int32_t width,
-                               int32_t height)
-    : TizenSurface(x, y, width, height) {
-  LoggerD("x =[%d] y = [%d], width = [%d], height = [%d]", x, y, width, height);
-  InitalizeDisplay();
+template <class T>
+using EGLResult = std::pair<bool, T>;
+
+static EGLResult<EGLContext> CreateContext(EGLDisplay display, EGLConfig config,
+                                           EGLContext share = EGL_NO_CONTEXT) {
+  EGLint attributes[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+
+  EGLContext context = eglCreateContext(display, config, share, attributes);
+
+  return {context != EGL_NO_CONTEXT, context};
 }
 
-bool TizenSurfaceGL::IsValid() { return display_valid_; }
+static EGLResult<EGLConfig> ChooseEGLConfiguration(EGLDisplay display) {
+  EGLint attributes[] = {
+      // clang-format off
+      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
+      EGL_RED_SIZE,        8,
+      EGL_GREEN_SIZE,      8,
+      EGL_BLUE_SIZE,       8,
+      EGL_ALPHA_SIZE,      8,
+      EGL_DEPTH_SIZE,      0,
+      EGL_STENCIL_SIZE,    0,
+      EGL_NONE,            // termination sentinel
+      // clang-format on
+  };
+
+  EGLint config_count = 0;
+  EGLConfig egl_config = nullptr;
+
+  if (eglChooseConfig(display, attributes, &egl_config, 1, &config_count) !=
+      EGL_TRUE) {
+    return {false, nullptr};
+  }
+
+  bool success = config_count > 0 && egl_config != nullptr;
+
+  return {success, success ? egl_config : nullptr};
+}
+
+TizenEGLSurface::~TizenEGLSurface() {
+  eglDestroySurface(tizen_native_egl_window_->GetEGLDisplayHandle(),
+                    egl_surface_);
+}
+
+TizenEGLContext::TizenEGLContext(TizenNativeEGLWindow* tizen_native_egl_window)
+    : tizen_native_egl_window_(tizen_native_egl_window) {
+  EGLDisplay egl_display = tizen_native_egl_window_->GetEGLDisplayHandle();
+  auto config = ChooseEGLConfiguration(egl_display);
+  if (!config.first) {
+    LoggerE("Failed to ChooseEGLConfiguration");
+    return;
+  }
+  egl_config_ = config.second;
+
+  auto ctx = CreateContext(egl_display, egl_config_, EGL_NO_CONTEXT);
+  if (!ctx.first) {
+    LoggerE("Failed to create egl context");
+    return;
+  }
+  egl_context_ = ctx.second;
+
+  auto resource_ctx = CreateContext(egl_display, egl_config_, egl_context_);
+  if (!resource_ctx.first) {
+    LoggerE("Failed to create egl resource context");
+    return;
+  }
+  egl_resource_context_ = resource_ctx.second;
+}
+
+std::unique_ptr<TizenEGLSurface>
+TizenEGLContext::CreateTizenEGLWindowSurface() {
+  const EGLint attribs[] = {EGL_NONE};
+  EGLSurface surface = eglCreateWindowSurface(
+      tizen_native_egl_window_->GetEGLDisplayHandle(), egl_config_,
+      ecore_wl2_egl_window_native_get(
+          tizen_native_egl_window_->GetEglWindowHandle()),
+      attribs);
+
+  return std::make_unique<TizenEGLSurface>(tizen_native_egl_window_, surface);
+}
+
+TizenEGLContext::~TizenEGLContext() {
+  if (eglDestroyContext(tizen_native_egl_window_->GetEGLDisplayHandle(),
+                        egl_context_) != EGL_TRUE) {
+    LoggerE("Failed to destroy egl context");
+  }
+  if (eglDestroyContext(tizen_native_egl_window_->GetEGLDisplayHandle(),
+                        egl_resource_context_) != EGL_TRUE) {
+    LoggerE("Failed to destroy egl resource context");
+  }
+}
+
+std::unique_ptr<TizenEGLSurface>
+TizenEGLContext::CreateTizenEGLPbufferSurface() {
+  const EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+  EGLSurface surface = eglCreatePbufferSurface(
+      tizen_native_egl_window_->GetEGLDisplayHandle(), egl_config_, attribs);
+
+  return std::make_unique<TizenEGLSurface>(tizen_native_egl_window_, surface);
+}
+
+bool TizenEGLContext::IsValid() {
+  return tizen_native_egl_window_ && tizen_native_egl_window_->IsValid() &&
+         egl_config_ != nullptr && egl_context_ != EGL_NO_CONTEXT &&
+         egl_resource_context_ != EGL_NO_CONTEXT;
+}
+
+TizenSurfaceGL::TizenSurfaceGL(TizenNativeWindow* tizen_native_window)
+    : tizen_native_window_(tizen_native_window) {
+  if (!tizen_native_window_->IsValid()) {
+    LoggerE("Invalid native window");
+    return;
+  }
+
+  tizen_context_gl_ = std::make_unique<TizenEGLContext>(
+      tizen_native_window_->GetTizenNativeEGLWindow());
+  if (!tizen_context_gl_->IsValid()) {
+    LoggerE("Invalid context gl");
+    return;
+  }
+
+  tizen_egl_window_surface_ = tizen_context_gl_->CreateTizenEGLWindowSurface();
+  if (!tizen_egl_window_surface_->IsValid()) {
+    LoggerE("Invalid egl window surface");
+    return;
+  }
+
+  tizen_egl_pbuffer_surface_ =
+      tizen_context_gl_->CreateTizenEGLPbufferSurface();
+  if (!tizen_egl_pbuffer_surface_->IsValid()) {
+    LoggerE("Invalid egl puffer surface");
+    return;
+  }
+
+  is_valid_ = true;
+}
 
 bool TizenSurfaceGL::OnMakeCurrent() {
-  if (!display_valid_) {
-    LoggerE("Invalid Display");
+  if (!is_valid_) {
+    LoggerE("Invalid TizenSurfaceGL");
     return false;
   }
-  if (eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_) !=
-      EGL_TRUE) {
+  if (eglMakeCurrent(tizen_native_window_->GetTizenNativeEGLWindow()
+                         ->GetEGLDisplayHandle(),
+                     tizen_egl_window_surface_->GetEGLSurfaceHandle(),
+                     tizen_egl_window_surface_->GetEGLSurfaceHandle(),
+                     tizen_context_gl_->GetEGLContextHandle()) != EGL_TRUE) {
     LoggerE("Could not make the onscreen context current");
     return false;
   }
@@ -32,12 +164,16 @@ bool TizenSurfaceGL::OnMakeCurrent() {
 }
 
 bool TizenSurfaceGL::OnMakeResourceCurrent() {
-  if (!display_valid_) {
-    LoggerE("Invalid Display");
+  if (!is_valid_) {
+    LoggerE("Invalid TizenSurfaceGL");
     return false;
   }
-  if (eglMakeCurrent(egl_display_, egl_resource_surface_, egl_resource_surface_,
-                     egl_resource_context_) != EGL_TRUE) {
+  if (eglMakeCurrent(tizen_native_window_->GetTizenNativeEGLWindow()
+                         ->GetEGLDisplayHandle(),
+                     tizen_egl_pbuffer_surface_->GetEGLSurfaceHandle(),
+                     tizen_egl_pbuffer_surface_->GetEGLSurfaceHandle(),
+                     tizen_context_gl_->GetEGLResourceContextHandle()) !=
+      EGL_TRUE) {
     LoggerE("Could not make the offscreen context current");
     return false;
   }
@@ -45,12 +181,14 @@ bool TizenSurfaceGL::OnMakeResourceCurrent() {
 }
 
 bool TizenSurfaceGL::OnClearCurrent() {
-  if (!display_valid_) {
-    LoggerE("Invalid display");
+  if (!is_valid_) {
+    LoggerE("Invalid TizenSurfaceGL");
     return false;
   }
 
-  if (eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
+  if (eglMakeCurrent(tizen_native_window_->GetTizenNativeEGLWindow()
+                         ->GetEGLDisplayHandle(),
+                     EGL_NO_SURFACE, EGL_NO_SURFACE,
                      EGL_NO_CONTEXT) != EGL_TRUE) {
     LoggerE("Could not clear context");
     return false;
@@ -59,12 +197,15 @@ bool TizenSurfaceGL::OnClearCurrent() {
 }
 
 bool TizenSurfaceGL::OnPresent() {
-  if (!display_valid_) {
-    LoggerE("Invalid display");
+  if (!is_valid_) {
+    LoggerE("Invalid TizenSurfaceGL");
     return false;
   }
 
-  if (eglSwapBuffers(egl_display_, egl_surface_) != EGL_TRUE) {
+  if (eglSwapBuffers(tizen_native_window_->GetTizenNativeEGLWindow()
+                         ->GetEGLDisplayHandle(),
+                     tizen_egl_window_surface_->GetEGLSurfaceHandle()) !=
+      EGL_TRUE) {
     LoggerE("Could not swap EGl buffer");
     return false;
   }
@@ -72,8 +213,8 @@ bool TizenSurfaceGL::OnPresent() {
 }
 
 uint32_t TizenSurfaceGL::OnGetFBO() {
-  if (!display_valid_) {
-    LoggerE("Invalid display");
+  if (!is_valid_) {
+    LoggerE("Invalid TizenSurfaceGL");
     return 999;
   }
   LoggerD("OnApplicationGetOnscreenFBO");
@@ -84,6 +225,7 @@ uint32_t TizenSurfaceGL::OnGetFBO() {
   else if (strcmp(name, #FunctionName) == 0) {    \
     return reinterpret_cast<void*>(FunctionName); \
   }
+
 void* TizenSurfaceGL::OnProcResolver(const char* name) {
   auto address = eglGetProcAddress(name);
   if (address != nullptr) {
@@ -196,7 +338,6 @@ void* TizenSurfaceGL::OnProcResolver(const char* name) {
   GL_FUNC(glVertexAttrib4fv)
   GL_FUNC(glVertexAttribPointer)
   GL_FUNC(glViewport)
-
   LoggerW("Could not resolve: %s", name);
   return nullptr;
 }
@@ -204,175 +345,17 @@ void* TizenSurfaceGL::OnProcResolver(const char* name) {
 
 TizenSurfaceGL::~TizenSurfaceGL() {
   if (IsValid()) {
-    display_valid_ = false;
+    is_valid_ = false;
     Destroy();
   }
 }
 
-bool TizenSurfaceGL::InitalizeDisplay() {
-  LoggerD("x =[%d] y = [%d], width = [%d], height = [%d]", x_, y_,
-          window_width_, window_height_);
-  if (window_width_ == 0 || window_height_ == 0) {
-    return false;
-  }
-
-  // ecore_wl2 INIT
-  if (!ecore_wl2_init()) {
-    LoggerE("Could not initialize ecore_wl2");
-    return false;
-  }
-
-  // ecore_wl2 DISPLAY
-  wl2_display_ = ecore_wl2_display_connect(nullptr);
-  if (nullptr == wl2_display_) {
-    LoggerE("Display not found");
-    return false;
-  }
-  LoggerD("wl2_display_: %p", wl2_display_);
-  ecore_wl2_sync();
-
-  // ecore_wl2 WINDOW
-  wl2_window_ = ecore_wl2_window_new(wl2_display_, nullptr, x_, y_,
-                                     window_width_, window_height_);
-  LoggerD("wl2_window_: %p", wl2_window_);
-
-  ecore_wl2_window_type_set(wl2_window_, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
-  ecore_wl2_window_alpha_set(wl2_window_, EINA_FALSE);
-  // ecore_wl2_sync();
-
-  // ecore_wl2 SHOW
-  ecore_wl2_window_show(wl2_window_);
-
-  ecore_wl2_window_aux_hint_add(wl2_window_, 0, "wm.policy.win.user.geometry",
-                                "1");
-  ecore_wl2_window_position_set(wl2_window_, x_, y_);
-  ecore_wl2_window_geometry_set(wl2_window_, x_, y_, window_width_,
-                                window_height_);
-
-  // egl WINDOW
-  egl_window_ =
-      ecore_wl2_egl_window_create(wl2_window_, window_width_, window_height_);
-  LoggerD("egl_window_: %p", egl_window_);
-
-  if (!egl_window_) {
-    LoggerE("Could not create EGL window");
-    return false;
-  }
-
-  // egl DISPLAY
-  egl_display_ =
-      eglGetDisplay((EGLNativeDisplayType)ecore_wl2_display_get(wl2_display_));
-  if (egl_display_ == EGL_NO_DISPLAY) {
-    LoggerE("Could not access EGL display");
-    return false;
-  }
-  LoggerD("egl_display_: %p", egl_display_);
-
-  // egl INTIALIZE
-  EGLint majorVersion;
-  EGLint minorVersion;
-  if (eglInitialize(egl_display_, &majorVersion, &minorVersion) != EGL_TRUE) {
-    LoggerE("Could not initialize EGL display");
-    return false;
-  }
-  LoggerD("eglInitialized: %d.%d", majorVersion, minorVersion);
-
-  // egl BINDAPI
-  if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) {
-    LoggerE("Could not bind API");
-    return false;
-  }
-
-  // egl CONFIG
-  EGLint config_count;
-  eglGetConfigs(egl_display_, NULL, 0, &config_count);
-  LoggerD("config_count: %d", config_count);
-
-  EGLConfig egl_config = nullptr;
-
-  {
-    EGLint attribs[] = {
-        // clang-format off
-      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-      EGL_RED_SIZE, 8,
-      EGL_GREEN_SIZE, 8,
-      EGL_BLUE_SIZE, 8,
-      EGL_ALPHA_SIZE, 8,
-      EGL_DEPTH_SIZE, 0,
-      EGL_STENCIL_SIZE, 0,
-      EGL_NONE,  // termination sentinel
-        // clang-format on
-    };
-
-    if (eglChooseConfig(egl_display_, attribs, &egl_config, 1, &config_count) !=
-        EGL_TRUE) {
-      LoggerE("Error when attempting to choose an EGL surface config");
-      return false;
-    }
-
-    if (config_count == 0 || egl_config == nullptr) {
-      LoggerE("No matching config");
-      return false;
-    }
-  }
-
-  // egl CONTEXT
-  const EGLint attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-
-  egl_context_ = eglCreateContext(egl_display_, egl_config, nullptr, attribs);
-  if (egl_context_ == EGL_NO_CONTEXT) {
-    LoggerE("Could not create an onscreen context");
-    return false;
-  }
-
-  egl_resource_context_ =
-      eglCreateContext(egl_display_, egl_config, EGL_NO_CONTEXT, attribs);
-  if (egl_resource_context_ == EGL_NO_CONTEXT) {
-    LoggerE("Could not create an resource  context");
-    return false;
-  }
-
-  // egl SURFACE
-  {
-    egl_surface_ = eglCreateWindowSurface(
-        egl_display_, egl_config, ecore_wl2_egl_window_native_get(egl_window_),
-        nullptr);
-
-    if (egl_surface_ == EGL_NO_SURFACE) {
-      return false;
-    }
-
-    const EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
-    egl_resource_surface_ =
-        eglCreatePbufferSurface(egl_display_, egl_config, attribs);
-    if (egl_resource_surface_ == EGL_NO_SURFACE) {
-      return false;
-    }
-  }
-  LoggerD("egl_surface_: %p", egl_surface_);
-  display_valid_ = true;
-  return true;
-}
-
-void TizenSurfaceGL::Destroy() {
-  if (egl_window_) {
-    ecore_wl2_egl_window_destroy(egl_window_);
-    egl_window_ = nullptr;
-  }
-  if (wl2_window_) {
-    ecore_wl2_window_free(wl2_window_);
-    wl2_window_ = nullptr;
-  }
-  if (wl2_display_) {
-    ecore_wl2_display_destroy(wl2_display_);
-    wl2_display_ = nullptr;
-  }
-  ecore_wl2_shutdown();
-}
+void TizenSurfaceGL::Destroy() { LoggerD("Destroy"); }
 
 void TizenSurfaceGL::SetSize(int32_t width, int32_t height) {
+  // FIXME : I think we have to find another way.
   LoggerD("Resize egl window %d %d", width, height);
-  ecore_wl2_egl_window_resize_with_rotation(egl_window_, 0, 0, width, height,
-                                            0);
+  ecore_wl2_egl_window_resize_with_rotation(
+      tizen_native_window_->GetTizenNativeEGLWindow()->GetEglWindowHandle(), 0,
+      0, width, height, 0);
 }
