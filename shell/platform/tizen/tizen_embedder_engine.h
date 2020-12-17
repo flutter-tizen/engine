@@ -137,7 +137,7 @@ class TizenEmbedderEngine {
   // A callback to be called when the engine (and thus the plugin registrar)
   // is being destroyed.
   FlutterDesktopOnPluginRegistrarDestroyed
-      plugin_registrar_destruction_callback_;
+      plugin_registrar_destruction_callback_{nullptr};
 
   // The plugin registrar managing internal plugins.
   std::unique_ptr<flutter::PluginRegistrar> internal_plugin_registrar_;
