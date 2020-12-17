@@ -24,7 +24,7 @@ class TizenWl2Display {
 
   ~TizenWl2Display() {
     if (wl2_display_) {
-      ecore_wl2_display_destroy(wl2_display_);
+      ecore_wl2_display_disconnect(wl2_display_);
       wl2_display_ = nullptr;
     }
     ecore_wl2_shutdown();
