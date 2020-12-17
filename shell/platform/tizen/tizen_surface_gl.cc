@@ -52,9 +52,11 @@ static EGLResult<EGLConfig> ChooseEGLConfiguration(EGLDisplay display) {
 TizenEGLSurface::~TizenEGLSurface() {
   eglDestroySurface(tizen_native_egl_window_->GetEGLDisplayHandle(),
                     egl_surface_);
+  tizen_native_egl_window_ = nullptr;
 }
 
-TizenEGLContext::TizenEGLContext(TizenNativeEGLWindow* tizen_native_egl_window)
+TizenEGLContext::TizenEGLContext(
+    std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window)
     : tizen_native_egl_window_(tizen_native_egl_window) {
   EGLDisplay egl_display = tizen_native_egl_window_->GetEGLDisplayHandle();
   auto config = ChooseEGLConfiguration(egl_display);
@@ -100,6 +102,7 @@ TizenEGLContext::~TizenEGLContext() {
                         egl_resource_context_) != EGL_TRUE) {
     LoggerE("Failed to destroy egl resource context");
   }
+  tizen_native_egl_window_ = nullptr;
 }
 
 std::unique_ptr<TizenEGLSurface>
@@ -117,7 +120,8 @@ bool TizenEGLContext::IsValid() {
          egl_resource_context_ != EGL_NO_CONTEXT;
 }
 
-TizenSurfaceGL::TizenSurfaceGL(TizenNativeWindow* tizen_native_window)
+TizenSurfaceGL::TizenSurfaceGL(
+    std::shared_ptr<TizenNativeWindow> tizen_native_window)
     : tizen_native_window_(tizen_native_window) {
   if (!tizen_native_window_->IsValid()) {
     LoggerE("Invalid native window");
@@ -344,13 +348,11 @@ void* TizenSurfaceGL::OnProcResolver(const char* name) {
 #undef GL_FUNC
 
 TizenSurfaceGL::~TizenSurfaceGL() {
-  if (IsValid()) {
-    is_valid_ = false;
-    Destroy();
-  }
+  tizen_egl_window_surface_ = nullptr;
+  tizen_egl_pbuffer_surface_ = nullptr;
+  tizen_context_gl_ = nullptr;
+  tizen_native_window_ = nullptr;
 }
-
-void TizenSurfaceGL::Destroy() { LoggerD("Destroy"); }
 
 void TizenSurfaceGL::SetSize(int32_t width, int32_t height) {
   // FIXME : I think we have to find another way.

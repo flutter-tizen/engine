@@ -23,7 +23,7 @@
 
 class TizenEGLSurface {
  public:
-  TizenEGLSurface(TizenNativeEGLWindow* tizen_native_egl_window,
+  TizenEGLSurface(std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window,
                   EGLSurface egl_surface)
       : tizen_native_egl_window_(tizen_native_egl_window),
         egl_surface_(egl_surface){};
@@ -32,13 +32,14 @@ class TizenEGLSurface {
   EGLSurface GetEGLSurfaceHandle() { return egl_surface_; };
 
  private:
-  TizenNativeEGLWindow* tizen_native_egl_window_;
+  std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window_;
   EGLSurface egl_surface_{EGL_NO_SURFACE};
 };
 
 class TizenEGLContext {
  public:
-  TizenEGLContext(TizenNativeEGLWindow* tizen_native_egl_window);
+  TizenEGLContext(
+      std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window);
   ~TizenEGLContext();
   bool IsValid();
   std::unique_ptr<TizenEGLSurface> CreateTizenEGLWindowSurface();
@@ -47,7 +48,7 @@ class TizenEGLContext {
   EGLContext GetEGLResourceContextHandle() { return egl_resource_context_; }
 
  public:
-  TizenNativeEGLWindow* tizen_native_egl_window_;
+  std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window_;
   EGLConfig egl_config_{nullptr};
   EGLContext egl_context_{EGL_NO_CONTEXT};
   EGLContext egl_resource_context_{EGL_NO_CONTEXT};
@@ -55,7 +56,7 @@ class TizenEGLContext {
 
 class TizenSurfaceGL : public TizenSurface {
  public:
-  TizenSurfaceGL(TizenNativeWindow* tizen_native_window);
+  TizenSurfaceGL(std::shared_ptr<TizenNativeWindow> tizen_native_window);
   ~TizenSurfaceGL();
   bool OnMakeCurrent() override;
   bool OnClearCurrent() override;
@@ -66,11 +67,9 @@ class TizenSurfaceGL : public TizenSurface {
   bool IsValid() override { return is_valid_; };
   void SetSize(int32_t width, int32_t height) override;
 
-  void Destroy();
-
  private:
   bool is_valid_{false};
-  TizenNativeWindow* tizen_native_window_;
+  std::shared_ptr<TizenNativeWindow> tizen_native_window_;
   std::unique_ptr<TizenEGLContext> tizen_context_gl_;
   std::unique_ptr<TizenEGLSurface> tizen_egl_window_surface_;
   std::unique_ptr<TizenEGLSurface> tizen_egl_pbuffer_surface_;

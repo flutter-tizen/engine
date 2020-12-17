@@ -39,13 +39,13 @@ class TizenNativeWindow {
   ~TizenNativeWindow();
   bool IsValid() { return is_valid_; }
   Ecore_Wl2_Window* GetWindowHandle() { return wl2_window_; }
-  TizenNativeEGLWindow* GetTizenNativeEGLWindow() {
-    return tizen_native_egl_window_.get();
+  std::shared_ptr<TizenNativeEGLWindow> GetTizenNativeEGLWindow() {
+    return tizen_native_egl_window_;
   };
   TizenNativeWindowGeometry GetGeometry();
 
  private:
-  std::unique_ptr<TizenNativeEGLWindow> tizen_native_egl_window_;
+  std::shared_ptr<TizenNativeEGLWindow> tizen_native_egl_window_;
   Ecore_Wl2_Window* wl2_window_{nullptr};
   bool is_valid_{false};
 };

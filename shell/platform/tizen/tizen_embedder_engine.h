@@ -95,7 +95,7 @@ class TizenEmbedderEngine {
 
   // The interface between the Flutter rasterizer and the platform.
   std::unique_ptr<TizenSurface> tizen_surface;
-  std::unique_ptr<TizenNativeWindow> tizen_native_window;
+  std::shared_ptr<TizenNativeWindow> tizen_native_window;
 
   // The system channels for communicating between Flutter and the platform.
   std::unique_ptr<KeyEventChannel> key_event_channel;

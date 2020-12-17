@@ -35,10 +35,10 @@ static double GetDeviceDpi() {
 TizenEmbedderEngine::TizenEmbedderEngine(
     const FlutterWindowProperties& window_properties)
     : device_profile(GetDeviceProfile()), device_dpi(GetDeviceDpi()) {
-  tizen_native_window = std::make_unique<TizenNativeWindow>(
+  tizen_native_window = std::make_shared<TizenNativeWindow>(
       window_properties.x, window_properties.y, window_properties.width,
       window_properties.height);
-  tizen_surface = std::make_unique<TizenSurfaceGL>(tizen_native_window.get());
+  tizen_surface = std::make_unique<TizenSurfaceGL>(tizen_native_window);
 
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
@@ -59,7 +59,11 @@ TizenEmbedderEngine::TizenEmbedderEngine(
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>();
 }
 
-TizenEmbedderEngine::~TizenEmbedderEngine() { LoggerD("Destroy"); }
+TizenEmbedderEngine::~TizenEmbedderEngine() {
+  LoggerD("Destroy");
+  tizen_surface = nullptr;
+  tizen_native_window = nullptr;
+}
 
 // Attempts to load AOT data from the given path, which must be absolute and
 // non-empty. Logs and returns nullptr on failure.

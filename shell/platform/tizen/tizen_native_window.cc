@@ -93,11 +93,12 @@ TizenNativeWindow::TizenNativeWindow(int32_t x, int32_t y, int32_t w,
                                 "1");
   ecore_wl2_window_show(wl2_window_);
 
-  tizen_native_egl_window_ = std::make_unique<TizenNativeEGLWindow>(this, w, h);
+  tizen_native_egl_window_ = std::make_shared<TizenNativeEGLWindow>(this, w, h);
   is_valid_ = true;
 }
 
 TizenNativeWindow::~TizenNativeWindow() {
+  tizen_native_egl_window_ = nullptr;
   if (wl2_window_) {
     ecore_wl2_window_free(wl2_window_);
     wl2_window_ = nullptr;
