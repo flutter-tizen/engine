@@ -56,7 +56,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
   message_dispatcher =
       std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
 
-  tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>();
+  tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 }
 
 TizenEmbedderEngine::~TizenEmbedderEngine() {
@@ -163,8 +163,6 @@ bool TizenEmbedderEngine::RunEngine(
     LoggerE("FlutterEngineRun Failure! result: %d", result);
     return false;
   }
-
-  tizen_vsync_waiter_->AsyncWaitForRunEngineSuccess(flutter_engine);
 
   std::unique_ptr<FlutterTextureRegistrar> textures =
       std::make_unique<FlutterTextureRegistrar>();
@@ -330,7 +328,11 @@ void TizenEmbedderEngine::OnFlutterPlatformMessage(
 void TizenEmbedderEngine::OnVsyncCallback(void* user_data, intptr_t baton) {
   TizenEmbedderEngine* tizen_embedder_engine =
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
-  tizen_embedder_engine->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
+  if (tizen_embedder_engine->tizen_vsync_waiter_->IsValid()) {
+    tizen_embedder_engine->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
+  } else {
+    LoggerW("TizenVsyncWaiter is not valid");
+  }
 }
 
 // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.

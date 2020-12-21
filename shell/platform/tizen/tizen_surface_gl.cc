@@ -342,7 +342,7 @@ void* TizenSurfaceGL::OnProcResolver(const char* name) {
   GL_FUNC(glVertexAttrib4fv)
   GL_FUNC(glVertexAttribPointer)
   GL_FUNC(glViewport)
-  LoggerW("Could not resolve: %s", name);
+  LoggerD("Could not resolve: %s", name);
   return nullptr;
 }
 #undef GL_FUNC
