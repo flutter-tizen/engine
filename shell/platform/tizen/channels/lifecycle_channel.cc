@@ -4,7 +4,7 @@
 
 #include "lifecycle_channel.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kChannelName[] = "flutter/lifecycle";
 static constexpr char kInactive[] = "AppLifecycleState.inactive";
@@ -29,21 +29,21 @@ void LifecycleChannel::SendLifecycleMessage(const char message[]) {
 }
 
 void LifecycleChannel::AppIsInactive() {
-  LoggerD("send app lifecycle state inactive.");
+  FT_LOGD("send app lifecycle state inactive.");
   SendLifecycleMessage(kInactive);
 }
 
 void LifecycleChannel::AppIsResumed() {
-  LoggerD("send app lifecycle state resumed.");
+  FT_LOGD("send app lifecycle state resumed.");
   SendLifecycleMessage(kResumed);
 }
 
 void LifecycleChannel::AppIsPaused() {
-  LoggerD("send app lifecycle state paused.");
+  FT_LOGD("send app lifecycle state paused.");
   SendLifecycleMessage(kPaused);
 }
 
 void LifecycleChannel::AppIsDetached() {
-  LoggerD("send app lifecycle state detached.");
+  FT_LOGD("send app lifecycle state detached.");
   SendLifecycleMessage(kDetached);
 }

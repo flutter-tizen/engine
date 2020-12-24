@@ -4,19 +4,19 @@
 
 #include "tizen_native_window.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 class TizenWl2Display {
  public:
   TizenWl2Display() {
     if (!ecore_wl2_init()) {
-      LoggerE("Could not initialize ecore_wl2");
+      FT_LOGE("Could not initialize ecore_wl2");
       return;
     }
     // ecore_wl2 DISPLAY
     wl2_display_ = ecore_wl2_display_connect(nullptr);
     if (wl2_display_ == nullptr) {
-      LoggerE("Display not found");
+      FT_LOGE("Display not found");
       return;
     }
     ecore_wl2_sync();
@@ -44,21 +44,21 @@ TizenNativeEGLWindow::TizenNativeEGLWindow(
   egl_display_ = eglGetDisplay((EGLNativeDisplayType)ecore_wl2_display_get(
       g_tizen_wl2_display.GetHandle()));
   if (egl_display_ == EGL_NO_DISPLAY) {
-    LoggerE("Could not access EGL display");
+    FT_LOGE("Could not access EGL display");
     return;
   }
 
   EGLint major_version;
   EGLint minor_version;
   if (eglInitialize(egl_display_, &major_version, &minor_version) != EGL_TRUE) {
-    LoggerE("Could not initialize EGL display");
+    FT_LOGE("Could not initialize EGL display");
     return;
   }
 
-  LoggerD("eglInitialized: %d.%d", major_version, minor_version);
+  FT_LOGD("eglInitialized: %d.%d", major_version, minor_version);
 
   if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) {
-    LoggerE("Could not bind API");
+    FT_LOGE("Could not bind API");
     return;
   }
 }
@@ -76,11 +76,11 @@ TizenNativeEGLWindow::~TizenNativeEGLWindow() {
 TizenNativeWindow::TizenNativeWindow(int32_t x, int32_t y, int32_t w,
                                      int32_t h) {
   if (g_tizen_wl2_display.GetHandle() == nullptr) {
-    LoggerE("Faild to get display handle");
+    FT_LOGE("Faild to get display handle");
     return;
   }
   if (w == 0 || h == 0) {
-    LoggerE("Failed to create because of the wrong size");
+    FT_LOGE("Failed to create because of the wrong size");
     return;
   }
 

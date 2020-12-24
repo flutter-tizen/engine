@@ -6,7 +6,7 @@
 
 #include <map>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kChannelName[] = "flutter/keyevent";
 
@@ -221,7 +221,7 @@ KeyEventChannel::KeyEventChannel(flutter::BinaryMessenger* messenger)
 KeyEventChannel::~KeyEventChannel() {}
 
 void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
-  LoggerD("code: %d, name: %s, mods: %d, type: %s", key->keycode, key->keyname,
+  FT_LOGD("code: %d, name: %s, mods: %d, type: %s", key->keycode, key->keyname,
           key->modifiers, is_down ? kKeyDown : kKeyUp);
 
   int gtk_keycode = 0;

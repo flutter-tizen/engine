@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Unique number associated with platform tasks.
 static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
@@ -47,7 +47,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
         if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
-          LoggerE("Could not post an engine task.");
+          FT_LOGE("Could not post an engine task.");
         }
       });
 
@@ -60,7 +60,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
 }
 
 TizenEmbedderEngine::~TizenEmbedderEngine() {
-  LoggerD("Destroy");
+  FT_LOGD("Destroy");
   tizen_surface = nullptr;
   tizen_native_window = nullptr;
 }
@@ -69,12 +69,12 @@ TizenEmbedderEngine::~TizenEmbedderEngine() {
 // non-empty. Logs and returns nullptr on failure.
 UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
   if (aot_data_path.empty()) {
-    LoggerE(
+    FT_LOGE(
         "Attempted to load AOT data, but no aot_library_path was provided.");
     return nullptr;
   }
   if (!std::filesystem::exists(aot_data_path)) {
-    LoggerE("Can't load AOT data from %s; no such file.",
+    FT_LOGE("Can't load AOT data from %s; no such file.",
             aot_data_path.c_str());
     return nullptr;
   }
@@ -84,7 +84,7 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
   FlutterEngineAOTData data = nullptr;
   auto result = FlutterEngineCreateAOTData(&source, &data);
   if (result != kSuccess) {
-    LoggerE("Failed to load AOT data from: %s", aot_data_path.c_str());
+    FT_LOGE("Failed to load AOT data from: %s", aot_data_path.c_str());
     return nullptr;
   }
   return UniqueAotDataPtr(data);
@@ -93,7 +93,7 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
 bool TizenEmbedderEngine::RunEngine(
     const FlutterEngineProperties& engine_properties) {
   if (!tizen_surface->IsValid()) {
-    LoggerE("The display was not valid.");
+    FT_LOGE("The display was not valid.");
     return false;
   }
 
@@ -149,7 +149,7 @@ bool TizenEmbedderEngine::RunEngine(
   if (FlutterEngineRunsAOTCompiledDartCode()) {
     aot_data_ = LoadAotData(engine_properties.aot_library_path);
     if (!aot_data_) {
-      LoggerE("Unable to start engine without AOT data.");
+      FT_LOGE("Unable to start engine without AOT data.");
       return false;
     }
     args.aot_data = aot_data_.get();
@@ -158,9 +158,9 @@ bool TizenEmbedderEngine::RunEngine(
   auto result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, &args, this,
                                  &flutter_engine);
   if (result == kSuccess && flutter_engine != nullptr) {
-    LoggerI("FlutterEngineRun Success!");
+    FT_LOGI("FlutterEngineRun Success!");
   } else {
-    LoggerE("FlutterEngineRun Failure! result: %d", result);
+    FT_LOGE("FlutterEngineRun Failure! result: %d", result);
     return false;
   }
 
@@ -313,11 +313,11 @@ void TizenEmbedderEngine::AppIsDetached() {
 void TizenEmbedderEngine::OnFlutterPlatformMessage(
     const FlutterPlatformMessage* engine_message, void* user_data) {
   if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
-    LoggerE("Invalid message size received. Expected: %zu, received %zu",
+    FT_LOGE("Invalid message size received. Expected: %zu, received %zu",
             sizeof(FlutterPlatformMessage), engine_message->struct_size);
     return;
   }
-  LoggerD("%s", engine_message->channel);
+  FT_LOGD("%s", engine_message->channel);
   TizenEmbedderEngine* tizen_embedder_engine =
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
   auto message =
@@ -330,9 +330,9 @@ void TizenEmbedderEngine::OnVsyncCallback(void* user_data, intptr_t baton) {
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
   if (tizen_embedder_engine->tizen_vsync_waiter_->IsValid()) {
     tizen_embedder_engine->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
-  } else {
-    LoggerW("TizenVsyncWaiter is not valid");
+    return;
   }
+  FT_ASSERT_NOT_REACHED();
 }
 
 // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.

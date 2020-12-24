@@ -4,8 +4,8 @@
 
 #include "touch_event_handler.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static const int DIRECTION_VERTICAL = 0;
 static const int DIRECTION_HORIZONTAL = 1;

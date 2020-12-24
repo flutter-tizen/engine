@@ -7,8 +7,8 @@
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/common/cpp/json_method_codec.h"
-#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kChannelName[] = "flutter/platform_views";
 
@@ -122,7 +122,7 @@ void PlatformViewChannel::HandleMethodCall(
     double width = ExtractDoubleFromMap(arguments, "width");
     double height = ExtractDoubleFromMap(arguments, "height");
 
-    LoggerD(
+    FT_LOGD(
         "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
         viewType.c_str(), viewId, width, height);
 
@@ -152,7 +152,7 @@ void PlatformViewChannel::HandleMethodCall(
 
       result->Success(flutter::EncodableValue(viewInstance->GetTextureId()));
     } else {
-      LoggerE("can't find view type = %s", viewType.c_str());
+      FT_LOGE("can't find view type = %s", viewType.c_str());
       result->Error("0", "can't find view type");
     }
   } else {
@@ -160,11 +160,11 @@ void PlatformViewChannel::HandleMethodCall(
     auto it = view_instances_.find(viewId);
     if (viewId >= 0 && it != view_instances_.end()) {
       if (method == "dispose") {
-        LoggerD("PlatformViewChannel dispose");
+        FT_LOGD("PlatformViewChannel dispose");
         it->second->Dispose();
         result->Success();
       } else if (method == "resize") {
-        LoggerD("PlatformViewChannel resize");
+        FT_LOGD("PlatformViewChannel resize");
         double width = ExtractDoubleFromMap(arguments, "width");
         double height = ExtractDoubleFromMap(arguments, "height");
         it->second->Resize(width, height);
@@ -188,18 +188,18 @@ void PlatformViewChannel::HandleMethodCall(
         it->second->Touch(type, button, x, y, dx, dy);
         result->Success();
       } else if (method == "setDirection") {
-        LoggerD("PlatformViewChannel setDirection");
+        FT_LOGD("PlatformViewChannel setDirection");
         result->NotImplemented();
       } else if (method == "clearFocus") {
-        LoggerD("PlatformViewChannel clearFocus");
+        FT_LOGD("PlatformViewChannel clearFocus");
         it->second->ClearFocus();
         result->NotImplemented();
       } else {
-        LoggerD("Unimplemented method: %s", method.c_str());
+        FT_LOGD("Unimplemented method: %s", method.c_str());
         result->NotImplemented();
       }
     } else {
-      LoggerE("can't find view id");
+      FT_LOGE("can't find view id");
       result->Error("0", "can't find view id");
     }
   }

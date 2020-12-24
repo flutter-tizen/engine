@@ -4,7 +4,6 @@
 
 #include "key_event_handler.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
 
 static constexpr char kPlatformBackButtonName[] = "XF86Back";

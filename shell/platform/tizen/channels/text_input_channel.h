@@ -31,7 +31,7 @@ class TextInputChannel {
   void OnPredit(const char* str, int cursorPos);
   void ShowSoftwareKeyboard();
   void HideSoftwareKeyboard();
-  bool IsSoftwareKeyboardShowing() { return isSoftwareKeyboardShowing_; }
+  bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
   SoftwareKeyboardGeometry GetCurrentKeyboardGeometry() {
     return current_keyboard_geometry_;
   }
@@ -74,10 +74,10 @@ class TextInputChannel {
   int client_id_;
   std::string input_type_;
   std::string input_action_;
-  bool isSoftwareKeyboardShowing_;
-  int lastPreeditStringLength_;
-  Ecore_IMF_Context* imfContext_;
-  bool inSelectMode_;
+  bool is_software_keyboard_showing_;
+  int last_preedit_string_length_;
+  Ecore_IMF_Context* imf_context_;
+  bool in_select_mode_;
   TizenEmbedderEngine* engine_;
   SoftwareKeyboardGeometry current_keyboard_geometry_;
 };

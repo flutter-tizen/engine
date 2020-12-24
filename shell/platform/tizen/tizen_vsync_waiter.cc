@@ -6,8 +6,8 @@
 
 #include <Ecore.h>
 
-#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static std::atomic<Ecore_Pipe*> g_vblank_ecore_pipe = nullptr;
 
@@ -17,7 +17,7 @@ static const int VBLANK_LOOP_DEL_PIPE = 2;
 static void SendVblankLoopRequest(int event_type) {
   if (ecore_pipe_write(g_vblank_ecore_pipe.load(), &event_type,
                        sizeof(event_type)) == EINA_FALSE) {
-    LoggerE("Failed to Send Reqeust [%s]", event_type == VBLANK_LOOP_REQUEST
+    FT_LOGE("Failed to Send Reqeust [%s]", event_type == VBLANK_LOOP_REQUEST
                                                ? "VBLANK_LOOP_REQUEST"
                                                : "VBLANK_LOOP_DEL_PIPE");
   }
@@ -26,14 +26,14 @@ static void SendVblankLoopRequest(int event_type) {
 TizenVsyncWaiter::TizenVsyncWaiter(TizenEmbedderEngine* engine)
     : engine_(engine) {
   if (!CreateTDMVblank()) {
-    LoggerE("Failed to create TDM vblank");
+    FT_LOGE("Failed to create TDM vblank");
     return;
   }
 
   std::thread t(
       [this](void* data) {
         if (!ecore_init()) {
-          LoggerE("Failed to init Ecore");
+          FT_LOGE("Failed to init Ecore");
           return;
         }
         Ecore_Pipe* vblank_ecore_pipe = ecore_pipe_add(
@@ -61,7 +61,7 @@ TizenVsyncWaiter::TizenVsyncWaiter(TizenEmbedderEngine* engine)
   t.join();
 
   if (g_vblank_ecore_pipe.load() == nullptr) {
-    LoggerE("Failed to create Ecore Pipe");
+    FT_LOGE("Failed to create Ecore Pipe");
   }
 }
 
@@ -84,26 +84,26 @@ void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
 
 bool TizenVsyncWaiter::IsValid() {
   return g_vblank_ecore_pipe.load() && client_ && output_ && vblank_ &&
-         engine_->flutter_engine;
+         engine_ && engine_->flutter_engine;
 }
 
 bool TizenVsyncWaiter::CreateTDMVblank() {
   tdm_error ret;
   client_ = tdm_client_create(&ret);
   if (ret != TDM_ERROR_NONE && client_ != NULL) {
-    LoggerE("create client fail");
+    FT_LOGE("create client fail");
     return false;
   }
 
   output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
   if (ret != TDM_ERROR_NONE && output_ != NULL) {
-    LoggerE("get output fail");
+    FT_LOGE("get output fail");
     return false;
   }
 
   vblank_ = tdm_client_output_create_vblank(output_, &ret);
   if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    LoggerE("create vblank fail");
+    FT_LOGE("create vblank fail");
     return false;
   }
 
@@ -118,6 +118,10 @@ void TizenVsyncWaiter::TdmClientVblankCallback(
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(user_data);
 
+  FT_ASSERT(tizen_vsync_waiter != nullptr);
+  FT_ASSERT(tizen_vsync_waiter->engine_ != nullptr);
+  FT_ASSERT(tizen_vsync_waiter->engine_->flutter_engine != nullptr);
+
   uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
   uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
   FlutterEngineOnVsync(tizen_vsync_waiter->engine_->flutter_engine,
@@ -129,7 +133,7 @@ void TizenVsyncWaiter::HandleVblankLoopRequest() {
   tdm_error ret;
   ret = tdm_client_vblank_wait(vblank_, 1, TdmClientVblankCallback, this);
   if (ret != TDM_ERROR_NONE) {
-    LoggerE("ERROR, ret = %d", ret);
+    FT_LOGE("ERROR, ret = %d", ret);
     return;
   }
   tdm_client_handle_events(client_);

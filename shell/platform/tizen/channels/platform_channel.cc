@@ -7,7 +7,7 @@
 #include <app.h>
 
 #include "flutter/shell/platform/common/cpp/json_method_codec.h"
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kChannelName[] = "flutter/platform";
 
@@ -53,7 +53,7 @@ void PlatformChannel::HandleMethodCall(
   } else if (method == "SystemChrome.setSystemUIOverlayStyle") {
     result->NotImplemented();
   } else {
-    LoggerI("Unimplemented method: %s", method.c_str());
+    FT_LOGI("Unimplemented method: %s", method.c_str());
     result->NotImplemented();
   }
 }

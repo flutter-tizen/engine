@@ -13,7 +13,7 @@
 #include <atomic>
 #include <iostream>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 struct ExternalTextureGLState {
   GLuint gl_texture;
@@ -39,17 +39,17 @@ ExternalTextureGL::~ExternalTextureGL() {
 bool ExternalTextureGL::OnFrameAvailable(tbm_surface_h tbm_surface) {
   mutex_.lock();
   if (!tbm_surface) {
-    LoggerE("tbm_surface is null");
+    FT_LOGE("tbm_surface is null");
     mutex_.unlock();
     return false;
   }
   if (texture_tbm_surface_) {
-    LoggerD("texture_tbm_surface_ does not destruction, discard");
+    FT_LOGD("texture_tbm_surface_ does not destruction, discard");
     mutex_.unlock();
     return false;
   }
   if (!tbm_surface_internal_is_valid(tbm_surface)) {
-    LoggerD("tbm_surface not valid, pass");
+    FT_LOGD("tbm_surface not valid, pass");
     mutex_.unlock();
     return false;
   }
@@ -63,12 +63,12 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
     size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
   mutex_.lock();
   if (!texture_tbm_surface_) {
-    LoggerD("texture_tbm_surface_ is NULL");
+    FT_LOGD("texture_tbm_surface_ is NULL");
     mutex_.unlock();
     return false;
   }
   if (!tbm_surface_internal_is_valid(texture_tbm_surface_)) {
-    LoggerD("tbm_surface not valid");
+    FT_LOGD("tbm_surface not valid");
     DestructionTbmSurface();
     mutex_.unlock();
     return false;
@@ -82,7 +82,7 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
       eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
       (EGLClientBuffer)texture_tbm_surface_, attrs);
   if (!eglSrcImage) {
-    LoggerE("eglSrcImage create fail!!, errorcode == %d", eglGetError());
+    FT_LOGE("eglSrcImage create fail!!, errorcode == %d", eglGetError());
     mutex_.unlock();
     return false;
   }
@@ -128,7 +128,7 @@ void ExternalTextureGL::DestructionTbmSurfaceWithLock() {
 
 void ExternalTextureGL::DestructionTbmSurface() {
   if (!texture_tbm_surface_) {
-    LoggerE("tbm_surface_h is NULL");
+    FT_LOGE("tbm_surface_h is NULL");
     return;
   }
   tbm_surface_internal_unref(texture_tbm_surface_);

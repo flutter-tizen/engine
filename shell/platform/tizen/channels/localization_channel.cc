@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
@@ -51,13 +51,13 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
   const char* locale;
   int ret = i18n_ulocale_get_default(&locale);
   if (ret != I18N_ERROR_NONE) {
-    LoggerE("i18n_ulocale_get_default() failed.");
+    FT_LOGE("i18n_ulocale_get_default() failed.");
     return;
   }
 
   FlutterLocale* flutterLocale = GetFlutterLocale(locale);
   if (!flutterLocale) {
-    LoggerE("Language code is required but not present.");
+    FT_LOGE("Language code is required but not present.");
     return;
   }
 
@@ -88,7 +88,7 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   if (!document.Accept(writer)) {
-    LoggerE("document.Accept failed!");
+    FT_LOGE("document.Accept failed!");
     return;
   }
 
@@ -120,7 +120,7 @@ FlutterLocale* LocalizationChannel::GetFlutterLocale(const char* locale) {
     memcpy(language, buffer, bufSize);
     language[bufSize] = '\0';
   } else {
-    LoggerE("i18n_ulocale_get_language failed!");
+    FT_LOGE("i18n_ulocale_get_language failed!");
     return nullptr;
   }
 

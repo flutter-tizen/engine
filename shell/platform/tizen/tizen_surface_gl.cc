@@ -7,7 +7,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 template <class T>
 using EGLResult = std::pair<bool, T>;
@@ -61,21 +61,21 @@ TizenEGLContext::TizenEGLContext(
   EGLDisplay egl_display = tizen_native_egl_window_->GetEGLDisplayHandle();
   auto config = ChooseEGLConfiguration(egl_display);
   if (!config.first) {
-    LoggerE("Failed to ChooseEGLConfiguration");
+    FT_LOGE("Failed to ChooseEGLConfiguration");
     return;
   }
   egl_config_ = config.second;
 
   auto ctx = CreateContext(egl_display, egl_config_, EGL_NO_CONTEXT);
   if (!ctx.first) {
-    LoggerE("Failed to create egl context");
+    FT_LOGE("Failed to create egl context");
     return;
   }
   egl_context_ = ctx.second;
 
   auto resource_ctx = CreateContext(egl_display, egl_config_, egl_context_);
   if (!resource_ctx.first) {
-    LoggerE("Failed to create egl resource context");
+    FT_LOGE("Failed to create egl resource context");
     return;
   }
   egl_resource_context_ = resource_ctx.second;
@@ -96,11 +96,11 @@ TizenEGLContext::CreateTizenEGLWindowSurface() {
 TizenEGLContext::~TizenEGLContext() {
   if (eglDestroyContext(tizen_native_egl_window_->GetEGLDisplayHandle(),
                         egl_context_) != EGL_TRUE) {
-    LoggerE("Failed to destroy egl context");
+    FT_LOGE("Failed to destroy egl context");
   }
   if (eglDestroyContext(tizen_native_egl_window_->GetEGLDisplayHandle(),
                         egl_resource_context_) != EGL_TRUE) {
-    LoggerE("Failed to destroy egl resource context");
+    FT_LOGE("Failed to destroy egl resource context");
   }
   tizen_native_egl_window_ = nullptr;
 }
@@ -124,27 +124,27 @@ TizenSurfaceGL::TizenSurfaceGL(
     std::shared_ptr<TizenNativeWindow> tizen_native_window)
     : tizen_native_window_(tizen_native_window) {
   if (!tizen_native_window_->IsValid()) {
-    LoggerE("Invalid native window");
+    FT_LOGE("Invalid native window");
     return;
   }
 
   tizen_context_gl_ = std::make_unique<TizenEGLContext>(
       tizen_native_window_->GetTizenNativeEGLWindow());
   if (!tizen_context_gl_->IsValid()) {
-    LoggerE("Invalid context gl");
+    FT_LOGE("Invalid context gl");
     return;
   }
 
   tizen_egl_window_surface_ = tizen_context_gl_->CreateTizenEGLWindowSurface();
   if (!tizen_egl_window_surface_->IsValid()) {
-    LoggerE("Invalid egl window surface");
+    FT_LOGE("Invalid egl window surface");
     return;
   }
 
   tizen_egl_pbuffer_surface_ =
       tizen_context_gl_->CreateTizenEGLPbufferSurface();
   if (!tizen_egl_pbuffer_surface_->IsValid()) {
-    LoggerE("Invalid egl puffer surface");
+    FT_LOGE("Invalid egl puffer surface");
     return;
   }
 
@@ -153,7 +153,7 @@ TizenSurfaceGL::TizenSurfaceGL(
 
 bool TizenSurfaceGL::OnMakeCurrent() {
   if (!is_valid_) {
-    LoggerE("Invalid TizenSurfaceGL");
+    FT_LOGE("Invalid TizenSurfaceGL");
     return false;
   }
   if (eglMakeCurrent(tizen_native_window_->GetTizenNativeEGLWindow()
@@ -161,7 +161,7 @@ bool TizenSurfaceGL::OnMakeCurrent() {
                      tizen_egl_window_surface_->GetEGLSurfaceHandle(),
                      tizen_egl_window_surface_->GetEGLSurfaceHandle(),
                      tizen_context_gl_->GetEGLContextHandle()) != EGL_TRUE) {
-    LoggerE("Could not make the onscreen context current");
+    FT_LOGE("Could not make the onscreen context current");
     return false;
   }
   return true;
@@ -169,7 +169,7 @@ bool TizenSurfaceGL::OnMakeCurrent() {
 
 bool TizenSurfaceGL::OnMakeResourceCurrent() {
   if (!is_valid_) {
-    LoggerE("Invalid TizenSurfaceGL");
+    FT_LOGE("Invalid TizenSurfaceGL");
     return false;
   }
   if (eglMakeCurrent(tizen_native_window_->GetTizenNativeEGLWindow()
@@ -178,7 +178,7 @@ bool TizenSurfaceGL::OnMakeResourceCurrent() {
                      tizen_egl_pbuffer_surface_->GetEGLSurfaceHandle(),
                      tizen_context_gl_->GetEGLResourceContextHandle()) !=
       EGL_TRUE) {
-    LoggerE("Could not make the offscreen context current");
+    FT_LOGE("Could not make the offscreen context current");
     return false;
   }
   return true;
@@ -186,7 +186,7 @@ bool TizenSurfaceGL::OnMakeResourceCurrent() {
 
 bool TizenSurfaceGL::OnClearCurrent() {
   if (!is_valid_) {
-    LoggerE("Invalid TizenSurfaceGL");
+    FT_LOGE("Invalid TizenSurfaceGL");
     return false;
   }
 
@@ -194,7 +194,7 @@ bool TizenSurfaceGL::OnClearCurrent() {
                          ->GetEGLDisplayHandle(),
                      EGL_NO_SURFACE, EGL_NO_SURFACE,
                      EGL_NO_CONTEXT) != EGL_TRUE) {
-    LoggerE("Could not clear context");
+    FT_LOGE("Could not clear context");
     return false;
   }
   return true;
@@ -202,7 +202,7 @@ bool TizenSurfaceGL::OnClearCurrent() {
 
 bool TizenSurfaceGL::OnPresent() {
   if (!is_valid_) {
-    LoggerE("Invalid TizenSurfaceGL");
+    FT_LOGE("Invalid TizenSurfaceGL");
     return false;
   }
 
@@ -210,7 +210,7 @@ bool TizenSurfaceGL::OnPresent() {
                          ->GetEGLDisplayHandle(),
                      tizen_egl_window_surface_->GetEGLSurfaceHandle()) !=
       EGL_TRUE) {
-    LoggerE("Could not swap EGl buffer");
+    FT_LOGE("Could not swap EGl buffer");
     return false;
   }
   return true;
@@ -218,10 +218,10 @@ bool TizenSurfaceGL::OnPresent() {
 
 uint32_t TizenSurfaceGL::OnGetFBO() {
   if (!is_valid_) {
-    LoggerE("Invalid TizenSurfaceGL");
+    FT_LOGE("Invalid TizenSurfaceGL");
     return 999;
   }
-  LoggerD("OnApplicationGetOnscreenFBO");
+  FT_LOGD("OnApplicationGetOnscreenFBO");
   return 0;  // FBO0
 }
 
@@ -342,7 +342,7 @@ void* TizenSurfaceGL::OnProcResolver(const char* name) {
   GL_FUNC(glVertexAttrib4fv)
   GL_FUNC(glVertexAttribPointer)
   GL_FUNC(glViewport)
-  LoggerD("Could not resolve: %s", name);
+  FT_LOGD("Could not resolve: %s", name);
   return nullptr;
 }
 #undef GL_FUNC
@@ -356,7 +356,7 @@ TizenSurfaceGL::~TizenSurfaceGL() {
 
 void TizenSurfaceGL::SetSize(int32_t width, int32_t height) {
   // FIXME : I think we have to find another way.
-  LoggerD("Resize egl window %d %d", width, height);
+  FT_LOGD("Resize egl window %d %d", width, height);
   ecore_wl2_egl_window_resize_with_rotation(
       tizen_native_window_->GetTizenNativeEGLWindow()->GetEglWindowHandle(), 0,
       0, width, height, 0);
