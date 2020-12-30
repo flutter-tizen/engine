@@ -5,11 +5,13 @@
 #ifndef EMBEDDER_TIZEN_WINDOW_H_
 #define EMBEDDER_TIZEN_WINDOW_H_
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
 
 #include <memory>
+
+void LogLastEGLError();
+
 class TizenNativeWindow;
 
 class TizenNativeEGLWindow {
@@ -23,6 +25,8 @@ class TizenNativeEGLWindow {
 
   Ecore_Wl2_Egl_Window* GetEglWindowHandle() { return egl_window_; };
   EGLDisplay GetEGLDisplayHandle() { return egl_display_; }
+  void ResizeWithRotation(int32_t dx, int32_t dy, int32_t width, int32_t height,
+                          int32_t degree);
 
  private:
   Ecore_Wl2_Egl_Window* egl_window_ = nullptr;

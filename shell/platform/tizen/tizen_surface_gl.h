@@ -5,8 +5,6 @@
 #ifndef EMBEDDER_TIZEN_SURFACE_GL_H_
 #define EMBEDDER_TIZEN_SURFACE_GL_H_
 
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
@@ -65,7 +63,6 @@ class TizenSurfaceGL : public TizenSurface {
   uint32_t OnGetFBO() override;
   void* OnProcResolver(const char* name) override;
   bool IsValid() override { return is_valid_; };
-  void SetSize(int32_t width, int32_t height) override;
 
  private:
   bool is_valid_{false};

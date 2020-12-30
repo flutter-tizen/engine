@@ -17,7 +17,6 @@ class TizenSurface {
   virtual uint32_t OnGetFBO() = 0;
   virtual void* OnProcResolver(const char* name) = 0;
   virtual bool IsValid() = 0;
-  virtual void SetSize(int32_t width, int32_t height) = 0;
 };
 
 #endif  // EMBEDDER_TIZEN_SURFACE_H_

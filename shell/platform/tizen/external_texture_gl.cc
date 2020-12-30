@@ -112,7 +112,7 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = (VoidCallback)destructionCallback;
+  opengl_texture->destruction_callback = (VoidCallback)DestructionCallback;
   opengl_texture->user_data = static_cast<void*>(this);
   opengl_texture->width = width;
   opengl_texture->height = height;
@@ -135,7 +135,7 @@ void ExternalTextureGL::DestructionTbmSurface() {
   texture_tbm_surface_ = NULL;
 }
 
-void ExternalTextureGL::destructionCallback(void* user_data) {
+void ExternalTextureGL::DestructionCallback(void* user_data) {
   ExternalTextureGL* externalTextureGL =
       reinterpret_cast<ExternalTextureGL*>(user_data);
   externalTextureGL->DestructionTbmSurfaceWithLock();

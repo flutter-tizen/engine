@@ -28,7 +28,7 @@ class ExternalTextureGL {
   /**
    * Returns the unique id for the ExternalTextureGL instance.
    */
-  int64_t texture_id() { return (int64_t)texture_id_; }
+  int64_t TextureId() { return (int64_t)texture_id_; }
 
   /**
    * Accepts texture buffer copy request from the Flutter engine.
@@ -48,7 +48,7 @@ class ExternalTextureGL {
   std::unique_ptr<ExternalTextureGLState> state_;
   std::mutex mutex_;
   tbm_surface_h texture_tbm_surface_;
-  static void destructionCallback(void* user_data);
+  static void DestructionCallback(void* user_data);
   const long texture_id_;
 };
 

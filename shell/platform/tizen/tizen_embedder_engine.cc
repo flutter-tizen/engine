@@ -158,7 +158,7 @@ bool TizenEmbedderEngine::RunEngine(
   auto result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, &args, this,
                                  &flutter_engine);
   if (result == kSuccess && flutter_engine != nullptr) {
-    FT_LOGI("FlutterEngineRun Success!");
+    FT_LOGD("FlutterEngineRun Success!");
   } else {
     FT_LOGE("FlutterEngineRun Failure! result: %d", result);
     return false;

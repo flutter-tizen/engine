@@ -9,7 +9,6 @@
 
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
-#include "flutter/shell/platform/tizen/tizen_surface.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -113,7 +112,9 @@ void TextInputChannel::InputPanelStateChangedCallback(
               int32_t surface_w = window_geometry.w;
               int32_t surface_h =
                   window_geometry.h - self->current_keyboard_geometry_.h;
-              self->engine_->tizen_surface->SetSize(surface_w, surface_h);
+
+              self->engine_->tizen_native_window->GetTizenNativeEGLWindow()
+                  ->ResizeWithRotation(0, 0, surface_w, surface_h, 0);
               if (self->rotation == 90 || self->rotation == 270) {
                 self->engine_->SendWindowMetrics(surface_h, surface_w, 0);
               } else {
@@ -618,7 +619,8 @@ void TextInputChannel::HideSoftwareKeyboard() {
       } else {
         engine_->SendWindowMetrics(window_geometry.w, window_geometry.h, 0);
       }
-      engine_->tizen_surface->SetSize(window_geometry.w, window_geometry.h);
+      engine_->tizen_native_window->GetTizenNativeEGLWindow()
+          ->ResizeWithRotation(0, 0, window_geometry.w, window_geometry.h, 0);
       ecore_timer_add(
           0.05,
           [](void* data) -> Eina_Bool {
