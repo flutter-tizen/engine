@@ -33,9 +33,11 @@ jobs:
     value: $(Pipeline.Workspace)/src
   steps:
   - checkout: self
-    clean: false
     path: src/flutter
   - bash: |
+      git reset --hard HEAD
+      gclient sync -D
+      sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
