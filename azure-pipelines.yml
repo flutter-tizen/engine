@@ -8,7 +8,7 @@ pr:
 - flutter-*-tizen
 
 jobs:
-- job: Linux
+- job: build
   strategy:
     matrix:
       tizen-arm-release:
@@ -56,38 +56,50 @@ jobs:
       cp libflutter_linux_tizen.so $OUTDIR/libflutter.so
       if [ "$(System.JobName)" = "tizen-arm-release" ]; then
         cp icudtl.dat $OUTDIR
-        mkdir $OUTDIR/linux-x64
-        cp clang_x64/gen_snapshot $OUTDIR/linux-x64
       fi
     displayName: Copy artifacts
     workingDirectory: $(buildroot)/out/linux_$(mode)_$(arch)
     failOnStderr: true
   - publish: $(Build.StagingDirectory)
     artifact: $(System.JobName)
-- job: Release
-  dependsOn: Linux
+- job: release
+  dependsOn: build
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
   pool:
     name: Default
     demands: agent.os -equals Linux
+  workspace:
+    clean: outputs
+  variables:
+  - name: upstreamVersion
+    value: 4654fc6cf6416daae78eac2c211ad84c46e21625
   steps:
   - checkout: self
     path: src/flutter
   - download: current
   - bash: |
       mkdir -p common/client_wrapper
-      mv $(Pipeline.Workspace)/tizen-* .
-      mv tizen-*/icudtl.dat common
-      PLATFORM=$(Pipeline.Workspace)/src/flutter/shell/platform
-      cp $PLATFORM/common/cpp/client_wrapper/*.{h,cc} common/client_wrapper
+      ROOT=$(Pipeline.Workspace)/src/flutter/shell/platform
+      cp $ROOT/common/cpp/client_wrapper/*.{h,cc} common/client_wrapper
       rm common/client_wrapper/{*_unittests.*,engine_method_result.cc}
-      cp -r $PLATFORM/common/cpp/public common
-      cp -r $PLATFORM/common/cpp/client_wrapper/include common/client_wrapper
-      cp $PLATFORM/tizen/public/*.h common/public
-      cp $PLATFORM/tizen/LICENSE .
-      zip -r linux-x64.zip *
-    displayName: Create a release
-    workingDirectory: $(Build.StagingDirectory)
+      cp -r $ROOT/common/cpp/public common
+      cp -r $ROOT/common/cpp/client_wrapper/include common/client_wrapper
+      cp $ROOT/tizen/public/*.h common/public
+      cp $ROOT/tizen/LICENSE .
+    displayName: Copy peripherals
+    workingDirectory: $(Build.BinariesDirectory)
     failOnStderr: true
-  - publish: $(Build.StagingDirectory)/linux-x64.zip
-    artifact: Release
+  - bash: |
+      mv $(Pipeline.Workspace)/tizen-* .
+      mv tizen-arm-release/icudtl.dat common
+      for platform in linux windows darwin; do
+        curl -o tmp.zip https://storage.googleapis.com/flutter_infra/flutter/$(upstreamVersion)/android-arm-release/$platform-x64.zip 2> /dev/null
+        unzip tmp.zip -d tizen-arm-release/$platform-x64 && rm tmp.zip
+        zip -r $(Build.StagingDirectory)/$platform-x64.zip *
+        rm -r tizen-arm-release/$platform-x64
+      done
+    displayName: Create releases
+    workingDirectory: $(Build.BinariesDirectory)
+    failOnStderr: true
+  - publish: $(Build.StagingDirectory)
+    artifact: release
