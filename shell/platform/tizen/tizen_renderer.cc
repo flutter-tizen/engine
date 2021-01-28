@@ -62,7 +62,7 @@ bool TizenRenderer::OnPresent() {
     return false;
   }
 
-  if(received_rotation) {
+  if (received_rotation) {
     SendRotationChangeDone();
     received_rotation = false;
   }
@@ -246,8 +246,8 @@ bool TizenRenderer::SetupEglSurface() {
     return false;
   }
 
-  egl_resource_context_ = eglCreateContext(egl_display_, egl_config_,
-                                           EGL_NO_CONTEXT, contextAttribs);
+  egl_resource_context_ =
+      eglCreateContext(egl_display_, egl_config_, egl_context_, contextAttribs);
   if (EGL_NO_CONTEXT == egl_resource_context_) {
     PrintEGLError();
     return false;
@@ -272,15 +272,18 @@ bool TizenRenderer::SetupEglSurface() {
 bool TizenRenderer::ChooseEGLConfiguration() {
   // egl CONTEXT
   EGLint configAttribs[] = {
-    EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
-    EGL_RED_SIZE,        8,
-    EGL_GREEN_SIZE,      8,
-    EGL_BLUE_SIZE,       8,
-    EGL_ALPHA_SIZE,      EGL_DONT_CARE,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_SAMPLE_BUFFERS,  EGL_DONT_CARE,
-    EGL_SAMPLES,         EGL_DONT_CARE,
-    EGL_NONE};
+      // clang-format off
+      EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
+      EGL_RED_SIZE,        8,
+      EGL_GREEN_SIZE,      8,
+      EGL_BLUE_SIZE,       8,
+      EGL_ALPHA_SIZE,      EGL_DONT_CARE,
+      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL_SAMPLE_BUFFERS,  EGL_DONT_CARE,
+      EGL_SAMPLES,         EGL_DONT_CARE,
+      EGL_NONE
+      // clang-format on
+  };
 
   EGLint major = 0;
   EGLint minor = 0;
