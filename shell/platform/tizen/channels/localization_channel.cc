@@ -21,30 +21,48 @@ LocalizationChannel::LocalizationChannel(FLUTTER_API_SYMBOL(FlutterEngine)
 LocalizationChannel::~LocalizationChannel() {}
 
 void LocalizationChannel::SendLocales() {
+  const char* defualt_locale = nullptr;
+  FlutterLocale* flutter_locale = nullptr;
+  std::vector<FlutterLocale*> flutter_locales;
+
+  int ret = i18n_ulocale_set_default(getenv("LC_TIME"));
+  ret = i18n_ulocale_get_default(&defualt_locale);
+  if (ret != I18N_ERROR_NONE) {
+    FT_LOGE("i18n_ulocale_get_default() failed.");
+    return;
+  }
+
+  std::string without_encoding_type(defualt_locale);
+  auto n = without_encoding_type.find('.');
+  without_encoding_type.erase(n, without_encoding_type.length() - n);
+
+  flutter_locale = GetFlutterLocale(without_encoding_type.data());
+  if (flutter_locale) {
+    FT_LOGD("Choose Default locale[%s]", without_encoding_type.data());
+    flutter_locales.push_back(flutter_locale);
+  }
+
   int32_t count = i18n_ulocale_count_available();
-  if (count > 0) {
-    FlutterLocale* flutterLocale = nullptr;
-    std::vector<FlutterLocale*> flutterLocales;
-    for (int i = 0; i < count; i++) {
-      const char* locale = i18n_ulocale_get_available(i);
-      flutterLocale = GetFlutterLocale(locale);
-      if (flutterLocale) {
-        flutterLocales.push_back(flutterLocale);
+  for (int i = 0; i < count; i++) {
+    const char* locale = i18n_ulocale_get_available(i);
+    if (without_encoding_type.compare(locale) != 0) {
+      flutter_locale = GetFlutterLocale(locale);
+      if (flutter_locale) {
+        flutter_locales.push_back(flutter_locale);
       }
-    }
-
-    // send locales to engine
-    FlutterEngineUpdateLocales(
-        flutter_engine_,
-        const_cast<const FlutterLocale**>(flutterLocales.data()),
-        flutterLocales.size());
-
-    for (auto it : flutterLocales) {
-      DestroyFlutterLocale(it);
     }
   }
 
-  SendPlatformResolvedLocale();
+  FT_LOGD("Send %zu available locales", flutter_locales.size());
+  // send locales to engine
+  FlutterEngineUpdateLocales(
+      flutter_engine_,
+      const_cast<const FlutterLocale**>(flutter_locales.data()),
+      flutter_locales.size());
+
+  for (auto it : flutter_locales) {
+    DestroyFlutterLocale(it);
+  }
 }
 
 void LocalizationChannel::SendPlatformResolvedLocale() {
