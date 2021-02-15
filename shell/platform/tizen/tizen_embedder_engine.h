@@ -23,8 +23,12 @@
 #include "flutter/shell/platform/tizen/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
-#include "flutter/shell/platform/tizen/tizen_surface.h"
-#include "flutter/shell/platform/tizen/tizen_surface_gl.h"
+#include "flutter/shell/platform/tizen/tizen_renderer.h"
+#ifdef FLUTTER_TIZEN_4
+#include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl.h"
+#else
+#include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl2.h"
+#endif
 #include "flutter/shell/platform/tizen/tizen_vsync_waiter.h"
 #include "flutter/shell/platform/tizen/touch_event_handler.h"
 
@@ -61,7 +65,7 @@ struct FlutterTextureRegistrar {
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
 
 // Manages state associated with the underlying FlutterEngine.
-class TizenEmbedderEngine {
+class TizenEmbedderEngine : public TizenRenderer::Delegate {
  public:
   explicit TizenEmbedderEngine(
       const FlutterWindowProperties& window_properties);
@@ -76,12 +80,14 @@ class TizenEmbedderEngine {
   void SetPluginRegistrarDestructionCallback(
       FlutterDesktopOnPluginRegistrarDestroyed callback);
 
+  void SendWindowMetrics(int32_t width, int32_t height, double pixel_ratio);
   void SetWindowOrientation(int32_t degree);
   void SendLocales();
   void AppIsInactive();
   void AppIsResumed();
   void AppIsPaused();
   void AppIsDetached();
+  void OnRotationChange(int degree) override;
 
   // The Flutter engine instance.
   FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine;
@@ -93,7 +99,7 @@ class TizenEmbedderEngine {
   std::unique_ptr<flutter::IncomingMessageDispatcher> message_dispatcher;
 
   // The interface between the Flutter rasterizer and the platform.
-  std::unique_ptr<TizenSurface> tizen_surface;
+  std::unique_ptr<TizenRenderer> tizen_renderer;
 
   // The system channels for communicating between Flutter and the platform.
   std::unique_ptr<KeyEventChannel> key_event_channel;
@@ -104,6 +110,9 @@ class TizenEmbedderEngine {
   std::unique_ptr<SettingsChannel> settings_channel;
   std::unique_ptr<TextInputChannel> text_input_channel;
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
+
+  const std::string device_profile;
+  const double device_dpi;
 
  private:
   static bool MakeContextCurrent(void* user_data);
@@ -117,7 +126,6 @@ class TizenEmbedderEngine {
       const FlutterPlatformMessage* engine_message, void* user_data);
   static void OnVsyncCallback(void* user_data, intptr_t baton);
 
-  void SendWindowMetrics(int32_t width, int32_t height, double pixel_ratio);
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
   static bool OnAcquireExternalTexture(void* user_data, int64_t texture_id,
@@ -134,7 +142,7 @@ class TizenEmbedderEngine {
   // A callback to be called when the engine (and thus the plugin registrar)
   // is being destroyed.
   FlutterDesktopOnPluginRegistrarDestroyed
-      plugin_registrar_destruction_callback_;
+      plugin_registrar_destruction_callback_{nullptr};
 
   // The plugin registrar managing internal plugins.
   std::unique_ptr<flutter::PluginRegistrar> internal_plugin_registrar_;

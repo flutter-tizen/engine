@@ -8,38 +8,33 @@
 #include <Ecore.h>
 #include <tdm_client.h>
 
-#include <thread>
-
 #include "flutter/shell/platform/embedder/embedder.h"
+
+class TizenEmbedderEngine;
 
 class TizenVsyncWaiter {
  public:
-  TizenVsyncWaiter();
+  TizenVsyncWaiter(TizenEmbedderEngine* engine);
   virtual ~TizenVsyncWaiter();
-  bool CreateTDMVblank();
-  bool AsyncWaitForVsync();
   void AsyncWaitForVsync(intptr_t baton);
-  void AsyncWaitForRunEngineSuccess(FLUTTER_API_SYMBOL(FlutterEngine)
-                                        flutter_engine);
 
  private:
-  static const int VBLANK_LOOP_REQUEST = 1;
-  static const int VBLANK_LOOP_DEL_PIPE = 2;
-  void AsyncWaitForVsyncCallback();
-  void DeleteVblankEventPipe();
-  static void CreateVblankEventLoop(void* data);
+  bool CreateTDMVblank();
+  void DestoryTDMVblank();
+  bool TDMValid();
+  void SendMessage(int val);
   static void TdmClientVblankCallback(tdm_client_vblank* vblank,
                                       tdm_error error, unsigned int sequence,
                                       unsigned int tv_sec, unsigned int tv_usec,
                                       void* user_data);
-  static void VblankEventLoopCallback(void* data, void* buffer,
-                                      unsigned int nbyte);
-  tdm_client* client_;
-  tdm_client_output* output_;
-  tdm_client_vblank* vblank_;
-  FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine_;
-  intptr_t baton_;
-  Ecore_Pipe* vblank_ecore_pipe_;
+  static void RequestVblankLoop(void* data, Ecore_Thread* thread);
+  static void VblankLoopFinish(void* data, Ecore_Thread* thread);
+  tdm_client* client_{nullptr};
+  tdm_client_output* output_{nullptr};
+  tdm_client_vblank* vblank_{nullptr};
+  TizenEmbedderEngine* engine_{nullptr};
+  intptr_t baton_{0};
+  Ecore_Thread* vblank_thread_{nullptr};
 };
 
 #endif  // EMBEDDER_TIZEN_VSYNC_WAITER_H_

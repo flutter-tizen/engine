@@ -174,6 +174,7 @@ def to_gn_args(args):
 
     gn_args['embedder_for_target'] = args.embedder_for_target
     gn_args['build_tizen_shell'] = args.build_tizen_shell
+    gn_args['tizen_sdk_4'] = args.tizen_sdk_4
 
     gn_args['enable_coverage'] = args.coverage
 
@@ -489,6 +490,7 @@ def parse_args(args):
 
   parser.add_argument('--embedder-for-target', dest='embedder_for_target', action='store_true', default=False)
   parser.add_argument('--build-tizen-shell', dest='build_tizen_shell', action='store_true', default=False)
+  parser.add_argument('--tizen-sdk-4', dest='tizen_sdk_4', action='store_true', default=False)
 
   parser.add_argument('--coverage', default=False, action='store_true')
 

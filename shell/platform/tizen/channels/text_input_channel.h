@@ -8,7 +8,6 @@
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_IMF.h>
 #include <Ecore_Input.h>
-#include <Ecore_Wl2.h>
 
 #include <string>
 
@@ -17,17 +16,28 @@
 #include "flutter/shell/platform/common/cpp/json_method_codec.h"
 #include "flutter/shell/platform/common/cpp/text_input_model.h"
 
+class TizenEmbedderEngine;
 class TextInputChannel {
  public:
+  struct SoftwareKeyboardGeometry {
+    int32_t x = 0, y = 0, w = 0, h = 0;
+  };
   explicit TextInputChannel(flutter::BinaryMessenger* messenger,
-                            Ecore_Wl2_Window* ecoreWindow);
+                            TizenEmbedderEngine* engine);
   virtual ~TextInputChannel();
   void OnKeyDown(Ecore_Event_Key* key);
   void OnCommit(const char* str);
   void OnPredit(const char* str, int cursorPos);
   void ShowSoftwareKeyboard();
   void HideSoftwareKeyboard();
-  bool isSoftwareKeyboardShowing() { return isSoftwareKeyboardShowing_; }
+  bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
+  SoftwareKeyboardGeometry GetCurrentKeyboardGeometry() {
+    return current_keyboard_geometry_;
+  }
+
+  Ecore_IMF_Context* GetImfContext() { return imf_context_; }
+
+  int32_t rotation = 0;
 
  private:
   void HandleMethodCall(
@@ -38,20 +48,38 @@ class TextInputChannel {
   void NonIMFFallback(Ecore_Event_Key* keyDownEvent);
   void EnterPressed(flutter::TextInputModel* model);
   void SelectPressed(flutter::TextInputModel* model);
-  void RegisterIMFCallback(Ecore_Wl2_Window* ecoreWindow);
+  void RegisterIMFCallback();
   void UnregisterIMFCallback();
 
   std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
   std::unique_ptr<flutter::TextInputModel> active_model_;
 
- private:
+  static void CommitCallback(void* data, Ecore_IMF_Context* ctx,
+                             void* event_info);
+  static void PreeditCallback(void* data, Ecore_IMF_Context* ctx,
+                              void* event_info);
+  static void PrivateCommandCallback(void* data, Ecore_IMF_Context* ctx,
+                                     void* event_info);
+  static void DeleteSurroundingCallback(void* data, Ecore_IMF_Context* ctx,
+                                        void* event_info);
+  static void InputPanelStateChangedCallback(void* data,
+                                             Ecore_IMF_Context* context,
+                                             int value);
+  static void InputPanelGeometryChangedCallback(void* data,
+                                                Ecore_IMF_Context* context,
+                                                int value);
+  static Eina_Bool RetrieveSurroundingCallback(void* data,
+                                               Ecore_IMF_Context* ctx,
+                                               char** text, int* cursor_pos);
+
   int client_id_;
   std::string input_type_;
   std::string input_action_;
-  bool isSoftwareKeyboardShowing_;
-  int lastPreeditStringLength_;
-  Ecore_IMF_Context* imfContext_;
-  bool isWearable_;
-  bool inSelectMode_;
+  bool is_software_keyboard_showing_;
+  int last_preedit_string_length_;
+  Ecore_IMF_Context* imf_context_;
+  bool in_select_mode_;
+  TizenEmbedderEngine* engine_;
+  SoftwareKeyboardGeometry current_keyboard_geometry_;
 };
 #endif

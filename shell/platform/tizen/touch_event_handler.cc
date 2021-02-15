@@ -4,8 +4,11 @@
 
 #include "touch_event_handler.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
+
+static const int DIRECTION_VERTICAL = 0;
+static const int DIRECTION_HORIZONTAL = 1;
 
 TouchEventHandler::TouchEventHandler(TizenEmbedderEngine *engine)
     : engine_(engine) {
@@ -14,9 +17,9 @@ TouchEventHandler::TouchEventHandler(TizenEmbedderEngine *engine)
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_UP, OnTouch, this));
   touch_event_handlers_.push_back(
+      ecore_event_handler_add(ECORE_EVENT_MOUSE_WHEEL, OnTouch, this));
+  touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, OnTouch, this));
-  touch_event_handlers_.push_back(ecore_event_handler_add(
-      ECORE_WL2_EVENT_WINDOW_VISIBILITY_CHANGE, OnTouch, this));
 }
 
 TouchEventHandler::~TouchEventHandler() {
@@ -28,15 +31,19 @@ TouchEventHandler::~TouchEventHandler() {
 
 void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 double x, double y,
+                                                double scroll_delta_x,
+                                                double scroll_delta_y,
                                                 size_t timestamp) {
   if (!engine_->flutter_engine) {
     return;
   }
 
   // Correct errors caused by window rotation.
-  double width = engine_->tizen_surface->GetWidth();
-  double height = engine_->tizen_surface->GetHeight();
+  auto window_geometry = engine_->tizen_renderer->GetGeometry();
+  double width = window_geometry.w;
+  double height = window_geometry.h;
   double new_x = x, new_y = y;
+
   if (rotation == 90) {
     new_x = height - y;
     new_y = x;
@@ -53,7 +60,12 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   event.phase = phase;
   event.x = new_x;
   event.y = new_y;
-  event.timestamp = timestamp;
+  if (scroll_delta_x != 0 || scroll_delta_y != 0) {
+    event.signal_kind = kFlutterPointerSignalKindScroll;
+  }
+  event.scroll_delta_x = scroll_delta_x;
+  event.scroll_delta_y = scroll_delta_y;
+  event.timestamp = timestamp * 1000;
   FlutterEngineSendPointerEvent(engine_->flutter_engine, &event, 1);
 }
 
@@ -63,25 +75,33 @@ Eina_Bool TouchEventHandler::OnTouch(void *data, int type, void *event) {
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
     self->pointer_state_ = true;
     auto *button_event = reinterpret_cast<Ecore_Event_Mouse_Button *>(event);
-    self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y,
+    self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0, 0,
                                   button_event->timestamp);
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
     self->pointer_state_ = false;
     auto *button_event = reinterpret_cast<Ecore_Event_Mouse_Button *>(event);
-    self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y,
+    self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
                                   button_event->timestamp);
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
     if (self->pointer_state_) {
       auto *move_event = reinterpret_cast<Ecore_Event_Mouse_Move *>(event);
-      self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y,
+      self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
                                     move_event->timestamp);
     }
-  } else if (type == ECORE_WL2_EVENT_WINDOW_VISIBILITY_CHANGE) {
-    auto *focus_event =
-        reinterpret_cast<Ecore_Wl2_Event_Window_Visibility_Change *>(event);
-    LoggerD("Visibility changed: %u, %d", focus_event->win,
-            focus_event->fully_obscured);
+  } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
+    auto *wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel *>(event);
+    double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
+    if (wheel_event->direction == DIRECTION_VERTICAL) {
+      scroll_delta_y += wheel_event->z;
+    } else if (wheel_event->direction == DIRECTION_HORIZONTAL) {
+      scroll_delta_x += wheel_event->z;
+    }
+    const int kScrollOffsetMultiplier = 20;
+    scroll_delta_x *= kScrollOffsetMultiplier;
+    scroll_delta_y *= kScrollOffsetMultiplier;
+    self->SendFlutterPointerEvent(
+        self->pointer_state_ ? kMove : kHover, wheel_event->x, wheel_event->y,
+        scroll_delta_x, scroll_delta_y, wheel_event->timestamp);
   }
-
   return ECORE_CALLBACK_PASS_ON;
 }

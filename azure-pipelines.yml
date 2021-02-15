@@ -1,0 +1,135 @@
+# Azure Pipelines YAML pipeline.
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema
+name: ninja
+
+trigger:
+- flutter-*-tizen
+pr:
+- flutter-*-tizen
+
+jobs:
+- job: build
+  strategy:
+    matrix:
+      tizen-arm-release:
+        arch: arm
+        mode: release
+        targetTriple: armv7l-tizen-linux-gnueabi
+      tizen-arm-profile:
+        arch: arm
+        mode: profile
+        targetTriple: armv7l-tizen-linux-gnueabi
+      tizen-arm-debug:
+        arch: arm
+        mode: debug
+        targetTriple: armv7l-tizen-linux-gnueabi
+      tizen-x86-debug:
+        arch: x86
+        mode: debug
+        targetTriple: i586-tizen-linux-gnueabi
+  pool:
+    name: Default
+    demands: agent.os -equals Linux
+  timeoutInMinutes: 60
+  cancelTimeoutInMinutes: 1
+  variables:
+  - name: buildroot
+    value: $(Pipeline.Workspace)/src
+  steps:
+  - checkout: self
+    path: src/flutter
+  - bash: |
+      git reset --hard HEAD
+      gclient sync -D
+      sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
+    displayName: Prepare for build
+    workingDirectory: $(buildroot)
+    failOnStderr: true
+  - bash: |
+      flutter/tools/gn \
+        --target-os linux \
+        --linux-cpu $(arch) \
+        --target-toolchain `pwd`/tizen_tools/toolchains \
+        --target-sysroot `pwd`/tizen_tools/sysroot/$(arch) \
+        --target-triple $(targetTriple) \
+        --runtime-mode $(mode) \
+        --enable-fontconfig \
+        --embedder-for-target \
+        --disable-desktop-embeddings \
+        --build-tizen-shell \
+        --out-dir output/default
+      ninja -C output/default/out/linux_$(mode)_$(arch)
+    displayName: Build
+    workingDirectory: $(buildroot)
+    failOnStderr: true
+  - bash: |
+      flutter/tools/gn \
+        --target-os linux \
+        --linux-cpu $(arch) \
+        --target-toolchain `pwd`/tizen_tools/toolchains \
+        --target-sysroot `pwd`/tizen_tools/sysroot/$(arch)_40 \
+        --target-triple $(targetTriple) \
+        --runtime-mode $(mode) \
+        --enable-fontconfig \
+        --embedder-for-target \
+        --disable-desktop-embeddings \
+        --build-tizen-shell \
+        --tizen-sdk-4 \
+        --out-dir output/tizen40
+      ninja -C output/tizen40/out/linux_$(mode)_$(arch)
+    displayName: Build for Tizen 4.0
+    workingDirectory: $(buildroot)
+    failOnStderr: true
+  - bash: |
+      OUTDIR=$(Build.StagingDirectory)
+      cp default/out/linux_$(mode)_$(arch)/libflutter_tizen.so $OUTDIR
+      cp tizen40/out/linux_$(mode)_$(arch)/libflutter_tizen.so $OUTDIR/libflutter_tizen40.so
+      cp tizen40/out/linux_$(mode)_$(arch)/libflutter_engine.so $OUTDIR
+    displayName: Copy artifacts
+    workingDirectory: $(buildroot)/output
+    failOnStderr: true
+  - publish: $(Build.StagingDirectory)
+    artifact: $(System.JobName)
+- job: release
+  dependsOn: build
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  pool:
+    name: Default
+    demands: agent.os -equals Linux
+  workspace:
+    clean: outputs
+  variables:
+  - name: upstreamVersion
+    value: 2f0af3715217a0c2ada72c717d4ed9178d68f6ed
+  steps:
+  - checkout: self
+    path: src/flutter
+  - download: current
+  - bash: |
+      mkdir -p common/client_wrapper
+      ROOT=$(Pipeline.Workspace)/src/flutter/shell/platform
+      cp $ROOT/common/cpp/client_wrapper/*.{h,cc} common/client_wrapper
+      rm common/client_wrapper/{*_unittests.*,engine_method_result.cc}
+      cp -r $ROOT/common/cpp/public common
+      cp -r $ROOT/common/cpp/client_wrapper/include common/client_wrapper
+      cp $ROOT/tizen/public/*.h common/public
+      cp $ROOT/tizen/LICENSE .
+    displayName: Copy headers
+    workingDirectory: $(Build.BinariesDirectory)
+    failOnStderr: true
+  - bash: |
+      cp $(Pipeline.Workspace)/src/third_party/icu/flutter/icudtl.dat common
+      mv $(Pipeline.Workspace)/tizen-* .
+      for platform in linux windows darwin; do
+        for mode in release profile; do
+          curl -o tmp.zip https://storage.googleapis.com/flutter_infra/flutter/$(upstreamVersion)/android-arm-$mode/$platform-x64.zip 2> /dev/null
+          unzip tmp.zip -d tizen-arm-$mode/$platform-x64 && rm tmp.zip
+        done
+        zip -r $(Build.StagingDirectory)/$platform-x64.zip *
+        rm -r tizen-arm-*/$platform-x64
+      done
+    displayName: Create releases
+    workingDirectory: $(Build.BinariesDirectory)
+    failOnStderr: true
+  - publish: $(Build.StagingDirectory)
+    artifact: release

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
@@ -21,43 +21,61 @@ LocalizationChannel::LocalizationChannel(FLUTTER_API_SYMBOL(FlutterEngine)
 LocalizationChannel::~LocalizationChannel() {}
 
 void LocalizationChannel::SendLocales() {
+  const char* defualt_locale = nullptr;
+  FlutterLocale* flutter_locale = nullptr;
+  std::vector<FlutterLocale*> flutter_locales;
+
+  int ret = i18n_ulocale_set_default(getenv("LANG"));
+  ret = i18n_ulocale_get_default(&defualt_locale);
+  if (ret != I18N_ERROR_NONE) {
+    FT_LOGE("i18n_ulocale_get_default() failed.");
+    return;
+  }
+
+  std::string without_encoding_type(defualt_locale);
+  auto n = without_encoding_type.find('.');
+  without_encoding_type.erase(n, without_encoding_type.length() - n);
+
+  flutter_locale = GetFlutterLocale(without_encoding_type.data());
+  if (flutter_locale) {
+    FT_LOGD("Choose Default locale[%s]", without_encoding_type.data());
+    flutter_locales.push_back(flutter_locale);
+  }
+
   int32_t count = i18n_ulocale_count_available();
-  if (count > 0) {
-    FlutterLocale* flutterLocale = nullptr;
-    std::vector<FlutterLocale*> flutterLocales;
-    for (int i = 0; i < count; i++) {
-      const char* locale = i18n_ulocale_get_available(i);
-      flutterLocale = GetFlutterLocale(locale);
-      if (flutterLocale) {
-        flutterLocales.push_back(flutterLocale);
+  for (int i = 0; i < count; i++) {
+    const char* locale = i18n_ulocale_get_available(i);
+    if (without_encoding_type.compare(locale) != 0) {
+      flutter_locale = GetFlutterLocale(locale);
+      if (flutter_locale) {
+        flutter_locales.push_back(flutter_locale);
       }
-    }
-
-    // send locales to engine
-    FlutterEngineUpdateLocales(
-        flutter_engine_,
-        const_cast<const FlutterLocale**>(flutterLocales.data()),
-        flutterLocales.size());
-
-    for (auto it : flutterLocales) {
-      DestroyFlutterLocale(it);
     }
   }
 
-  SendPlatformResolvedLocale();
+  FT_LOGD("Send %zu available locales", flutter_locales.size());
+  // send locales to engine
+  FlutterEngineUpdateLocales(
+      flutter_engine_,
+      const_cast<const FlutterLocale**>(flutter_locales.data()),
+      flutter_locales.size());
+
+  for (auto it : flutter_locales) {
+    DestroyFlutterLocale(it);
+  }
 }
 
 void LocalizationChannel::SendPlatformResolvedLocale() {
   const char* locale;
   int ret = i18n_ulocale_get_default(&locale);
   if (ret != I18N_ERROR_NONE) {
-    LoggerE("i18n_ulocale_get_default() failed.");
+    FT_LOGE("i18n_ulocale_get_default() failed.");
     return;
   }
 
   FlutterLocale* flutterLocale = GetFlutterLocale(locale);
   if (!flutterLocale) {
-    LoggerE("Language code is required but not present.");
+    FT_LOGE("Language code is required but not present.");
     return;
   }
 
@@ -88,7 +106,7 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   if (!document.Accept(writer)) {
-    LoggerE("document.Accept failed!");
+    FT_LOGE("document.Accept failed!");
     return;
   }
 
@@ -120,7 +138,7 @@ FlutterLocale* LocalizationChannel::GetFlutterLocale(const char* locale) {
     memcpy(language, buffer, bufSize);
     language[bufSize] = '\0';
   } else {
-    LoggerE("i18n_ulocale_get_language failed!");
+    FT_LOGE("i18n_ulocale_get_language failed!");
     return nullptr;
   }
 

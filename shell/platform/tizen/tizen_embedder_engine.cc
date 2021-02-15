@@ -11,16 +11,39 @@
 #include <string>
 #include <vector>
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Unique number associated with platform tasks.
 static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
 
+static std::string GetDeviceProfile() {
+  char* feature_profile;
+  system_info_get_platform_string("http://tizen.org/feature/profile",
+                                  &feature_profile);
+  std::string profile(feature_profile);
+  free(feature_profile);
+  return profile;
+}
+
+static double GetDeviceDpi() {
+  int feature_dpi;
+  system_info_get_platform_int("http://tizen.org/feature/screen.dpi",
+                               &feature_dpi);
+  return (double)feature_dpi;
+}
+
 TizenEmbedderEngine::TizenEmbedderEngine(
-    const FlutterWindowProperties& window_properties) {
-  tizen_surface = std::make_unique<TizenSurfaceGL>(
-      window_properties.x, window_properties.y, window_properties.width,
+    const FlutterWindowProperties& window_properties)
+    : device_profile(GetDeviceProfile()), device_dpi(GetDeviceDpi()) {
+#ifdef FLUTTER_TIZEN_4
+  tizen_renderer = std::make_unique<TizenRendererEcoreWl>(
+      *this, window_properties.x, window_properties.y, window_properties.width,
       window_properties.height);
+#else
+  tizen_renderer = std::make_unique<TizenRendererEcoreWl2>(
+      *this, window_properties.x, window_properties.y, window_properties.width,
+      window_properties.height);
+#endif
 
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
@@ -29,7 +52,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
         if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
-          LoggerE("Could not post an engine task.");
+          FT_LOGE("Could not post an engine task.");
         }
       });
 
@@ -38,21 +61,24 @@ TizenEmbedderEngine::TizenEmbedderEngine(
   message_dispatcher =
       std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
 
-  tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>();
+  tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 }
 
-TizenEmbedderEngine::~TizenEmbedderEngine() {}
+TizenEmbedderEngine::~TizenEmbedderEngine() {
+  FT_LOGD("Destroy");
+  tizen_renderer = nullptr;
+}
 
 // Attempts to load AOT data from the given path, which must be absolute and
 // non-empty. Logs and returns nullptr on failure.
 UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
   if (aot_data_path.empty()) {
-    LoggerE(
+    FT_LOGE(
         "Attempted to load AOT data, but no aot_library_path was provided.");
     return nullptr;
   }
   if (!std::filesystem::exists(aot_data_path)) {
-    LoggerE("Can't load AOT data from %s; no such file.",
+    FT_LOGE("Can't load AOT data from %s; no such file.",
             aot_data_path.c_str());
     return nullptr;
   }
@@ -62,7 +88,7 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
   FlutterEngineAOTData data = nullptr;
   auto result = FlutterEngineCreateAOTData(&source, &data);
   if (result != kSuccess) {
-    LoggerE("Failed to load AOT data from: %s", aot_data_path.c_str());
+    FT_LOGE("Failed to load AOT data from: %s", aot_data_path.c_str());
     return nullptr;
   }
   return UniqueAotDataPtr(data);
@@ -70,8 +96,8 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
 
 bool TizenEmbedderEngine::RunEngine(
     const FlutterEngineProperties& engine_properties) {
-  if (!tizen_surface->IsValid()) {
-    LoggerE("The display was not valid.");
+  if (!tizen_renderer->IsValid()) {
+    FT_LOGE("The display was not valid.");
     return false;
   }
 
@@ -127,7 +153,7 @@ bool TizenEmbedderEngine::RunEngine(
   if (FlutterEngineRunsAOTCompiledDartCode()) {
     aot_data_ = LoadAotData(engine_properties.aot_library_path);
     if (!aot_data_) {
-      LoggerE("Unable to start engine without AOT data.");
+      FT_LOGE("Unable to start engine without AOT data.");
       return false;
     }
     args.aot_data = aot_data_.get();
@@ -136,13 +162,11 @@ bool TizenEmbedderEngine::RunEngine(
   auto result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, &args, this,
                                  &flutter_engine);
   if (result == kSuccess && flutter_engine != nullptr) {
-    LoggerI("FlutterEngineRun Success!");
+    FT_LOGD("FlutterEngineRun Success!");
   } else {
-    LoggerE("FlutterEngineRun Failure! result: %d", result);
+    FT_LOGE("FlutterEngineRun Failure! result: %d", result);
     return false;
   }
-
-  tizen_vsync_waiter_->AsyncWaitForRunEngineSuccess(flutter_engine);
 
   std::unique_ptr<FlutterTextureRegistrar> textures =
       std::make_unique<FlutterTextureRegistrar>();
@@ -163,24 +187,29 @@ bool TizenEmbedderEngine::RunEngine(
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
   text_input_channel = std::make_unique<TextInputChannel>(
-      internal_plugin_registrar_->messenger(),
-      ((TizenSurfaceGL*)tizen_surface.get())->wl2_window());
+      internal_plugin_registrar_->messenger(), this);
   localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);
   localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(flutter_engine);
   platform_view_channel = std::make_unique<PlatformViewChannel>(
-      internal_plugin_registrar_->messenger());
+      internal_plugin_registrar_->messenger(), this);
 
   key_event_handler_ = std::make_unique<KeyEventHandler>(this);
   touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
   SetWindowOrientation(0);
-
   return true;
+}
+
+void TizenEmbedderEngine::OnRotationChange(int angle) {
+  SetWindowOrientation(angle);
 }
 
 bool TizenEmbedderEngine::StopEngine() {
   if (flutter_engine) {
+    if (platform_view_channel) {
+      platform_view_channel->Dispose();
+    }
     if (plugin_registrar_destruction_callback_) {
       plugin_registrar_destruction_callback_(plugin_registrar_.get());
     }
@@ -210,22 +239,6 @@ bool TizenEmbedderEngine::OnAcquireExternalTexture(
       ->PopulateTextureWithIdentifier(width, height, texture);
 }
 
-std::string GetDeviceProfile() {
-  char* feature_profile;
-  system_info_get_platform_string("http://tizen.org/feature/profile",
-                                  &feature_profile);
-  std::string profile(feature_profile);
-  free(feature_profile);
-  return profile;
-}
-
-double GetDeviceDpi() {
-  int feature_dpi;
-  system_info_get_platform_int("http://tizen.org/feature/screen.dpi",
-                               &feature_dpi);
-  return (double)feature_dpi;
-}
-
 void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
                                             double pixel_ratio) {
   FlutterWindowMetricsEvent event;
@@ -236,16 +249,15 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
     // The scale factor is computed based on the display DPI and the current
     // profile. A fixed DPI value (72) is used on TVs. See:
     // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
-    std::string profile = GetDeviceProfile();
     double profile_factor = 1.0;
-    if (profile == "wearable") {
+    if (device_profile == "wearable") {
       profile_factor = 0.4;
-    } else if (profile == "mobile") {
+    } else if (device_profile == "mobile") {
       profile_factor = 0.7;
-    } else if (profile == "tv") {
+    } else if (device_profile == "tv") {
       profile_factor = 2.0;
     }
-    double dpi = profile == "tv" ? 72.0 : GetDeviceDpi();
+    double dpi = device_profile == "tv" ? 72.0 : device_dpi;
     double scale_factor = dpi / 90.0 * profile_factor;
     event.pixel_ratio = std::max(scale_factor, 1.0);
   } else {
@@ -257,14 +269,17 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
 // This must be called at least once in order to initialize the value of
 // transformation_.
 void TizenEmbedderEngine::SetWindowOrientation(int32_t degree) {
-  if (!tizen_surface) {
+  if (!tizen_renderer) {
     return;
   }
 
+  tizen_renderer->SetRotate(degree);
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - degree) * M_PI / 180;
-  double width = tizen_surface->GetWidth();
-  double height = tizen_surface->GetHeight();
+  auto geometry = tizen_renderer->GetGeometry();
+  double width = geometry.w;
+  double height = geometry.h;
+
   double trans_x = 0.0, trans_y = 0.0;
   if (degree == 90) {
     trans_y = height;
@@ -280,10 +295,14 @@ void TizenEmbedderEngine::SetWindowOrientation(int32_t degree) {
       0.0,      0.0,       1.0       // perspective
   };
   touch_event_handler_->rotation = degree;
-
+  text_input_channel->rotation = degree;
   if (degree == 90 || degree == 270) {
+    tizen_renderer->ResizeWithRotation(geometry.x, geometry.y, height, width,
+                                       degree);
     SendWindowMetrics(height, width, 0.0);
   } else {
+    tizen_renderer->ResizeWithRotation(geometry.x, geometry.y, width, height,
+                                       degree);
     SendWindowMetrics(width, height, 0.0);
   }
 }
@@ -305,11 +324,11 @@ void TizenEmbedderEngine::AppIsDetached() {
 void TizenEmbedderEngine::OnFlutterPlatformMessage(
     const FlutterPlatformMessage* engine_message, void* user_data) {
   if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
-    LoggerE("Invalid message size received. Expected: %zu, received %zu",
+    FT_LOGE("Invalid message size received. Expected: %zu, received %zu",
             sizeof(FlutterPlatformMessage), engine_message->struct_size);
     return;
   }
-  LoggerD("%s", engine_message->channel);
+  FT_LOGD("%s", engine_message->channel);
   TizenEmbedderEngine* tizen_embedder_engine =
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
   auto message =
@@ -337,27 +356,27 @@ FlutterDesktopMessage TizenEmbedderEngine::ConvertToDesktopMessage(
 
 bool TizenEmbedderEngine::MakeContextCurrent(void* user_data) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnMakeCurrent();
+      ->tizen_renderer->OnMakeCurrent();
 }
 
 bool TizenEmbedderEngine::ClearContext(void* user_data) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnClearCurrent();
+      ->tizen_renderer->OnClearCurrent();
 }
 
 bool TizenEmbedderEngine::Present(void* user_data) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnPresent();
+      ->tizen_renderer->OnPresent();
 }
 
 bool TizenEmbedderEngine::MakeResourceCurrent(void* user_data) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnMakeResourceCurrent();
+      ->tizen_renderer->OnMakeResourceCurrent();
 }
 
 uint32_t TizenEmbedderEngine::GetActiveFbo(void* user_data) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnGetFBO();
+      ->tizen_renderer->OnGetFBO();
 }
 
 FlutterTransformation TizenEmbedderEngine::Transformation(void* user_data) {
@@ -366,5 +385,5 @@ FlutterTransformation TizenEmbedderEngine::Transformation(void* user_data) {
 
 void* TizenEmbedderEngine::GlProcResolver(void* user_data, const char* name) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
-      ->tizen_surface->OnProcResolver(name);
+      ->tizen_renderer->OnProcResolver(name);
 }

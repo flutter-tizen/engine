@@ -10,4 +10,5 @@ declare_args() {
   # as an extra build artifact with this flag. The native toolkit shell will
   # still be built as well.
   build_tizen_shell = false
+  tizen_sdk_4 = false
 }

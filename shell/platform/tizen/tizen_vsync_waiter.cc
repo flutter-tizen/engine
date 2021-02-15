@@ -4,142 +4,154 @@
 
 #include "tizen_vsync_waiter.h"
 
-#include "flutter/shell/platform/tizen/logger.h"
+#include <eina_thread_queue.h>
 
-TizenVsyncWaiter::TizenVsyncWaiter()
-    : client_(NULL),
-      output_(NULL),
-      vblank_(NULL),
-      flutter_engine_(nullptr),
-      baton_(0),
-      vblank_ecore_pipe_(NULL) {
-  if (CreateTDMVblank()) {
-    std::thread t(CreateVblankEventLoop, this);
-    t.join();
+#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/tizen_log.h"
+
+static const int QUEUE_QUIT = -1;
+static const int QUEUE_REQUEST_VBLANK = 0;
+
+typedef struct {
+  Eina_Thread_Queue_Msg head;
+  int value;
+} Msg;
+
+static Eina_Thread_Queue* vblank_thread_queue{nullptr};
+
+TizenVsyncWaiter::TizenVsyncWaiter(TizenEmbedderEngine* engine)
+    : engine_(engine) {
+  if (!CreateTDMVblank()) {
+    FT_LOGE("Failed to create TDM vblank");
+    DestoryTDMVblank();
   } else {
-    LoggerE("CreateVsyncVaiter fail");
+    vblank_thread_queue = eina_thread_queue_new();
+    vblank_thread_ =
+        ecore_thread_feedback_run(RequestVblankLoop, NULL, VblankLoopFinish,
+                                  VblankLoopFinish, this, EINA_TRUE);
   }
 }
 
-void TizenVsyncWaiter::CreateVblankEventLoop(void* data) {
-  TizenVsyncWaiter* tizen_vsync_waiter =
-      reinterpret_cast<TizenVsyncWaiter*>(data);
-  if (!ecore_init()) {
-    LoggerE("ERROR: Cannot init Ecore!");
+TizenVsyncWaiter::~TizenVsyncWaiter() {
+  SendMessage(QUEUE_QUIT);
+  if (vblank_thread_) {
+    ecore_thread_cancel(vblank_thread_);
+    vblank_thread_ = nullptr;
+  }
+  DestoryTDMVblank();
+}
+
+void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
+  baton_ = baton;
+  if (TDMValid()) {
+    SendMessage(QUEUE_REQUEST_VBLANK);
+  }
+}
+
+void TizenVsyncWaiter::SendMessage(int val) {
+  if (!vblank_thread_queue || !vblank_thread_) {
+    FT_LOGE("vblank thread or vblank thread queue not valid");
     return;
   }
-  tizen_vsync_waiter->vblank_ecore_pipe_ =
-      ecore_pipe_add(VblankEventLoopCallback, tizen_vsync_waiter);
-  LoggerD("ecore_init successful");
-  ecore_main_loop_begin();
-  ecore_shutdown();
+  Msg* msg;
+  void* ref;
+  msg = (Msg*)eina_thread_queue_send(vblank_thread_queue, sizeof(Msg), &ref);
+  msg->value = val;
+  eina_thread_queue_send_done(vblank_thread_queue, ref);
 }
 
-void TizenVsyncWaiter::VblankEventLoopCallback(void* data, void* buffer,
-                                               unsigned int nbyte) {
+void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(data);
-  int* event_type = reinterpret_cast<int*>(buffer);
-  if ((*event_type) == VBLANK_LOOP_REQUEST) {
-    tizen_vsync_waiter->AsyncWaitForVsyncCallback();
-  } else if ((*event_type) == VBLANK_LOOP_DEL_PIPE) {
-    tizen_vsync_waiter->DeleteVblankEventPipe();
+  void* ref;
+  Msg* msg;
+  while (!ecore_thread_check(thread)) {
+    if (!vblank_thread_queue) {
+      FT_LOGE("Vblank thread queue is not valid");
+      return;
+    }
+    msg = (Msg*)eina_thread_queue_wait(vblank_thread_queue, &ref);
+    if (msg) {
+      eina_thread_queue_wait_done(vblank_thread_queue, ref);
+    } else {
+      FT_LOGE("Message is null");
+      continue;
+    }
+    if (msg->value == QUEUE_QUIT) {
+      FT_LOGD("Message queue quit");
+      return;
+    }
+    if (!tizen_vsync_waiter->TDMValid()) {
+      FT_LOGE("TDM not valid");
+      return;
+    }
+    tdm_error error = tdm_client_vblank_wait(tizen_vsync_waiter->vblank_, 1,
+                                             TdmClientVblankCallback, data);
+    if (error != TDM_ERROR_NONE) {
+      FT_LOGE("tdm_client_vblank_wait error  %d", error);
+      continue;
+    }
+    tdm_client_handle_events(tizen_vsync_waiter->client_);
   }
 }
 
-void TizenVsyncWaiter::AsyncWaitForVsyncCallback() {
-  tdm_error ret;
-  ret = tdm_client_vblank_wait(vblank_, 1, TdmClientVblankCallback, this);
-  if (ret != TDM_ERROR_NONE) {
-    LoggerE("ERROR, ret = %d", ret);
-    return;
+void TizenVsyncWaiter::VblankLoopFinish(void* data, Ecore_Thread* thread) {
+  FT_LOGD("VblankLoopFinish.");
+  if (vblank_thread_queue) {
+    eina_thread_queue_free(vblank_thread_queue);
+    vblank_thread_queue = nullptr;
   }
-  tdm_client_handle_events(client_);
-}
-
-void TizenVsyncWaiter::DeleteVblankEventPipe() {
-  if (vblank_ecore_pipe_) {
-    ecore_pipe_del(vblank_ecore_pipe_);
-    vblank_ecore_pipe_ = NULL;
-  }
-  ecore_main_loop_quit();
 }
 
 bool TizenVsyncWaiter::CreateTDMVblank() {
   tdm_error ret;
   client_ = tdm_client_create(&ret);
   if (ret != TDM_ERROR_NONE && client_ != NULL) {
-    LoggerE("create client fail");
+    FT_LOGE("create client fail");
     return false;
   }
 
   output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
   if (ret != TDM_ERROR_NONE && output_ != NULL) {
-    LoggerE("get output fail");
+    FT_LOGE("get output fail");
     return false;
   }
 
   vblank_ = tdm_client_output_create_vblank(output_, &ret);
   if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    LoggerE("create vblank fail");
+    FT_LOGE("create vblank fail");
     return false;
   }
 
+  tdm_client_vblank_set_enable_fake(vblank_, 1);
   return true;
 }
+
+void TizenVsyncWaiter::DestoryTDMVblank() {
+  if (vblank_) {
+    tdm_client_vblank_destroy(vblank_);
+    vblank_ = nullptr;
+  }
+  output_ = nullptr;
+  if (client_) {
+    tdm_client_destroy(client_);
+    client_ = nullptr;
+  }
+}
+
+bool TizenVsyncWaiter::TDMValid() { return vblank_ && client_; }
 
 void TizenVsyncWaiter::TdmClientVblankCallback(
     tdm_client_vblank* vblank, tdm_error error, unsigned int sequence,
     unsigned int tv_sec, unsigned int tv_usec, void* user_data) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(user_data);
-  if (tizen_vsync_waiter == nullptr) {
-    LoggerE("tizen_vsync_waiter is null");
-    return;
-  }
-  if (tizen_vsync_waiter->flutter_engine_ == nullptr) {
-    LoggerI("flutter engine creation is not completed");
-    return;
-  }
+  FT_ASSERT(tizen_vsync_waiter != nullptr);
+  FT_ASSERT(tizen_vsync_waiter->engine_ != nullptr);
+  FT_ASSERT(tizen_vsync_waiter->engine_->flutter_engine != nullptr);
   uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
   uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-  FlutterEngineOnVsync(tizen_vsync_waiter->flutter_engine_,
+  FlutterEngineOnVsync(tizen_vsync_waiter->engine_->flutter_engine,
                        tizen_vsync_waiter->baton_, frame_start_time_nanos,
                        frame_target_time_nanos);
-}
-
-bool TizenVsyncWaiter::AsyncWaitForVsync() {
-  if (vblank_ecore_pipe_) {
-    int event_type = VBLANK_LOOP_REQUEST;
-    ecore_pipe_write(vblank_ecore_pipe_, &event_type, sizeof(event_type));
-  }
-  return true;
-}
-
-TizenVsyncWaiter::~TizenVsyncWaiter() {
-  if (vblank_ecore_pipe_) {
-    int event_type = VBLANK_LOOP_DEL_PIPE;
-    ecore_pipe_write(vblank_ecore_pipe_, &event_type, sizeof(event_type));
-  }
-  if (vblank_) {
-    tdm_client_vblank_destroy(vblank_);
-  }
-  if (client_) {
-    tdm_client_destroy(client_);
-  }
-}
-
-void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
-  baton_ = baton;
-  AsyncWaitForVsync();
-}
-
-void TizenVsyncWaiter::AsyncWaitForRunEngineSuccess(
-    FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine) {
-  flutter_engine_ = flutter_engine;
-  if (baton_ == 0) {
-    LoggerD("baton_ == 0");
-    return;
-  }
-  AsyncWaitForVsync();
 }

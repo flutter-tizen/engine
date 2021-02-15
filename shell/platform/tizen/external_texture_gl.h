@@ -6,7 +6,6 @@
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
 
 #include <stdint.h>
-#include <tbm_bo.h>
 #include <tbm_bufmgr.h>
 #include <tbm_drm_helper.h>
 #include <tbm_surface.h>
@@ -29,7 +28,7 @@ class ExternalTextureGL {
   /**
    * Returns the unique id for the ExternalTextureGL instance.
    */
-  int64_t texture_id() { return (int64_t)texture_id_; }
+  int64_t TextureId() { return (int64_t)texture_id_; }
 
   /**
    * Accepts texture buffer copy request from the Flutter engine.
@@ -43,12 +42,13 @@ class ExternalTextureGL {
                                      FlutterOpenGLTexture* opengl_texture);
   bool OnFrameAvailable(tbm_surface_h tbm_surface);
   void DestructionTbmSurface();
+  void DestructionTbmSurfaceWithLock();
 
  private:
   std::unique_ptr<ExternalTextureGLState> state_;
   std::mutex mutex_;
   tbm_surface_h texture_tbm_surface_;
-  static void destructionCallback(void* user_data);
+  static void DestructionCallback(void* user_data);
   const long texture_id_;
 };
 

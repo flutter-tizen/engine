@@ -4,6 +4,7 @@
 
 import("//build/fuchsia/sdk.gni")
 import("//flutter/shell/platform/config.gni")
+import("//flutter/shell/platform/tizen/config.gni")
 
 group("platform") {
   if (is_mac || is_ios) {
@@ -14,6 +15,9 @@ group("platform") {
     deps = []
     if (enable_desktop_embeddings) {
       deps += [ "linux" ]
+    }
+    if (build_tizen_shell) {
+      deps += [ "tizen" ]
     }
   } else if (is_win) {
     deps = []
