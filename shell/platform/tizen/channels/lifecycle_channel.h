@@ -20,4 +20,5 @@ class LifecycleChannel {
  private:
   FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine_;
 };
+
 #endif  // EMBEDDER_LIFECYCLE_CHANNEL_H_

@@ -9,8 +9,6 @@
 
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
-#include "stdlib.h"
-#include "string.h"
 
 static constexpr char kSetEditingStateMethod[] = "TextInput.setEditingState";
 static constexpr char kClearClientMethod[] = "TextInput.clearClient";

@@ -50,6 +50,7 @@ source_set("flutter_tizen") {
     "key_event_handler.cc",
     "tizen_embedder_engine.cc",
     "tizen_event_loop.cc",
+    "tizen_log.cc",
     "tizen_renderer.cc",
     "tizen_vsync_waiter.cc",
     "touch_event_handler.cc",

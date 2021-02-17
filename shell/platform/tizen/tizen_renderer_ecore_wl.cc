@@ -65,6 +65,7 @@ Eina_Bool TizenRendererEcoreWl::RotationEventCb(void *data, int type,
 }
 
 void TizenRendererEcoreWl::Show() { ecore_wl_window_show(ecore_wl_window_); }
+
 void TizenRendererEcoreWl::SetRotate(int degree) {
   ecore_wl_window_rotation_set(ecore_wl_window_, degree);
   received_rotation = true;

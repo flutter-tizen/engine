@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TEXT_INPUT_PLUGIN_H_
-#define EMBEDDER_TEXT_INPUT_PLUGIN_H_
+#ifndef EMBEDDER_TEXT_INPUT_CHANNEL_H_
+#define EMBEDDER_TEXT_INPUT_CHANNEL_H_
 
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_IMF.h>
@@ -82,4 +82,5 @@ class TextInputChannel {
   TizenEmbedderEngine* engine_;
   SoftwareKeyboardGeometry current_keyboard_geometry_;
 };
-#endif
+
+#endif  // EMBEDDER_TEXT_INPUT_CHANNEL_H_

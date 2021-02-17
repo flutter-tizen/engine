@@ -5,10 +5,10 @@
 #ifndef EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
 #define EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
 
-#include "tizen_renderer.h"
-
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
+
+#include "flutter/shell/platform/tizen/tizen_renderer.h"
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
@@ -39,4 +39,5 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   Ecore_Wl2_Egl_Window *ecore_wl2_egl_window_ = nullptr;
   static Eina_Bool RotationEventCb(void *data, int type, void *event);
 };
-#endif //EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
+
+#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H

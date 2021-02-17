@@ -6,6 +6,7 @@
 #define EMBEDDER_TOUCH_EVENT_HANDLER_H_
 
 #include <Ecore_Input.h>
+
 #include <vector>
 
 #include "flutter/shell/platform/embedder/embedder.h"

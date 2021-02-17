@@ -24,6 +24,7 @@ std::string ExtractStringFromMap(const flutter::EncodableValue& arguments,
   }
   return std::string();
 }
+
 int ExtractIntFromMap(const flutter::EncodableValue& arguments,
                       const char* key) {
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
@@ -33,6 +34,7 @@ int ExtractIntFromMap(const flutter::EncodableValue& arguments,
   }
   return -1;
 }
+
 double ExtractDoubleFromMap(const flutter::EncodableValue& arguments,
                             const char* key) {
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {

@@ -4,11 +4,15 @@
 
 #ifndef EMBEDDER_TIZEN_LOG_H_
 #define EMBEDDER_TIZEN_LOG_H_
+
 #include <dlog.h>
 
 #include <cassert>
 #include <cstdlib>
-#include <string>
+
+// Start logging threads which constantly redirect stdout/stderr to dlog.
+// The threads can be started only once per process.
+void StartLogging();
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -47,7 +51,7 @@
       FT_LOGE("RELEASE_ASSERT");     \
       abort();                       \
     }                                \
-  } while (0);
+  } while (0)
 
 #define FT_RELEASE_ASSERT_NOT_REACHED()    \
   do {                                     \

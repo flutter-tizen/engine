@@ -14,6 +14,7 @@ TizenRendererEcoreWl2::TizenRendererEcoreWl2(TizenRenderer::Delegate &delegate,
 }
 
 TizenRendererEcoreWl2::~TizenRendererEcoreWl2() { DestoryRenderer(); }
+
 bool TizenRendererEcoreWl2::SetupDisplay() {
   if (!ecore_wl2_init()) {
     FT_LOGE("Could not initialize ecore_wl2");

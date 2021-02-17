@@ -8,9 +8,11 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-#include "tizen_renderer.h"
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wayland.h>
+
+#include "flutter/shell/platform/tizen/tizen_renderer.h"
+
 class TizenRendererEcoreWl : public TizenRenderer {
  public:
   TizenRendererEcoreWl(TizenRenderer::Delegate& delegate, int32_t x, int32_t y,
@@ -40,4 +42,5 @@ class TizenRendererEcoreWl : public TizenRenderer {
   wl_display* wl_display_ = nullptr;
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
 };
-#endif //EMBEDDER_TIZEN_RENDERER_ECORE_WL_H
+
+#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL_H

@@ -5,9 +5,6 @@
 
 #include "public/flutter_tizen.h"
 
-#include <inttypes.h>
-#include <unistd.h>
-
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
@@ -21,62 +18,10 @@ struct FlutterWindowControllerState {
   std::unique_ptr<TizenEmbedderEngine> engine;
 };
 
-// The pipe used for logging to dlog.
-static int logging_pipe[2];
-// The thread that constantly writes out stdout to dlog through the pipe.
-// Only one logging thread should exist per process.
-static pthread_t logging_thread;
-
-static void* LoggingFunction(void*) {
-  ssize_t size;
-  char buffer[1024];
-
-  while ((size = read(logging_pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-    buffer[size] = 0;
-    __dlog_print(LOG_ID_MAIN, DLOG_INFO, LOG_TAG, "%s", buffer);
-  }
-
-  close(logging_pipe[0]);
-  close(logging_pipe[1]);
-
-  return nullptr;
-}
-
-// Redirects the process's standard output/error to dlog for use by the flutter
-// tools.
-bool InitializeLogging() {
-  if (logging_thread) {
-    FT_LOGD("The logging thread already exists.");
-    return true;
-  }
-
-  if (pipe(logging_pipe) < 0) {
-    FT_LOGE("Failed to create a pipe.");
-    return false;
-  }
-
-  if (dup2(logging_pipe[1], 1) < 0 || dup2(logging_pipe[1], 2) < 0) {
-    FT_LOGE("Failed to duplicate file descriptors.");
-    return false;
-  }
-
-  if (pthread_create(&logging_thread, 0, LoggingFunction, 0) != 0) {
-    FT_LOGE("Failed to create a logging thread.");
-    logging_thread = 0;
-    return false;
-  }
-
-  if (pthread_detach(logging_thread) != 0) {
-    FT_LOGE("Failed to detach the logging thread.");
-    return false;
-  }
-  return true;
-}
-
 FlutterWindowControllerRef FlutterCreateWindow(
     const FlutterWindowProperties& window_properties,
     const FlutterEngineProperties& engine_properties) {
-  InitializeLogging();
+  StartLogging();
 
   auto state = std::make_unique<FlutterWindowControllerState>();
   state->engine = std::make_unique<TizenEmbedderEngine>(window_properties);
@@ -221,6 +166,7 @@ void FlutterNotifyLowMemoryWarning(FlutterWindowControllerRef controller) {
 
 void FlutterRotateWindow(FlutterWindowControllerRef controller,
                          int32_t degree) {
+  FT_LOGW("Deprecated API. Use SystemChrome.setPreferredOrientations instead.");
 }
 
 int64_t FlutterRegisterExternalTexture(

@@ -159,4 +159,5 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   // The current renderer transformation.
   FlutterTransformation transformation_;
 };
+
 #endif  // EMBEDDER_TIZEN_EMBEDDER_ENGINE_H_
