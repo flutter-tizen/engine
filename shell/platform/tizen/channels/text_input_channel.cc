@@ -70,7 +70,7 @@ void TextInputChannel::PreeditCallback(void* data, Ecore_IMF_Context* ctx,
   int cursor_pos;
   ecore_imf_context_preedit_string_get(ctx, &preedit_string, &cursor_pos);
   if (preedit_string) {
-    self->OnPredit(preedit_string, cursor_pos);
+    self->OnPreedit(preedit_string, cursor_pos);
     free(preedit_string);
   }
 }
@@ -79,26 +79,26 @@ void TextInputChannel::PrivateCommandCallback(void* data,
                                               Ecore_IMF_Context* ctx,
                                               void* event_info) {
   // TODO
-  FT_LOGD_UNIMPLEMENTED();
+  FT_UNIMPLEMENTED();
 }
 
 void TextInputChannel::DeleteSurroundingCallback(void* data,
                                                  Ecore_IMF_Context* ctx,
                                                  void* event_info) {
   // TODO
-  FT_LOGD_UNIMPLEMENTED();
+  FT_UNIMPLEMENTED();
 }
 
 void TextInputChannel::InputPanelStateChangedCallback(
     void* data, Ecore_IMF_Context* context, int value) {
+  FT_LOGD("Change input panel state[%d]", value);
   if (!data) {
-    FT_LOGD("[No Data]\n");
+    FT_LOGW("No Data");
     return;
   }
   TextInputChannel* self = (TextInputChannel*)data;
   switch (value) {
     case ECORE_IMF_INPUT_PANEL_STATE_SHOW: {
-      FT_LOGD("[PANEL_STATE_SHOW]\n");
       if (self->engine_->device_profile ==
           "mobileD") {  // FIXME : Needs improvement on other devices.
         ecore_timer_add(
@@ -126,13 +126,10 @@ void TextInputChannel::InputPanelStateChangedCallback(
     } break;
     case ECORE_IMF_INPUT_PANEL_STATE_HIDE:
       self->HideSoftwareKeyboard();  // FIXME: Fallback for HW back-key
-      FT_LOGD("[PANEL_STATE_HIDE]\n");
       break;
     case ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW:
-      FT_LOGD("[PANEL_STATE_WILL_SHOW]\n");
       break;
     default:
-      FT_LOGD("[PANEL_STATE_EVENT (default: %d)]\n", value);
       break;
   }
 }
@@ -140,7 +137,7 @@ void TextInputChannel::InputPanelStateChangedCallback(
 void TextInputChannel::InputPanelGeometryChangedCallback(
     void* data, Ecore_IMF_Context* context, int value) {
   if (!data) {
-    FT_LOGD("[No Data]\n");
+    FT_LOGW("No Data");
     return;
   }
   TextInputChannel* self = (TextInputChannel*)data;
@@ -150,7 +147,7 @@ void TextInputChannel::InputPanelGeometryChangedCallback(
       &self->current_keyboard_geometry_.h);
 
   FT_LOGD(
-      "[Current keyboard geometry] x:%d y:%d w:%d h:%d\n",
+      "Current keyboard geometry x:[%d] y:[%d] w:[%d] h:[%d]",
       self->current_keyboard_geometry_.x, self->current_keyboard_geometry_.y,
       self->current_keyboard_geometry_.w, self->current_keyboard_geometry_.h);
 }
@@ -159,13 +156,7 @@ Eina_Bool TextInputChannel::RetrieveSurroundingCallback(void* data,
                                                         Ecore_IMF_Context* ctx,
                                                         char** text,
                                                         int* cursor_pos) {
-  // TODO
-  if (text) {
-    *text = strdup("");
-  }
-  if (cursor_pos) {
-    *cursor_pos = 0;
-  }
+  FT_UNIMPLEMENTED();
   return EINA_TRUE;
 }
 
@@ -275,11 +266,6 @@ TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
                                    TizenEmbedderEngine* engine)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
           messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())),
-      active_model_(nullptr),
-      is_software_keyboard_showing_(false),
-      last_preedit_string_length_(0),
-      imf_context_(nullptr),
-      in_select_mode_(false),
       engine_(engine) {
   channel_->SetMethodCallHandler(
       [this](
@@ -313,7 +299,7 @@ TextInputChannel::~TextInputChannel() {
 }
 
 void TextInputChannel::OnKeyDown(Ecore_Event_Key* key) {
-  if (active_model_ && !FilterEvent(key)) {
+  if (active_model_ && !FilterEvent(key) && !have_preedit_) {
     NonIMFFallback(key);
   }
 }
@@ -429,11 +415,11 @@ void TextInputChannel::SendStateUpdate(const flutter::TextInputModel& model) {
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
   args->PushBack(editing_state, allocator);
 
+  FT_LOGD("Send text[%s]", model.GetText().data());
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
 bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
-  FT_LOGD("NonIMFFallback key name [%s]", keyDownEvent->keyname);
   bool handled = false;
   const char* device = ecore_device_name_get(keyDownEvent->dev);
 
@@ -459,9 +445,12 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
   bool isIME = strcmp(device, "ime") == 0;
   if (isIME && strcmp(keyDownEvent->key, "Select") == 0) {
     if (engine_->device_profile == "wearable") {
+      // FIXME: for wearable
       in_select_mode_ = true;
     } else {
+      FT_LOGD("Force Handle key[Select] event");
       SelectPressed(active_model_.get());
+      ResetCurrentContext();
       return true;
     }
   }
@@ -500,12 +489,20 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
         reinterpret_cast<Ecore_IMF_Event*>(&ecoreKeyDownEvent));
   }
 
+  if (handled) {
+    last_handled_ecore_event_keyname_ = keyDownEvent->keyname;
+  }
+
+  FT_LOGD("The %skey-event[%s] are%s filtered", isIME ? "IME " : "",
+          keyDownEvent->keyname, handled ? "" : " not");
+
   if (!handled && !strcmp(keyDownEvent->key, "Return")) {
     if (in_select_mode_) {
       in_select_mode_ = false;
       handled = true;
     } else {
-      ecore_imf_context_reset(imf_context_);
+      FT_LOGD("Force Handle key[Return] event");
+      ResetCurrentContext();
       EnterPressed(active_model_.get());
     }
   }
@@ -515,6 +512,13 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
 
 void TextInputChannel::NonIMFFallback(Ecore_Event_Key* keyDownEvent) {
   FT_LOGD("NonIMFFallback key name [%s]", keyDownEvent->keyname);
+  if (edit_status_ == EditStatus::PREEDIT_END &&
+      !strcmp(keyDownEvent->key, "space") /*FIXME: for mobile*/) {
+    have_ignored_space_ = true;
+    FT_LOGD("Ignore key-event[space]");
+    return;
+  }
+
   if (strcmp(keyDownEvent->key, "Left") == 0) {
     if (active_model_->MoveCursorBack()) {
       SendStateUpdate(*active_model_);
@@ -568,33 +572,49 @@ void TextInputChannel::SelectPressed(flutter::TextInputModel* model) {
   channel_->InvokeMethod(kPerformActionMethod, std::move(args));
 }
 
-void TextInputChannel::OnCommit(const char* str) {
-  for (int i = last_preedit_string_length_; i > 0; i--) {
-    active_model_->Backspace();
-  }
+void TextInputChannel::OnCommit(std::string str) {
+  FT_LOGD("OnCommit str[%s]", str.data());
+  SetEditStatus(EditStatus::COMMIT);
+  ConsumeLastPreedit();
   active_model_->AddText(str);
+  if (have_ignored_space_) {
+    active_model_->AddText(" ");
+    have_ignored_space_ = false;
+  }
   SendStateUpdate(*active_model_);
-  last_preedit_string_length_ = 0;
+  SetEditStatus(EditStatus::NONE);
 }
 
-void TextInputChannel::OnPredit(const char* str, int cursorPos) {
-  if (strcmp(str, "") == 0) {
-    last_preedit_string_length_ = 0;
-    return;
+void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
+  FT_LOGD("OnPreedit str[%s], cursor_pos[%d]", str.data(), cursor_pos);
+  SetEditStatus(EditStatus::PREEDIT_START);
+  if (str.compare("") == 0) {
+    SetEditStatus(EditStatus::PREEDIT_END);
   }
 
-  for (int i = last_preedit_string_length_; i > 0; i--) {
-    active_model_->Backspace();
+  if (edit_status_ == EditStatus::PREEDIT_START ||
+      (edit_status_ == EditStatus::PREEDIT_END &&
+       /* FIXME: for tv */
+       last_handled_ecore_event_keyname_.compare("Return") != 0)) {
+    FT_LOGD("last_handled_ecore_event_keyname_[%s]",
+            last_handled_ecore_event_keyname_.data());
+    ConsumeLastPreedit();
   }
 
-  active_model_->AddText(str);
-  SendStateUpdate(*active_model_);
-  last_preedit_string_length_ = cursorPos;
+  have_preedit_ = false;
+  if (edit_status_ == EditStatus::PREEDIT_START) {
+    preedit_start_pos_ = active_model_->selection_base();
+    active_model_->AddText(str);
+    preedit_end_pos_ = active_model_->selection_base();
+    have_preedit_ = true;
+    SendStateUpdate(*active_model_);
+    FT_LOGD("preedit_start_pos_[%d] preedit_end_pos_[%d]", preedit_start_pos_,
+            preedit_end_pos_);
+  }
 }
 
 void TextInputChannel::ShowSoftwareKeyboard() {
-  FT_LOGD("ShowPanel() [is_software_keyboard_showing_:%d] \n",
-          is_software_keyboard_showing_);
+  FT_LOGD("Show input panel");
   if (imf_context_ && !is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = true;
     ecore_imf_context_input_panel_show(imf_context_);
@@ -603,8 +623,7 @@ void TextInputChannel::ShowSoftwareKeyboard() {
 }
 
 void TextInputChannel::HideSoftwareKeyboard() {
-  FT_LOGD("HidePanel() [is_software_keyboard_showing_:%d] \n",
-          is_software_keyboard_showing_);
+  FT_LOGD("Hide input panel");
   if (imf_context_ && is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = false;
 
@@ -622,19 +641,24 @@ void TextInputChannel::HideSoftwareKeyboard() {
       ecore_timer_add(
           0.05,
           [](void* data) -> Eina_Bool {
-            Ecore_IMF_Context* imfContext = (Ecore_IMF_Context*)data;
-            ecore_imf_context_reset(imfContext);
-            ecore_imf_context_focus_out(imfContext);
-            ecore_imf_context_input_panel_hide(imfContext);
+            TextInputChannel* self = (TextInputChannel*)data;
+            self->ResetCurrentContext();
+            ecore_imf_context_focus_out(self->imf_context_);
+            ecore_imf_context_input_panel_hide(self->imf_context_);
             return ECORE_CALLBACK_CANCEL;
           },
-          imf_context_);
+          this);
     } else {
-      ecore_imf_context_reset(imf_context_);
+      ResetCurrentContext();
       ecore_imf_context_focus_out(imf_context_);
       ecore_imf_context_input_panel_hide(imf_context_);
     }
   }
+}
+
+void TextInputChannel::SetEditStatus(EditStatus edit_status) {
+  FT_LOGD("Set edit status[%d]", edit_status);
+  edit_status_ = edit_status;
 }
 
 void TextInputChannel::RegisterIMFCallback() {
@@ -688,4 +712,27 @@ void TextInputChannel::UnregisterIMFCallback() {
   ecore_imf_context_input_panel_event_callback_del(
       imf_context_, ECORE_IMF_INPUT_PANEL_GEOMETRY_EVENT,
       InputPanelGeometryChangedCallback);
+}
+
+void TextInputChannel::ConsumeLastPreedit() {
+  if (have_preedit_) {
+    std::string before = active_model_->GetText();
+    int count = preedit_end_pos_ - preedit_start_pos_;
+    active_model_->DeleteSurrounding(-count, count);
+    std::string after = active_model_->GetText();
+    FT_LOGD("Consume last preedit count:[%d] text:[%s] -> [%s]", count,
+            before.data(), after.data());
+    SendStateUpdate(*active_model_);
+  }
+  have_preedit_ = false;
+  preedit_end_pos_ = 0;
+  preedit_start_pos_ = 0;
+}
+
+void TextInputChannel::ResetCurrentContext() {
+  SetEditStatus(EditStatus::NONE);
+  ecore_imf_context_reset(imf_context_);
+  preedit_start_pos_ = 0;
+  preedit_end_pos_ = 0;
+  have_preedit_ = false;
 }
