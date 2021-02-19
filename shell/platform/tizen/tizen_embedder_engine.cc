@@ -16,13 +16,22 @@
 // Unique number associated with platform tasks.
 static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
 
-static std::string GetDeviceProfile() {
+static DeviceProfile GetDeviceProfile() {
   char* feature_profile;
   system_info_get_platform_string("http://tizen.org/feature/profile",
                                   &feature_profile);
   std::string profile(feature_profile);
   free(feature_profile);
-  return profile;
+
+  if (profile == "mobile") {
+    return DeviceProfile::kMobile;
+  } else if (profile == "wearable") {
+    return DeviceProfile::kWearable;
+  } else if (profile == "tv") {
+    return DeviceProfile::kTV;
+  }
+  FT_LOGW("Flutter-tizen is running on an unknown device profile!");
+  return DeviceProfile::kUnknown;
 }
 
 static double GetDeviceDpi() {
@@ -250,14 +259,14 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
     // profile. A fixed DPI value (72) is used on TVs. See:
     // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
     double profile_factor = 1.0;
-    if (device_profile == "wearable") {
+    if (device_profile == DeviceProfile::kWearable) {
       profile_factor = 0.4;
-    } else if (device_profile == "mobile") {
+    } else if (device_profile == DeviceProfile::kMobile) {
       profile_factor = 0.7;
-    } else if (device_profile == "tv") {
+    } else if (device_profile == DeviceProfile::kTV) {
       profile_factor = 2.0;
     }
-    double dpi = device_profile == "tv" ? 72.0 : device_dpi;
+    double dpi = device_profile == DeviceProfile::kTV ? 72.0 : device_dpi;
     double scale_factor = dpi / 90.0 * profile_factor;
     event.pixel_ratio = std::max(scale_factor, 1.0);
   } else {

@@ -22,15 +22,17 @@ class TextInputChannel {
   struct SoftwareKeyboardGeometry {
     int32_t x = 0, y = 0, w = 0, h = 0;
   };
+  enum EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
   explicit TextInputChannel(flutter::BinaryMessenger* messenger,
                             TizenEmbedderEngine* engine);
   virtual ~TextInputChannel();
   void OnKeyDown(Ecore_Event_Key* key);
-  void OnCommit(const char* str);
-  void OnPredit(const char* str, int cursorPos);
+  void OnCommit(std::string str);
+  void OnPreedit(std::string str, int cursor_pos);
   void ShowSoftwareKeyboard();
   void HideSoftwareKeyboard();
   bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
+  void SetEditStatus(EditStatus edit_status);
   SoftwareKeyboardGeometry GetCurrentKeyboardGeometry() {
     return current_keyboard_geometry_;
   }
@@ -46,10 +48,11 @@ class TextInputChannel {
   void SendStateUpdate(const flutter::TextInputModel& model);
   bool FilterEvent(Ecore_Event_Key* keyDownEvent);
   void NonIMFFallback(Ecore_Event_Key* keyDownEvent);
-  void EnterPressed(flutter::TextInputModel* model);
-  void SelectPressed(flutter::TextInputModel* model);
+  void EnterPressed(flutter::TextInputModel* model, bool select);
   void RegisterIMFCallback();
   void UnregisterIMFCallback();
+  void ConsumeLastPreedit();
+  void ResetCurrentContext();
 
   std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
   std::unique_ptr<flutter::TextInputModel> active_model_;
@@ -72,15 +75,20 @@ class TextInputChannel {
                                                Ecore_IMF_Context* ctx,
                                                char** text, int* cursor_pos);
 
-  int client_id_;
-  std::string input_type_;
-  std::string input_action_;
-  bool is_software_keyboard_showing_;
-  int last_preedit_string_length_;
-  Ecore_IMF_Context* imf_context_;
-  bool in_select_mode_;
-  TizenEmbedderEngine* engine_;
+  int client_id_{0};
   SoftwareKeyboardGeometry current_keyboard_geometry_;
+  bool is_software_keyboard_showing_{false};
+  std::string input_action_;
+  std::string input_type_;
+
+  EditStatus edit_status_{EditStatus::kNone};
+  bool have_preedit_{false};
+  bool in_select_mode_{false};
+  int preedit_end_pos_{0};
+  int preedit_start_pos_{0};
+  std::string last_handled_ecore_event_keyname_;
+  TizenEmbedderEngine* engine_{nullptr};
+  Ecore_IMF_Context* imf_context_{nullptr};
 };
 
 #endif  // EMBEDDER_TEXT_INPUT_CHANNEL_H_
