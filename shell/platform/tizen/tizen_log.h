@@ -64,6 +64,6 @@ void StartLogging();
 #define FT_COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #endif
 
-#define FT_LOGD_UNIMPLEMENTED() FT_LOGD("UNIMPLEMENTED")
+#define FT_UNIMPLEMENTED() FT_LOGD("UNIMPLEMENTED!")
 
 #endif  // EMBEDDER_TIZEN_LOG_H_

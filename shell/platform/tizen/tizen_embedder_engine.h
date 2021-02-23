@@ -64,6 +64,8 @@ struct FlutterTextureRegistrar {
 
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
 
+enum DeviceProfile { kUnknown, kMobile, kWearable, kTV };
+
 // Manages state associated with the underlying FlutterEngine.
 class TizenEmbedderEngine : public TizenRenderer::Delegate {
  public:
@@ -111,7 +113,7 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   std::unique_ptr<TextInputChannel> text_input_channel;
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
 
-  const std::string device_profile;
+  const DeviceProfile device_profile;
   const double device_dpi;
 
  private:
