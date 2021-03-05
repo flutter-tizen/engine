@@ -9,7 +9,6 @@
 #undef EFL_BETA_API_SUPPORT
 #include <Ecore.h>
 #include <Elementary.h>
-#include <Evas_GL.h>
 #else
 #include <EGL/egl.h>
 #endif
@@ -27,6 +26,10 @@ class TizenRenderer {
 
   TizenRenderer(TizenRenderer::Delegate& deleget);
   virtual ~TizenRenderer();
+
+#ifdef FLUTTER_TIZEN_EVASGL
+  void ClearColor(float r, float g, float b, float a);
+#endif
   bool OnMakeCurrent();
   bool OnClearCurrent();
   bool OnMakeResourceCurrent();
@@ -59,12 +62,11 @@ class TizenRenderer {
   void DestoryEglSurface();
   bool SetupEglSurface();
 #else
-  virtual void* SetupEvasWindow(int32_t x, int32_t y, int32_t w,
-                                  int32_t h) = 0;  
+  virtual void* SetupEvasWindow(int32_t x, int32_t y, int32_t w, int32_t h) = 0;
   virtual void DestoryEvasWindow() = 0;
   virtual void* GetImageHandle() = 0;
 
-  bool SetupEvasGL(int32_t x, int32_t y,int32_t w, int32_t h);
+  bool SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h);
   void DestoryEvasGL();
 #endif
   void DestoryRenderer();
@@ -75,7 +77,6 @@ class TizenRenderer {
 #ifdef FLUTTER_TIZEN_EVASGL
   Evas_GL_Config* gl_config_;
   Evas_GL* evas_gl_{nullptr};
-  Evas_GL_API* evas_glGlapi{nullptr};
 
   Evas_GL_Context* gl_context_;
   Evas_GL_Context* gl_resource_context_;

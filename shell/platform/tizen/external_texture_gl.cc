@@ -14,9 +14,9 @@
 #undef EFL_BETA_API_SUPPORT
 #include <Ecore.h>
 #include <Elementary.h>
-#include <Evas_GL.h>
-extern Evas_GL* kEvasGl;
-extern Evas_GL_API* kEvasGLApi;
+#include <Evas_GL_GLES3_Helpers.h>
+extern Evas_GL* g_evas_gl;
+EVAS_GL_GLOBAL_GLES3_DECLARE();
 #endif
 
 #include <atomic>
@@ -41,7 +41,7 @@ ExternalTextureGL::~ExternalTextureGL() {
 #ifndef FLUTTER_TIZEN_EVASGL
     glDeleteTextures(1, &state_->gl_texture);
 #else
-    kEvasGLApi->glDeleteTextures(1, &state_->gl_texture);
+    glDeleteTextures(1, &state_->gl_texture);
 #endif
   }
   state_.release();
@@ -95,12 +95,12 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
       (PFNEGLCREATEIMAGEKHRPROC)eglGetProcAddress("eglCreateImageKHR");
   const EGLint attrs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
                           EGL_NONE};
-  EGLImageKHR eglSrcImage = n_eglCreateImageKHR(
+  EGLImageKHR egl_src_image = n_eglCreateImageKHR(
       eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
       (EGLClientBuffer)texture_tbm_surface_, attrs);
 
-  if (!eglSrcImage) {
-    FT_LOGE("eglSrcImage create fail!!, errorcode == %d", eglGetError());
+  if (!egl_src_image) {
+    FT_LOGE("egl_src_image create fail!!, errorcode == %d", eglGetError());
     mutex_.unlock();
     return false;
   }
@@ -121,43 +121,40 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
       (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress(
           "glEGLImageTargetTexture2DOES");
-  glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, eglSrcImage);
-  if (eglSrcImage) {
+  glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
+  if (egl_src_image) {
     PFNEGLDESTROYIMAGEKHRPROC n_eglDestoryImageKHR =
         (PFNEGLDESTROYIMAGEKHRPROC)eglGetProcAddress("eglDestroyImageKHR");
-    n_eglDestoryImageKHR(eglGetCurrentDisplay(), eglSrcImage);
+    n_eglDestoryImageKHR(eglGetCurrentDisplay(), egl_src_image);
   }
 #else
   int eglImgAttr[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
-  EvasGLImage eglSrcImage = kEvasGLApi->evasglCreateImageForContext(
-      kEvasGl, evas_gl_current_context_get(kEvasGl),
+  EvasGLImage egl_src_image = evasglCreateImageForContext(
+      g_evas_gl, evas_gl_current_context_get(g_evas_gl),
       EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)texture_tbm_surface_,
       eglImgAttr);
-  if (!eglSrcImage) {
-    // FT_LOGE("eglSrcImage create fail!!, errorcode == %d", eglGetError());
+  if (!egl_src_image) {
+    // FT_LOGE("egl_src_image create fail!!, errorcode == %d", eglGetError());
     mutex_.unlock();
     return false;
   }
   if (state_->gl_texture == 0) {
-    kEvasGLApi->glGenTextures(1, &state_->gl_texture);
-    kEvasGLApi->glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+    glGenTextures(1, &state_->gl_texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
     // set the texture wrapping parameters
-    kEvasGLApi->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
-                                GL_CLAMP_TO_BORDER);
-    kEvasGLApi->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
-                                GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
+                    GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
+                    GL_CLAMP_TO_BORDER);
     // set texture filtering parameters
-    kEvasGLApi->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR);
-    kEvasGLApi->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER,
-                                GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   } else {
-    kEvasGLApi->glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
   }
-  kEvasGLApi->glEvasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
-                                              eglSrcImage);
-  if (eglSrcImage) {
-    kEvasGLApi->evasglDestroyImage(eglSrcImage);
+  glEvasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
+  if (egl_src_image) {
+    evasglDestroyImage(egl_src_image);
   }
 
 #endif

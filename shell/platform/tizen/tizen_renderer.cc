@@ -8,8 +8,9 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #else
-Evas_GL* kEvasGl = nullptr;
-Evas_GL_API* kEvasGLApi = nullptr;
+#include <Evas_GL_GLES3_Helpers.h>
+Evas_GL* g_evas_gl = nullptr;
+EVAS_GL_GLOBAL_GLES3_DEFINE();
 #endif
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
@@ -467,6 +468,11 @@ void TizenRenderer::DestoryEglSurface() {
 }
 #else
 
+void TizenRenderer::ClearColor(float r, float g, float b, float a) {
+  glClearColor(r, g, b, a);
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
 bool TizenRenderer::OnMakeCurrent() {
   if (!IsValid()) {
     FT_LOGE("Invalid TizenRenderer");
@@ -475,7 +481,7 @@ bool TizenRenderer::OnMakeCurrent() {
   if (evas_gl_make_current(evas_gl_, gl_surface_, gl_context_) != EINA_TRUE) {
     return false;
   }
-  evas_object_image_pixels_dirty_set((Evas_Object*)GetImageHandle(),EINA_TRUE);
+  evas_object_image_pixels_dirty_set((Evas_Object*)GetImageHandle(), EINA_TRUE);
   return true;
 }
 
@@ -523,13 +529,12 @@ uint32_t TizenRenderer::OnGetFBO() {
   return 0;
 }
 
-#define GL_FUNC(FunctionName)                                   \
-  else if (strcmp(name, #FunctionName) == 0) {                  \
-    return reinterpret_cast<void*>(evas_glGlapi->FunctionName); \
+#define GL_FUNC(FunctionName)                     \
+  else if (strcmp(name, #FunctionName) == 0) {    \
+    return reinterpret_cast<void*>(FunctionName); \
   }
 void* TizenRenderer::OnProcResolver(const char* name) {
-  auto address =
-      evas_gl_proc_address_get(evas_gl_, name);
+  auto address = evas_gl_proc_address_get(evas_gl_, name);
   if (address != nullptr) {
     return reinterpret_cast<void*>(address);
   }
@@ -646,7 +651,7 @@ void* TizenRenderer::OnProcResolver(const char* name) {
 
 bool TizenRenderer::InitializeRenderer(int32_t x, int32_t y, int32_t w,
                                        int32_t h) {
-  if (!SetupEvasGL(x,y,w, h)) {
+  if (!SetupEvasGL(x, y, w, h)) {
     FT_LOGE("SetupEvasGL fail");
     return false;
   }
@@ -658,21 +663,19 @@ bool TizenRenderer::InitializeRenderer(int32_t x, int32_t y, int32_t w,
 bool TizenRenderer::IsValid() { return is_valid_; }
 
 bool TizenRenderer::SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h) {
+  evas_gl_ = evas_gl_new(
+      evas_object_evas_get((Evas_Object*)SetupEvasWindow(x, y, w, h)));
 
-  evas_gl_ = evas_gl_new(evas_object_evas_get((Evas_Object*)SetupEvasWindow(x, y, w, h)));
-  
-  if(!evas_gl_){
+  if (!evas_gl_) {
     FT_LOGE("SetupEvasWindow fail");
     return false;
   }
 
-  evas_glGlapi = evas_gl_api_get(evas_gl_);
-  kEvasGl = evas_gl_;
-  kEvasGLApi = evas_glGlapi;
+  g_evas_gl = evas_gl_;
 
   gl_config_ = evas_gl_config_new();
   gl_config_->color_format = EVAS_GL_RGBA_8888;
-  gl_config_->depth_bits = EVAS_GL_DEPTH_BIT_24;
+  gl_config_->depth_bits = EVAS_GL_DEPTH_NONE;
   gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
   gl_config_->options_bits = EVAS_GL_OPTIONS_NONE;
 
@@ -683,11 +686,9 @@ bool TizenRenderer::SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h) {
   //     EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
   //     EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
 
-  gl_context_ =
-      evas_gl_context_version_create(evas_gl_, NULL, EVAS_GL_GLES_2_X);
-  gl_resource_context_ =
-      evas_gl_context_version_create(evas_gl_, NULL, EVAS_GL_GLES_2_X);
-
+  gl_context_ = evas_gl_context_create(evas_gl_, NULL);
+  gl_resource_context_ = evas_gl_context_create(evas_gl_, gl_context_);
+  EVAS_GL_GLOBAL_GLES3_USE(g_evas_gl, gl_context_);
   gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, w, h);
 
   gl_resource_surface_ =
@@ -695,12 +696,10 @@ bool TizenRenderer::SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h) {
 
   Evas_Native_Surface ns;
   evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
-  evas_object_image_native_surface_set((Evas_Object*)GetImageHandle(),
-                                       &ns);
-  pixelDirtyCallback_ = [](void* data, Evas_Object* o) {
-  };
-  evas_object_image_pixels_get_callback_set(
-      (Evas_Object*)GetImageHandle(), pixelDirtyCallback_, NULL);
+  evas_object_image_native_surface_set((Evas_Object*)GetImageHandle(), &ns);
+  pixelDirtyCallback_ = [](void* data, Evas_Object* o) {};
+  evas_object_image_pixels_get_callback_set((Evas_Object*)GetImageHandle(),
+                                            pixelDirtyCallback_, NULL);
   return true;
 }
 
@@ -710,8 +709,8 @@ void TizenRenderer::DestoryRenderer() {
 }
 
 void TizenRenderer::DestoryEvasGL() {
-  evas_gl_surface_destroy(evas_gl_,gl_surface_);
-  evas_gl_surface_destroy(evas_gl_,gl_resource_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
 
   evas_gl_context_destroy(evas_gl_, gl_context_);
   evas_gl_context_destroy(evas_gl_, gl_resource_context_);
