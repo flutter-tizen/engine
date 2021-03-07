@@ -481,7 +481,6 @@ bool TizenRenderer::OnMakeCurrent() {
   if (evas_gl_make_current(evas_gl_, gl_surface_, gl_context_) != EINA_TRUE) {
     return false;
   }
-  evas_object_image_pixels_dirty_set((Evas_Object*)GetImageHandle(), EINA_TRUE);
   return true;
 }
 
@@ -517,6 +516,7 @@ bool TizenRenderer::OnPresent() {
     SendRotationChangeDone();
     received_rotation = false;
   }
+  evas_object_image_pixels_dirty_set((Evas_Object*)GetImageHandle(), EINA_TRUE);
   return true;
 }
 
@@ -662,6 +662,8 @@ bool TizenRenderer::InitializeRenderer(int32_t x, int32_t y, int32_t w,
 
 bool TizenRenderer::IsValid() { return is_valid_; }
 
+void TizenRenderer::flush() { glFlush(); }
+
 bool TizenRenderer::SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h) {
   evas_gl_ = evas_gl_new(
       evas_object_evas_get((Evas_Object*)SetupEvasWindow(x, y, w, h)));
@@ -697,9 +699,12 @@ bool TizenRenderer::SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h) {
   Evas_Native_Surface ns;
   evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
   evas_object_image_native_surface_set((Evas_Object*)GetImageHandle(), &ns);
-  pixelDirtyCallback_ = [](void* data, Evas_Object* o) {};
+  pixelDirtyCallback_ = [](void* data, Evas_Object* o) {
+    TizenRenderer* renderer = (TizenRenderer*)data;
+    renderer->flush();
+  };
   evas_object_image_pixels_get_callback_set((Evas_Object*)GetImageHandle(),
-                                            pixelDirtyCallback_, NULL);
+                                            pixelDirtyCallback_, this);
   return true;
 }
 

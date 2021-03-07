@@ -36,6 +36,7 @@ class TizenRenderer {
   bool OnPresent();
   uint32_t OnGetFBO();
   void* OnProcResolver(const char* name);
+  void flush();
   virtual TizenWindowGeometry GetGeometry() = 0;
   bool IsValid();
   virtual void Show() = 0;
