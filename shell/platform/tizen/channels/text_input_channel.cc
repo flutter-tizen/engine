@@ -361,9 +361,9 @@ void TextInputChannel::HandleMethodCall(
                     "Selection base/extent values invalid.");
       return;
     }
-    active_model_->SetEditingState(selection_base->value.GetInt(),
-                                   selection_extent->value.GetInt(),
-                                   text->value.GetString());
+    active_model_->SetText(text->value.GetString());
+    active_model_->SetSelection(TextRange(selection_base->value.GetInt(),
+                                          selection_extent->value.GetInt()));
   } else {
     result->NotImplemented();
     return;
@@ -378,14 +378,14 @@ void TextInputChannel::SendStateUpdate(const flutter::TextInputModel& model) {
   auto& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
 
+  TextRange selection = model.selection();
   rapidjson::Value editing_state(rapidjson::kObjectType);
   editing_state.AddMember(kComposingBaseKey, -1, allocator);
   editing_state.AddMember(kComposingExtentKey, -1, allocator);
   editing_state.AddMember(kSelectionAffinityKey, kAffinityDownstream,
                           allocator);
-  editing_state.AddMember(kSelectionBaseKey, model.selection_base(), allocator);
-  editing_state.AddMember(kSelectionExtentKey, model.selection_extent(),
-                          allocator);
+  editing_state.AddMember(kSelectionBaseKey, selection.base(), allocator);
+  editing_state.AddMember(kSelectionExtentKey, selection.extent(), allocator);
   editing_state.AddMember(kSelectionIsDirectionalKey, false, allocator);
   editing_state.AddMember(
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
@@ -560,9 +560,10 @@ void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
 
   have_preedit_ = false;
   if (edit_status_ == EditStatus::kPreeditStart) {
-    preedit_start_pos_ = active_model_->selection_base();
+    TextRange selection = active_model_->selection();
+    preedit_start_pos_ = selection.base();
     active_model_->AddText(str);
-    preedit_end_pos_ = active_model_->selection_base();
+    preedit_end_pos_ = selection.base();
     have_preedit_ = true;
     SendStateUpdate(*active_model_);
     FT_LOGD("preedit start pos[%d], preedit end pos[%d]", preedit_start_pos_,

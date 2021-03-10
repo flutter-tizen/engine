@@ -42,6 +42,7 @@ jobs:
       git reset --hard HEAD
       gclient sync -D
       sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
+      sed -i 's/"-Wno-psabi",//g' build/config/compiler/BUILD.gn
     displayName: Prepare for build
     workingDirectory: $(buildroot)
     failOnStderr: true
@@ -100,7 +101,7 @@ jobs:
     clean: outputs
   variables:
   - name: upstreamVersion
-    value: 2f0af3715217a0c2ada72c717d4ed9178d68f6ed
+    value: 40441def692f444660a11e20fac37af9050245ab
   steps:
   - checkout: self
     path: src/flutter
