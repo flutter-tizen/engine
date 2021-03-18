@@ -9,7 +9,7 @@
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
-#include "flutter/shell/platform/tizen/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
@@ -214,4 +214,29 @@ void FlutterRegisterViewFactory(
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));
+}
+
+FlutterDesktopTextureRegistrarRef FlutterDesktopRegistrarGetTextureRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar) {
+  FT_LOGE("Tizen DesktopTexture support is not implemented yet.");
+  return nullptr;
+}
+
+int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(
+    FlutterDesktopTextureRegistrarRef texture_registrar,
+    const FlutterDesktopTextureInfo* texture_info) {
+  FT_LOGE("Tizen DesktopTexture support is not implemented yet.");
+  return -1;
+}
+
+bool FlutterDesktopTextureRegistrarUnregisterExternalTexture(
+    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+  FT_LOGE("Tizen DesktopTexture support is not implemented yet.");
+  return false;
+}
+
+bool FlutterDesktopTextureRegistrarMarkExternalTextureFrameAvailable(
+    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+  FT_LOGE("Tizen DesktopTexture support is not implemented yet.");
+  return false;
 }
