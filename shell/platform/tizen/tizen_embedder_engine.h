@@ -20,8 +20,8 @@
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
 #include "flutter/shell/platform/tizen/external_texture_gl.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
-#include "flutter/shell/platform/tizen/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
+#include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 #ifdef FLUTTER_TIZEN_4
