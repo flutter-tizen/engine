@@ -108,6 +108,23 @@ void PlatformViewChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
   }
 }
 
+void PlatformViewChannel::DispatchCompositionUpdateEvent(
+    const std::string& key) {
+  auto instances = ViewInstances();
+  auto it = instances.find(CurrentFocusedViewId());
+  if (it != instances.end()) {
+    it->second->DispatchCompositionUpdateEvent(key.c_str(), key.size());
+  }
+}
+
+void PlatformViewChannel::DispatchCompositionEndEvent(const std::string& key) {
+  auto instances = ViewInstances();
+  auto it = instances.find(CurrentFocusedViewId());
+  if (it != instances.end()) {
+    it->second->DispatchCompositionEndEvent(key.c_str(), key.size());
+  }
+}
+
 int PlatformViewChannel::CurrentFocusedViewId() {
   for (auto it = view_instances_.begin(); it != view_instances_.end(); it++) {
     if (it->second->IsFocused()) {

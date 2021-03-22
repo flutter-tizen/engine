@@ -46,9 +46,6 @@ Eina_Bool KeyEventHandler::OnKey(void *data, int type, void *event) {
     if (engine->key_event_channel) {
       engine->key_event_channel->SendKeyEvent(key, is_down);
     }
-    if (engine->platform_view_channel) {
-      engine->platform_view_channel->SendKeyEvent(key, is_down);
-    }
   }
   return ECORE_CALLBACK_PASS_ON;
 }

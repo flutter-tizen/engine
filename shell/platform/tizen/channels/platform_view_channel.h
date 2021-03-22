@@ -30,6 +30,9 @@ class PlatformViewChannel {
   void SendKeyEvent(Ecore_Event_Key* key, bool is_down);
   int CurrentFocusedViewId();
 
+  void DispatchCompositionUpdateEvent(const std::string& key);
+  void DispatchCompositionEndEvent(const std::string& key);
+
  private:
   TizenEmbedderEngine* engine_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;

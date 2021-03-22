@@ -59,19 +59,37 @@ static bool IsASCIIPrintableKey(char c) {
 void TextInputChannel::CommitCallback(void* data, Ecore_IMF_Context* ctx,
                                       void* event_info) {
   TextInputChannel* self = (TextInputChannel*)data;
+  if (!self) {
+    return;
+  }
   char* str = (char*)event_info;
+  if (self->engine_ && self->engine_->platform_view_channel &&
+      self->engine_->platform_view_channel->CurrentFocusedViewId() > -1) {
+    self->engine_->platform_view_channel->DispatchCompositionEndEvent(str);
+    return;
+  }
+
   self->OnCommit(str);
 }
 
 void TextInputChannel::PreeditCallback(void* data, Ecore_IMF_Context* ctx,
                                        void* event_info) {
   TextInputChannel* self = (TextInputChannel*)data;
-  char* preedit_string = nullptr;
+  if (!self) {
+    return;
+  }
+
+  char* str = nullptr;
   int cursor_pos;
-  ecore_imf_context_preedit_string_get(ctx, &preedit_string, &cursor_pos);
-  if (preedit_string) {
-    self->OnPreedit(preedit_string, cursor_pos);
-    free(preedit_string);
+  ecore_imf_context_preedit_string_get(ctx, &str, &cursor_pos);
+  if (str) {
+    if (self->engine_ && self->engine_->platform_view_channel &&
+        self->engine_->platform_view_channel->CurrentFocusedViewId() > -1) {
+      self->OnPreeditForPlatformView(str, cursor_pos);
+    } else {
+      self->OnPreedit(str, cursor_pos);
+    }
+    free(str);
   }
 }
 
@@ -99,6 +117,7 @@ void TextInputChannel::InputPanelStateChangedCallback(
   TextInputChannel* self = (TextInputChannel*)data;
   switch (value) {
     case ECORE_IMF_INPUT_PANEL_STATE_SHOW:
+      self->SetSoftwareKeyboardShowing();
       break;
     case ECORE_IMF_INPUT_PANEL_STATE_HIDE:
       self->HideSoftwareKeyboard();  // FIXME: Fallback for HW back-key
@@ -275,7 +294,7 @@ TextInputChannel::~TextInputChannel() {
 }
 
 void TextInputChannel::OnKeyDown(Ecore_Event_Key* key) {
-  if (active_model_ && !FilterEvent(key) && !have_preedit_) {
+  if (!FilterEvent(key) && !have_preedit_) {
     NonIMFFallback(key);
   }
 }
@@ -431,6 +450,8 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
   if (isIME) {
     if (!strcmp(keyDownEvent->key, "Left") ||
         !strcmp(keyDownEvent->key, "Right") ||
+        !strcmp(keyDownEvent->key, "Up") ||
+        !strcmp(keyDownEvent->key, "Down") ||
         !strcmp(keyDownEvent->key, "End") ||
         !strcmp(keyDownEvent->key, "Home") ||
         !strcmp(keyDownEvent->key, "BackSpace") ||
@@ -481,35 +502,49 @@ void TextInputChannel::NonIMFFallback(Ecore_Event_Key* keyDownEvent) {
   }
 
   bool select = !strcmp(keyDownEvent->key, "Select");
+  bool is_filtered = true;
   if (!strcmp(keyDownEvent->key, "Left")) {
-    if (active_model_->MoveCursorBack()) {
+    if (active_model_ && active_model_->MoveCursorBack()) {
       SendStateUpdate(*active_model_);
     }
   } else if (!strcmp(keyDownEvent->key, "Right")) {
-    if (active_model_->MoveCursorForward()) {
+    if (active_model_ && active_model_->MoveCursorForward()) {
       SendStateUpdate(*active_model_);
     }
   } else if (!strcmp(keyDownEvent->key, "End")) {
-    active_model_->MoveCursorToEnd();
-    SendStateUpdate(*active_model_);
+    if (active_model_) {
+      active_model_->MoveCursorToEnd();
+      SendStateUpdate(*active_model_);
+    }
   } else if (!strcmp(keyDownEvent->key, "Home")) {
-    active_model_->MoveCursorToBeginning();
-    SendStateUpdate(*active_model_);
+    if (active_model_) {
+      active_model_->MoveCursorToBeginning();
+      SendStateUpdate(*active_model_);
+    }
   } else if (!strcmp(keyDownEvent->key, "BackSpace")) {
-    if (active_model_->Backspace()) {
+    if (active_model_ && active_model_->Backspace()) {
       SendStateUpdate(*active_model_);
     }
   } else if (!strcmp(keyDownEvent->key, "Delete")) {
-    if (active_model_->Delete()) {
+    if (active_model_ && active_model_->Delete()) {
       SendStateUpdate(*active_model_);
     }
   } else if (!strcmp(keyDownEvent->key, "Return") ||
              (select && !in_select_mode_)) {
-    EnterPressed(active_model_.get(), select);
+    if (active_model_) {
+      EnterPressed(active_model_.get(), select);
+    }
   } else if (keyDownEvent->string && strlen(keyDownEvent->string) == 1 &&
              IsASCIIPrintableKey(keyDownEvent->string[0])) {
-    active_model_->AddCodePoint(keyDownEvent->string[0]);
-    SendStateUpdate(*active_model_);
+    if (active_model_) {
+      active_model_->AddCodePoint(keyDownEvent->string[0]);
+      SendStateUpdate(*active_model_);
+    }
+  } else {
+    is_filtered = false;
+  }
+  if (!active_model_ && is_filtered) {
+    engine_->platform_view_channel->SendKeyEvent(keyDownEvent, true);
   }
   SetEditStatus(EditStatus::kNone);
 }
@@ -568,6 +603,30 @@ void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
     SendStateUpdate(*active_model_);
     FT_LOGD("preedit start pos[%d], preedit end pos[%d]", preedit_start_pos_,
             preedit_end_pos_);
+  }
+}
+void TextInputChannel::OnPreeditForPlatformView(std::string str,
+                                                int cursor_pos) {
+  FT_LOGD("OnPreeditForPlatformView str[%s], cursor_pos[%d]", str.data(),
+          cursor_pos);
+
+  SetEditStatus(EditStatus::kPreeditStart);
+  if (str.compare("") == 0) {
+    SetEditStatus(EditStatus::kPreeditEnd);
+  }
+
+  if (edit_status_ == EditStatus::kPreeditStart ||
+      (edit_status_ == EditStatus::kPreeditEnd &&
+       // For tv, fix me
+       last_handled_ecore_event_keyname_.compare("Return") != 0)) {
+    FT_LOGD("last_handled_ecore_event_keyname_[%s]",
+            last_handled_ecore_event_keyname_.data());
+    last_handled_ecore_event_keyname_ = "";
+  }
+
+  have_preedit_ = false;
+  if (edit_status_ == EditStatus::kPreeditStart) {
+    engine_->platform_view_channel->DispatchCompositionUpdateEvent(str);
   }
 }
 

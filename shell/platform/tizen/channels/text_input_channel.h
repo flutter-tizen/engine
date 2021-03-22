@@ -29,9 +29,13 @@ class TextInputChannel {
   void OnKeyDown(Ecore_Event_Key* key);
   void OnCommit(std::string str);
   void OnPreedit(std::string str, int cursor_pos);
+  void OnPreeditForPlatformView(std::string str, int cursor_pos);
+
   void ShowSoftwareKeyboard();
   void HideSoftwareKeyboard();
   bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
+  void SetSoftwareKeyboardShowing() { is_software_keyboard_showing_ = true; }
+
   void SetEditStatus(EditStatus edit_status);
   SoftwareKeyboardGeometry GetCurrentKeyboardGeometry() {
     return current_keyboard_geometry_;
