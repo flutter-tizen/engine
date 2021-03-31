@@ -34,7 +34,7 @@ FlutterWindowControllerRef FlutterCreateWindow(
   return state.release();
 }
 
-void FlutterDestoryWindow(FlutterWindowControllerRef controller) {
+void FlutterDestroyWindow(FlutterWindowControllerRef controller) {
   if (controller->engine) {
     controller->engine->StopEngine();
   }
@@ -162,11 +162,6 @@ void FlutterNotifyLowMemoryWarning(FlutterWindowControllerRef controller) {
   if (controller->engine->flutter_engine) {
     FlutterEngineNotifyLowMemoryWarning(controller->engine->flutter_engine);
   }
-}
-
-void FlutterRotateWindow(FlutterWindowControllerRef controller,
-                         int32_t degree) {
-  FT_LOGW("Deprecated API. Use SystemChrome.setPreferredOrientations instead.");
 }
 
 int64_t FlutterRegisterExternalTexture(
