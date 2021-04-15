@@ -597,10 +597,9 @@ void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
 
   have_preedit_ = false;
   if (edit_status_ == EditStatus::kPreeditStart) {
-    TextRange selection = active_model_->selection();
-    preedit_start_pos_ = selection.base();
+    preedit_start_pos_ = active_model_->selection().base();
     active_model_->AddText(str);
-    preedit_end_pos_ = selection.base();
+    preedit_end_pos_ = active_model_->selection().base();
     have_preedit_ = true;
     SendStateUpdate(*active_model_);
     FT_LOGD("preedit start pos[%d], preedit end pos[%d]", preedit_start_pos_,
