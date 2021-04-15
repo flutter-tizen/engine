@@ -5,6 +5,8 @@
 
 #include "public/flutter_tizen.h"
 
+#include <inttypes.h>
+
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
@@ -191,12 +193,12 @@ bool FlutterMarkExternalTextureFrameAvailable(
     void* tbm_surface) {
   auto it = texture_registrar->textures.find(texture_id);
   if (it == texture_registrar->textures.end()) {
-    FT_LOGE("can't find texture texture_id = %lld", texture_id);
+    FT_LOGE("can't find texture texture_id = %" PRId64, texture_id);
     return false;
   }
   if (!texture_registrar->textures[texture_id]->OnFrameAvailable(
           (tbm_surface_h)tbm_surface)) {
-    FT_LOGE("OnFrameAvailable fail texture_id = %lld", texture_id);
+    FT_LOGE("OnFrameAvailable fail texture_id = %" PRId64, texture_id);
     return false;
   }
   return (FlutterEngineMarkExternalTextureFrameAvailable(

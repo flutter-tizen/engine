@@ -29,6 +29,8 @@ static DeviceProfile GetDeviceProfile() {
     return DeviceProfile::kWearable;
   } else if (profile == "tv") {
     return DeviceProfile::kTV;
+  } else if (profile == "common") {
+    return DeviceProfile::kCommon;
   }
   FT_LOGW("Flutter-tizen is running on an unknown device profile!");
   return DeviceProfile::kUnknown;
@@ -265,6 +267,8 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
       profile_factor = 0.7;
     } else if (device_profile == DeviceProfile::kTV) {
       profile_factor = 2.0;
+    } else if (device_profile == DeviceProfile::kCommon) {
+      profile_factor = 0.5;
     }
     double dpi = device_profile == DeviceProfile::kTV ? 72.0 : device_dpi;
     double scale_factor = dpi / 90.0 * profile_factor;
