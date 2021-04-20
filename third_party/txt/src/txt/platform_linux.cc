@@ -13,14 +13,24 @@
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
-  return {"SamsungOneUI", "BreezeSans", "Ubuntu", "Cantarell", "DejaVu Sans", "Liberation Sans", "Arial"};
+  return {
+      "SamsungOneUI",          "BreezeColorEmoji",   "SECEmoji",
+      "SamsungOneUIKorean",    "SamsungOneUISCN",    "SamsungOneUITCN",
+      "BreezeSansJapanese",    "BreezeSansHindi",    "BreezeSansBengali",
+      "SamsungOneUIEthiopic",  "BreezeSansGeorgian", "BreezeSansGujarathi",
+      "BreezeSansKannada",     "BreezeSansKhmer",    "BreezeSansMalayalam",
+      "BreezeSansMyanmar",     "BreezeSansOriya",    "BreezeSansPunjabi",
+      "BreezeSansSinhala",     "BreezeSansTamil",    "BreezeSansTelugu",
+      "BreezeSansMeeteiMayek", "BreezeSansTibetan",  "SamsungOneUIOlChiki",
+      "BreezeSansArmenian",    "SamsungOneUILao",    "BreezeSansThai",
+      "SamsungOneUIArabic",    "SamsungOneUIHebrew", "SamsungOneUIFallback"};
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager() {
 #ifdef FLUTTER_USE_FONTCONFIG
   return SkFontMgr_New_FontConfig(nullptr);
 #else
-  return SkFontMgr_New_Custom_Directory("/usr/share/fonts/");
+  return SkFontMgr_New_Custom_Directory("/usr/share/");
 #endif
 }
 

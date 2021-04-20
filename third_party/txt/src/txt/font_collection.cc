@@ -187,7 +187,6 @@ FontCollection::GetMinikinFontCollectionForFamilies(
           FindFontFamilyInManagers(family);
       if (minikin_family != nullptr) {
         minikin_families.push_back(minikin_family);
-        break;
       }
     }
   }
