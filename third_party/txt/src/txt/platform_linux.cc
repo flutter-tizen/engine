@@ -14,16 +14,32 @@ namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
   return {
-      "SamsungOneUI",          "BreezeColorEmoji",   "SECEmoji",
-      "SamsungOneUIKorean",    "SamsungOneUISCN",    "SamsungOneUITCN",
-      "BreezeSansJapanese",    "BreezeSansHindi",    "BreezeSansBengali",
-      "SamsungOneUIEthiopic",  "BreezeSansGeorgian", "BreezeSansGujarathi",
-      "BreezeSansKannada",     "BreezeSansKhmer",    "BreezeSansMalayalam",
-      "BreezeSansMyanmar",     "BreezeSansOriya",    "BreezeSansPunjabi",
-      "BreezeSansSinhala",     "BreezeSansTamil",    "BreezeSansTelugu",
-      "BreezeSansMeeteiMayek", "BreezeSansTibetan",  "SamsungOneUIOlChiki",
-      "BreezeSansArmenian",    "SamsungOneUILao",    "BreezeSansThai",
-      "SamsungOneUIArabic",    "SamsungOneUIHebrew", "SamsungOneUIFallback"};
+      "SamsungOneUI",           "SamsungOneUIArabic",
+      "SamsungOneUIArmenian",   "SamsungOneUIBangla",
+      "SamsungOneUIDevanagari", "SamsungOneUIEthiopic",
+      "SamsungOneUIGeorgian",   "SamsungOneUIGujarati",
+      "SamsungOneUIGurmukhi",   "SamsungOneUIHebrew",
+      "SamsungOneUIJP",         "SamsungOneUIKannada",
+      "SamsungOneUIKhmer",      "SamsungOneUIKorean",
+      "SamsungOneUIKoreanH",    "SamsungOneUILao",
+      "SamsungOneUIMalayalam",  "SamsungOneUIMyanmar",
+      "SamsungOneUIOdia",       "SamsungOneUIOlChiki",
+      "SamsungOneUISCN",        "SamsungOneUISinhala",
+      "SamsungOneUITCN",        "SamsungOneUITagalog",
+      "SamsungOneUITamil",      "SamsungOneUITelugu",
+      "SamsungOneUIThai",       "SECEmoji",
+      "BreezeColorEmoji",       "BreezeSansArmenian",
+      "BreezeSansBengali",      "BreezeSansGeorgian",
+      "BreezeSansGujarathi",    "BreezeSansHindi",
+      "BreezeSansJapanese",     "BreezeSansKannada",
+      "BreezeSansKhmer",        "BreezeSansMalayalam",
+      "BreezeSansMeeteiMayek",  "BreezeSansMyanmar",
+      "BreezeSansOriya",        "BreezeSansPunjabi",
+      "BreezeSansSinhala",      "BreezeSansTamil",
+      "BreezeSansTelugu",       "BreezeSansThai",
+      "BreezeSansTibetan",      "SamsungOneUIFallback",
+      "SamsungOneFallback",
+  };
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager() {
