@@ -54,7 +54,6 @@ jobs:
         --target-sysroot `pwd`/tizen_tools/sysroot/$(arch) \
         --target-triple $(targetTriple) \
         --runtime-mode $(mode) \
-        --enable-fontconfig \
         --embedder-for-target \
         --disable-desktop-embeddings \
         --build-tizen-shell \
@@ -71,7 +70,6 @@ jobs:
         --target-sysroot `pwd`/tizen_tools/sysroot/$(arch)_40 \
         --target-triple $(targetTriple) \
         --runtime-mode $(mode) \
-        --enable-fontconfig \
         --embedder-for-target \
         --disable-desktop-embeddings \
         --build-tizen-shell \
