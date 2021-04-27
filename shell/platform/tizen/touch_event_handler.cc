@@ -63,8 +63,8 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   if (scroll_delta_x != 0 || scroll_delta_y != 0) {
     event.signal_kind = kFlutterPointerSignalKindScroll;
   }
-  event.scroll_delta_x = scroll_delta_x;
-  event.scroll_delta_y = scroll_delta_y;
+  event.scroll_delta_x = scroll_delta_x * 2;
+  event.scroll_delta_y = scroll_delta_y * 2;
   event.timestamp = timestamp * 1000;
   FlutterEngineSendPointerEvent(engine_->flutter_engine, &event, 1);
 }
