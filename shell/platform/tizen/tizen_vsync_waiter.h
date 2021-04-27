@@ -20,7 +20,7 @@ class TizenVsyncWaiter {
 
  private:
   bool CreateTDMVblank();
-  void DestoryTDMVblank();
+  void DestroyTDMVblank();
   bool TDMValid();
   void SendMessage(int val);
   static void TdmClientVblankCallback(tdm_client_vblank* vblank,

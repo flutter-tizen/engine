@@ -15,14 +15,14 @@ static bool is_running = false;
 
 static void* LoggingFunction(void* arg) {
   int* pipe = (int*)arg;
-  int priority = pipe == stdout_pipe ? DLOG_INFO : DLOG_ERROR;
+  auto priority = pipe == stdout_pipe ? DLOG_INFO : DLOG_ERROR;
 
   ssize_t size;
   char buffer[1024];
 
   while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
     buffer[size] = 0;
-    __dlog_print(LOG_ID_MAIN, priority, LOG_TAG, "%s", buffer);
+    __LOG(priority, "%s", buffer);
   }
 
   close(pipe[0]);

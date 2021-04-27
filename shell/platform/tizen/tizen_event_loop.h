@@ -8,6 +8,7 @@
 
 #include <Ecore.h>
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -18,12 +19,14 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+class TizenRenderer;
+
 class TizenEventLoop {
  public:
   using TaskExpiredCallback = std::function<void(const FlutterTask*)>;
   TizenEventLoop(std::thread::id main_thread_id,
                  TaskExpiredCallback on_task_expired);
-  ~TizenEventLoop();
+  virtual ~TizenEventLoop();
   bool RunsTasksOnCurrentThread() const;
 
   void ExcuteTaskEvents(
@@ -32,7 +35,9 @@ class TizenEventLoop {
   // Post a Flutter engine tasks to the event loop for delayed execution.
   void PostTask(FlutterTask flutter_task, uint64_t flutter_target_time_nanos);
 
- private:
+  virtual void OnTaskExpired() = 0;
+
+ protected:
   using TaskTimePoint = std::chrono::steady_clock::time_point;
   struct Task {
     uint64_t order;
@@ -53,6 +58,11 @@ class TizenEventLoop {
   std::mutex task_queue_mutex_;
   std::priority_queue<Task, std::deque<Task>, Task::Comparer> task_queue_;
   std::condition_variable task_queue_cv_;
+  std::vector<FlutterTask> expired_tasks_;
+  std::mutex expired_tasks_mutex_;
+  std::atomic<std::uint64_t> task_order_{0};
+
+ private:
   Ecore_Pipe* ecore_pipe_;
 
   TizenEventLoop(const TizenEventLoop&) = delete;
@@ -65,5 +75,28 @@ class TizenEventLoop {
   static TaskTimePoint TimePointFromFlutterTime(
       uint64_t flutter_target_time_nanos);
 };
+
+class TizenPlatformEventLoop : public TizenEventLoop {
+ public:
+  TizenPlatformEventLoop(std::thread::id main_thread_id,
+                         TaskExpiredCallback on_task_expired);
+  virtual ~TizenPlatformEventLoop();
+  virtual void OnTaskExpired() override;
+};
+
+#ifdef TIZEN_RENDERER_EVAS_GL
+class TizenRenderEventLoop : public TizenEventLoop {
+ public:
+  TizenRenderEventLoop(std::thread::id main_thread_id,
+                       TaskExpiredCallback on_task_expired,
+                       TizenRenderer* tizen_renderer);
+  virtual ~TizenRenderEventLoop();
+  virtual void OnTaskExpired() override;
+
+ private:
+  TizenRenderer* tizen_renderer_{nullptr};
+  std::atomic_bool has_pending_renderer_callback_{false};
+};
+#endif
 
 #endif  // TIZEN_EVENT_LOOP_H_

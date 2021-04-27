@@ -10,22 +10,29 @@
 #include <cassert>
 #include <cstdlib>
 
-// Start logging threads which constantly redirect stdout/stderr to dlog.
+// Starts logging threads which constantly redirect stdout/stderr to dlog.
 // The threads can be started only once per process.
 void StartLogging();
 
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
+// This is the only valid log tag that TV devices can understand.
 #define LOG_TAG "ConsoleMessage"
 
 #undef __LOG
-#define __LOG(id, prio, tag, fmt, arg...)                              \
-  __dlog_print(id, prio, tag, "%s: %s(%d) > " fmt, __FILE__, __func__, \
-               __LINE__, ##arg);
+#ifdef TV_PROFILE
+// dlog_print() cannot be used because it implicitly passes LOG_ID_APPS as
+// a log id, which is ignored by TV devices. Instead, an internal function
+// __dlog_print() that takes a log id as a parameter is used.
+#define __LOG(prio, fmt, args...) \
+  __dlog_print(LOG_ID_MAIN, prio, LOG_TAG, fmt, ##args)
+#else
+#define __LOG(prio, fmt, args...) dlog_print(prio, LOG_TAG, fmt, ##args)
+#endif
 
 #define __FT_LOG(prio, fmt, args...) \
-  __LOG(LOG_ID_MAIN, prio, LOG_TAG, fmt, ##args)
+  __LOG(prio, "%s: %s(%d) > " fmt, __MODULE__, __func__, __LINE__, ##args)
 
 #define FT_LOGD(fmt, args...) __FT_LOG(DLOG_DEBUG, fmt, ##args)
 #define FT_LOGI(fmt, args...) __FT_LOG(DLOG_INFO, fmt, ##args)

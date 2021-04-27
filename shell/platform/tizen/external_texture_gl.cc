@@ -4,11 +4,20 @@
 
 #include "external_texture_gl.h"
 
+#ifdef TIZEN_RENDERER_EVAS_GL
+#undef EFL_BETA_API_SUPPORT
+#include <Ecore.h>
+#include <Elementary.h>
+#include <Evas_GL_GLES3_Helpers.h>
+extern Evas_GL* g_evas_gl;
+EVAS_GL_GLOBAL_GLES3_DECLARE();
+#else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl32.h>
+#endif
 
 #include <atomic>
 #include <iostream>
@@ -48,13 +57,13 @@ bool ExternalTextureGL::OnFrameAvailable(tbm_surface_h tbm_surface) {
     mutex_.unlock();
     return false;
   }
-  if (!tbm_surface_internal_is_valid(tbm_surface)) {
+  tbm_surface_info_s info;
+  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
     FT_LOGD("tbm_surface not valid, pass");
     mutex_.unlock();
     return false;
   }
   texture_tbm_surface_ = tbm_surface;
-  tbm_surface_internal_ref(texture_tbm_surface_);
   mutex_.unlock();
   return true;
 }
@@ -67,22 +76,53 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
     mutex_.unlock();
     return false;
   }
-  if (!tbm_surface_internal_is_valid(texture_tbm_surface_)) {
+  tbm_surface_info_s info;
+  if (tbm_surface_get_info(texture_tbm_surface_, &info) !=
+      TBM_SURFACE_ERROR_NONE) {
     FT_LOGD("tbm_surface not valid");
     DestructionTbmSurface();
     mutex_.unlock();
     return false;
   }
 
+#ifdef TIZEN_RENDERER_EVAS_GL
+  int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
+  EvasGLImage egl_src_image = evasglCreateImageForContext(
+      g_evas_gl, evas_gl_current_context_get(g_evas_gl),
+      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)texture_tbm_surface_,
+      attribs);
+  if (!egl_src_image) {
+    mutex_.unlock();
+    return false;
+  }
+  if (state_->gl_texture == 0) {
+    glGenTextures(1, &state_->gl_texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
+                    GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
+                    GL_CLAMP_TO_BORDER);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  } else {
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+  }
+  glEvasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
+  if (egl_src_image) {
+    evasglDestroyImage(egl_src_image);
+  }
+#else
   PFNEGLCREATEIMAGEKHRPROC n_eglCreateImageKHR =
       (PFNEGLCREATEIMAGEKHRPROC)eglGetProcAddress("eglCreateImageKHR");
-  const EGLint attrs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
-                          EGL_NONE};
-  EGLImageKHR eglSrcImage = n_eglCreateImageKHR(
+  const EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
+                            EGL_NONE};
+  EGLImageKHR egl_src_image = n_eglCreateImageKHR(
       eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-      (EGLClientBuffer)texture_tbm_surface_, attrs);
-  if (!eglSrcImage) {
-    FT_LOGE("eglSrcImage create fail!!, errorcode == %d", eglGetError());
+      (EGLClientBuffer)texture_tbm_surface_, attribs);
+  if (!egl_src_image) {
+    FT_LOGE("egl_src_image create fail!!, errorcode == %d", eglGetError());
     mutex_.unlock();
     return false;
   }
@@ -103,12 +143,14 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
       (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress(
           "glEGLImageTargetTexture2DOES");
-  glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, eglSrcImage);
-  if (eglSrcImage) {
-    PFNEGLDESTROYIMAGEKHRPROC n_eglDestoryImageKHR =
+  glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
+  if (egl_src_image) {
+    PFNEGLDESTROYIMAGEKHRPROC n_eglDestroyImageKHR =
         (PFNEGLDESTROYIMAGEKHRPROC)eglGetProcAddress("eglDestroyImageKHR");
-    n_eglDestoryImageKHR(eglGetCurrentDisplay(), eglSrcImage);
+    n_eglDestroyImageKHR(eglGetCurrentDisplay(), egl_src_image);
   }
+#endif
+
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
@@ -131,7 +173,7 @@ void ExternalTextureGL::DestructionTbmSurface() {
     FT_LOGE("tbm_surface_h is NULL");
     return;
   }
-  tbm_surface_internal_unref(texture_tbm_surface_);
+  tbm_surface_destroy(texture_tbm_surface_);
   texture_tbm_surface_ = NULL;
 }
 

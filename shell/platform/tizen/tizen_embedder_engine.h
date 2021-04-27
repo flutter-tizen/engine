@@ -24,12 +24,12 @@
 #include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
-#ifdef FLUTTER_TIZEN_4
-#include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl.h"
+#ifdef TIZEN_RENDERER_EVAS_GL
+#include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
 #else
 #include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl2.h"
-#endif
 #include "flutter/shell/platform/tizen/tizen_vsync_waiter.h"
+#endif
 #include "flutter/shell/platform/tizen/touch_event_handler.h"
 
 // State associated with the plugin registrar.
@@ -126,7 +126,9 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   static void* GlProcResolver(void* user_data, const char* name);
   static void OnFlutterPlatformMessage(
       const FlutterPlatformMessage* engine_message, void* user_data);
+#ifndef TIZEN_RENDERER_EVAS_GL
   static void OnVsyncCallback(void* user_data, intptr_t baton);
+#endif
 
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
@@ -150,10 +152,16 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   std::unique_ptr<flutter::PluginRegistrar> internal_plugin_registrar_;
 
   // The event loop for the main thread that allows for delayed task execution.
-  std::unique_ptr<TizenEventLoop> event_loop_;
+  std::unique_ptr<TizenPlatformEventLoop> event_loop_;
 
+#ifdef TIZEN_RENDERER_EVAS_GL
+  std::unique_ptr<TizenRenderEventLoop> render_loop_;
+#endif
+
+#ifndef TIZEN_RENDERER_EVAS_GL
   // The vsync waiter for the embedder.
   std::unique_ptr<TizenVsyncWaiter> tizen_vsync_waiter_;
+#endif
 
   // AOT data for this engine instance, if applicable.
   UniqueAotDataPtr aot_data_;

@@ -15,6 +15,9 @@
 
 // Unique number associated with platform tasks.
 static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
+#ifdef TIZEN_RENDERER_EVAS_GL
+static constexpr size_t kRenderTaskRunnerIdentifier = 2;
+#endif
 
 static DeviceProfile GetDeviceProfile() {
   char* feature_profile;
@@ -46,8 +49,8 @@ static double GetDeviceDpi() {
 TizenEmbedderEngine::TizenEmbedderEngine(
     const FlutterWindowProperties& window_properties)
     : device_profile(GetDeviceProfile()), device_dpi(GetDeviceDpi()) {
-#ifdef FLUTTER_TIZEN_4
-  tizen_renderer = std::make_unique<TizenRendererEcoreWl>(
+#ifdef TIZEN_RENDERER_EVAS_GL
+  tizen_renderer = std::make_unique<TizenRendererEvasGL>(
       *this, window_properties.x, window_properties.y, window_properties.width,
       window_properties.height);
 #else
@@ -59,7 +62,7 @@ TizenEmbedderEngine::TizenEmbedderEngine(
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
   // thread). UI threads need to send flutter task to platform thread.
-  event_loop_ = std::make_unique<TizenEventLoop>(
+  event_loop_ = std::make_unique<TizenPlatformEventLoop>(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
         if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
@@ -67,12 +70,25 @@ TizenEmbedderEngine::TizenEmbedderEngine(
         }
       });
 
+#ifdef TIZEN_RENDERER_EVAS_GL
+  render_loop_ = std::make_unique<TizenRenderEventLoop>(
+      std::this_thread::get_id(),  // main thread
+      [this](const auto* task) {
+        if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
+          FT_LOGE("Could not post an engine task.");
+        }
+      },
+      tizen_renderer.get());
+#endif
+
   messenger = std::make_unique<FlutterDesktopMessenger>();
   messenger->engine = this;
   message_dispatcher =
       std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
 
+#ifndef TIZEN_RENDERER_EVAS_GL
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
+#endif
 }
 
 TizenEmbedderEngine::~TizenEmbedderEngine() {
@@ -135,9 +151,27 @@ bool TizenEmbedderEngine::RunEngine(
   };
   platform_task_runner.identifier = kPlatformTaskRunnerIdentifier;
 
+#ifdef TIZEN_RENDERER_EVAS_GL
+  FlutterTaskRunnerDescription render_task_runner = {};
+  render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
+  render_task_runner.user_data = render_loop_.get();
+  render_task_runner.runs_task_on_current_thread_callback =
+      [](void* data) -> bool {
+    return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
+  };
+  render_task_runner.post_task_callback =
+      [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
+    static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
+  };
+  render_task_runner.identifier = kRenderTaskRunnerIdentifier;
+#endif  
+
   FlutterCustomTaskRunners custom_task_runners = {};
   custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
   custom_task_runners.platform_task_runner = &platform_task_runner;
+#ifdef TIZEN_RENDERER_EVAS_GL
+  custom_task_runners.render_task_runner = &render_task_runner;
+#endif
 
   FlutterRendererConfig config = {};
   config.type = kOpenGL;
@@ -159,7 +193,9 @@ bool TizenEmbedderEngine::RunEngine(
   args.command_line_argv = &argv[0];
   args.platform_message_callback = OnFlutterPlatformMessage;
   args.custom_task_runners = &custom_task_runners;
+#ifndef TIZEN_RENDERER_EVAS_GL
   args.vsync_callback = OnVsyncCallback;
+#endif
 
   if (FlutterEngineRunsAOTCompiledDartCode()) {
     aot_data_ = LoadAotData(engine_properties.aot_library_path);
@@ -349,11 +385,13 @@ void TizenEmbedderEngine::OnFlutterPlatformMessage(
   tizen_embedder_engine->message_dispatcher->HandleMessage(message);
 }
 
+#ifndef TIZEN_RENDERER_EVAS_GL
 void TizenEmbedderEngine::OnVsyncCallback(void* user_data, intptr_t baton) {
   TizenEmbedderEngine* tizen_embedder_engine =
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
   tizen_embedder_engine->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
 }
+#endif
 
 // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
 FlutterDesktopMessage TizenEmbedderEngine::ConvertToDesktopMessage(

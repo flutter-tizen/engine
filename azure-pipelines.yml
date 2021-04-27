@@ -68,39 +68,21 @@ jobs:
         --runtime-mode $(mode) \
         --embedder-for-target \
         --disable-desktop-embeddings \
-        --build-tizen-shell \
-        --out-dir output/default
-      ninja -C output/default/out/linux_$(mode)_$(arch)
+        --build-tizen-shell
+      ninja -C out/linux_$(mode)_$(arch)
     displayName: Build
     workingDirectory: $(buildroot)
     failOnStderr: true
   - bash: |
-      flutter/tools/gn \
-        --target-os linux \
-        --linux-cpu $(arch) \
-        --target-toolchain `pwd`/tizen_tools/toolchains \
-        --target-sysroot `pwd`/tizen_tools/sysroot/$(arch)_40 \
-        --target-triple $(targetTriple) \
-        --runtime-mode $(mode) \
-        --embedder-for-target \
-        --disable-desktop-embeddings \
-        --build-tizen-shell \
-        --tizen-sdk-4 \
-        --out-dir output/tizen40
-      ninja -C output/tizen40/out/linux_$(mode)_$(arch)
-    displayName: Build for Tizen 4.0
-    workingDirectory: $(buildroot)
-    condition: ne(variables['arch'], 'arm64')
-    failOnStderr: true
-  - bash: |
       OUTDIR=$(Build.StagingDirectory)
-      cp default/out/linux_$(mode)_$(arch)/libflutter_engine.so $OUTDIR
-      cp default/out/linux_$(mode)_$(arch)/libflutter_tizen.so $OUTDIR
-      if [[ "$(arch)" != "arm64" ]]; then
-        cp tizen40/out/linux_$(mode)_$(arch)/libflutter_tizen.so $OUTDIR/libflutter_tizen40.so
+      cp out/linux_$(mode)_$(arch)/libflutter_*.so $OUTDIR
+      if [[ $(System.JobName) == "tizen-arm-release" ]]; then
+        mkdir $OUTDIR/common
+        cp -r out/linux_$(mode)_$(arch)/{cpp_client_wrapper,icu,public} $OUTDIR/common
+        rm $OUTDIR/common/cpp_client_wrapper/engine_method_result.cc
       fi
     displayName: Copy artifacts
-    workingDirectory: $(buildroot)/output
+    workingDirectory: $(buildroot)
     failOnStderr: true
   - publish: $(Build.StagingDirectory)
     artifact: $(System.JobName)
@@ -119,19 +101,7 @@ jobs:
     path: src/flutter
   - download: current
   - bash: |
-      mkdir -p common/client_wrapper
-      ROOT=$(Pipeline.Workspace)/src/flutter/shell/platform
-      cp $ROOT/common/cpp/client_wrapper/*.{h,cc} common/client_wrapper
-      rm common/client_wrapper/{*_unittests.*,engine_method_result.cc}
-      cp -r $ROOT/common/cpp/public common
-      cp -r $ROOT/common/cpp/client_wrapper/include common/client_wrapper
-      cp $ROOT/tizen/public/*.h common/public
-      cp $ROOT/tizen/LICENSE .
-    displayName: Copy headers
-    workingDirectory: $(Build.BinariesDirectory)
-    failOnStderr: true
-  - bash: |
-      cp $(Pipeline.Workspace)/src/third_party/icu/flutter/icudtl.dat common
+      mv $(Pipeline.Workspace)/tizen-arm-release/common .
       mv $(Pipeline.Workspace)/tizen-* .
       for platform in linux windows darwin; do
         for arch in arm arm64; do
