@@ -33,7 +33,8 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 double x, double y,
                                                 double scroll_delta_x,
                                                 double scroll_delta_y,
-                                                size_t timestamp) {
+                                                size_t timestamp,
+                                                int device_id = 0) {
   if (!engine_->flutter_engine) {
     return;
   }
@@ -66,6 +67,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   event.scroll_delta_x = scroll_delta_x * 2;
   event.scroll_delta_y = scroll_delta_y * 2;
   event.timestamp = timestamp * 1000;
+  event.device = device_id;
   FlutterEngineSendPointerEvent(engine_->flutter_engine, &event, 1);
 }
 
@@ -76,17 +78,20 @@ Eina_Bool TouchEventHandler::OnTouch(void *data, int type, void *event) {
     self->pointer_state_ = true;
     auto *button_event = reinterpret_cast<Ecore_Event_Mouse_Button *>(event);
     self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0, 0,
-                                  button_event->timestamp);
+                                  button_event->timestamp,
+                                  button_event->multi.device);
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
     self->pointer_state_ = false;
     auto *button_event = reinterpret_cast<Ecore_Event_Mouse_Button *>(event);
     self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
-                                  button_event->timestamp);
+                                  button_event->timestamp,
+                                  button_event->multi.device);
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
     if (self->pointer_state_) {
       auto *move_event = reinterpret_cast<Ecore_Event_Mouse_Move *>(event);
       self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
-                                    move_event->timestamp);
+                                    move_event->timestamp,
+                                    move_event->multi.device);
     }
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
     auto *wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel *>(event);
