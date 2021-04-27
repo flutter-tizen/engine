@@ -10,11 +10,9 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-TizenRendererEvasGL::TizenRendererEvasGL(TizenRenderer::Delegate& delegate,
-                                         int32_t x, int32_t y, int32_t w,
-                                         int32_t h)
+TizenRendererEvasGL::TizenRendererEvasGL(TizenRenderer::Delegate& delegate)
     : TizenRenderer(delegate) {
-  InitializeRenderer(x, y, w, h);
+  InitializeRenderer();
 
   // Clear once to remove noise.
   OnMakeCurrent();
@@ -549,6 +547,14 @@ TizenRenderer::TizenWindowGeometry TizenRendererEvasGL::GetGeometry() {
   return result;
 }
 
+int32_t TizenRendererEvasGL::GetDpi() {
+  auto* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
+  int32_t xdpi, ydpi;
+  ecore_evas_screen_dpi_get(ecore_evas, &xdpi, &ydpi);
+  return xdpi;
+}
+
 uintptr_t TizenRendererEvasGL::GetWindowId() {
   return ecore_evas_window_get(
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_)));
@@ -556,9 +562,8 @@ uintptr_t TizenRendererEvasGL::GetWindowId() {
 
 void* TizenRendererEvasGL::GetImageHandle() { return (void*)graphics_adapter_; }
 
-bool TizenRendererEvasGL::InitializeRenderer(int32_t x, int32_t y, int32_t w,
-                                             int32_t h) {
-  if (!SetupEvasGL(x, y, w, h)) {
+bool TizenRendererEvasGL::InitializeRenderer() {
+  if (!SetupEvasGL()) {
     FT_LOGE("SetupEvasGL fail");
     return false;
   }
@@ -577,10 +582,10 @@ void TizenRendererEvasGL::DestroyRenderer() {
   DestroyEvasWindow();
 }
 
-bool TizenRendererEvasGL::SetupEvasGL(int32_t x, int32_t y, int32_t w,
-                                      int32_t h) {
+bool TizenRendererEvasGL::SetupEvasGL() {
+  int32_t width, height;
   evas_gl_ = evas_gl_new(
-      evas_object_evas_get((Evas_Object*)SetupEvasWindow(x, y, w, h)));
+      evas_object_evas_get((Evas_Object*)SetupEvasWindow(width, height)));
   if (!evas_gl_) {
     FT_LOGE("SetupEvasWindow fail");
     return false;
@@ -612,10 +617,10 @@ bool TizenRendererEvasGL::SetupEvasGL(int32_t x, int32_t y, int32_t w,
   }
 
   EVAS_GL_GLOBAL_GLES3_USE(g_evas_gl, gl_context_);
-  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, w, h);
+  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
 
   gl_resource_surface_ =
-      evas_gl_pbuffer_surface_create(evas_gl_, gl_config_, w, h, NULL);
+      evas_gl_pbuffer_surface_create(evas_gl_, gl_config_, width, height, NULL);
 
   Evas_Native_Surface ns;
   evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
@@ -624,18 +629,22 @@ bool TizenRendererEvasGL::SetupEvasGL(int32_t x, int32_t y, int32_t w,
   return true;
 }
 
-void* TizenRendererEvasGL::SetupEvasWindow(int32_t x, int32_t y, int32_t w,
-                                           int32_t h) {
-  if (w == 0 || h == 0) {
-    FT_LOGE("Failed to create because of the wrong size");
-    return nullptr;
-  }
+void* TizenRendererEvasGL::SetupEvasWindow(int32_t& width, int32_t& height) {
   elm_config_accel_preference_set("hw:opengl");
 
   evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
+  auto* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
+  int32_t x, y;
+  ecore_evas_screen_geometry_get(ecore_evas, &x, &y, &width, &height);
+  if (width == 0 || height == 0) {
+    FT_LOGE("Invalid screen size: %d x %d", width, height);
+    return nullptr;
+  }
+
   elm_win_alpha_set(evas_window_, EINA_FALSE);
-  evas_object_move(evas_window_, x, y);
-  evas_object_resize(evas_window_, w, h);
+  evas_object_move(evas_window_, 0, 0);
+  evas_object_resize(evas_window_, width, height);
   evas_object_raise(evas_window_);
 
   Evas_Object* bg = elm_bg_add(evas_window_);
@@ -646,9 +655,9 @@ void* TizenRendererEvasGL::SetupEvasWindow(int32_t x, int32_t y, int32_t w,
 
   graphics_adapter_ =
       evas_object_image_filled_add(evas_object_evas_get(evas_window_));
-  evas_object_resize(graphics_adapter_, w, h);
-  evas_object_move(graphics_adapter_, x, y);
-  evas_object_image_size_set(graphics_adapter_, w, h);
+  evas_object_resize(graphics_adapter_, width, height);
+  evas_object_move(graphics_adapter_, 0, 0);
+  evas_object_image_size_set(graphics_adapter_, width, height);
   evas_object_image_alpha_set(graphics_adapter_, EINA_TRUE);
   elm_win_resize_object_add(evas_window_, graphics_adapter_);
 

@@ -21,12 +21,11 @@ struct FlutterWindowControllerState {
 };
 
 FlutterWindowControllerRef FlutterCreateWindow(
-    const FlutterWindowProperties& window_properties,
     const FlutterEngineProperties& engine_properties) {
   StartLogging();
 
   auto state = std::make_unique<FlutterWindowControllerState>();
-  state->engine = std::make_unique<TizenEmbedderEngine>(window_properties);
+  state->engine = std::make_unique<TizenEmbedderEngine>();
 
   if (!state->engine->RunEngine(engine_properties)) {
     FT_LOGE("Failed to run the Flutter engine.");

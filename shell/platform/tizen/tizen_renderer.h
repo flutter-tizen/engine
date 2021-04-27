@@ -30,6 +30,7 @@ class TizenRenderer {
   virtual void* OnProcResolver(const char* name) = 0;
 
   virtual TizenWindowGeometry GetGeometry() = 0;
+  virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
 
   virtual void SetRotate(int angle) = 0;

@@ -14,8 +14,7 @@
 
 class TizenRendererEvasGL : public TizenRenderer {
  public:
-  explicit TizenRendererEvasGL(TizenRenderer::Delegate& delegate, int32_t x,
-                               int32_t y, int32_t w, int32_t h);
+  explicit TizenRendererEvasGL(TizenRenderer::Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 
   bool OnMakeCurrent() override;
@@ -26,6 +25,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   void* OnProcResolver(const char* name) override;
 
   TizenWindowGeometry GetGeometry() override;
+  int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
 
   void ResizeWithRotation(int32_t x, int32_t y, int32_t width, int32_t height,
@@ -37,12 +37,12 @@ class TizenRendererEvasGL : public TizenRenderer {
  private:
   void ClearColor(float r, float g, float b, float a);
 
-  bool InitializeRenderer(int32_t x, int32_t y, int32_t w, int32_t h);
+  bool InitializeRenderer();
   void Show();
   void DestroyRenderer();
 
-  bool SetupEvasGL(int32_t x, int32_t y, int32_t w, int32_t h);
-  void* SetupEvasWindow(int32_t x, int32_t y, int32_t w, int32_t h);
+  bool SetupEvasGL();
+  void* SetupEvasWindow(int32_t& width, int32_t& height);
   void DestroyEvasGL();
   void DestroyEvasWindow();
 

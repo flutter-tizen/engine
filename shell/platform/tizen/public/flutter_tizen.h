@@ -20,18 +20,6 @@ extern "C" {
 // Opaque reference to a Flutter window controller.
 typedef struct FlutterWindowControllerState* FlutterWindowControllerRef;
 
-// Properties for configuring the initial settings of a Flutter window.
-typedef struct {
-  // The display title.
-  const char* title;
-  int32_t x;
-  int32_t y;
-  // Width in screen coordinates.
-  int32_t width;
-  // Height in screen coordinates.
-  int32_t height;
-} FlutterWindowProperties;
-
 // Properties for configuring a Flutter engine instance.
 typedef struct {
   // The path to the flutter_assets folder for the application to be run.
@@ -50,8 +38,7 @@ typedef struct {
 } FlutterEngineProperties;
 
 FLUTTER_EXPORT FlutterWindowControllerRef
-FlutterCreateWindow(const FlutterWindowProperties& window_properties,
-                    const FlutterEngineProperties& engine_properties);
+FlutterCreateWindow(const FlutterEngineProperties& engine_properties);
 
 // Returns the plugin registrar handle for the plugin with the given name.
 //

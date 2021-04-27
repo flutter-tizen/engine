@@ -69,8 +69,7 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class TizenEmbedderEngine : public TizenRenderer::Delegate {
  public:
-  explicit TizenEmbedderEngine(
-      const FlutterWindowProperties& window_properties);
+  explicit TizenEmbedderEngine();
   virtual ~TizenEmbedderEngine();
   bool RunEngine(const FlutterEngineProperties& engine_properties);
   bool StopEngine();
@@ -114,7 +113,6 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
 
   const DeviceProfile device_profile;
-  const double device_dpi;
 
  private:
   static bool MakeContextCurrent(void* user_data);

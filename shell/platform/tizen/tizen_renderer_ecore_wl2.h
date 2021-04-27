@@ -13,8 +13,7 @@
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2(TizenRenderer::Delegate &delegate, int32_t x,
-                                 int32_t y, int32_t w, int32_t h);
+  explicit TizenRendererEcoreWl2(TizenRenderer::Delegate &delegate);
   virtual ~TizenRendererEcoreWl2();
 
   bool OnMakeCurrent() override;
@@ -25,6 +24,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void *OnProcResolver(const char *name) override;
 
   TizenWindowGeometry GetGeometry() override;
+  int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
 
   void ResizeWithRotation(int32_t x, int32_t y, int32_t width, int32_t height,
@@ -32,13 +32,13 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void SetRotate(int angle) override;
 
  private:
-  bool InitializeRenderer(int32_t x, int32_t y, int32_t w, int32_t h);
+  bool InitializeRenderer();
   void Show();
   void DestroyRenderer();
 
-  bool SetupDisplay();
-  bool SetupEcoreWlWindow(int32_t x, int32_t y, int32_t w, int32_t h);
-  bool SetupEglWindow(int32_t w, int32_t h);
+  bool SetupDisplay(int32_t &width, int32_t &height);
+  bool SetupEcoreWlWindow(int32_t width, int32_t height);
+  bool SetupEglWindow(int32_t width, int32_t height);
   EGLDisplay GetEGLDisplay();
   EGLNativeWindowType GetEGLNativeWindowType();
   void DestroyEglWindow();

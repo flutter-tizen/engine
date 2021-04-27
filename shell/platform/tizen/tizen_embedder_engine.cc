@@ -39,24 +39,12 @@ static DeviceProfile GetDeviceProfile() {
   return DeviceProfile::kUnknown;
 }
 
-static double GetDeviceDpi() {
-  int feature_dpi;
-  system_info_get_platform_int("http://tizen.org/feature/screen.dpi",
-                               &feature_dpi);
-  return (double)feature_dpi;
-}
-
-TizenEmbedderEngine::TizenEmbedderEngine(
-    const FlutterWindowProperties& window_properties)
-    : device_profile(GetDeviceProfile()), device_dpi(GetDeviceDpi()) {
+TizenEmbedderEngine::TizenEmbedderEngine()
+    : device_profile(GetDeviceProfile()) {
 #ifdef TIZEN_RENDERER_EVAS_GL
-  tizen_renderer = std::make_unique<TizenRendererEvasGL>(
-      *this, window_properties.x, window_properties.y, window_properties.width,
-      window_properties.height);
+  tizen_renderer = std::make_unique<TizenRendererEvasGL>(*this);
 #else
-  tizen_renderer = std::make_unique<TizenRendererEcoreWl2>(
-      *this, window_properties.x, window_properties.y, window_properties.width,
-      window_properties.height);
+  tizen_renderer = std::make_unique<TizenRendererEcoreWl2>(*this);
 #endif
 
   // Run flutter task on Tizen main loop.
@@ -296,6 +284,10 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
     // The scale factor is computed based on the display DPI and the current
     // profile. A fixed DPI value (72) is used on TVs. See:
     // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
+    double dpi = 72.0;
+    if (tizen_renderer && device_profile != DeviceProfile::kTV) {
+      dpi = (double)tizen_renderer->GetDpi();
+    }
     double profile_factor = 1.0;
     if (device_profile == DeviceProfile::kWearable) {
       profile_factor = 0.4;
@@ -303,10 +295,7 @@ void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,
       profile_factor = 0.7;
     } else if (device_profile == DeviceProfile::kTV) {
       profile_factor = 2.0;
-    } else if (device_profile == DeviceProfile::kCommon) {
-      profile_factor = 0.5;
     }
-    double dpi = device_profile == DeviceProfile::kTV ? 72.0 : device_dpi;
     double scale_factor = dpi / 90.0 * profile_factor;
     event.pixel_ratio = std::max(scale_factor, 1.0);
   } else {
