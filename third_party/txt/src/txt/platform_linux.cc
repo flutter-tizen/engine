@@ -78,7 +78,15 @@ sk_sp<SkFontMgr> GetDefaultFontManager() {
 #ifdef FLUTTER_USE_FONTCONFIG
   return SkFontMgr_New_FontConfig(nullptr);
 #else
-  return SkFontMgr_New_Custom_Directory("/usr/share/");
+  return SkFontMgr_New_Custom_Directory("/usr/share/fonts");
+#endif
+}
+
+sk_sp<SkFontMgr> GetFallbackFontManager() {
+#ifdef FLUTTER_USE_FONTCONFIG
+  return nullptr;
+#else
+  return SkFontMgr_New_Custom_Directory("/usr/share/fallback_fonts");
 #endif
 }
 

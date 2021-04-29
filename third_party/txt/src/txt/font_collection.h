@@ -91,6 +91,7 @@ class FontCollection : public std::enable_shared_from_this<FontCollection> {
   };
 
   sk_sp<SkFontMgr> default_font_manager_;
+  sk_sp<SkFontMgr> fallback_font_manager_;
   sk_sp<SkFontMgr> asset_font_manager_;
   sk_sp<SkFontMgr> dynamic_font_manager_;
   sk_sp<SkFontMgr> test_font_manager_;
