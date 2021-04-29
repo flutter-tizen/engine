@@ -100,6 +100,7 @@ size_t FontCollection::GetFontManagersCount() const {
 void FontCollection::SetupDefaultFontManager(
     uint32_t font_initialization_data) {
   default_font_manager_ = GetDefaultFontManager(font_initialization_data);
+  fallback_font_manager_ = GetFallbackFontManager(font_initialization_data);
 }
 
 void FontCollection::SetDefaultFontManager(sk_sp<SkFontMgr> font_manager) {
@@ -145,6 +146,8 @@ std::vector<sk_sp<SkFontMgr>> FontCollection::GetFontManagerOrder() const {
     order.push_back(test_font_manager_);
   if (default_font_manager_)
     order.push_back(default_font_manager_);
+  if (fallback_font_manager_)
+    order.push_back(fallback_font_manager_);
   return order;
 }
 
