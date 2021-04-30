@@ -35,6 +35,19 @@ FlutterWindowControllerRef FlutterCreateWindow(
   return state.release();
 }
 
+FlutterWindowControllerRef FlutterRunEngine(
+    const FlutterEngineProperties& engine_properties) {
+  StartLogging();
+  auto state = std::make_unique<FlutterWindowControllerState>();
+  state->engine = std::make_unique<TizenEmbedderEngine>(false);
+
+  if (!state->engine->RunEngine(engine_properties)) {
+    FT_LOGE("Failed to run the Flutter engine.");
+    return nullptr;
+  }
+  return state.release();
+}
+
 void FlutterDestroyWindow(FlutterWindowControllerRef controller) {
   if (controller->engine) {
     controller->engine->StopEngine();

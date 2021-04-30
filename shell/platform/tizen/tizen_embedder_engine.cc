@@ -39,14 +39,8 @@ static DeviceProfile GetDeviceProfile() {
   return DeviceProfile::kUnknown;
 }
 
-TizenEmbedderEngine::TizenEmbedderEngine()
+TizenEmbedderEngine::TizenEmbedderEngine(bool initialize_tizen_renderer)
     : device_profile(GetDeviceProfile()) {
-#ifdef TIZEN_RENDERER_EVAS_GL
-  tizen_renderer = std::make_unique<TizenRendererEvasGL>(*this);
-#else
-  tizen_renderer = std::make_unique<TizenRendererEcoreWl2>(*this);
-#endif
-
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
   // thread). UI threads need to send flutter task to platform thread.
@@ -58,7 +52,20 @@ TizenEmbedderEngine::TizenEmbedderEngine()
         }
       });
 
+  messenger = std::make_unique<FlutterDesktopMessenger>();
+  messenger->engine = this;
+  message_dispatcher =
+      std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
+
+  if (initialize_tizen_renderer) {
+    InitializeTizenRenderer();
+  }
+}
+
+void TizenEmbedderEngine::InitializeTizenRenderer() {
 #ifdef TIZEN_RENDERER_EVAS_GL
+  tizen_renderer = std::make_unique<TizenRendererEvasGL>(*this);
+
   render_loop_ = std::make_unique<TizenRenderEventLoop>(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
@@ -67,14 +74,8 @@ TizenEmbedderEngine::TizenEmbedderEngine()
         }
       },
       tizen_renderer.get());
-#endif
-
-  messenger = std::make_unique<FlutterDesktopMessenger>();
-  messenger->engine = this;
-  message_dispatcher =
-      std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
-
-#ifndef TIZEN_RENDERER_EVAS_GL
+#else
+  tizen_renderer = std::make_unique<TizenRendererEcoreWl2>(*this);
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
 }
@@ -111,7 +112,7 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
 
 bool TizenEmbedderEngine::RunEngine(
     const FlutterEngineProperties& engine_properties) {
-  if (!tizen_renderer->IsValid()) {
+  if (HasTizenRenderer() && !tizen_renderer->IsValid()) {
     FT_LOGE("The display was not valid.");
     return false;
   }
@@ -138,40 +139,48 @@ bool TizenEmbedderEngine::RunEngine(
     static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
   };
   platform_task_runner.identifier = kPlatformTaskRunnerIdentifier;
-
-#ifdef TIZEN_RENDERER_EVAS_GL
-  FlutterTaskRunnerDescription render_task_runner = {};
-  render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
-  render_task_runner.user_data = render_loop_.get();
-  render_task_runner.runs_task_on_current_thread_callback =
-      [](void* data) -> bool {
-    return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
-  };
-  render_task_runner.post_task_callback =
-      [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
-    static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
-  };
-  render_task_runner.identifier = kRenderTaskRunnerIdentifier;
-#endif  
-
   FlutterCustomTaskRunners custom_task_runners = {};
   custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
   custom_task_runners.platform_task_runner = &platform_task_runner;
+
 #ifdef TIZEN_RENDERER_EVAS_GL
-  custom_task_runners.render_task_runner = &render_task_runner;
+  FlutterTaskRunnerDescription render_task_runner = {};
+  if (HasTizenRenderer()) {
+    render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
+    render_task_runner.user_data = render_loop_.get();
+    render_task_runner.runs_task_on_current_thread_callback =
+        [](void* data) -> bool {
+      return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
+    };
+    render_task_runner.post_task_callback =
+        [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
+      static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
+    };
+    render_task_runner.identifier = kRenderTaskRunnerIdentifier;
+    custom_task_runners.render_task_runner = &render_task_runner;
+  }
 #endif
 
   FlutterRendererConfig config = {};
-  config.type = kOpenGL;
-  config.open_gl.struct_size = sizeof(config.open_gl);
-  config.open_gl.make_current = MakeContextCurrent;
-  config.open_gl.make_resource_current = MakeResourceCurrent;
-  config.open_gl.clear_current = ClearContext;
-  config.open_gl.present = Present;
-  config.open_gl.fbo_callback = GetActiveFbo;
-  config.open_gl.surface_transformation = Transformation;
-  config.open_gl.gl_proc_resolver = GlProcResolver;
-  config.open_gl.gl_external_texture_frame_callback = OnAcquireExternalTexture;
+  if (HasTizenRenderer()) {
+    config.type = kOpenGL;
+    config.open_gl.struct_size = sizeof(config.open_gl);
+    config.open_gl.make_current = MakeContextCurrent;
+    config.open_gl.make_resource_current = MakeResourceCurrent;
+    config.open_gl.clear_current = ClearContext;
+    config.open_gl.present = Present;
+    config.open_gl.fbo_callback = GetActiveFbo;
+    config.open_gl.surface_transformation = Transformation;
+    config.open_gl.gl_proc_resolver = GlProcResolver;
+    config.open_gl.gl_external_texture_frame_callback =
+        OnAcquireExternalTexture;
+  } else {
+    config.type = kSoftware;
+    config.software.struct_size = sizeof(config.software);
+    config.software.surface_present_callback =
+        [](void* user_data, const void* allocation, size_t row_bytes,
+           size_t height) -> bool { return true; };
+  }
 
   FlutterProjectArgs args = {};
   args.struct_size = sizeof(FlutterProjectArgs);
@@ -181,8 +190,11 @@ bool TizenEmbedderEngine::RunEngine(
   args.command_line_argv = &argv[0];
   args.platform_message_callback = OnFlutterPlatformMessage;
   args.custom_task_runners = &custom_task_runners;
+
 #ifndef TIZEN_RENDERER_EVAS_GL
-  args.vsync_callback = OnVsyncCallback;
+  if (HasTizenRenderer()) {
+    args.vsync_callback = OnVsyncCallback;
+  }
 #endif
 
   if (FlutterEngineRunsAOTCompiledDartCode()) {
@@ -203,36 +215,40 @@ bool TizenEmbedderEngine::RunEngine(
     return false;
   }
 
-  std::unique_ptr<FlutterTextureRegistrar> textures =
-      std::make_unique<FlutterTextureRegistrar>();
-  textures->flutter_engine = flutter_engine;
   plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
   plugin_registrar_->engine = this;
-  plugin_registrar_->texture_registrar = std::move(textures);
 
   internal_plugin_registrar_ =
       std::make_unique<flutter::PluginRegistrar>(plugin_registrar_.get());
 
-  key_event_channel = std::make_unique<KeyEventChannel>(
-      internal_plugin_registrar_->messenger());
-  navigation_channel = std::make_unique<NavigationChannel>(
-      internal_plugin_registrar_->messenger());
   platform_channel = std::make_unique<PlatformChannel>(
       internal_plugin_registrar_->messenger());
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
-  text_input_channel = std::make_unique<TextInputChannel>(
-      internal_plugin_registrar_->messenger(), this);
   localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);
   localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(flutter_engine);
-  platform_view_channel = std::make_unique<PlatformViewChannel>(
-      internal_plugin_registrar_->messenger(), this);
 
-  key_event_handler_ = std::make_unique<KeyEventHandler>(this);
-  touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
+  if (HasTizenRenderer()) {
+    std::unique_ptr<FlutterTextureRegistrar> textures =
+    std::make_unique<FlutterTextureRegistrar>();
+    textures->flutter_engine = flutter_engine;
+    plugin_registrar_->texture_registrar = std::move(textures);
 
-  SetWindowOrientation(0);
+    key_event_channel = std::make_unique<KeyEventChannel>(
+        internal_plugin_registrar_->messenger());
+    navigation_channel = std::make_unique<NavigationChannel>(
+        internal_plugin_registrar_->messenger());
+    text_input_channel = std::make_unique<TextInputChannel>(
+        internal_plugin_registrar_->messenger(), this);
+    platform_view_channel = std::make_unique<PlatformViewChannel>(
+        internal_plugin_registrar_->messenger(), this);
+    key_event_handler_ = std::make_unique<KeyEventHandler>(this);
+    touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
+
+    SetWindowOrientation(0);
+  }
+
   return true;
 }
 
@@ -426,4 +442,8 @@ FlutterTransformation TizenEmbedderEngine::Transformation(void* user_data) {
 void* TizenEmbedderEngine::GlProcResolver(void* user_data, const char* name) {
   return reinterpret_cast<TizenEmbedderEngine*>(user_data)
       ->tizen_renderer->OnProcResolver(name);
+}
+
+bool TizenEmbedderEngine::HasTizenRenderer() {
+  return tizen_renderer != nullptr;
 }

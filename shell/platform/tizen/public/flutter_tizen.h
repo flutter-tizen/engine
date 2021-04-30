@@ -40,6 +40,9 @@ typedef struct {
 FLUTTER_EXPORT FlutterWindowControllerRef
 FlutterCreateWindow(const FlutterEngineProperties& engine_properties);
 
+FLUTTER_EXPORT FlutterWindowControllerRef
+FlutterRunEngine(const FlutterEngineProperties& engine_properties);
+
 // Returns the plugin registrar handle for the plugin with the given name.
 //
 // The name must be unique across the application.

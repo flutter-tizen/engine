@@ -69,8 +69,9 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class TizenEmbedderEngine : public TizenRenderer::Delegate {
  public:
-  explicit TizenEmbedderEngine();
+  explicit TizenEmbedderEngine(bool initialize_tizen_renderer = true);
   virtual ~TizenEmbedderEngine();
+  void InitializeTizenRenderer();
   bool RunEngine(const FlutterEngineProperties& engine_properties);
   bool StopEngine();
 
@@ -133,6 +134,8 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
   static bool OnAcquireExternalTexture(void* user_data, int64_t texture_id,
                                        size_t width, size_t height,
                                        FlutterOpenGLTexture* texture);
+
+  bool HasTizenRenderer();
 
   // The handlers listening to platform events.
   std::unique_ptr<KeyEventHandler> key_event_handler_;
