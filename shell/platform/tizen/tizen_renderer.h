@@ -6,6 +6,7 @@
 #define EMBEDDER_TIZEN_RENDERER_H
 
 #include <cstdint>
+#include <vector>
 
 class TizenRenderer {
  public:
@@ -36,6 +37,7 @@ class TizenRenderer {
   virtual void SetRotate(int angle) = 0;
   virtual void ResizeWithRotation(int32_t x, int32_t y, int32_t width,
                                   int32_t height, int32_t degree) = 0;
+  virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
  protected:
   explicit TizenRenderer(TizenRenderer::Delegate& delegate);

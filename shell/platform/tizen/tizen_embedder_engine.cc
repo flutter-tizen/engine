@@ -222,7 +222,7 @@ bool TizenEmbedderEngine::RunEngine(
       std::make_unique<flutter::PluginRegistrar>(plugin_registrar_.get());
 
   platform_channel = std::make_unique<PlatformChannel>(
-      internal_plugin_registrar_->messenger());
+      internal_plugin_registrar_->messenger(), tizen_renderer.get());
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
   localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);

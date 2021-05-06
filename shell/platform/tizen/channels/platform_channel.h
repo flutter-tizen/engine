@@ -7,15 +7,18 @@
 
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/method_channel.h"
+#include "flutter/shell/platform/tizen/tizen_renderer.h"
 #include "rapidjson/document.h"
 
 class PlatformChannel {
  public:
-  explicit PlatformChannel(flutter::BinaryMessenger* messenger);
+  explicit PlatformChannel(flutter::BinaryMessenger* messenger,
+                           TizenRenderer* renderer);
   virtual ~PlatformChannel();
 
  private:
   std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
+  TizenRenderer* tizen_renderer_;
 
   void HandleMethodCall(
       const flutter::MethodCall<rapidjson::Document>& call,
