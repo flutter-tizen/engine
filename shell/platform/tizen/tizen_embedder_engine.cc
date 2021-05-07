@@ -231,7 +231,7 @@ bool TizenEmbedderEngine::RunEngine(
 
   if (HasTizenRenderer()) {
     std::unique_ptr<FlutterTextureRegistrar> textures =
-    std::make_unique<FlutterTextureRegistrar>();
+        std::make_unique<FlutterTextureRegistrar>();
     textures->flutter_engine = flutter_engine;
     plugin_registrar_->texture_registrar = std::move(textures);
 
@@ -285,9 +285,16 @@ bool TizenEmbedderEngine::OnAcquireExternalTexture(
     FlutterOpenGLTexture* texture) {
   TizenEmbedderEngine* tizen_embedder_engine =
       reinterpret_cast<TizenEmbedderEngine*>(user_data);
-  return tizen_embedder_engine->plugin_registrar_->texture_registrar
-      ->textures[texture_id]
-      ->PopulateTextureWithIdentifier(width, height, texture);
+  std::lock_guard<std::mutex> lock(
+      tizen_embedder_engine->plugin_registrar_->texture_registrar->mutex);
+  auto it = tizen_embedder_engine->plugin_registrar_->texture_registrar
+                ->textures.find(texture_id);
+  int ret = false;
+  if (it != tizen_embedder_engine->plugin_registrar_->texture_registrar
+                ->textures.end()) {
+    ret = it->second->PopulateTextureWithIdentifier(width, height, texture);
+  }
+  return ret;
 }
 
 void TizenEmbedderEngine::SendWindowMetrics(int32_t width, int32_t height,

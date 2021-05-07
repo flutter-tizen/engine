@@ -60,6 +60,7 @@ struct FlutterTextureRegistrar {
 
   // The texture registrar managing external texture adapters.
   std::map<int64_t, std::unique_ptr<ExternalTextureGL>> textures;
+  std::mutex mutex;
 };
 
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;

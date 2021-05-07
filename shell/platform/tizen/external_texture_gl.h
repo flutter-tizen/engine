@@ -41,15 +41,12 @@ class ExternalTextureGL {
   bool PopulateTextureWithIdentifier(size_t width, size_t height,
                                      FlutterOpenGLTexture* opengl_texture);
   bool OnFrameAvailable(tbm_surface_h tbm_surface);
-  void DestructionTbmSurface();
-  void DestructionTbmSurfaceWithLock();
 
  private:
   std::unique_ptr<ExternalTextureGLState> state_;
   std::mutex mutex_;
-  tbm_surface_h texture_tbm_surface_;
-  static void DestructionCallback(void* user_data);
-  const long texture_id_;
+  tbm_surface_h available_tbm_surface_{nullptr};
+  const long texture_id_{0};
 };
 
 #endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_

@@ -181,6 +181,7 @@ void FlutterNotifyLowMemoryWarning(FlutterWindowControllerRef controller) {
 int64_t FlutterRegisterExternalTexture(
     FlutterTextureRegistrarRef texture_registrar) {
   FT_LOGD("FlutterDesktopRegisterExternalTexture");
+  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto texture_gl = std::make_unique<ExternalTextureGL>();
   int64_t texture_id = texture_gl->TextureId();
   texture_registrar->textures[texture_id] = std::move(texture_gl);
@@ -193,16 +194,19 @@ int64_t FlutterRegisterExternalTexture(
 
 bool FlutterUnregisterExternalTexture(
     FlutterTextureRegistrarRef texture_registrar, int64_t texture_id) {
+  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto it = texture_registrar->textures.find(texture_id);
   if (it != texture_registrar->textures.end())
     texture_registrar->textures.erase(it);
-  return (FlutterEngineUnregisterExternalTexture(
-              texture_registrar->flutter_engine, texture_id) == kSuccess);
+  bool ret = FlutterEngineUnregisterExternalTexture(
+                 texture_registrar->flutter_engine, texture_id) == kSuccess;
+  return ret;
 }
 
 bool FlutterMarkExternalTextureFrameAvailable(
     FlutterTextureRegistrarRef texture_registrar, int64_t texture_id,
     void* tbm_surface) {
+  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto it = texture_registrar->textures.find(texture_id);
   if (it == texture_registrar->textures.end()) {
     FT_LOGE("can't find texture texture_id = %" PRId64, texture_id);
@@ -210,11 +214,12 @@ bool FlutterMarkExternalTextureFrameAvailable(
   }
   if (!texture_registrar->textures[texture_id]->OnFrameAvailable(
           (tbm_surface_h)tbm_surface)) {
-    FT_LOGE("OnFrameAvailable fail texture_id = %" PRId64, texture_id);
+    // If a texture that has not been used already exists, it can fail
     return false;
   }
-  return (FlutterEngineMarkExternalTextureFrameAvailable(
-              texture_registrar->flutter_engine, texture_id) == kSuccess);
+  bool ret = FlutterEngineMarkExternalTextureFrameAvailable(
+                 texture_registrar->flutter_engine, texture_id) == kSuccess;
+  return ret;
 }
 
 void FlutterRegisterViewFactory(
