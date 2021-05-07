@@ -179,10 +179,16 @@ void FlutterNotifyLowMemoryWarning(FlutterWindowControllerRef controller) {
 }
 
 int64_t FlutterRegisterExternalTexture(
-    FlutterTextureRegistrarRef texture_registrar) {
+    FlutterTextureRegistrarRef texture_registrar,
+    TizenTextureType textureType) {
   FT_LOGD("FlutterDesktopRegisterExternalTexture");
   std::lock_guard<std::mutex> lock(texture_registrar->mutex);
-  auto texture_gl = std::make_unique<ExternalTextureGL>();
+  std::unique_ptr<ExternalTextureGL> texture_gl;
+  if (textureType == TbmSurface) {
+    texture_gl = std::make_unique<ExternalTextureTbm>();
+  } else {
+    texture_gl = std::make_unique<ExternalTextureMediaPacket>();
+  }
   int64_t texture_id = texture_gl->TextureId();
   texture_registrar->textures[texture_id] = std::move(texture_gl);
   if (FlutterEngineRegisterExternalTexture(texture_registrar->flutter_engine,
@@ -205,15 +211,14 @@ bool FlutterUnregisterExternalTexture(
 
 bool FlutterMarkExternalTextureFrameAvailable(
     FlutterTextureRegistrarRef texture_registrar, int64_t texture_id,
-    void* tbm_surface) {
+    void* frame) {
   std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto it = texture_registrar->textures.find(texture_id);
   if (it == texture_registrar->textures.end()) {
     FT_LOGE("can't find texture texture_id = %" PRId64, texture_id);
     return false;
   }
-  if (!texture_registrar->textures[texture_id]->OnFrameAvailable(
-          (tbm_surface_h)tbm_surface)) {
+  if (!texture_registrar->textures[texture_id]->OnFrameAvailable(frame)) {
     // If a texture that has not been used already exists, it can fail
     return false;
   }

@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+enum TizenTextureType { TbmSurface = 0, MediaPacket };
+
 // Opaque reference to a texture registrar.
 typedef struct FlutterTextureRegistrar* FlutterTextureRegistrarRef;
 
@@ -23,7 +25,8 @@ FlutterPluginRegistrarGetTexture(FlutterDesktopPluginRegistrarRef registrar);
 
 // Registers a new texture with the Flutter engine and returns the texture ID,
 FLUTTER_EXPORT int64_t
-FlutterRegisterExternalTexture(FlutterTextureRegistrarRef texture_registrar);
+FlutterRegisterExternalTexture(FlutterTextureRegistrarRef texture_registrar,
+                               TizenTextureType textureType = TbmSurface);
 
 // Unregisters an existing texture from the Flutter engine for a |texture_id|.
 // Returns true on success, false on failure.

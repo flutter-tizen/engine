@@ -5,6 +5,7 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
 
+#include <media_packet.h>
 #include <stdint.h>
 #include <tbm_bufmgr.h>
 #include <tbm_drm_helper.h>
@@ -22,7 +23,6 @@ typedef struct ExternalTextureGLState ExternalTextureGLState;
 class ExternalTextureGL {
  public:
   ExternalTextureGL();
-
   virtual ~ExternalTextureGL();
 
   /**
@@ -38,15 +38,51 @@ class ExternalTextureGL {
    * texture object.
    * Returns true on success, false on failure.
    */
-  bool PopulateTextureWithIdentifier(size_t width, size_t height,
-                                     FlutterOpenGLTexture* opengl_texture);
-  bool OnFrameAvailable(tbm_surface_h tbm_surface);
+  virtual bool PopulateTextureWithIdentifier(
+      size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+    // assert;
+    return false;
+  }
+  virtual bool OnFrameAvailable(void* external_image) {
+    // assert;
+    return false;
+  }
 
- private:
+ protected:
+  bool MakeTextureFromExternalImage(tbm_surface_h surface, void* external_image, size_t width,
+                                    size_t height,
+                                    FlutterOpenGLTexture* opengl_texture,
+                                    VoidCallback destruction_callback);
+private:
   std::unique_ptr<ExternalTextureGLState> state_;
   std::mutex mutex_;
-  tbm_surface_h available_tbm_surface_{nullptr};
   const long texture_id_{0};
+};
+
+class ExternalTextureTbm : public ExternalTextureGL {
+ public:
+  ExternalTextureTbm();
+  ~ExternalTextureTbm();
+  virtual bool PopulateTextureWithIdentifier(
+      size_t width, size_t height,
+      FlutterOpenGLTexture* opengl_texture) override;
+  virtual bool OnFrameAvailable(void* external_image) override;
+
+ private:
+  tbm_surface_h available_tbm_surface_{nullptr};
+};
+
+class ExternalTextureMediaPacket : public ExternalTextureGL {
+ public:
+  ExternalTextureMediaPacket();
+  ~ExternalTextureMediaPacket();
+  virtual bool PopulateTextureWithIdentifier(
+      size_t width, size_t height,
+      FlutterOpenGLTexture* opengl_texture) override;
+  virtual bool OnFrameAvailable(void* external_image) override;
+
+ private:
+  media_packet_h available_media_packet_{nullptr};
 };
 
 #endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_

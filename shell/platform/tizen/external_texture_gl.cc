@@ -30,89 +30,36 @@ struct ExternalTextureGLState {
 
 static std::atomic_long nextTextureId = {1};
 
-static void MarkTbmSurfaceToUse(void* surface) {
-#ifndef WEARABLE_PROFILE
-  FT_ASSERT(surface);
-  tbm_surface_h tbm_surface = (tbm_surface_h)surface;
-  tbm_surface_internal_ref(tbm_surface);
-#endif
-}
-
 static void UnmarkTbmSurfaceToUse(void* surface) {
   FT_ASSERT(surface);
   tbm_surface_h tbm_surface = (tbm_surface_h)surface;
-#ifndef WEARABLE_PROFILE
-  tbm_surface_internal_unref(tbm_surface);
-#else
   tbm_surface_destroy(tbm_surface);
-#endif
+}
+
+static void UnmarkMediaPacketToUse(void* surface) {
+  FT_ASSERT(surface);
+  media_packet_destroy((media_packet_h)surface);
 }
 
 ExternalTextureGL::ExternalTextureGL()
     : state_(std::make_unique<ExternalTextureGLState>()),
-      available_tbm_surface_(nullptr),
       texture_id_(nextTextureId++) {}
 
 ExternalTextureGL::~ExternalTextureGL() {
   if (state_->gl_texture != 0) {
     glDeleteTextures(1, &state_->gl_texture);
   }
-
-  // If there is a available_tbm_surface_ that is not populated, remove it
-  if (available_tbm_surface_) {
-    UnmarkTbmSurfaceToUse(available_tbm_surface_);
-  }
-
   state_.release();
 }
 
-bool ExternalTextureGL::OnFrameAvailable(tbm_surface_h tbm_surface) {
-  if (!tbm_surface) {
-    FT_LOGE("[texture id:%ld] tbm_surface is null", texture_id_);
-    return false;
-  }
-
-  if (available_tbm_surface_) {
-    FT_LOGD(
-        "[texture id:%ld] Discard! an available tbm surface that has not yet "
-        "been used exists",
-        texture_id_);
-    return false;
-  }
-
-  tbm_surface_info_s info;
-  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
-    FT_LOGD("[texture id:%ld] tbm_surface not valid, pass", texture_id_);
-    return false;
-  }
-
-  available_tbm_surface_ = tbm_surface;
-  MarkTbmSurfaceToUse(available_tbm_surface_);
-
-  return true;
-}
-
-bool ExternalTextureGL::PopulateTextureWithIdentifier(
-    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
-  if (!available_tbm_surface_) {
-    FT_LOGD("[texture id:%ld] available_tbm_surface_ is null", texture_id_);
-    return false;
-  }
-  tbm_surface_info_s info;
-  if (tbm_surface_get_info(available_tbm_surface_, &info) !=
-      TBM_SURFACE_ERROR_NONE) {
-    FT_LOGD("[texture id:%ld] tbm_surface is invalid", texture_id_);
-    UnmarkTbmSurfaceToUse(available_tbm_surface_);
-    available_tbm_surface_ = nullptr;
-    return false;
-  }
-
+bool ExternalTextureGL::MakeTextureFromExternalImage(
+    tbm_surface_h surface, void* external_image, size_t width, size_t height,
+    FlutterOpenGLTexture* opengl_texture, VoidCallback destruction_callback) {
 #ifdef TIZEN_RENDERER_EVAS_GL
   int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
   EvasGLImage egl_src_image = evasglCreateImageForContext(
       g_evas_gl, evas_gl_current_context_get(g_evas_gl),
-      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)available_tbm_surface_,
-      attribs);
+      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)surface, attribs);
   if (!egl_src_image) {
     return false;
   }
@@ -141,7 +88,7 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
                             EGL_NONE};
   EGLImageKHR egl_src_image = n_eglCreateImageKHR(
       eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-      (EGLClientBuffer)available_tbm_surface_, attribs);
+      (EGLClientBuffer)surface, attribs);
 
   if (!egl_src_image) {
     FT_LOGE("[texture id:%ld] egl_src_image create fail!!, errorcode == %d",
@@ -176,13 +123,122 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = (VoidCallback)UnmarkTbmSurfaceToUse;
-
-  // Abandon ownership of tbm_surface
-  opengl_texture->user_data = available_tbm_surface_;
-  available_tbm_surface_ = nullptr;
-
+  opengl_texture->destruction_callback = destruction_callback;
+  opengl_texture->user_data = external_image;
   opengl_texture->width = width;
   opengl_texture->height = height;
+
+  return true;
+}
+
+ExternalTextureTbm::ExternalTextureTbm()
+    : ExternalTextureGL(), available_tbm_surface_(nullptr) {}
+
+ExternalTextureTbm::~ExternalTextureTbm() {
+  if (available_tbm_surface_) {
+    UnmarkTbmSurfaceToUse(available_tbm_surface_);
+  }
+}
+
+bool ExternalTextureTbm::OnFrameAvailable(void* external_image) {
+  if (!external_image) {
+    FT_LOGE("[texture id:%ld] tbm_surface is null", (long)TextureId());
+    return false;
+  }
+  tbm_surface_h tbm_surface = (tbm_surface_h)external_image;
+
+  if (available_tbm_surface_) {
+    FT_LOGD(
+        "[texture id:%ld] Discard! an available tbm surface that has not yet "
+        "been used exists",
+        (long)TextureId());
+    return false;
+  }
+
+  tbm_surface_info_s info;
+  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
+    FT_LOGD("[texture id:%ld] tbm_surface not valid, pass", (long)TextureId());
+    return false;
+  }
+  available_tbm_surface_ = tbm_surface;
+
+  return true;
+}
+
+bool ExternalTextureTbm::PopulateTextureWithIdentifier(
+    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+  if (!available_tbm_surface_) {
+    FT_LOGD("[texture id:%ld] available_tbm_surface_ is null",
+            (long)TextureId());
+    return false;
+  }
+  tbm_surface_info_s info;
+  if (tbm_surface_get_info(available_tbm_surface_, &info) !=
+      TBM_SURFACE_ERROR_NONE) {
+    FT_LOGD("[texture id:%ld] tbm_surface is invalid", (long)TextureId());
+    UnmarkTbmSurfaceToUse(available_tbm_surface_);
+    available_tbm_surface_ = nullptr;
+    return false;
+  }
+  MakeTextureFromExternalImage(
+      available_tbm_surface_, (void*)available_tbm_surface_, width, height,
+      opengl_texture, (VoidCallback)UnmarkTbmSurfaceToUse);
+  available_tbm_surface_ = nullptr;
+  return true;
+}
+
+ExternalTextureMediaPacket::ExternalTextureMediaPacket()
+    : ExternalTextureGL(), available_media_packet_(nullptr) {}
+
+ExternalTextureMediaPacket::~ExternalTextureMediaPacket() {
+  if (available_media_packet_) {
+    UnmarkTbmSurfaceToUse(available_media_packet_);
+  }
+}
+
+bool ExternalTextureMediaPacket::OnFrameAvailable(void* external_image) {
+  if (!external_image) {
+    FT_LOGE("[texture id:%ld] media_packet is null", (long)TextureId());
+    return false;
+  }
+
+  if (available_media_packet_) {
+    FT_LOGD(
+        "[texture id:%ld] Discard! an available media_packet that has not yet "
+        "been used exists",
+        (long)TextureId());
+    // If not ready, discard media_packet.
+    UnmarkMediaPacketToUse(external_image);
+    return false;
+  }
+
+  available_media_packet_ = (media_packet_h)external_image;
+  return true;
+}
+
+bool ExternalTextureMediaPacket::PopulateTextureWithIdentifier(
+    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+  if (!available_media_packet_) {
+    FT_LOGD("[texture id:%ld] available_media_packet_ is null",
+            (long)TextureId());
+    return false;
+  }
+
+  tbm_surface_h tbm_surface;
+  if (media_packet_get_tbm_surface(available_media_packet_, &tbm_surface) !=
+      0) {
+    FT_LOGD("[texture id:%ld] fail to get tbm_surface from media_packet",
+            (long)TextureId());
+    return false;
+  }
+  tbm_surface_info_s info;
+  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
+    FT_LOGD("[texture id:%ld] tbm_surface is invalid", (long)TextureId());
+    return false;
+  }
+  MakeTextureFromExternalImage(tbm_surface, available_media_packet_, width,
+                               height, opengl_texture,
+                               (VoidCallback)UnmarkMediaPacketToUse);
+  available_media_packet_ = nullptr;
   return true;
 }

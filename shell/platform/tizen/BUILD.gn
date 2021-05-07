@@ -52,6 +52,7 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/emile-1",
     "$custom_sysroot/usr/include/eo-1",
     "$custom_sysroot/usr/include/evas-1",
+    "$custom_sysroot/usr/include/media",
     "$custom_sysroot/usr/include/system",
     "$custom_sysroot/usr/include/wayland-extension",
     # For Evas_GL.
@@ -106,6 +107,7 @@ template("embedder_for_profile") {
     libs = [
       "base-utils-i18n",
       "capi-appfw-application",
+      "capi-media-tool",
       "capi-system-info",
       "capi-system-system-settings",
       "dlog",
