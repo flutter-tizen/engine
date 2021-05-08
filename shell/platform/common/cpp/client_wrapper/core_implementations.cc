@@ -33,8 +33,7 @@ namespace {
 // interface provided by the C API and the std::function-based message handler
 // interface of BinaryMessenger.
 void ForwardToHandler(FlutterDesktopMessengerRef messenger,
-                      const FlutterDesktopMessage* message,
-                      void* user_data) {
+                      const FlutterDesktopMessage* message, void* user_data) {
   auto* response_handle = message->response_handle;
   BinaryReply reply_handler = [messenger, response_handle](
                                   const uint8_t* reply,
@@ -67,8 +66,7 @@ BinaryMessengerImpl::BinaryMessengerImpl(
 BinaryMessengerImpl::~BinaryMessengerImpl() = default;
 
 void BinaryMessengerImpl::Send(const std::string& channel,
-                               const uint8_t* message,
-                               size_t message_size,
+                               const uint8_t* message, size_t message_size,
                                BinaryReply reply) const {
   if (reply == nullptr) {
     FlutterDesktopMessengerSend(messenger_, channel.c_str(), message,
@@ -166,6 +164,21 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
            void* user_data) -> const FlutterDesktopPixelBuffer* {
       auto texture = static_cast<PixelBufferTexture*>(user_data);
       auto buffer = texture->CopyPixelBuffer(width, height);
+      return buffer;
+    };
+
+    int64_t texture_id = FlutterDesktopTextureRegistrarRegisterExternalTexture(
+        texture_registrar_ref_, &info);
+    return texture_id;
+  } else if (auto gpu_buffer_texture = std::get_if<GpuBufferTexture>(texture)) {
+    FlutterDesktopTextureInfo info = {};
+    info.type = kFlutterDesktopGpuBufferTexture;
+    info.pixel_buffer_config.user_data = gpu_buffer_texture;
+    info.pixel_buffer_config.gbCallback =
+        [](size_t width, size_t height,
+           void* user_data) -> const FlutterDesktopGpuBuffer* {
+      auto texture = static_cast<GpuBufferTexture*>(user_data);
+      auto buffer = texture->CopyGpuBuffer(width, height);
       return buffer;
     };
 
