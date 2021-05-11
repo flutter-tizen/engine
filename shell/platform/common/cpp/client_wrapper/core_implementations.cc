@@ -33,7 +33,8 @@ namespace {
 // interface provided by the C API and the std::function-based message handler
 // interface of BinaryMessenger.
 void ForwardToHandler(FlutterDesktopMessengerRef messenger,
-                      const FlutterDesktopMessage* message, void* user_data) {
+                      const FlutterDesktopMessage* message,
+                      void* user_data) {
   auto* response_handle = message->response_handle;
   BinaryReply reply_handler = [messenger, response_handle](
                                   const uint8_t* reply,
@@ -66,7 +67,8 @@ BinaryMessengerImpl::BinaryMessengerImpl(
 BinaryMessengerImpl::~BinaryMessengerImpl() = default;
 
 void BinaryMessengerImpl::Send(const std::string& channel,
-                               const uint8_t* message, size_t message_size,
+                               const uint8_t* message,
+                               size_t message_size,
                                BinaryReply reply) const {
   if (reply == nullptr) {
     FlutterDesktopMessengerSend(messenger_, channel.c_str(), message,
