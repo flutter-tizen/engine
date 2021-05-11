@@ -52,8 +52,10 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/emile-1",
     "$custom_sysroot/usr/include/eo-1",
     "$custom_sysroot/usr/include/evas-1",
+    "$custom_sysroot/usr/include/feedback",
     "$custom_sysroot/usr/include/system",
     "$custom_sysroot/usr/include/wayland-extension",
+
     # For Evas_GL.
     "$custom_sysroot/usr/include/ecore-con-1",
     "$custom_sysroot/usr/include/ecore-file-1",
@@ -76,6 +78,8 @@ config("tizen_rootstrap_include_dirs") {
 # otherwise the Ecore_Wl2 renderer is used.
 template("embedder_for_profile") {
   forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
+
+  profile = target_name
 
   if (!defined(use_evas_gl_renderer)) {
     use_evas_gl_renderer = false
@@ -120,6 +124,20 @@ template("embedder_for_profile") {
       "tdm-client",
       "wayland-client",
     ]
+
+    if (profile == "mobile") {
+      libs += [
+        "capi-base-common",
+        "feedback",
+      ]
+    }
+
+    if (profile == "wearable") {
+      libs += [
+        "capi-base-common",
+        "feedback",
+      ]
+    }
 
     defines = invoker.defines
 
