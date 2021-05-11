@@ -18,10 +18,11 @@ class SettingsChannel {
   virtual ~SettingsChannel();
 
  private:
-  std::unique_ptr<flutter::BasicMessageChannel<rapidjson::Document>> channel_;
   static void OnSettingsChangedCallback(system_settings_key_e key,
                                         void* user_data);
   void SendSettingsEvent();
+
+  std::unique_ptr<flutter::BasicMessageChannel<rapidjson::Document>> channel_;
 };
 
 #endif  // EMBEDDER_SETTINGS_CHANNEL_H_

@@ -51,8 +51,10 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/emile-1",
     "$custom_sysroot/usr/include/eo-1",
     "$custom_sysroot/usr/include/evas-1",
+    "$custom_sysroot/usr/include/feedback",
     "$custom_sysroot/usr/include/system",
     "$custom_sysroot/usr/include/wayland-extension",
+
     # For Evas_GL.
     "$custom_sysroot/usr/include/ecore-con-1",
     "$custom_sysroot/usr/include/ecore-file-1",
@@ -76,6 +78,8 @@ config("tizen_rootstrap_include_dirs") {
 template("embedder_for_profile") {
   forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
 
+  profile = target_name
+
   if (!defined(use_evas_gl_renderer)) {
     use_evas_gl_renderer = false
   }
@@ -94,10 +98,10 @@ template("embedder_for_profile") {
       "channels/text_input_channel.cc",
       "external_texture_gl.cc",
       "external_texture_pixel_gl.cc",
+      "flutter_tizen_engine.cc",
       "flutter_tizen.cc",
       "flutter_tizen_texture_registrar.cc",
       "key_event_handler.cc",
-      "tizen_embedder_engine.cc",
       "tizen_event_loop.cc",
       "tizen_log.cc",
       "tizen_renderer.cc",
@@ -121,6 +125,20 @@ template("embedder_for_profile") {
       "tdm-client",
       "wayland-client",
     ]
+
+    if (profile == "mobile") {
+      libs += [
+        "capi-base-common",
+        "feedback",
+      ]
+    }
+
+    if (profile == "wearable") {
+      libs += [
+        "capi-base-common",
+        "feedback",
+      ]
+    }
 
     defines = invoker.defines
 

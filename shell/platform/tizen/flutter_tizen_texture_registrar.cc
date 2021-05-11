@@ -8,11 +8,11 @@
 #include <mutex>
 
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 FlutterTizenTextureRegistrar::FlutterTizenTextureRegistrar(
-    TizenEmbedderEngine* engine)
+    FlutterTizenEngine* engine)
     : engine_(engine) {}
 
 int64_t FlutterTizenTextureRegistrar::RegisterTexture(

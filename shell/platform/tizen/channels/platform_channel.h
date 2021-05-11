@@ -17,12 +17,24 @@ class PlatformChannel {
   virtual ~PlatformChannel();
 
  private:
-  std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
-  TizenRenderer* tizen_renderer_;
-
   void HandleMethodCall(
       const flutter::MethodCall<rapidjson::Document>& call,
       std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
+
+  std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
+
+  // A reference to the renderer object managed by FlutterTizenEngine.
+  // This can be nullptr if the engine is running in headless mode.
+  TizenRenderer* renderer_;
+};
+
+namespace Clipboard {
+void GetData(
+    const flutter::MethodCall<rapidjson::Document>& call,
+    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
+void SetData(
+    const flutter::MethodCall<rapidjson::Document>& call,
+    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
 };
 
 #endif  //  EMBEDDER_PLATFORM_CHANNEL_H_

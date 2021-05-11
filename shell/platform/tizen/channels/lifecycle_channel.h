@@ -11,6 +11,7 @@ class LifecycleChannel {
  public:
   explicit LifecycleChannel(FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine);
   virtual ~LifecycleChannel();
+
   void AppIsInactive();
   void AppIsResumed();
   void AppIsPaused();

@@ -4,13 +4,13 @@
 
 #include "touch_event_handler.h"
 
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 static const int DIRECTION_VERTICAL = 0;
 static const int DIRECTION_HORIZONTAL = 1;
 
-TouchEventHandler::TouchEventHandler(TizenEmbedderEngine *engine)
+TouchEventHandler::TouchEventHandler(FlutterTizenEngine *engine)
     : engine_(engine) {
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, OnTouch, this));
@@ -40,7 +40,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   }
 
   // Correct errors caused by window rotation.
-  auto window_geometry = engine_->tizen_renderer->GetGeometry();
+  auto window_geometry = engine_->renderer->GetGeometry();
   double width = window_geometry.w;
   double height = window_geometry.h;
   double new_x = x, new_y = y;

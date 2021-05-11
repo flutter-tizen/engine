@@ -560,9 +560,8 @@ void TizenRendererEcoreWl2::DestroyEglSurface() {
 Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void *data, int type,
                                                  void *event) {
   auto *self = reinterpret_cast<TizenRendererEcoreWl2 *>(data);
-  Ecore_Wl2_Event_Window_Rotation *ev =
-      reinterpret_cast<Ecore_Wl2_Event_Window_Rotation *>(event);
-  self->delegate_.OnRotationChange(ev->angle);
+  auto *ev = reinterpret_cast<Ecore_Wl2_Event_Window_Rotation *>(event);
+  self->delegate_.OnOrientationChange(ev->angle);
   return ECORE_CALLBACK_PASS_ON;
 }
 

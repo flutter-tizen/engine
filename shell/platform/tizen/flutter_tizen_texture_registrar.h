@@ -11,13 +11,13 @@
 
 #include "flutter/shell/platform/tizen/external_texture_gl.h"
 
-class TizenEmbedderEngine;
+class FlutterTizenEngine;
 
 // An object managing the registration of an external texture.
 // Thread safety: All member methods are thread safe.
 class FlutterTizenTextureRegistrar {
  public:
-  explicit FlutterTizenTextureRegistrar(TizenEmbedderEngine* engine);
+  explicit FlutterTizenTextureRegistrar(FlutterTizenEngine* engine);
 
   // Registers a texture described by the given |texture_info| object.
   // Returns the non-zero, positive texture id or -1 on error.
@@ -39,7 +39,7 @@ class FlutterTizenTextureRegistrar {
                        size_t height,
                        FlutterOpenGLTexture* texture);
  private:
-  TizenEmbedderEngine* engine_ = nullptr;
+  FlutterTizenEngine* engine_ = nullptr;
 
   // All registered textures, keyed by their IDs.
   std::unordered_map<int64_t, std::unique_ptr<ExternalTexture>>

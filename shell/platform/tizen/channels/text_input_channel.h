@@ -16,16 +16,19 @@
 #include "flutter/shell/platform/common/cpp/json_method_codec.h"
 #include "flutter/shell/platform/common/cpp/text_input_model.h"
 
-class TizenEmbedderEngine;
+class FlutterTizenEngine;
 class TextInputChannel {
  public:
   struct SoftwareKeyboardGeometry {
     int32_t x = 0, y = 0, w = 0, h = 0;
   };
+
   enum EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
+
   explicit TextInputChannel(flutter::BinaryMessenger* messenger,
-                            TizenEmbedderEngine* engine);
+                            FlutterTizenEngine* engine);
   virtual ~TextInputChannel();
+
   void OnKeyDown(Ecore_Event_Key* key);
   void OnCommit(std::string str);
   void OnPreedit(std::string str, int cursor_pos);
@@ -91,7 +94,7 @@ class TextInputChannel {
   int preedit_end_pos_{0};
   int preedit_start_pos_{0};
   std::string last_handled_ecore_event_keyname_;
-  TizenEmbedderEngine* engine_{nullptr};
+  FlutterTizenEngine* engine_{nullptr};
   Ecore_IMF_Context* imf_context_{nullptr};
 };
 

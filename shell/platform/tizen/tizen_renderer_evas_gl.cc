@@ -690,7 +690,7 @@ void TizenRendererEvasGL::RotationEventCb(void* data, Evas_Object* obj,
   auto* self = reinterpret_cast<TizenRendererEvasGL*>(data);
   // TODO : Use current window rotation degree
   FT_UNIMPLEMENTED();
-  self->delegate_.OnRotationChange(0);
+  self->delegate_.OnOrientationChange(0);
 }
 
 void TizenRendererEvasGL::SetRotate(int angle) {

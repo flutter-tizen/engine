@@ -17,8 +17,9 @@
 extern "C" {
 #endif
 
-// Opaque reference to a Flutter window controller.
-typedef struct FlutterWindowControllerState* FlutterWindowControllerRef;
+// Opaque reference to a Flutter engine instance.
+struct FlutterDesktopEngine;
+typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;
 
 // Properties for configuring a Flutter engine instance.
 typedef struct {
@@ -26,7 +27,7 @@ typedef struct {
   const char* assets_path;
   // The path to the icudtl.dat file for the version of Flutter you are using.
   const char* icu_data_path;
-  // The path to the libapp.so file for the application to be run.
+  // The path to the AOT libary file for your application, if any.
   const char* aot_library_path;
   // The switches to pass to the Flutter engine.
   //
@@ -35,42 +36,48 @@ typedef struct {
   const char** switches;
   // The number of elements in |switches|.
   size_t switches_count;
-} FlutterEngineProperties;
+} FlutterDesktopEngineProperties;
 
-FLUTTER_EXPORT FlutterWindowControllerRef
-FlutterCreateWindow(const FlutterEngineProperties& engine_properties);
+// Runs an instance of a Flutter engine with the given properties.
+//
+// If |headed| is false, the engine is run in headless mode.
+FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopRunEngine(
+    const FlutterDesktopEngineProperties& engine_properties, bool headed);
 
-FLUTTER_EXPORT FlutterWindowControllerRef
-FlutterRunEngine(const FlutterEngineProperties& engine_properties);
+// Shuts down the given engine instance.
+//
+// |engine| is no longer valid after this call.
+FLUTTER_EXPORT void FlutterDesktopShutdownEngine(
+    FlutterDesktopEngineRef engine);
 
 // Returns the plugin registrar handle for the plugin with the given name.
 //
 // The name must be unique across the application.
 FLUTTER_EXPORT FlutterDesktopPluginRegistrarRef
-FlutterDesktopGetPluginRegistrar(FlutterWindowControllerRef controller,
+FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
                                  const char* plugin_name);
 
-FLUTTER_EXPORT void FlutterDestroyWindow(FlutterWindowControllerRef controller);
+// Returns the messenger associated with the engine.
+FLUTTER_EXPORT FlutterDesktopMessengerRef
+FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT bool FlutterRunsPrecompiledCode();
+FLUTTER_EXPORT void FlutterDesktopNotifyLocaleChange(
+    FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT void FlutterNotifyLocaleChange(
-    FlutterWindowControllerRef controller);
+FLUTTER_EXPORT void FlutterDesktopNotifyLowMemoryWarning(
+    FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT void FlutterNotifyLowMemoryWarning(
-    FlutterWindowControllerRef controller);
+FLUTTER_EXPORT void FlutterDesktopNotifyAppIsInactive(
+    FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT void FlutterNotifyAppIsInactive(
-    FlutterWindowControllerRef controller);
+FLUTTER_EXPORT void FlutterDesktopNotifyAppIsResumed(
+    FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT void FlutterNotifyAppIsResumed(
-    FlutterWindowControllerRef controller);
+FLUTTER_EXPORT void FlutterDesktopNotifyAppIsPaused(
+    FlutterDesktopEngineRef engine);
 
-FLUTTER_EXPORT void FlutterNotifyAppIsPaused(
-    FlutterWindowControllerRef controller);
-
-FLUTTER_EXPORT void FlutterNotifyAppIsDetached(
-    FlutterWindowControllerRef controller);
+FLUTTER_EXPORT void FlutterDesktopNotifyAppIsDetached(
+    FlutterDesktopEngineRef engine);
 
 #if defined(__cplusplus)
 }  // extern "C"
