@@ -28,4 +28,13 @@ class PlatformChannel {
   TizenRenderer* renderer_;
 };
 
+namespace Clipboard {
+void GetData(
+    const flutter::MethodCall<rapidjson::Document>& call,
+    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
+void SetData(
+    const flutter::MethodCall<rapidjson::Document>& call,
+    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
+};
+
 #endif  //  EMBEDDER_PLATFORM_CHANNEL_H_
