@@ -24,7 +24,8 @@ typedef struct FlutterDesktopTextureRegistrar*
 typedef enum {
   // A Pixel buffer-based texture.
   kFlutterDesktopPixelBufferTexture,
-  kFlutterDesktopGpuBufferTexture
+  kFlutterDesktopGpuBufferTexture,
+  kFlutterDesktopTextureNone
 } FlutterDesktopTextureType;
 
 // An image buffer object.
@@ -66,6 +67,7 @@ typedef const FlutterDesktopGpuBuffer* (
                                                size_t height,
                                                void* user_data);
 
+typedef void (*FlutterDesktopDestructionCallback)(void* user_data);
 
 // An object used to configure pixel buffer textures.
 typedef struct {
@@ -73,6 +75,9 @@ typedef struct {
   FlutterDesktopPixelBufferTextureCallback callback;
 
   FlutterDesktopGpuBufferTextureCallback gbCallback;
+
+  FlutterDesktopDestructionCallback destructionCallback;
+
   // Opaque data that will get passed to the provided |callback|.
   void* user_data;
 } FlutterDesktopPixelBufferTextureConfig;

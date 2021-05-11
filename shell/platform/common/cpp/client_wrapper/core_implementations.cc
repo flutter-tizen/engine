@@ -178,8 +178,13 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
         [](size_t width, size_t height,
            void* user_data) -> const FlutterDesktopGpuBuffer* {
       auto texture = static_cast<GpuBufferTexture*>(user_data);
-      auto buffer = texture->CopyGpuBuffer(width, height);
+      auto buffer = texture->GetGpuBuffer(width, height);
       return buffer;
+    };
+
+    info.pixel_buffer_config.destructionCallback = [](void* user_data) -> void {
+      auto texture = static_cast<GpuBufferTexture*>(user_data);
+      texture->Destruction();
     };
 
     int64_t texture_id = FlutterDesktopTextureRegistrarRegisterExternalTexture(

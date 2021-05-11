@@ -9,19 +9,20 @@
 #include <tbm_bufmgr.h>
 #include <tbm_drm_helper.h>
 #include <tbm_surface.h>
-#include <tbm_surface_internal.h>
 
 #include <memory>
 #include <mutex>
 
+#include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
-
-typedef struct ExternalTextureGLState ExternalTextureGLState;
+#include "flutter/shell/platform/tizen/external_texture.h"
 
 // An adaptation class of flutter engine and external texture interface.
-class ExternalTextureGL {
+class ExternalTextureGL : public ExternalTexture {
  public:
-  ExternalTextureGL();
+  ExternalTextureGL(FlutterDesktopGpuBufferTextureCallback texture_callback,
+                    FlutterDesktopDestructionCallback destruction_callback,
+                    void* user_data);
 
   virtual ~ExternalTextureGL();
 
@@ -38,15 +39,17 @@ class ExternalTextureGL {
    * texture object.
    * Returns true on success, false on failure.
    */
-  bool PopulateTextureWithIdentifier(size_t width, size_t height,
-                                     FlutterOpenGLTexture* opengl_texture);
-  bool OnFrameAvailable(tbm_surface_h tbm_surface);
+  bool PopulateTexture(size_t width, size_t height,
+                       FlutterOpenGLTexture* opengl_texture) override;
+  static void OnCollectTexture(void* surface);
 
  private:
   std::unique_ptr<ExternalTextureGLState> state_;
   std::mutex mutex_;
-  tbm_surface_h available_tbm_surface_{nullptr};
   const long texture_id_{0};
+  FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;
+  FlutterDesktopDestructionCallback destruction_callback_ = nullptr;
+  void* user_data_ = nullptr;
 };
 
 #endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_

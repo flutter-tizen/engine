@@ -21,9 +21,9 @@
 #include "flutter/shell/platform/tizen/external_texture_gl.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
-#include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #ifdef TIZEN_RENDERER_EVAS_GL
 #include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
 #else
@@ -36,9 +36,6 @@
 struct FlutterDesktopPluginRegistrar {
   // The engine that owns this state object.
   TizenEmbedderEngine* engine;
-
-  // The plugin texture registrar handle given to API clients.
-  std::unique_ptr<FlutterTextureRegistrar> texture_registrar;
 };
 
 // State associated with the messenger used to communicate with the engine.
@@ -59,7 +56,7 @@ struct FlutterTextureRegistrar {
   FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine;
 
   // The texture registrar managing external texture adapters.
-  std::map<int64_t, std::unique_ptr<ExternalTextureGL>> textures;
+  std::map<int64_t, std::unique_ptr<ExternalTexture>> textures;
   std::mutex mutex;
 };
 
@@ -78,6 +75,10 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
 
   // Returns the currently configured Plugin Registrar.
   FlutterDesktopPluginRegistrarRef GetPluginRegistrar();
+
+    FlutterTizenTextureRegistrar* texture_registrar() {
+    return texture_registrar_.get();
+  }
 
   // Sets |callback| to be called when the plugin registrar is destroyed.
   void SetPluginRegistrarDestructionCallback(
@@ -144,6 +145,9 @@ class TizenEmbedderEngine : public TizenRenderer::Delegate {
 
   // The plugin registrar handle given to API clients.
   std::unique_ptr<FlutterDesktopPluginRegistrar> plugin_registrar_;
+
+  // The texture registrar.
+  std::unique_ptr<FlutterTizenTextureRegistrar> texture_registrar_;
 
   // A callback to be called when the engine (and thus the plugin registrar)
   // is being destroyed.

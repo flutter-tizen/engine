@@ -47,27 +47,34 @@ class GpuBufferTexture {
  public:
   // A callback used for retrieving pixel buffers.
   typedef std::function<const FlutterDesktopGpuBuffer*(size_t width,
-                                                         size_t height)>
+                                                       size_t height)>
       CopyBufferCallback;
+
+  typedef std::function<void()> DestructionCallback;
 
   // Creates a pixel buffer texture that uses the provided |copy_buffer_cb| to
   // retrieve the buffer.
   // As the callback is usually invoked from the render thread, the callee must
   // take care of proper synchronization. It also needs to be ensured that the
   // returned buffer isn't released prior to unregistering this texture.
-  GpuBufferTexture(CopyBufferCallback copy_buffer_callback)
-      : copy_buffer_callback_(copy_buffer_callback) {}
+  GpuBufferTexture(CopyBufferCallback copy_buffer_callback,
+                   DestructionCallback destruction_callback)
+      : copy_buffer_callback_(copy_buffer_callback),
+        destruction_callback_(destruction_callback) {}
 
   // Returns the callback-provided FlutterDesktopPixelBuffer that contains the
   // actual pixel data. The intended surface size is specified by |width| and
   // |height|.
-  const FlutterDesktopGpuBuffer* CopyGpuBuffer(size_t width,
-                                                   size_t height) const {
+  const FlutterDesktopGpuBuffer* GetGpuBuffer(size_t width,
+                                              size_t height) const {
     return copy_buffer_callback_(width, height);
   }
 
+  void Destruction() { destruction_callback_(); }
+
  private:
   const CopyBufferCallback copy_buffer_callback_;
+  const DestructionCallback destruction_callback_;
 };
 
 
