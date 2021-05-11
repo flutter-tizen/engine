@@ -10,53 +10,37 @@
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-// Opaque reference to a Tizen embedder engine.
-struct FlutterWindowControllerState {
-  std::unique_ptr<TizenEmbedderEngine> engine;
-};
+// Returns the engine corresponding to the given opaque API handle.
+static FlutterTizenEngine* EngineFromHandle(FlutterDesktopEngineRef ref) {
+  return reinterpret_cast<FlutterTizenEngine*>(ref);
+}
 
-FlutterWindowControllerRef FlutterCreateWindow(
-    const FlutterEngineProperties& engine_properties) {
+// Returns the opaque API handle for the given engine instance.
+static FlutterDesktopEngineRef HandleForEngine(FlutterTizenEngine* engine) {
+  return reinterpret_cast<FlutterDesktopEngineRef>(engine);
+}
+
+FlutterDesktopEngineRef FlutterDesktopRunEngine(
+    const FlutterDesktopEngineProperties& engine_properties, bool headed) {
   StartLogging();
 
-  auto state = std::make_unique<FlutterWindowControllerState>();
-  state->engine = std::make_unique<TizenEmbedderEngine>();
-
-  if (!state->engine->RunEngine(engine_properties)) {
+  auto engine = std::make_unique<FlutterTizenEngine>(headed);
+  if (!engine->RunEngine(engine_properties)) {
     FT_LOGE("Failed to run the Flutter engine.");
     return nullptr;
   }
-
-  return state.release();
+  return HandleForEngine(engine.release());
 }
 
-FlutterWindowControllerRef FlutterRunEngine(
-    const FlutterEngineProperties& engine_properties) {
-  StartLogging();
-  auto state = std::make_unique<FlutterWindowControllerState>();
-  state->engine = std::make_unique<TizenEmbedderEngine>(false);
-
-  if (!state->engine->RunEngine(engine_properties)) {
-    FT_LOGE("Failed to run the Flutter engine.");
-    return nullptr;
-  }
-  return state.release();
-}
-
-void FlutterDestroyWindow(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->StopEngine();
-  }
-  delete controller;
-}
-
-bool FlutterRunsPrecompiledCode() {
-  return FlutterEngineRunsAOTCompiledDartCode();
+void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
+  auto engine = EngineFromHandle(engine_ref);
+  engine->StopEngine();
+  delete engine;
 }
 
 void FlutterDesktopPluginRegistrarEnableInputBlocking(
@@ -65,11 +49,16 @@ void FlutterDesktopPluginRegistrarEnableInputBlocking(
 }
 
 FlutterDesktopPluginRegistrarRef FlutterDesktopGetPluginRegistrar(
-    FlutterWindowControllerRef controller, const char* plugin_name) {
+    FlutterDesktopEngineRef engine, const char* plugin_name) {
   // Currently, one registrar acts as the registrar for all plugins, so the
   // name is ignored. It is part of the API to reduce churn in the future when
   // aligning more closely with the Flutter registrar system.
-  return controller->engine->GetPluginRegistrar();
+  return EngineFromHandle(engine)->GetPluginRegistrar();
+}
+
+FlutterDesktopMessengerRef FlutterDesktopEngineGetMessenger(
+    FlutterDesktopEngineRef engine) {
+  return EngineFromHandle(engine)->messenger.get();
 }
 
 FlutterDesktopMessengerRef FlutterDesktopPluginRegistrarGetMessenger(
@@ -142,40 +131,29 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
                                                             user_data);
 }
 
-void FlutterNotifyLocaleChange(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->SendLocales();
-  }
+void FlutterDesktopNotifyLocaleChange(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->localization_channel->SendLocales();
 }
 
-void FlutterNotifyAppIsInactive(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->AppIsInactive();
-  }
+void FlutterDesktopNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->lifecycle_channel->AppIsInactive();
 }
 
-void FlutterNotifyAppIsResumed(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->AppIsResumed();
-  }
+void FlutterDesktopNotifyAppIsResumed(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->lifecycle_channel->AppIsResumed();
 }
 
-void FlutterNotifyAppIsPaused(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->AppIsPaused();
-  }
+void FlutterDesktopNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->lifecycle_channel->AppIsPaused();
 }
 
-void FlutterNotifyAppIsDetached(FlutterWindowControllerRef controller) {
-  if (controller->engine) {
-    controller->engine->AppIsDetached();
-  }
+void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->lifecycle_channel->AppIsDetached();
 }
 
-void FlutterNotifyLowMemoryWarning(FlutterWindowControllerRef controller) {
-  if (controller->engine->flutter_engine) {
-    FlutterEngineNotifyLowMemoryWarning(controller->engine->flutter_engine);
-  }
+void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
+  auto flutter_engine = EngineFromHandle(engine)->flutter_engine;
+  FlutterEngineNotifyLowMemoryWarning(flutter_engine);
 }
 
 int64_t FlutterRegisterExternalTexture(

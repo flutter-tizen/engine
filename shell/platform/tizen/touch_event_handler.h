@@ -11,17 +11,17 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
-class TizenEmbedderEngine;
+class FlutterTizenEngine;
 
 class TouchEventHandler {
  public:
-  explicit TouchEventHandler(TizenEmbedderEngine* engine);
+  explicit TouchEventHandler(FlutterTizenEngine* engine);
   virtual ~TouchEventHandler();
 
   int32_t rotation = 0;
 
  private:
-  TizenEmbedderEngine* engine_;
+  FlutterTizenEngine* engine_;
   std::vector<Ecore_Event_Handler*> touch_event_handlers_;
   bool pointer_state_ = false;
 

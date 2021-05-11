@@ -4,15 +4,15 @@
 
 #include "settings_channel.h"
 
-static constexpr char CHANNEL_NAME[] = "flutter/settings";
-static constexpr char TEXT_SCALE_FACTOR[] = "textScaleFactor";
-static constexpr char ALWAYS_USE_24_HOUR_FORMAT[] = "alwaysUse24HourFormat";
-static constexpr char PLATFORM_BRIGHTNESS[] = "platformBrightness";
+static constexpr char kChannelName[] = "flutter/settings";
+static constexpr char kTextScaleFactorKey[] = "textScaleFactor";
+static constexpr char kAlwaysUse24HourFormatKey[] = "alwaysUse24HourFormat";
+static constexpr char kPlatformBrightnessKey[] = "platformBrightness";
 
 SettingsChannel::SettingsChannel(flutter::BinaryMessenger* messenger)
     : channel_(
           std::make_unique<flutter::BasicMessageChannel<rapidjson::Document>>(
-              messenger, CHANNEL_NAME,
+              messenger, kChannelName,
               &flutter::JsonMessageCodec::GetInstance())) {
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR,
                                  OnSettingsChangedCallback, this);
@@ -31,16 +31,15 @@ void SettingsChannel::SendSettingsEvent() {
   int ret = system_settings_get_value_bool(
       SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR, &value);
   if (ret == SYSTEM_SETTINGS_ERROR_NONE) {
-    event.AddMember(TEXT_SCALE_FACTOR, 1.0, allocator);
-    event.AddMember(PLATFORM_BRIGHTNESS, "light", allocator);
-    event.AddMember(ALWAYS_USE_24_HOUR_FORMAT, value, allocator);
+    event.AddMember(kTextScaleFactorKey, 1.0, allocator);
+    event.AddMember(kPlatformBrightnessKey, "light", allocator);
+    event.AddMember(kAlwaysUse24HourFormatKey, value, allocator);
     channel_->Send(event);
   }
 }
 
 void SettingsChannel::OnSettingsChangedCallback(system_settings_key_e key,
                                                 void* user_data) {
-  SettingsChannel* settingsChannel =
-      reinterpret_cast<SettingsChannel*>(user_data);
-  settingsChannel->SendSettingsEvent();
+  auto settings_channel = reinterpret_cast<SettingsChannel*>(user_data);
+  settings_channel->SendSettingsEvent();
 }

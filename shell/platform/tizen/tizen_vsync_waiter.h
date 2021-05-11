@@ -10,11 +10,11 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
-class TizenEmbedderEngine;
+class FlutterTizenEngine;
 
 class TizenVsyncWaiter {
  public:
-  TizenVsyncWaiter(TizenEmbedderEngine* engine);
+  TizenVsyncWaiter(FlutterTizenEngine* engine);
   virtual ~TizenVsyncWaiter();
   void AsyncWaitForVsync(intptr_t baton);
 
@@ -32,7 +32,7 @@ class TizenVsyncWaiter {
   tdm_client* client_{nullptr};
   tdm_client_output* output_{nullptr};
   tdm_client_vblank* vblank_{nullptr};
-  TizenEmbedderEngine* engine_{nullptr};
+  FlutterTizenEngine* engine_{nullptr};
   intptr_t baton_{0};
   Ecore_Thread* vblank_thread_{nullptr};
 };

@@ -4,12 +4,11 @@
 
 #include "key_event_handler.h"
 
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 
 static constexpr char kPlatformBackButtonName[] = "XF86Back";
 
-KeyEventHandler::KeyEventHandler(TizenEmbedderEngine *engine)
-    : engine_(engine) {
+KeyEventHandler::KeyEventHandler(FlutterTizenEngine *engine) : engine_(engine) {
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));
   key_event_handlers_.push_back(

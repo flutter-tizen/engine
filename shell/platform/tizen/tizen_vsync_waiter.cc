@@ -6,7 +6,7 @@
 
 #include <eina_thread_queue.h>
 
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 static const int QUEUE_QUIT = -1;
@@ -19,7 +19,7 @@ typedef struct {
 
 static Eina_Thread_Queue* vblank_thread_queue{nullptr};
 
-TizenVsyncWaiter::TizenVsyncWaiter(TizenEmbedderEngine* engine)
+TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
     : engine_(engine) {
   if (!CreateTDMVblank()) {
     FT_LOGE("Failed to create TDM vblank");

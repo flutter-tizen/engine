@@ -7,7 +7,7 @@
 #include <Ecore.h>
 #include <Ecore_IMF_Evas.h>
 
-#include "flutter/shell/platform/tizen/tizen_embedder_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kSetEditingStateMethod[] = "TextInput.setEditingState";
@@ -203,7 +203,7 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifierToEcoreIMFLock(
 }
 
 TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
-                                   TizenEmbedderEngine* engine)
+                                   FlutterTizenEngine* engine)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
           messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())),
       engine_(engine) {
@@ -223,7 +223,7 @@ TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
   }
   if (imf_context_) {
     ecore_imf_context_client_window_set(
-        imf_context_, (void*)engine_->tizen_renderer->GetWindowId());
+        imf_context_, (void*)engine_->renderer->GetWindowId());
     RegisterIMFCallback();
   } else {
     FT_LOGE("Failed to create imfContext");

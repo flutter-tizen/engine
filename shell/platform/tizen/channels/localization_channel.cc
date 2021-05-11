@@ -73,8 +73,8 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
     return;
   }
 
-  FlutterLocale* flutterLocale = GetFlutterLocale(locale);
-  if (!flutterLocale) {
+  FlutterLocale* flutter_locale = GetFlutterLocale(locale);
+  if (!flutter_locale) {
     FT_LOGE("Language code is required but not present.");
     return;
   }
@@ -86,14 +86,15 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
   document.AddMember("method", "setPlatformResolvedLocale", allocator);
 
   rapidjson::Value language_code, country_code, script_code, variant_code;
-  language_code.SetString(flutterLocale->language_code, allocator);
+  language_code.SetString(flutter_locale->language_code, allocator);
   country_code.SetString(
-      flutterLocale->country_code ? flutterLocale->country_code : "",
+      flutter_locale->country_code ? flutter_locale->country_code : "",
       allocator);
   script_code.SetString(
-      flutterLocale->script_code ? flutterLocale->script_code : "", allocator);
+      flutter_locale->script_code ? flutter_locale->script_code : "",
+      allocator);
   variant_code.SetString(
-      flutterLocale->variant_code ? flutterLocale->variant_code : "",
+      flutter_locale->variant_code ? flutter_locale->variant_code : "",
       allocator);
 
   rapidjson::Value args(rapidjson::kArrayType);
@@ -118,7 +119,7 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
   message.response_handle = nullptr;
   FlutterEngineSendPlatformMessage(flutter_engine_, &message);
 
-  DestroyFlutterLocale(flutterLocale);
+  DestroyFlutterLocale(flutter_locale);
 }
 
 FlutterLocale* LocalizationChannel::GetFlutterLocale(const char* locale) {
@@ -166,39 +167,39 @@ FlutterLocale* LocalizationChannel::GetFlutterLocale(const char* locale) {
     variant[bufSize] = '\0';
   }
 
-  FlutterLocale* flutterLocale = new FlutterLocale;
-  flutterLocale->struct_size = sizeof(FlutterLocale);
-  flutterLocale->language_code = language;
-  flutterLocale->country_code = country;
-  flutterLocale->script_code = script;
-  flutterLocale->variant_code = variant;
+  FlutterLocale* flutter_locale = new FlutterLocale;
+  flutter_locale->struct_size = sizeof(FlutterLocale);
+  flutter_locale->language_code = language;
+  flutter_locale->country_code = country;
+  flutter_locale->script_code = script;
+  flutter_locale->variant_code = variant;
 
-  return flutterLocale;
+  return flutter_locale;
 }
 
-void LocalizationChannel::DestroyFlutterLocale(FlutterLocale* flutterLocale) {
-  if (flutterLocale) {
-    if (flutterLocale->language_code) {
-      delete[] flutterLocale->language_code;
-      flutterLocale->language_code = nullptr;
+void LocalizationChannel::DestroyFlutterLocale(FlutterLocale* flutter_locale) {
+  if (flutter_locale) {
+    if (flutter_locale->language_code) {
+      delete[] flutter_locale->language_code;
+      flutter_locale->language_code = nullptr;
     }
 
-    if (flutterLocale->country_code) {
-      delete[] flutterLocale->country_code;
-      flutterLocale->country_code = nullptr;
+    if (flutter_locale->country_code) {
+      delete[] flutter_locale->country_code;
+      flutter_locale->country_code = nullptr;
     }
 
-    if (flutterLocale->script_code) {
-      delete[] flutterLocale->script_code;
-      flutterLocale->script_code = nullptr;
+    if (flutter_locale->script_code) {
+      delete[] flutter_locale->script_code;
+      flutter_locale->script_code = nullptr;
     }
 
-    if (flutterLocale->variant_code) {
-      delete[] flutterLocale->variant_code;
-      flutterLocale->variant_code = nullptr;
+    if (flutter_locale->variant_code) {
+      delete[] flutter_locale->variant_code;
+      flutter_locale->variant_code = nullptr;
     }
 
-    delete flutterLocale;
-    flutterLocale = nullptr;
+    delete flutter_locale;
+    flutter_locale = nullptr;
   }
 }

@@ -9,15 +9,15 @@
 
 #include <vector>
 
-class TizenEmbedderEngine;
+class FlutterTizenEngine;
 
 class KeyEventHandler {
  public:
-  explicit KeyEventHandler(TizenEmbedderEngine* engine);
+  explicit KeyEventHandler(FlutterTizenEngine* engine);
   virtual ~KeyEventHandler();
 
  private:
-  TizenEmbedderEngine* engine_;
+  FlutterTizenEngine* engine_;
   std::vector<Ecore_Event_Handler*> key_event_handlers_;
 
   static Eina_Bool OnKey(void* data, int type, void* event);

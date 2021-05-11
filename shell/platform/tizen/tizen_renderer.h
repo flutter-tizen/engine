@@ -16,7 +16,7 @@ class TizenRenderer {
 
   class Delegate {
    public:
-    virtual void OnRotationChange(int angle) = 0;
+    virtual void OnOrientationChange(int32_t degree) = 0;
   };
 
   virtual ~TizenRenderer();

@@ -16,16 +16,14 @@ static constexpr char kChannelName[] = "flutter/platform";
 PlatformChannel::PlatformChannel(flutter::BinaryMessenger* messenger,
                                  TizenRenderer* renderer)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
-          messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())) {
+          messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())),
+      renderer_(renderer) {
   channel_->SetMethodCallHandler(
       [this](
           const flutter::MethodCall<rapidjson::Document>& call,
           std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
         HandleMethodCall(call, std::move(result));
       });
-  // renderer pointer is managed by TizenEmbedderEngine
-  // !! can be nullptr in case of service application !!
-  tizen_renderer_ = renderer;
 }
 
 PlatformChannel::~PlatformChannel() {}
@@ -49,7 +47,7 @@ void PlatformChannel::HandleMethodCall(
   } else if (method == "Clipboard.hasStrings") {
     result->NotImplemented();
   } else if (method == "SystemChrome.setPreferredOrientations") {
-    if (tizen_renderer_) {
+    if (renderer_) {
       static const std::string kPortraitUp = "DeviceOrientation.portraitUp";
       static const std::string kPortraitDown = "DeviceOrientation.portraitDown";
       static const std::string kLandscapeLeft =
@@ -79,7 +77,7 @@ void PlatformChannel::HandleMethodCall(
         FT_LOGD("No rotations passed, using default values");
         rotations = {0, 90, 180, 270};
       }
-      tizen_renderer_->SetPreferredOrientations(rotations);
+      renderer_->SetPreferredOrientations(rotations);
       result->Success();
     } else {
       result->Error("Not supported for service applications");
