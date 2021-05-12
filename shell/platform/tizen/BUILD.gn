@@ -79,8 +79,6 @@ config("tizen_rootstrap_include_dirs") {
 template("embedder_for_profile") {
   forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
 
-  profile = target_name
-
   if (!defined(use_evas_gl_renderer)) {
     use_evas_gl_renderer = false
   }
@@ -110,6 +108,7 @@ template("embedder_for_profile") {
     libs = [
       "base-utils-i18n",
       "capi-appfw-application",
+      "capi-base-common",
       "capi-system-info",
       "capi-system-system-settings",
       "dlog",
@@ -119,25 +118,12 @@ template("embedder_for_profile") {
       "eina",
       "evas",
       "EGL",
+      "feedback",
       "GLESv2",
       "tbm",
       "tdm-client",
       "wayland-client",
     ]
-
-    if (profile == "mobile") {
-      libs += [
-        "capi-base-common",
-        "feedback",
-      ]
-    }
-
-    if (profile == "wearable") {
-      libs += [
-        "capi-base-common",
-        "feedback",
-      ]
-    }
 
     defines = invoker.defines
 
