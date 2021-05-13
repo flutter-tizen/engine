@@ -8,7 +8,10 @@
 
 {
   global:
-    *;
+    FlutterDesktop*;
+    FlutterEngine*;
+    FlutterPlatformMessage*;
+    *Dart*;
   local:
-    FT_*;
+    *;
 };
