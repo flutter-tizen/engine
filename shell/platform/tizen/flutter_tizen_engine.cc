@@ -208,10 +208,8 @@ bool FlutterTizenEngine::RunEngine(
   localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);
   localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(flutter_engine);
-
   if (IsHeaded()) {
-    auto texture_registrar = std::make_unique<FlutterTextureRegistrar>();
-    texture_registrar->flutter_engine = flutter_engine;
+    texture_registrar_ = std::make_unique<FlutterTizenTextureRegistrar>(this);
     key_event_channel = std::make_unique<KeyEventChannel>(
         internal_plugin_registrar_->messenger());
     navigation_channel = std::make_unique<NavigationChannel>(

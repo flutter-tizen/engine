@@ -52,15 +52,6 @@ struct AOTDataDeleter {
   }
 };
 
-// State associated with the texture registrar.
-struct FlutterTextureRegistrar {
-  FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine;
-
-  // The texture registrar managing external texture adapters.
-  std::map<int64_t, std::unique_ptr<ExternalTexture>> textures;
-  std::mutex mutex;
-};
-
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
 
 enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };

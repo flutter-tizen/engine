@@ -6,11 +6,13 @@
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
 
 #include <stdint.h>
+
+#include <atomic>
 #include <memory>
 #include <mutex>
 
-#include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/embedder/embedder.h"
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
@@ -31,25 +33,23 @@ struct ExternalTextureGLState {
   GLuint gl_texture;
 };
 
+static std::atomic_long nextTextureId = {1};
+
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexture {
  public:
-  ExternalTexture();
-
   virtual ~ExternalTexture() = default;
 
   /**
    * Returns the unique id for the ExternalTextureGL instance.
    */
-  int64_t TextureId() { return (int64_t)texture_id_; }
+  virtual int64_t TextureId() = 0;
 
   virtual bool PopulateTexture(size_t width, size_t height,
-                                     FlutterOpenGLTexture* opengl_texture) = 0;
-  
+                               FlutterOpenGLTexture* opengl_texture) = 0;
+
  protected:
   std::unique_ptr<ExternalTextureGLState> state_;
- private:
-  const long texture_id_{0};
 };
 
 #endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_

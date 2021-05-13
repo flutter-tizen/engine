@@ -29,7 +29,7 @@ class ExternalTextureGL : public ExternalTexture {
   /**
    * Returns the unique id for the ExternalTextureGL instance.
    */
-  int64_t TextureId() { return (int64_t)texture_id_; }
+  int64_t TextureId() override { return (int64_t)texture_id_; }
 
   /**
    * Accepts texture buffer copy request from the Flutter engine.

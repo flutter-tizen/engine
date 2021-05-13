@@ -6,28 +6,30 @@
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
 
 #include <stdint.h>
+
 #include <memory>
 #include <mutex>
 
-#include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/external_texture.h"
 
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexturePixelGL : public ExternalTexture {
  public:
-  ExternalTexturePixelGL(FlutterDesktopPixelBufferTextureCallback texture_callback,
-    void* user_data);
+  ExternalTexturePixelGL(
+      FlutterDesktopPixelBufferTextureCallback texture_callback,
+      void* user_data);
 
-   ~ExternalTexturePixelGL() = default;
+  ~ExternalTexturePixelGL() = default;
 
   /**
    * Returns the unique id for the ExternalTextureGL instance.
    */
-  int64_t TextureId() { return (int64_t)texture_id_; }
+  int64_t TextureId() override { return (int64_t)texture_id_; }
 
   bool PopulateTexture(size_t width, size_t height,
-                                     FlutterOpenGLTexture* opengl_texture) override;
+                       FlutterOpenGLTexture* opengl_texture) override;
 
   bool CopyPixelBuffer(size_t& width, size_t& height);
 

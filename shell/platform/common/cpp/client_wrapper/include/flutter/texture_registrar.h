@@ -42,45 +42,44 @@ class PixelBufferTexture {
   const CopyBufferCallback copy_buffer_callback_;
 };
 
-// A pixel buffer texture.
+// A gpu buffer texture.
 class GpuBufferTexture {
  public:
-  // A callback used for retrieving pixel buffers.
+  // A callback used for retrieving gpu buffers.
   typedef std::function<const FlutterDesktopGpuBuffer*(size_t width,
                                                        size_t height)>
-      CopyBufferCallback;
+      AcquireGpuBufferCallback;
 
-  typedef std::function<void()> DestructionCallback;
+  typedef std::function<void()> DestructionGpuBufferCallback;
 
-  // Creates a pixel buffer texture that uses the provided |copy_buffer_cb| to
+  // Creates a gpu buffer texture that uses the provided |copy_buffer_cb| to
   // retrieve the buffer.
   // As the callback is usually invoked from the render thread, the callee must
   // take care of proper synchronization. It also needs to be ensured that the
   // returned buffer isn't released prior to unregistering this texture.
-  GpuBufferTexture(CopyBufferCallback copy_buffer_callback,
-                   DestructionCallback destruction_callback)
-      : copy_buffer_callback_(copy_buffer_callback),
-        destruction_callback_(destruction_callback) {}
+  GpuBufferTexture(AcquireGpuBufferCallback copy_buffer_callback,
+                   DestructionGpuBufferCallback destruction_callback)
+      : acquire_gpu_buffer_callback_(copy_buffer_callback),
+        destruction_gpu_buffer_callback_(destruction_callback) {}
 
-  // Returns the callback-provided FlutterDesktopPixelBuffer that contains the
-  // actual pixel data. The intended surface size is specified by |width| and
+  // Returns the callback-provided FlutterDesktopGpuBuffer that contains the
+  // actual gpu buffer pointer. The intended surface size is specified by |width| and
   // |height|.
   const FlutterDesktopGpuBuffer* GetGpuBuffer(size_t width,
                                               size_t height) const {
-    return copy_buffer_callback_(width, height);
+    return acquire_gpu_buffer_callback_(width, height);
   }
 
-  void Destruction() { destruction_callback_(); }
+  void Destruction() { destruction_gpu_buffer_callback_(); }
 
  private:
-  const CopyBufferCallback copy_buffer_callback_;
-  const DestructionCallback destruction_callback_;
+  const AcquireGpuBufferCallback acquire_gpu_buffer_callback_;
+  const DestructionGpuBufferCallback destruction_gpu_buffer_callback_;
 };
 
 
 // The available texture variants.
-// Only PixelBufferTexture is currently implemented.
-// Other variants are expected to be added in the future.
+// Only PixelBufferTexture and GpuBufferTexture are currently implemented.
 typedef std::variant<PixelBufferTexture, GpuBufferTexture> TextureVariant;
 
 // An object keeping track of external textures.
