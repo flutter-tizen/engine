@@ -3,12 +3,6 @@
 # found in the LICENSE file.
 
 declare_args() {
-  # Whether to build the Tizen shell for the host platform, if available.
-  #
-  # By default, the Tizen shell is not built if there is a native toolkit shell,
-  # but it can be enabled for supported platforms (Linux)
-  # as an extra build artifact with this flag. The native toolkit shell will
-  # still be built as well.
+  # Whether to build the Tizen shell.
   build_tizen_shell = false
-  tizen_sdk_4 = false
 }

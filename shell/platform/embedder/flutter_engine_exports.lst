@@ -1,0 +1,14 @@
+# Copyright 2021 Samsung Electronics Co., Ltd. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Linker script that hides symbols with the prefix "FT_" so that global freetype
+# symbols referenced by Skia are not overriden by an external shared library at
+# runtime.
+
+{
+  global:
+    *;
+  local:
+    FT_*;
+};

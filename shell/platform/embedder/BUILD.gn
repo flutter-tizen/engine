@@ -292,6 +292,9 @@ shared_library("flutter_engine_library") {
 
   output_name = "flutter_engine"
 
+  # For Tizen 5.5 or older. See the script file for details.
+  ldflags = [ "-Wl,--version-script=" + rebase_path("flutter_engine_exports.lst") ]
+
   if (is_mac && !embedder_for_target) {
     ldflags = [ "-Wl,-install_name,@rpath/FlutterEmbedder.framework/$_framework_binary_subpath" ]
   }
