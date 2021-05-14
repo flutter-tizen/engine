@@ -35,9 +35,8 @@ class ExternalTexturePixelGL : public ExternalTexture {
 
  private:
   std::unique_ptr<ExternalTextureGLState> state_;
-  const long texture_id_{0};
   FlutterDesktopPixelBufferTextureCallback texture_callback_ = nullptr;
   void* user_data_ = nullptr;
 };
 
-#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
+#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H

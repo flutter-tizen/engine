@@ -26,8 +26,8 @@ bool ExternalTexturePixelGL::PopulateTexture(
 ExternalTexturePixelGL::ExternalTexturePixelGL(
     FlutterDesktopPixelBufferTextureCallback texture_callback,
     void* user_data)
-    : state_(std::make_unique<ExternalTextureGLState>()),
-      texture_id_(nextTextureId++),
+    : ExternalTexture(),
+      state_(std::make_unique<ExternalTextureGLState>()),
       texture_callback_(texture_callback),
       user_data_(user_data) {}
 

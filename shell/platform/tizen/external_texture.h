@@ -14,6 +14,7 @@
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 
+
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
 #include <Ecore.h>
@@ -38,6 +39,7 @@ static std::atomic_long nextTextureId = {1};
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexture {
  public:
+  ExternalTexture():texture_id_(nextTextureId++){}
   virtual ~ExternalTexture() = default;
 
   /**
@@ -50,6 +52,7 @@ class ExternalTexture {
 
  protected:
   std::unique_ptr<ExternalTextureGLState> state_;
+  const long texture_id_{0};
 };
 
 #endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_

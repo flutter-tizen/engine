@@ -175,8 +175,8 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
   } else if (auto gpu_buffer_texture = std::get_if<GpuBufferTexture>(texture)) {
     FlutterDesktopTextureInfo info = {};
     info.type = kFlutterDesktopGpuBufferTexture;
-    info.pixel_buffer_config.user_data = gpu_buffer_texture;
-    info.pixel_buffer_config.gbCallback =
+    info.gpu_buffer_config.user_data = gpu_buffer_texture;
+    info.gpu_buffer_config.callback =
         [](size_t width, size_t height,
            void* user_data) -> const FlutterDesktopGpuBuffer* {
       auto texture = static_cast<GpuBufferTexture*>(user_data);
@@ -184,7 +184,7 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
       return buffer;
     };
 
-    info.pixel_buffer_config.destructionCallback = [](void* user_data) -> void {
+    info.gpu_buffer_config.destructionCallback = [](void* user_data) -> void {
       auto texture = static_cast<GpuBufferTexture*>(user_data);
       texture->Destruction();
     };

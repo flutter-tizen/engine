@@ -9,7 +9,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "flutter/shell/platform/tizen/external_texture_gl.h"
+#include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
 
 class FlutterTizenEngine;
 

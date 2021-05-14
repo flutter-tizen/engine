@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
-#define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
+#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
 
 #include <stdint.h>
 #include <tbm_bufmgr.h>
@@ -45,11 +45,9 @@ class ExternalTextureGL : public ExternalTexture {
 
  private:
   std::unique_ptr<ExternalTextureGLState> state_;
-  std::mutex mutex_;
-  const long texture_id_{0};
   FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;
   FlutterDesktopDestructionCallback destruction_callback_ = nullptr;
   void* user_data_ = nullptr;
 };
 
-#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
+#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_

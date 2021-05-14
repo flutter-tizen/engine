@@ -34,14 +34,14 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
   }
 
   if (texture_info->type == kFlutterDesktopGpuBufferTexture) {
-    if (!texture_info->pixel_buffer_config.gbCallback) {
+    if (!texture_info->gpu_buffer_config.callback) {
       FT_LOGE("Invalid gpu buffer texture callback.");
       return -1;
     }
     texture_gl = std::make_unique<ExternalTextureGL>(
-        texture_info->pixel_buffer_config.gbCallback,
-        texture_info->pixel_buffer_config.destructionCallback,
-        texture_info->pixel_buffer_config.user_data);
+        texture_info->gpu_buffer_config.callback,
+        texture_info->gpu_buffer_config.destructionCallback,
+        texture_info->gpu_buffer_config.user_data);
   }
 
   int64_t texture_id = texture_gl->TextureId();

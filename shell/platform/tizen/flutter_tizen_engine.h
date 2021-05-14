@@ -19,7 +19,6 @@
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
 #include "flutter/shell/platform/tizen/channels/settings_channel.h"
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
-#include "flutter/shell/platform/tizen/external_texture_gl.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"

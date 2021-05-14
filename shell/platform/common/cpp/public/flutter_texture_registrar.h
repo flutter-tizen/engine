@@ -62,6 +62,7 @@ typedef const FlutterDesktopPixelBuffer* (
     *FlutterDesktopPixelBufferTextureCallback)(size_t width,
                                                size_t height,
                                                void* user_data);
+                                               
 typedef const FlutterDesktopGpuBuffer* (
     *FlutterDesktopGpuBufferTextureCallback)(size_t width,
                                                size_t height,
@@ -73,19 +74,25 @@ typedef void (*FlutterDesktopDestructionCallback)(void* user_data);
 typedef struct {
   // The callback used by the engine to copy the pixel buffer object.
   FlutterDesktopPixelBufferTextureCallback callback;
-
-  FlutterDesktopGpuBufferTextureCallback gbCallback;
-
-  FlutterDesktopDestructionCallback destructionCallback;
-
   // Opaque data that will get passed to the provided |callback|.
   void* user_data;
 } FlutterDesktopPixelBufferTextureConfig;
+
+// An object used to configure GPU buffer textures.
+typedef struct {
+  // The callback used by the engine to copy the GPU buffer object.
+  FlutterDesktopGpuBufferTextureCallback callback;
+  // The callback used by the engine to desturction GPU buffer object.
+  FlutterDesktopDestructionCallback destructionCallback;
+  // Opaque data that will get passed to the provided |callback|.
+  void* user_data;
+} FlutterDesktopGPUBufferTextureConfig;
 
 typedef struct {
   FlutterDesktopTextureType type;
   union {
     FlutterDesktopPixelBufferTextureConfig pixel_buffer_config;
+    FlutterDesktopGPUBufferTextureConfig gpu_buffer_config;
   };
 } FlutterDesktopTextureInfo;
 

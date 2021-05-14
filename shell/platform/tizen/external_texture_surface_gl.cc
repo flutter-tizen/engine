@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "external_texture_gl.h"
+#include "external_texture_surface_gl.h"
 
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 
@@ -33,8 +33,8 @@ void ExternalTextureGL::OnCollectTexture(void* textureGL) {
 ExternalTextureGL::ExternalTextureGL(
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopDestructionCallback destruction_callback, void* user_data)
-    : state_(std::make_unique<ExternalTextureGLState>()),
-      texture_id_(nextTextureId++),
+    : ExternalTexture(),
+      state_(std::make_unique<ExternalTextureGLState>()),
       texture_callback_(texture_callback),
       destruction_callback_(destruction_callback),
       user_data_(user_data) {}
