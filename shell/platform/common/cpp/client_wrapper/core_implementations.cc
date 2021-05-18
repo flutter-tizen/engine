@@ -181,6 +181,9 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
            void* user_data) -> const FlutterDesktopGpuBuffer* {
       auto texture = static_cast<GpuBufferTexture*>(user_data);
       auto buffer = texture->GetGpuBuffer(width, height);
+      if (buffer) {
+        texture->setBuffer(const_cast<void*>(buffer->buffer));
+      }
       return buffer;
     };
 

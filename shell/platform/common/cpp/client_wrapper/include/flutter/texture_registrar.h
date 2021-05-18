@@ -50,7 +50,7 @@ class GpuBufferTexture {
                                                        size_t height)>
       AcquireGpuBufferCallback;
 
-  typedef std::function<void()> DestructionGpuBufferCallback;
+  typedef std::function<void(void* buffer)> DestructionGpuBufferCallback;
 
   // Creates a gpu buffer texture that uses the provided |copy_buffer_cb| to
   // retrieve the buffer.
@@ -60,21 +60,24 @@ class GpuBufferTexture {
   GpuBufferTexture(AcquireGpuBufferCallback copy_buffer_callback,
                    DestructionGpuBufferCallback destruction_callback)
       : acquire_gpu_buffer_callback_(copy_buffer_callback),
-        destruction_gpu_buffer_callback_(destruction_callback) {}
+        destruction_gpu_buffer_callback_(destruction_callback),
+        buffer_(nullptr) {}
 
   // Returns the callback-provided FlutterDesktopGpuBuffer that contains the
-  // actual gpu buffer pointer. The intended surface size is specified by |width| and
-  // |height|.
+  // actual gpu buffer pointer. The intended surface size is specified by
+  // |width| and |height|.
   const FlutterDesktopGpuBuffer* GetGpuBuffer(size_t width,
                                               size_t height) const {
     return acquire_gpu_buffer_callback_(width, height);
   }
 
-  void Destruction() { destruction_gpu_buffer_callback_(); }
+  void Destruction() { destruction_gpu_buffer_callback_(buffer_); }
+  void setBuffer(void* buffer) { buffer_ = buffer; }
 
  private:
   const AcquireGpuBufferCallback acquire_gpu_buffer_callback_;
   const DestructionGpuBufferCallback destruction_gpu_buffer_callback_;
+  void* buffer_;
 };
 
 
