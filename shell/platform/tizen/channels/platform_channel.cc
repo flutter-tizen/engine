@@ -17,7 +17,9 @@ static constexpr char kChannelName[] = "flutter/platform";
 PlatformChannel::PlatformChannel(flutter::BinaryMessenger* messenger,
                                  TizenRenderer* renderer)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
-          messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())),
+          messenger,
+          kChannelName,
+          &flutter::JsonMethodCodec::GetInstance())),
       renderer_(renderer) {
   channel_->SetMethodCallHandler(
       [this](
@@ -327,8 +329,7 @@ void GetData(
   document.SetObject();
   rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
   document.AddMember(rapidjson::Value(kTextKey, allocator),
-                      rapidjson::Value(string_clipboard, allocator),
-                      allocator);
+                     rapidjson::Value(string_clipboard, allocator), allocator);
   result->Success(document);
 }
 

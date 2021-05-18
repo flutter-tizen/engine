@@ -93,7 +93,9 @@ bool ExternalTextureGL::OnFrameAvailable(tbm_surface_h tbm_surface) {
 }
 
 bool ExternalTextureGL::PopulateTextureWithIdentifier(
-    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+    size_t width,
+    size_t height,
+    FlutterOpenGLTexture* opengl_texture) {
   if (!available_tbm_surface_) {
     FT_LOGD("[texture id:%ld] available_tbm_surface_ is null", texture_id_);
     return false;

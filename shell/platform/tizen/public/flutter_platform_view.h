@@ -28,7 +28,11 @@ class PlatformView {
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
   virtual void Dispose() = 0;
   virtual void Resize(double width, double height) = 0;
-  virtual void Touch(int type, int button, double x, double y, double dx,
+  virtual void Touch(int type,
+                     int button,
+                     double x,
+                     double y,
+                     double dx,
                      double dy) = 0;
   virtual void SetDirection(int direction) = 0;
   virtual void ClearFocus() = 0;
@@ -60,7 +64,9 @@ class PlatformViewFactory {
   const flutter::MessageCodec<flutter::EncodableValue>& GetCodec() {
     return codec_;
   }
-  virtual PlatformView* Create(int viewId, double width, double height,
+  virtual PlatformView* Create(int viewId,
+                               double width,
+                               double height,
                                const ByteMessage& createParams) = 0;
   virtual void Dispose() = 0;
 
@@ -74,7 +80,8 @@ extern "C" {
 #endif
 
 FLUTTER_EXPORT void FlutterRegisterViewFactory(
-    FlutterDesktopPluginRegistrarRef registrar, const char* view_type,
+    FlutterDesktopPluginRegistrarRef registrar,
+    const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory);
 
 #if defined(__cplusplus)

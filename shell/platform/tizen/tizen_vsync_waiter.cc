@@ -139,11 +139,16 @@ void TizenVsyncWaiter::DestroyTDMVblank() {
   }
 }
 
-bool TizenVsyncWaiter::TDMValid() { return vblank_ && client_; }
+bool TizenVsyncWaiter::TDMValid() {
+  return vblank_ && client_;
+}
 
-void TizenVsyncWaiter::TdmClientVblankCallback(
-    tdm_client_vblank* vblank, tdm_error error, unsigned int sequence,
-    unsigned int tv_sec, unsigned int tv_usec, void* user_data) {
+void TizenVsyncWaiter::TdmClientVblankCallback(tdm_client_vblank* vblank,
+                                               tdm_error error,
+                                               unsigned int sequence,
+                                               unsigned int tv_sec,
+                                               unsigned int tv_usec,
+                                               void* user_data) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(user_data);
   FT_ASSERT(tizen_vsync_waiter != nullptr);

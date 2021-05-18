@@ -64,7 +64,9 @@ FlutterTizenEngine::FlutterTizenEngine(bool headed)
   }
 }
 
-FlutterTizenEngine::~FlutterTizenEngine() { renderer = nullptr; }
+FlutterTizenEngine::~FlutterTizenEngine() {
+  renderer = nullptr;
+}
 
 void FlutterTizenEngine::InitializeRenderer() {
 #ifdef TIZEN_RENDERER_EVAS_GL
@@ -255,7 +257,8 @@ void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
   plugin_registrar_destruction_callback_ = callback;
 }
 
-void FlutterTizenEngine::SendWindowMetrics(int32_t width, int32_t height,
+void FlutterTizenEngine::SendWindowMetrics(int32_t width,
+                                           int32_t height,
                                            double pixel_ratio) {
   FlutterWindowMetricsEvent event;
   event.struct_size = sizeof(FlutterWindowMetricsEvent);
@@ -331,7 +334,8 @@ void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
 // The Flutter Engine calls out to this function when new platform messages are
 // available.
 void FlutterTizenEngine::OnFlutterPlatformMessage(
-    const FlutterPlatformMessage* engine_message, void* user_data) {
+    const FlutterPlatformMessage* engine_message,
+    void* user_data) {
   if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
     FT_LOGE("Invalid message size received. Expected: %zu, but received %zu",
             sizeof(FlutterPlatformMessage), engine_message->struct_size);

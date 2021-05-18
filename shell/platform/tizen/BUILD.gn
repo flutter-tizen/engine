@@ -96,8 +96,8 @@ template("embedder_for_profile") {
       "channels/settings_channel.cc",
       "channels/text_input_channel.cc",
       "external_texture_gl.cc",
-      "flutter_tizen_engine.cc",
       "flutter_tizen.cc",
+      "flutter_tizen_engine.cc",
       "key_event_handler.cc",
       "tizen_event_loop.cc",
       "tizen_log.cc",
@@ -152,7 +152,7 @@ template("embedder_for_profile") {
 
     configs += [
       ":tizen_rootstrap_include_dirs",
-      "//flutter/shell/platform/common/cpp:desktop_library_implementation"
+      "//flutter/shell/platform/common/cpp:desktop_library_implementation",
     ]
 
     public_configs = [ "//flutter:config" ]
@@ -214,12 +214,12 @@ copy("copy_icu") {
 
 group("tizen") {
   deps = [
-    ":flutter_tizen_mobile",
-    ":flutter_tizen_wearable",
-    ":flutter_tizen_tv",
+    ":copy_icu",
     ":flutter_tizen_common",
+    ":flutter_tizen_mobile",
+    ":flutter_tizen_tv",
+    ":flutter_tizen_wearable",
     ":publish_cpp_client_wrapper",
     ":publish_headers_tizen",
-    ":copy_icu",
   ]
 }

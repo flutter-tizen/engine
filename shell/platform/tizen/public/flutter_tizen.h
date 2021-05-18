@@ -41,8 +41,9 @@ typedef struct {
 // Runs an instance of a Flutter engine with the given properties.
 //
 // If |headed| is false, the engine is run in headless mode.
-FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopRunEngine(
-    const FlutterDesktopEngineProperties& engine_properties, bool headed);
+FLUTTER_EXPORT FlutterDesktopEngineRef
+FlutterDesktopRunEngine(const FlutterDesktopEngineProperties& engine_properties,
+                        bool headed);
 
 // Shuts down the given engine instance.
 //

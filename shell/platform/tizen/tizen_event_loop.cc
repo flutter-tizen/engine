@@ -73,7 +73,8 @@ Eina_Bool TizenEventLoop::TaskTimerCallback(void* data) {
   return EINA_FALSE;
 }
 
-void TizenEventLoop::ExcuteTaskEvents(void* data, void* buffer,
+void TizenEventLoop::ExcuteTaskEvents(void* data,
+                                      void* buffer,
                                       unsigned int nbyte) {
   auto* self = reinterpret_cast<TizenEventLoop*>(data);
   auto* p_task = reinterpret_cast<Task*>(buffer);
@@ -98,7 +99,8 @@ void TizenEventLoop::ExcuteTaskEvents(void* data, void* buffer,
 }
 
 TizenPlatformEventLoop::TizenPlatformEventLoop(
-    std::thread::id main_thread_id, TaskExpiredCallback on_task_expired)
+    std::thread::id main_thread_id,
+    TaskExpiredCallback on_task_expired)
     : TizenEventLoop(main_thread_id, on_task_expired) {}
 
 TizenPlatformEventLoop::~TizenPlatformEventLoop() {}
@@ -114,8 +116,7 @@ void TizenPlatformEventLoop::OnTaskExpired() {
 TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
                                            TaskExpiredCallback on_task_expired,
                                            TizenRenderer* renderer)
-    : TizenEventLoop(main_thread_id, on_task_expired),
-      renderer_(renderer) {
+    : TizenEventLoop(main_thread_id, on_task_expired), renderer_(renderer) {
   evas_object_image_pixels_get_callback_set(
       (Evas_Object*)static_cast<TizenRendererEvasGL*>(renderer_)
           ->GetImageHandle(),

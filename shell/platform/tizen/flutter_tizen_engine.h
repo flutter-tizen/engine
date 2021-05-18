@@ -122,7 +122,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   bool IsHeaded() { return renderer != nullptr; }
 
   static void OnFlutterPlatformMessage(
-      const FlutterPlatformMessage* engine_message, void* user_data);
+      const FlutterPlatformMessage* engine_message,
+      void* user_data);
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
   FlutterRendererConfig GetRendererConfig();

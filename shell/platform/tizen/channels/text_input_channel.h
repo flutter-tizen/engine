@@ -64,13 +64,17 @@ class TextInputChannel {
   std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
   std::unique_ptr<flutter::TextInputModel> active_model_;
 
-  static void CommitCallback(void* data, Ecore_IMF_Context* ctx,
+  static void CommitCallback(void* data,
+                             Ecore_IMF_Context* ctx,
                              void* event_info);
-  static void PreeditCallback(void* data, Ecore_IMF_Context* ctx,
+  static void PreeditCallback(void* data,
+                              Ecore_IMF_Context* ctx,
                               void* event_info);
-  static void PrivateCommandCallback(void* data, Ecore_IMF_Context* ctx,
+  static void PrivateCommandCallback(void* data,
+                                     Ecore_IMF_Context* ctx,
                                      void* event_info);
-  static void DeleteSurroundingCallback(void* data, Ecore_IMF_Context* ctx,
+  static void DeleteSurroundingCallback(void* data,
+                                        Ecore_IMF_Context* ctx,
                                         void* event_info);
   static void InputPanelStateChangedCallback(void* data,
                                              Ecore_IMF_Context* context,
@@ -80,7 +84,8 @@ class TextInputChannel {
                                                 int value);
   static Eina_Bool RetrieveSurroundingCallback(void* data,
                                                Ecore_IMF_Context* ctx,
-                                               char** text, int* cursor_pos);
+                                               char** text,
+                                               int* cursor_pos);
 
   int client_id_{0};
   SoftwareKeyboardGeometry current_keyboard_geometry_;

@@ -215,7 +215,8 @@ static const std::map<int, int> kModifierMap = {
 KeyEventChannel::KeyEventChannel(flutter::BinaryMessenger* messenger)
     : channel_(
           std::make_unique<flutter::BasicMessageChannel<rapidjson::Document>>(
-              messenger, kChannelName,
+              messenger,
+              kChannelName,
               &flutter::JsonMessageCodec::GetInstance())) {}
 
 KeyEventChannel::~KeyEventChannel() {}

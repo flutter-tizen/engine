@@ -38,7 +38,8 @@ class ExternalTextureGL {
    * texture object.
    * Returns true on success, false on failure.
    */
-  bool PopulateTextureWithIdentifier(size_t width, size_t height,
+  bool PopulateTextureWithIdentifier(size_t width,
+                                     size_t height,
                                      FlutterOpenGLTexture* opengl_texture);
   bool OnFrameAvailable(tbm_surface_h tbm_surface);
 

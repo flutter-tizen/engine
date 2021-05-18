@@ -25,9 +25,13 @@ class TouchEventHandler {
   std::vector<Ecore_Event_Handler*> touch_event_handlers_;
   bool pointer_state_ = false;
 
-  void SendFlutterPointerEvent(FlutterPointerPhase phase, double x, double y,
-                               double scroll_delta_x, double scroll_delta_y,
-                               size_t timestamp, int device_id);
+  void SendFlutterPointerEvent(FlutterPointerPhase phase,
+                               double x,
+                               double y,
+                               double scroll_delta_x,
+                               double scroll_delta_y,
+                               size_t timestamp,
+                               int device_id);
 
   static Eina_Bool OnTouch(void* data, int type, void* event);
 };

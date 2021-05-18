@@ -35,8 +35,11 @@ class TizenRenderer {
   virtual uintptr_t GetWindowId() = 0;
 
   virtual void SetRotate(int angle) = 0;
-  virtual void ResizeWithRotation(int32_t x, int32_t y, int32_t width,
-                                  int32_t height, int32_t degree) = 0;
+  virtual void ResizeWithRotation(int32_t x,
+                                  int32_t y,
+                                  int32_t width,
+                                  int32_t height,
+                                  int32_t degree) = 0;
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
  protected:

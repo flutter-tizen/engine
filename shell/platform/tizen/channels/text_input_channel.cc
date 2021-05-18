@@ -41,7 +41,8 @@ static const char* GetImfMethod() {
   Eina_List* modules;
 
   modules = ecore_imf_context_available_ids_get();
-  if (!modules) return nullptr;
+  if (!modules)
+    return nullptr;
 
   void* module;
   EINA_LIST_FREE(modules, module) { return (const char*)module; }
@@ -56,7 +57,8 @@ static bool IsASCIIPrintableKey(char c) {
   return false;
 }
 
-void TextInputChannel::CommitCallback(void* data, Ecore_IMF_Context* ctx,
+void TextInputChannel::CommitCallback(void* data,
+                                      Ecore_IMF_Context* ctx,
                                       void* event_info) {
   TextInputChannel* self = (TextInputChannel*)data;
   if (!self) {
@@ -72,7 +74,8 @@ void TextInputChannel::CommitCallback(void* data, Ecore_IMF_Context* ctx,
   self->OnCommit(str);
 }
 
-void TextInputChannel::PreeditCallback(void* data, Ecore_IMF_Context* ctx,
+void TextInputChannel::PreeditCallback(void* data,
+                                       Ecore_IMF_Context* ctx,
                                        void* event_info) {
   TextInputChannel* self = (TextInputChannel*)data;
   if (!self) {
@@ -108,7 +111,9 @@ void TextInputChannel::DeleteSurroundingCallback(void* data,
 }
 
 void TextInputChannel::InputPanelStateChangedCallback(
-    void* data, Ecore_IMF_Context* context, int value) {
+    void* data,
+    Ecore_IMF_Context* context,
+    int value) {
   FT_LOGD("Change input panel state[%d]", value);
   if (!data) {
     FT_LOGW("No Data");
@@ -130,7 +135,9 @@ void TextInputChannel::InputPanelStateChangedCallback(
 }
 
 void TextInputChannel::InputPanelGeometryChangedCallback(
-    void* data, Ecore_IMF_Context* context, int value) {
+    void* data,
+    Ecore_IMF_Context* context,
+    int value) {
   if (!data) {
     FT_LOGW("No Data");
     return;
@@ -205,7 +212,9 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifierToEcoreIMFLock(
 TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
                                    FlutterTizenEngine* engine)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
-          messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())),
+          messenger,
+          kChannelName,
+          &flutter::JsonMethodCodec::GetInstance())),
       engine_(engine) {
   channel_->SetMethodCallHandler(
       [this](
@@ -367,7 +376,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
   bool isIME = true;
 #else
   bool isIME = ecore_imf_context_keyboard_mode_get(imf_context_) ==
-          ECORE_IMF_INPUT_PANEL_SW_KEYBOARD_MODE;
+               ECORE_IMF_INPUT_PANEL_SW_KEYBOARD_MODE;
 #endif
 
   Ecore_IMF_Event_Key_Down ecoreKeyDownEvent;

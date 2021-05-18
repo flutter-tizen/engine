@@ -28,12 +28,14 @@ FlutterRegisterExternalTexture(FlutterTextureRegistrarRef texture_registrar);
 // Unregisters an existing texture from the Flutter engine for a |texture_id|.
 // Returns true on success, false on failure.
 FLUTTER_EXPORT bool FlutterUnregisterExternalTexture(
-    FlutterTextureRegistrarRef texture_registrar, int64_t texture_id);
+    FlutterTextureRegistrarRef texture_registrar,
+    int64_t texture_id);
 
 // Marks that a new texture frame is available for a given |texture_id|.
 // Returns true on success, false on failure.
 FLUTTER_EXPORT bool FlutterMarkExternalTextureFrameAvailable(
-    FlutterTextureRegistrarRef texture_registrar, int64_t texture_id,
+    FlutterTextureRegistrarRef texture_registrar,
+    int64_t texture_id,
     void* tbm_surface);
 
 #if defined(__cplusplus)

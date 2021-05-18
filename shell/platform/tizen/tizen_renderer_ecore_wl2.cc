@@ -9,12 +9,14 @@
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-TizenRendererEcoreWl2::TizenRendererEcoreWl2(TizenRenderer::Delegate &delegate)
+TizenRendererEcoreWl2::TizenRendererEcoreWl2(TizenRenderer::Delegate& delegate)
     : TizenRenderer(delegate) {
   InitializeRenderer();
 }
 
-TizenRendererEcoreWl2::~TizenRendererEcoreWl2() { DestroyRenderer(); }
+TizenRendererEcoreWl2::~TizenRendererEcoreWl2() {
+  DestroyRenderer();
+}
 
 bool TizenRendererEcoreWl2::OnMakeCurrent() {
   if (!IsValid()) {
@@ -86,14 +88,14 @@ uint32_t TizenRendererEcoreWl2::OnGetFBO() {
   return 0;
 }
 
-void *TizenRendererEcoreWl2::OnProcResolver(const char *name) {
+void* TizenRendererEcoreWl2::OnProcResolver(const char* name) {
   auto address = eglGetProcAddress(name);
   if (address != nullptr) {
-    return reinterpret_cast<void *>(address);
+    return reinterpret_cast<void*>(address);
   }
-#define GL_FUNC(FunctionName)                      \
-  else if (strcmp(name, #FunctionName) == 0) {     \
-    return reinterpret_cast<void *>(FunctionName); \
+#define GL_FUNC(FunctionName)                     \
+  else if (strcmp(name, #FunctionName) == 0) {    \
+    return reinterpret_cast<void*>(FunctionName); \
   }
   GL_FUNC(eglGetCurrentDisplay)
   GL_FUNC(eglQueryString)
@@ -216,7 +218,7 @@ TizenRenderer::TizenWindowGeometry TizenRendererEcoreWl2::GetGeometry() {
 }
 
 int32_t TizenRendererEcoreWl2::GetDpi() {
-  auto *output = ecore_wl2_window_output_find(ecore_wl2_window_);
+  auto* output = ecore_wl2_window_output_find(ecore_wl2_window_);
   if (!output) {
     FT_LOGE("Could not find an output associated with the window.");
     return 0;
@@ -251,7 +253,9 @@ bool TizenRendererEcoreWl2::InitializeRenderer() {
   return true;
 }
 
-void TizenRendererEcoreWl2::Show() { ecore_wl2_window_show(ecore_wl2_window_); }
+void TizenRendererEcoreWl2::Show() {
+  ecore_wl2_window_show(ecore_wl2_window_);
+}
 
 void TizenRendererEcoreWl2::DestroyRenderer() {
   DestroyEglSurface();
@@ -260,7 +264,7 @@ void TizenRendererEcoreWl2::DestroyRenderer() {
   ShutdownDisplay();
 }
 
-bool TizenRendererEcoreWl2::SetupDisplay(int32_t &width, int32_t &height) {
+bool TizenRendererEcoreWl2::SetupDisplay(int32_t& width, int32_t& height) {
   if (!ecore_wl2_init()) {
     FT_LOGE("Could not initialize ecore_wl2");
     return false;
@@ -354,7 +358,7 @@ bool TizenRendererEcoreWl2::SetupEglSurface() {
     return false;
   }
 
-  EGLint *ptr = nullptr;
+  EGLint* ptr = nullptr;
   egl_surface_ = eglCreateWindowSurface(egl_display_, egl_config_,
                                         GetEGLNativeWindowType(), ptr);
   if (egl_surface_ == EGL_NO_SURFACE) {
@@ -416,7 +420,7 @@ bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
     PrintEGLError();
     return false;
   }
-  EGLConfig *configs = (EGLConfig *)calloc(num_config, sizeof(EGLConfig));
+  EGLConfig* configs = (EGLConfig*)calloc(num_config, sizeof(EGLConfig));
   EGLint num;
   // Get the List of EGL framebuffer configuration matches with config_attribs
   // in list "configs"
@@ -557,10 +561,11 @@ void TizenRendererEcoreWl2::DestroyEglSurface() {
   }
 }
 
-Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void *data, int type,
-                                                 void *event) {
-  auto *self = reinterpret_cast<TizenRendererEcoreWl2 *>(data);
-  auto *ev = reinterpret_cast<Ecore_Wl2_Event_Window_Rotation *>(event);
+Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void* data,
+                                                 int type,
+                                                 void* event) {
+  auto* self = reinterpret_cast<TizenRendererEcoreWl2*>(data);
+  auto* ev = reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
   self->delegate_.OnOrientationChange(ev->angle);
   return ECORE_CALLBACK_PASS_ON;
 }
@@ -570,8 +575,10 @@ void TizenRendererEcoreWl2::SetRotate(int angle) {
   received_rotation_ = true;
 }
 
-void TizenRendererEcoreWl2::ResizeWithRotation(int32_t x, int32_t y,
-                                               int32_t width, int32_t height,
+void TizenRendererEcoreWl2::ResizeWithRotation(int32_t x,
+                                               int32_t y,
+                                               int32_t width,
+                                               int32_t height,
                                                int32_t angle) {
   ecore_wl2_egl_window_resize_with_rotation(ecore_wl2_egl_window_, x, y, width,
                                             height, angle);
@@ -586,7 +593,7 @@ void TizenRendererEcoreWl2::SendRotationChangeDone() {
 }
 
 void TizenRendererEcoreWl2::SetPreferredOrientations(
-    const std::vector<int> &rotations) {
+    const std::vector<int>& rotations) {
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations.data(),
                                            rotations.size());
 }

@@ -30,7 +30,8 @@ int ExtractIntFromMap(const flutter::EncodableValue& arguments,
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<int>(value)) return std::get<int>(value);
+    if (std::holds_alternative<int>(value))
+      return std::get<int>(value);
   }
   return -1;
 }
@@ -40,13 +41,15 @@ double ExtractDoubleFromMap(const flutter::EncodableValue& arguments,
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<double>(value)) return std::get<double>(value);
+    if (std::holds_alternative<double>(value))
+      return std::get<double>(value);
   }
   return -1;
 }
 
 flutter::EncodableMap ExtractMapFromMap(
-    const flutter::EncodableValue& arguments, const char* key) {
+    const flutter::EncodableValue& arguments,
+    const char* key) {
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
@@ -57,7 +60,8 @@ flutter::EncodableMap ExtractMapFromMap(
 }
 
 flutter::EncodableList ExtractListFromMap(
-    const flutter::EncodableValue& arguments, const char* key) {
+    const flutter::EncodableValue& arguments,
+    const char* key) {
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
@@ -72,7 +76,8 @@ PlatformViewChannel::PlatformViewChannel(flutter::BinaryMessenger* messenger,
     : engine_(engine),
       channel_(
           std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-              messenger, kChannelName,
+              messenger,
+              kChannelName,
               &flutter::StandardMethodCodec::GetInstance())) {
   channel_->SetMethodCallHandler(
       [this](const flutter::MethodCall<flutter::EncodableValue>& call,
@@ -80,7 +85,9 @@ PlatformViewChannel::PlatformViewChannel(flutter::BinaryMessenger* messenger,
                  result) { HandleMethodCall(call, std::move(result)); });
 }
 
-PlatformViewChannel::~PlatformViewChannel() { Dispose(); }
+PlatformViewChannel::~PlatformViewChannel() {
+  Dispose();
+}
 
 void PlatformViewChannel::Dispose() {
   // Clean-up view_instances_

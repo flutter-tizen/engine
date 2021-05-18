@@ -26,7 +26,8 @@ static FlutterDesktopEngineRef HandleForEngine(FlutterTizenEngine* engine) {
 }
 
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
-    const FlutterDesktopEngineProperties& engine_properties, bool headed) {
+    const FlutterDesktopEngineProperties& engine_properties,
+    bool headed) {
   StartLogging();
 
   auto engine = std::make_unique<FlutterTizenEngine>(headed);
@@ -44,12 +45,14 @@ void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
 }
 
 void FlutterDesktopPluginRegistrarEnableInputBlocking(
-    FlutterDesktopPluginRegistrarRef registrar, const char* channel) {
+    FlutterDesktopPluginRegistrarRef registrar,
+    const char* channel) {
   registrar->engine->message_dispatcher->EnableInputBlockingForChannel(channel);
 }
 
 FlutterDesktopPluginRegistrarRef FlutterDesktopGetPluginRegistrar(
-    FlutterDesktopEngineRef engine, const char* plugin_name) {
+    FlutterDesktopEngineRef engine,
+    const char* plugin_name) {
   // Currently, one registrar acts as the registrar for all plugins, so the
   // name is ignored. It is part of the API to reduce churn in the future when
   // aligning more closely with the Flutter registrar system.
@@ -78,7 +81,8 @@ FlutterTextureRegistrarRef FlutterPluginRegistrarGetTexture(
 }
 
 bool FlutterDesktopMessengerSend(FlutterDesktopMessengerRef messenger,
-                                 const char* channel, const uint8_t* message,
+                                 const char* channel,
+                                 const uint8_t* message,
                                  const size_t message_size) {
   return FlutterDesktopMessengerSendWithReply(messenger, channel, message,
                                               message_size, nullptr, nullptr);
@@ -117,7 +121,8 @@ bool FlutterDesktopMessengerSendWithReply(FlutterDesktopMessengerRef messenger,
 
 void FlutterDesktopMessengerSendResponse(
     FlutterDesktopMessengerRef messenger,
-    const FlutterDesktopMessageResponseHandle* handle, const uint8_t* data,
+    const FlutterDesktopMessageResponseHandle* handle,
+    const uint8_t* data,
     size_t data_length) {
   FlutterEngineSendPlatformMessageResponse(messenger->engine->flutter_engine,
                                            handle, data, data_length);
@@ -171,7 +176,8 @@ int64_t FlutterRegisterExternalTexture(
 }
 
 bool FlutterUnregisterExternalTexture(
-    FlutterTextureRegistrarRef texture_registrar, int64_t texture_id) {
+    FlutterTextureRegistrarRef texture_registrar,
+    int64_t texture_id) {
   std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto it = texture_registrar->textures.find(texture_id);
   if (it != texture_registrar->textures.end())
@@ -182,7 +188,8 @@ bool FlutterUnregisterExternalTexture(
 }
 
 bool FlutterMarkExternalTextureFrameAvailable(
-    FlutterTextureRegistrarRef texture_registrar, int64_t texture_id,
+    FlutterTextureRegistrarRef texture_registrar,
+    int64_t texture_id,
     void* tbm_surface) {
   std::lock_guard<std::mutex> lock(texture_registrar->mutex);
   auto it = texture_registrar->textures.find(texture_id);
@@ -201,7 +208,8 @@ bool FlutterMarkExternalTextureFrameAvailable(
 }
 
 void FlutterRegisterViewFactory(
-    FlutterDesktopPluginRegistrarRef registrar, const char* view_type,
+    FlutterDesktopPluginRegistrarRef registrar,
+    const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
@@ -222,13 +230,15 @@ int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(
 }
 
 bool FlutterDesktopTextureRegistrarUnregisterExternalTexture(
-    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+    FlutterDesktopTextureRegistrarRef texture_registrar,
+    int64_t texture_id) {
   FT_UNIMPLEMENTED();
   return false;
 }
 
 bool FlutterDesktopTextureRegistrarMarkExternalTextureFrameAvailable(
-    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+    FlutterDesktopTextureRegistrarRef texture_registrar,
+    int64_t texture_id) {
   FT_UNIMPLEMENTED();
   return false;
 }
