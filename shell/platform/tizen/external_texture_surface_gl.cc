@@ -25,12 +25,12 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-void ExternalTextureGL::OnCollectTexture(void* textureGL) {
-  ExternalTextureGL* externalTextureGL = (ExternalTextureGL*)textureGL;
+void ExternalTextureSurfaceGL::OnCollectTexture(void* textureGL) {
+  ExternalTextureSurfaceGL* externalTextureGL = (ExternalTextureSurfaceGL*)textureGL;
   externalTextureGL->destruction_callback_(externalTextureGL->user_data_);
 }
 
-ExternalTextureGL::ExternalTextureGL(
+ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopDestructionCallback destruction_callback, void* user_data)
     : ExternalTexture(),
@@ -39,14 +39,14 @@ ExternalTextureGL::ExternalTextureGL(
       destruction_callback_(destruction_callback),
       user_data_(user_data) {}
 
-ExternalTextureGL::~ExternalTextureGL() {
+ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
   if (state_->gl_texture != 0) {
     glDeleteTextures(1, &state_->gl_texture);
   }
   state_.release();
 }
 
-bool ExternalTextureGL::PopulateTexture(size_t width, size_t height,
+bool ExternalTextureSurfaceGL::PopulateTexture(size_t width, size_t height,
                                         FlutterOpenGLTexture* opengl_texture) {
   const FlutterDesktopGpuBuffer* gpu_buffer =
       texture_callback_(width, height, user_data_);

@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
+#include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
@@ -38,7 +39,7 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
       FT_LOGE("Invalid gpu buffer texture callback.");
       return -1;
     }
-    texture_gl = std::make_unique<ExternalTextureGL>(
+    texture_gl = std::make_unique<ExternalTextureSurfaceGL>(
         texture_info->gpu_buffer_config.callback,
         texture_info->gpu_buffer_config.destructionCallback,
         texture_info->gpu_buffer_config.user_data);

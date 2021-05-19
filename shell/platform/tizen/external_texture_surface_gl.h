@@ -18,13 +18,13 @@
 #include "flutter/shell/platform/tizen/external_texture.h"
 
 // An adaptation class of flutter engine and external texture interface.
-class ExternalTextureGL : public ExternalTexture {
+class ExternalTextureSurfaceGL : public ExternalTexture {
  public:
-  ExternalTextureGL(FlutterDesktopGpuBufferTextureCallback texture_callback,
+  ExternalTextureSurfaceGL(FlutterDesktopGpuBufferTextureCallback texture_callback,
                     FlutterDesktopDestructionCallback destruction_callback,
                     void* user_data);
 
-  virtual ~ExternalTextureGL();
+  virtual ~ExternalTextureSurfaceGL();
 
   /**
    * Returns the unique id for the ExternalTextureGL instance.
