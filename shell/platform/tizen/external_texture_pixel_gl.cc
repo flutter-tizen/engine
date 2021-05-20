@@ -27,7 +27,6 @@ ExternalTexturePixelGL::ExternalTexturePixelGL(
     FlutterDesktopPixelBufferTextureCallback texture_callback,
     void* user_data)
     : ExternalTexture(),
-      state_(std::make_unique<ExternalTextureGLState>()),
       texture_callback_(texture_callback),
       user_data_(user_data) {}
 

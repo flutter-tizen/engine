@@ -23,18 +23,12 @@ class ExternalTexturePixelGL : public ExternalTexture {
 
   ~ExternalTexturePixelGL() = default;
 
-  /**
-   * Returns the unique id for the ExternalTextureGL instance.
-   */
-  int64_t TextureId() override { return (int64_t)texture_id_; }
-
   bool PopulateTexture(size_t width, size_t height,
                        FlutterOpenGLTexture* opengl_texture) override;
 
   bool CopyPixelBuffer(size_t& width, size_t& height);
 
  private:
-  std::unique_ptr<ExternalTextureGLState> state_;
   FlutterDesktopPixelBufferTextureCallback texture_callback_ = nullptr;
   void* user_data_ = nullptr;
 };

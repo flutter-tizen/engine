@@ -27,11 +27,6 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
   virtual ~ExternalTextureSurfaceGL();
 
   /**
-   * Returns the unique id for the ExternalTextureGL instance.
-   */
-  int64_t TextureId() override { return (int64_t)texture_id_; }
-
-  /**
    * Accepts texture buffer copy request from the Flutter engine.
    * When the user side marks the texture_id as available, the Flutter engine
    * will callback to this method and ask for populate the |opengl_texture|
@@ -44,7 +39,6 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
   static void OnCollectTexture(void* surface);
 
  private:
-  std::unique_ptr<ExternalTextureGLState> state_;
   FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;
   FlutterDesktopDestructionCallback destruction_callback_ = nullptr;
   void* user_data_ = nullptr;

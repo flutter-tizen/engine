@@ -34,7 +34,6 @@ ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopDestructionCallback destruction_callback, void* user_data)
     : ExternalTexture(),
-      state_(std::make_unique<ExternalTextureGLState>()),
       texture_callback_(texture_callback),
       destruction_callback_(destruction_callback),
       user_data_(user_data) {}
@@ -140,6 +139,5 @@ bool ExternalTextureSurfaceGL::PopulateTexture(size_t width, size_t height,
   opengl_texture->user_data = this;
   opengl_texture->width = width;
   opengl_texture->height = height;
-
   return true;
 }
