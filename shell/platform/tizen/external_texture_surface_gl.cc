@@ -26,8 +26,12 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 void ExternalTextureSurfaceGL::OnCollectTexture(void* textureGL) {
-  ExternalTextureSurfaceGL* externalTextureGL = (ExternalTextureSurfaceGL*)textureGL;
-  externalTextureGL->destruction_callback_(externalTextureGL->user_data_);
+  auto* weak_texture = (std::weak_ptr<ExternalTexture>*)textureGL;
+  auto strong_texture = weak_texture->lock();
+  delete weak_texture;
+  if (strong_texture) {
+    strong_texture->OnDestruction();
+  }
 }
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
@@ -45,8 +49,8 @@ ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
   state_.release();
 }
 
-bool ExternalTextureSurfaceGL::PopulateTexture(size_t width, size_t height,
-                                        FlutterOpenGLTexture* opengl_texture) {
+bool ExternalTextureSurfaceGL::PopulateTexture(
+    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
   const FlutterDesktopGpuBuffer* gpu_buffer =
       texture_callback_(width, height, user_data_);
   if (!gpu_buffer) {
@@ -134,10 +138,14 @@ bool ExternalTextureSurfaceGL::PopulateTexture(size_t width, size_t height,
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
   opengl_texture->destruction_callback = (VoidCallback)OnCollectTexture;
-
+  auto* weak_texture = new std::weak_ptr<ExternalTexture>(shared_from_this());
   // Abandon ownership of tbm_surface
-  opengl_texture->user_data = this;
+  opengl_texture->user_data = weak_texture;
   opengl_texture->width = width;
   opengl_texture->height = height;
   return true;
+}
+
+void ExternalTextureSurfaceGL::OnDestruction() {
+  destruction_callback_(user_data_);
 }

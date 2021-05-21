@@ -5,6 +5,8 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
 
+#define FML_USED_ON_EMBEDDER
+
 #include <stdint.h>
 
 #include <atomic>
@@ -36,7 +38,7 @@ struct ExternalTextureGLState {
 static std::atomic_long nextTextureId = {1};
 
 // An adaptation class of flutter engine and external texture interface.
-class ExternalTexture {
+class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
  public:
   ExternalTexture()
       : state_(std::make_unique<ExternalTextureGLState>()),
@@ -50,6 +52,7 @@ class ExternalTexture {
 
   virtual bool PopulateTexture(size_t width, size_t height,
                                FlutterOpenGLTexture* opengl_texture) = 0;
+  virtual void OnDestruction(){};
 
  protected:
   std::unique_ptr<ExternalTextureGLState> state_;

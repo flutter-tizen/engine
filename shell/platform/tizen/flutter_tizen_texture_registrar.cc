@@ -23,13 +23,13 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
     FT_LOGE("Attempted to register texture of unsupport type.");
     return -1;
   }
-  std::unique_ptr<ExternalTexture> texture_gl;
+  std::shared_ptr<ExternalTexture> texture_gl;
   if (texture_info->type == kFlutterDesktopPixelBufferTexture) {
     if (!texture_info->pixel_buffer_config.callback) {
       FT_LOGE("Invalid pixel buffer texture callback.");
       return -1;
     }
-    texture_gl = std::make_unique<ExternalTexturePixelGL>(
+    texture_gl = std::make_shared<ExternalTexturePixelGL>(
         texture_info->pixel_buffer_config.callback,
         texture_info->pixel_buffer_config.user_data);
   }
@@ -39,7 +39,7 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
       FT_LOGE("Invalid gpu buffer texture callback.");
       return -1;
     }
-    texture_gl = std::make_unique<ExternalTextureSurfaceGL>(
+    texture_gl = std::make_shared<ExternalTextureSurfaceGL>(
         texture_info->gpu_buffer_config.callback,
         texture_info->gpu_buffer_config.destructionCallback,
         texture_info->gpu_buffer_config.user_data);
