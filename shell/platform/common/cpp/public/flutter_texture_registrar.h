@@ -48,7 +48,6 @@ typedef struct {
   size_t height;
 } FlutterDesktopGpuBuffer;
 
-
 // The pixel buffer copy callback definition provided to
 // the Flutter engine to copy the texture.
 // It is invoked with the intended surface size specified by |width| and
@@ -62,11 +61,11 @@ typedef const FlutterDesktopPixelBuffer* (
     *FlutterDesktopPixelBufferTextureCallback)(size_t width,
                                                size_t height,
                                                void* user_data);
-                                               
+
 typedef const FlutterDesktopGpuBuffer* (
     *FlutterDesktopGpuBufferTextureCallback)(size_t width,
-                                               size_t height,
-                                               void* user_data);
+                                             size_t height,
+                                             void* user_data);
 
 typedef void (*FlutterDesktopDestructionCallback)(void* user_data);
 

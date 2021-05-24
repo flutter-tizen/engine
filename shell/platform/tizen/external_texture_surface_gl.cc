@@ -36,7 +36,8 @@ void ExternalTextureSurfaceGL::OnCollectTexture(void* textureGL) {
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
     FlutterDesktopGpuBufferTextureCallback texture_callback,
-    FlutterDesktopDestructionCallback destruction_callback, void* user_data)
+    FlutterDesktopDestructionCallback destruction_callback,
+    void* user_data)
     : ExternalTexture(),
       texture_callback_(texture_callback),
       destruction_callback_(destruction_callback),
@@ -50,7 +51,9 @@ ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
 }
 
 bool ExternalTextureSurfaceGL::PopulateTexture(
-    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+    size_t width,
+    size_t height,
+    FlutterOpenGLTexture* opengl_texture) {
   const FlutterDesktopGpuBuffer* gpu_buffer =
       texture_callback_(width, height, user_data_);
   if (!gpu_buffer) {

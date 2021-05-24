@@ -50,7 +50,8 @@ class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
    */
   int64_t TextureId() { return (int64_t)texture_id_; }
 
-  virtual bool PopulateTexture(size_t width, size_t height,
+  virtual bool PopulateTexture(size_t width,
+                               size_t height,
                                FlutterOpenGLTexture* opengl_texture) = 0;
   virtual void OnDestruction(){};
 

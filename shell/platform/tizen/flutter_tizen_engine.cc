@@ -395,8 +395,8 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
       if (!engine->texture_registrar()) {
         return false;
       }
-      return engine->texture_registrar()->PopulateTexture(
-          texture_id, width, height, texture);
+      return engine->texture_registrar()->PopulateTexture(texture_id, width,
+                                                          height, texture);
     };
   } else {
     config.type = kSoftware;

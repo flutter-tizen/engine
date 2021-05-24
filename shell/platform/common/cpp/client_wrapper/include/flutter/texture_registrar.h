@@ -80,7 +80,6 @@ class GpuBufferTexture {
   void* buffer_;
 };
 
-
 // The available texture variants.
 // Only PixelBufferTexture and GpuBufferTexture are currently implemented.
 typedef std::variant<PixelBufferTexture, GpuBufferTexture> TextureVariant;

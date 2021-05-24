@@ -7,7 +7,9 @@
 #include <GLES3/gl32.h>
 
 bool ExternalTexturePixelGL::PopulateTexture(
-    size_t width, size_t height, FlutterOpenGLTexture* opengl_texture) {
+    size_t width,
+    size_t height,
+    FlutterOpenGLTexture* opengl_texture) {
   if (!CopyPixelBuffer(width, height)) {
     return false;
   }
@@ -40,26 +42,26 @@ bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
      return false;
    }
    */
-   width = pixel_buffer->width;
-   height = pixel_buffer->height;
- /*
-   if (state_->gl_texture == 0) {
-     gl.glGenTextures(1, &state_->gl_texture);
+  width = pixel_buffer->width;
+  height = pixel_buffer->height;
+  /*
+    if (state_->gl_texture == 0) {
+      gl.glGenTextures(1, &state_->gl_texture);
 
-     gl.glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
+      gl.glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
 
-     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-   } else {
-     gl.glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
-   }
-   gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pixel_buffer->width,
-                   pixel_buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                   pixel_buffer->buffer);
- */
+    } else {
+      gl.glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
+    }
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pixel_buffer->width,
+                    pixel_buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                    pixel_buffer->buffer);
+  */
   return true;
 }

@@ -75,7 +75,8 @@ void FlutterDesktopPluginRegistrarSetDestructionHandler(
 }
 
 bool FlutterDesktopMessengerSend(FlutterDesktopMessengerRef messenger,
-                                 const char* channel, const uint8_t* message,
+                                 const char* channel,
+                                 const uint8_t* message,
                                  const size_t message_size) {
   return FlutterDesktopMessengerSendWithReply(messenger, channel, message,
                                               message_size, nullptr, nullptr);
@@ -155,7 +156,8 @@ void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
 }
 
 void FlutterRegisterViewFactory(
-    FlutterDesktopPluginRegistrarRef registrar, const char* view_type,
+    FlutterDesktopPluginRegistrarRef registrar,
+    const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
@@ -187,13 +189,15 @@ int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(
 }
 
 bool FlutterDesktopTextureRegistrarUnregisterExternalTexture(
-    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+    FlutterDesktopTextureRegistrarRef texture_registrar,
+    int64_t texture_id) {
   return TextureRegistrarFromHandle(texture_registrar)
       ->UnregisterTexture(texture_id);
 }
 
 bool FlutterDesktopTextureRegistrarMarkExternalTextureFrameAvailable(
-    FlutterDesktopTextureRegistrarRef texture_registrar, int64_t texture_id) {
+    FlutterDesktopTextureRegistrarRef texture_registrar,
+    int64_t texture_id) {
   return TextureRegistrarFromHandle(texture_registrar)
       ->MarkTextureFrameAvailable(texture_id);
 }
