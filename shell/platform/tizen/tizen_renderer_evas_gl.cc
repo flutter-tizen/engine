@@ -20,7 +20,9 @@ TizenRendererEvasGL::TizenRendererEvasGL(TizenRenderer::Delegate& delegate)
   OnPresent();
 }
 
-TizenRendererEvasGL::~TizenRendererEvasGL() { DestroyRenderer(); }
+TizenRendererEvasGL::~TizenRendererEvasGL() {
+  DestroyRenderer();
+}
 
 void TizenRendererEvasGL::ClearColor(float r, float g, float b, float a) {
   glClearColor(r, g, b, a);
@@ -560,7 +562,9 @@ uintptr_t TizenRendererEvasGL::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_)));
 }
 
-void* TizenRendererEvasGL::GetImageHandle() { return (void*)graphics_adapter_; }
+void* TizenRendererEvasGL::GetImageHandle() {
+  return (void*)graphics_adapter_;
+}
 
 bool TizenRendererEvasGL::InitializeRenderer() {
   if (!SetupEvasGL()) {
@@ -685,7 +689,8 @@ void TizenRendererEvasGL::DestroyEvasWindow() {
   evas_object_del(graphics_adapter_);
 }
 
-void TizenRendererEvasGL::RotationEventCb(void* data, Evas_Object* obj,
+void TizenRendererEvasGL::RotationEventCb(void* data,
+                                          Evas_Object* obj,
                                           void* event_info) {
   auto* self = reinterpret_cast<TizenRendererEvasGL*>(data);
   // TODO : Use current window rotation degree
@@ -698,8 +703,10 @@ void TizenRendererEvasGL::SetRotate(int angle) {
   received_rotation_ = true;
 }
 
-void TizenRendererEvasGL::ResizeWithRotation(int32_t x, int32_t y,
-                                             int32_t width, int32_t height,
+void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
+                                             int32_t y,
+                                             int32_t width,
+                                             int32_t height,
                                              int32_t angle) {
   evas_object_move(evas_window_, x, y);
   evas_object_resize(evas_window_, width, height);

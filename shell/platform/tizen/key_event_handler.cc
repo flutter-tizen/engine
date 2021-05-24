@@ -8,7 +8,7 @@
 
 static constexpr char kPlatformBackButtonName[] = "XF86Back";
 
-KeyEventHandler::KeyEventHandler(FlutterTizenEngine *engine) : engine_(engine) {
+KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));
   key_event_handlers_.push_back(
@@ -22,10 +22,10 @@ KeyEventHandler::~KeyEventHandler() {
   key_event_handlers_.clear();
 }
 
-Eina_Bool KeyEventHandler::OnKey(void *data, int type, void *event) {
-  auto *self = reinterpret_cast<KeyEventHandler *>(data);
-  auto *key = reinterpret_cast<Ecore_Event_Key *>(event);
-  auto *engine = self->engine_;
+Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
+  auto* self = reinterpret_cast<KeyEventHandler*>(data);
+  auto* key = reinterpret_cast<Ecore_Event_Key*>(event);
+  auto* engine = self->engine_;
   auto is_down = type == ECORE_EVENT_KEY_DOWN;
 
   if (strcmp(key->keyname, kPlatformBackButtonName) == 0) {

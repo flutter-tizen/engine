@@ -8,7 +8,17 @@ pr:
 - flutter-*-tizen
 
 jobs:
+- job: format
+  pool:
+    name: Default
+    demands: agent.os -equals Linux
+  steps:
+  - checkout: self
+    path: src/flutter
+  - bash: ci/format.sh
+    displayName: Verify formatting
 - job: build
+  dependsOn: format
   strategy:
     matrix:
       tizen-arm-release:

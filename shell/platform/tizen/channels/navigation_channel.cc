@@ -14,7 +14,9 @@ static constexpr char kPopRouteMethod[] = "popRoute";
 
 NavigationChannel::NavigationChannel(flutter::BinaryMessenger* messenger)
     : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
-          messenger, kChannelName, &flutter::JsonMethodCodec::GetInstance())) {}
+          messenger,
+          kChannelName,
+          &flutter::JsonMethodCodec::GetInstance())) {}
 
 NavigationChannel::~NavigationChannel() {}
 

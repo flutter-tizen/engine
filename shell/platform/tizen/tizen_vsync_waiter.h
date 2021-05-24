@@ -24,8 +24,10 @@ class TizenVsyncWaiter {
   bool TDMValid();
   void SendMessage(int val);
   static void TdmClientVblankCallback(tdm_client_vblank* vblank,
-                                      tdm_error error, unsigned int sequence,
-                                      unsigned int tv_sec, unsigned int tv_usec,
+                                      tdm_error error,
+                                      unsigned int sequence,
+                                      unsigned int tv_sec,
+                                      unsigned int tv_usec,
                                       void* user_data);
   static void RequestVblankLoop(void* data, Ecore_Thread* thread);
   static void VblankLoopFinish(void* data, Ecore_Thread* thread);

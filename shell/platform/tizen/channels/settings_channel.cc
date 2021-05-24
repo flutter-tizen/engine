@@ -12,7 +12,8 @@ static constexpr char kPlatformBrightnessKey[] = "platformBrightness";
 SettingsChannel::SettingsChannel(flutter::BinaryMessenger* messenger)
     : channel_(
           std::make_unique<flutter::BasicMessageChannel<rapidjson::Document>>(
-              messenger, kChannelName,
+              messenger,
+              kChannelName,
               &flutter::JsonMessageCodec::GetInstance())) {
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR,
                                  OnSettingsChangedCallback, this);

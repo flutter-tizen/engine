@@ -35,6 +35,6 @@ void GetData(
 void SetData(
     const flutter::MethodCall<rapidjson::Document>& call,
     std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
-};
+};  // namespace Clipboard
 
 #endif  //  EMBEDDER_PLATFORM_CHANNEL_H_
