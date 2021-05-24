@@ -38,12 +38,15 @@ class FlutterTizenTextureRegistrar {
                        size_t width,
                        size_t height,
                        FlutterOpenGLTexture* texture);
+
+  std::unique_ptr<ExternalTexture> CreateExternalTexture(
+      const FlutterDesktopTextureInfo* info);
+
  private:
   FlutterTizenEngine* engine_ = nullptr;
 
   // All registered textures, keyed by their IDs.
-  std::unordered_map<int64_t, std::shared_ptr<ExternalTexture>>
-      textures_;
+  std::unordered_map<int64_t, std::shared_ptr<ExternalTexture>> textures_;
   std::mutex map_mutex_;
 };
 
