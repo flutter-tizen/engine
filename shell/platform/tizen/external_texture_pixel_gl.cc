@@ -1,11 +1,5 @@
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl32.h>
-
 bool ExternalTexturePixelGL::PopulateTexture(
     size_t width,
     size_t height,
@@ -13,15 +7,16 @@ bool ExternalTexturePixelGL::PopulateTexture(
   if (!CopyPixelBuffer(width, height)) {
     return false;
   }
-
-  // Populate the texture object used by the engine.
-  opengl_texture->target = GL_TEXTURE_2D;
-  opengl_texture->name = state_->gl_texture;
-  opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = nullptr;
-  opengl_texture->user_data = nullptr;
-  opengl_texture->width = width;
-  opengl_texture->height = height;
+  /*
+    // Populate the texture object used by the engine.
+    opengl_texture->target = GL_TEXTURE_2D;
+    opengl_texture->name = state_->gl_texture;
+    opengl_texture->format = GL_RGBA8;
+    opengl_texture->destruction_callback = nullptr;
+    opengl_texture->user_data = nullptr;
+    opengl_texture->width = width;
+    opengl_texture->height = height;
+  */
   return true;
 }
 
