@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
-#define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#ifndef EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#define EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
 
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
@@ -39,4 +39,4 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
   void* user_data_ = nullptr;
 };
 
-#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#endif  // EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_

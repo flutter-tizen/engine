@@ -142,7 +142,6 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   opengl_texture->format = GL_RGBA8;
   opengl_texture->destruction_callback = (VoidCallback)OnCollectTexture;
   auto* weak_texture = new std::weak_ptr<ExternalTexture>(shared_from_this());
-  // Abandon ownership of tbm_surface
   opengl_texture->user_data = weak_texture;
   opengl_texture->width = width;
   opengl_texture->height = height;

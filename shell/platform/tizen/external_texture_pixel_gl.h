@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
-#define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
+#ifndef EMBEDDER_EXTERNAL_TEXTURE_PIXEL_GL_H
+#define EMBEDDER_EXTERNAL_TEXTURE_PIXEL_GL_H
 
 #include <memory>
 
@@ -31,4 +31,4 @@ class ExternalTexturePixelGL : public ExternalTexture {
   void* user_data_ = nullptr;
 };
 
-#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
+#endif  // EMBEDDER_EXTERNAL_TEXTURE_PIXEL_GL_H

@@ -98,7 +98,7 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
     case kFlutterDesktopGpuBufferTexture:
       return std::make_unique<ExternalTextureSurfaceGL>(
           texture_info->gpu_buffer_config.callback,
-          texture_info->gpu_buffer_config.destructionCallback,
+          texture_info->gpu_buffer_config.destruction_callback,
           texture_info->gpu_buffer_config.user_data);
       break;
   }

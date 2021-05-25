@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
-#define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
+#ifndef EMBEDDER_EXTERNAL_TEXTURE_H_
+#define EMBEDDER_EXTERNAL_TEXTURE_H_
 
 #include <atomic>
 #include <memory>
@@ -54,4 +54,4 @@ class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
   const long texture_id_{0};
 };
 
-#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_GL_H_
+#endif  // EMBEDDER_EXTERNAL_TEXTURE_H_

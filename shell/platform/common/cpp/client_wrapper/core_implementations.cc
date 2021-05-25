@@ -187,7 +187,7 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
       return buffer;
     };
 
-    info.gpu_buffer_config.destructionCallback = [](void* user_data) -> void {
+    info.gpu_buffer_config.destruction_callback = [](void* user_data) -> void {
       auto texture = static_cast<GpuBufferTexture*>(user_data);
       texture->Destruction();
     };
