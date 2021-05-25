@@ -101,5 +101,8 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
           texture_info->gpu_buffer_config.destruction_callback,
           texture_info->gpu_buffer_config.user_data);
       break;
+    default:
+      FT_LOGE("Invalid texture type.");
+      return nullptr;
   }
 }

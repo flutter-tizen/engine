@@ -73,7 +73,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // Returns the currently configured Plugin Registrar.
   FlutterDesktopPluginRegistrarRef GetPluginRegistrar();
 
-  FlutterTizenTextureRegistrar* texture_registrar() {
+  FlutterTizenTextureRegistrar* GetTextureRegistrar() {
     return texture_registrar_.get();
   }
 

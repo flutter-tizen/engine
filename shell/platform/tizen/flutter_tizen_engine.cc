@@ -392,11 +392,11 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
         [](void* user_data, int64_t texture_id, size_t width, size_t height,
            FlutterOpenGLTexture* texture) -> bool {
       auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-      if (!engine->texture_registrar()) {
+      if (!engine->GetTextureRegistrar()) {
         return false;
       }
-      return engine->texture_registrar()->PopulateTexture(texture_id, width,
-                                                          height, texture);
+      return engine->GetTextureRegistrar()->PopulateTexture(texture_id, width,
+                                                            height, texture);
     };
   } else {
     config.type = kSoftware;

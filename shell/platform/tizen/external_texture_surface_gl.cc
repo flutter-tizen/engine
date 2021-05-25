@@ -25,7 +25,7 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-void ExternalTextureSurfaceGL::OnCollectTexture(void* textureGL) {
+static void OnCollectTexture(void* textureGL) {
   auto* weak_texture = (std::weak_ptr<ExternalTexture>*)textureGL;
   auto strong_texture = weak_texture->lock();
   delete weak_texture;

@@ -178,7 +178,7 @@ static FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
 
 FlutterDesktopTextureRegistrarRef FlutterDesktopRegistrarGetTextureRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  return HandleForTextureRegistrar(registrar->engine->texture_registrar());
+  return HandleForTextureRegistrar(registrar->engine->GetTextureRegistrar());
 }
 
 int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(
