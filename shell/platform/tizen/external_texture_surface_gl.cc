@@ -21,7 +21,7 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #include <GLES3/gl32.h>
 #endif
 
-#include <iostream>
+#include <tbm_surface.h>
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 

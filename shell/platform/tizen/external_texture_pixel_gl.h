@@ -5,10 +5,7 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_PIXEL_GL_H
 
-#include <stdint.h>
-
 #include <memory>
-#include <mutex>
 
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"

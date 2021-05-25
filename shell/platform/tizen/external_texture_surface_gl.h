@@ -5,14 +5,6 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_SURFACE_GL_H_
 
-#include <stdint.h>
-#include <tbm_bufmgr.h>
-#include <tbm_drm_helper.h>
-#include <tbm_surface.h>
-
-#include <memory>
-#include <mutex>
-
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/external_texture.h"

@@ -5,14 +5,8 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_EXTERNAL_TEXTURE_H_
 
-#define FML_USED_ON_EMBEDDER
-
-#include <stdint.h>
-
 #include <atomic>
 #include <memory>
-#include <mutex>
-
 #include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 
