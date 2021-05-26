@@ -839,6 +839,24 @@ FlutterEngineResult FlutterEngineRun(size_t version,
   return FlutterEngineRunInitialized(*engine_out);
 }
 
+FlutterEngineResult FlutterEngineSpawn(size_t version,
+                                       const FlutterRendererConfig* config,
+                                       const FlutterProjectArgs* args,
+                                       void* user_data,
+                                       FLUTTER_API_SYMBOL(FlutterEngine) *
+                                           engine_out,
+                                       FLUTTER_API_SYMBOL(FlutterEngine)
+                                           engine_main) {
+  auto result =
+      FlutterEngineInitialize(version, config, args, user_data, engine_out);
+
+  if (result != kSuccess) {
+    return result;
+  }
+
+  return FlutterEngineSpawnInitialized(*engine_out, engine_main);
+}
+
 FlutterEngineResult FlutterEngineInitialize(size_t version,
                                             const FlutterRendererConfig* config,
                                             const FlutterProjectArgs* args,
@@ -1304,6 +1322,44 @@ FlutterEngineResult FlutterEngineRunInitialized(
         kInvalidArguments,
         "Could not run the root isolate of the Flutter application using the "
         "project arguments specified.");
+  }
+
+  return kSuccess;
+}
+
+FlutterEngineResult FlutterEngineSpawnInitialized(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    FLUTTER_API_SYMBOL(FlutterEngine) engine_main) {
+  if (!engine || !engine_main) {
+    return LOG_EMBEDDER_ERROR(kInvalidArguments, "Engine handle was invalid.");
+  }
+
+  auto embedder_engine = reinterpret_cast<flutter::EmbedderEngine*>(engine);
+  auto embedder_engine_main =
+      reinterpret_cast<flutter::EmbedderEngine*>(engine_main);
+
+  // The engine must not already be running. Initialize may only be called
+  // once on an engine instance.
+  if (embedder_engine->IsValid()) {
+    return LOG_EMBEDDER_ERROR(kInvalidArguments, "Engine handle was invalid.");
+  }
+
+  // The main engine must be running.
+  if (!embedder_engine_main->IsValid()) {
+    return LOG_EMBEDDER_ERROR(kInvalidArguments, "Engine handle was invalid.");
+  }
+
+  // Spawn the shell.
+  if (!embedder_engine->SpawnShell(embedder_engine_main)) {
+    return LOG_EMBEDDER_ERROR(kInvalidArguments,
+                              "Could not launch the engine using supplied "
+                              "initialization arguments.");
+  }
+
+  // Step 2: Tell the platform view to initialize itself.
+  if (!embedder_engine->NotifyCreated()) {
+    return LOG_EMBEDDER_ERROR(kInternalInconsistency,
+                              "Could not create platform view components.");
   }
 
   return kSuccess;
@@ -2220,6 +2276,7 @@ FlutterEngineResult FlutterEngineGetProcAddresses(
   SET_PROC(CreateAOTData, FlutterEngineCreateAOTData);
   SET_PROC(CollectAOTData, FlutterEngineCollectAOTData);
   SET_PROC(Run, FlutterEngineRun);
+  SET_PROC(Spawn, FlutterEngineSpawn);
   SET_PROC(Shutdown, FlutterEngineShutdown);
   SET_PROC(Initialize, FlutterEngineInitialize);
   SET_PROC(Deinitialize, FlutterEngineDeinitialize);

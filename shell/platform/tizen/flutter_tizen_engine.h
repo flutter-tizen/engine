@@ -59,7 +59,10 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
-  explicit FlutterTizenEngine(bool headed, void* win );
+  explicit FlutterTizenEngine(bool headed, void* win);
+  explicit FlutterTizenEngine(FlutterTizenEngine* main_engine,
+                              bool headed,
+                              void* win);
   virtual ~FlutterTizenEngine();
 
   // Prevent copying.
@@ -68,6 +71,12 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   void InitializeRenderer();
   bool RunEngine(const FlutterDesktopEngineProperties& engine_properties);
+  bool RunSpawnedEngine(
+      const FlutterDesktopEngineProperties& engine_properties);
+
+  FlutterTizenEngine* SpawnEngine(
+      bool headed,
+      const FlutterDesktopEngineProperties& engine_properties);
   bool StopEngine();
 
   // Returns the currently configured Plugin Registrar.
@@ -144,6 +153,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   const DeviceProfile device_profile;
 
+  FLUTTER_API_SYMBOL(FlutterEngine) Engine() { return engine_; }
+
  private:
   bool IsHeaded() { return renderer != nullptr; }
   UniqueAotDataPtr LoadAotData(std::string aot_data_path);
@@ -193,6 +204,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterTransformation transformation_;
 
   void* custom_window_;
+  FlutterTizenEngine* main_engine_;
 };
 
 #endif  // EMBEDDER_FLUTTER_TIZEN_ENGINE_H_

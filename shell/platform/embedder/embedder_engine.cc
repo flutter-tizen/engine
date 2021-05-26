@@ -60,6 +60,39 @@ bool EmbedderEngine::LaunchShell() {
   return IsValid();
 }
 
+bool EmbedderEngine::SpawnShell(EmbedderEngine* main) {
+  if (!shell_args_) {
+    FML_DLOG(ERROR) << "Invalid shell arguments.";
+    return false;
+  }
+
+  if (shell_) {
+    FML_DLOG(ERROR) << "Shell already initialized";
+  }
+
+  if (!run_configuration_.IsValid()) {
+    FML_DLOG(ERROR) << "Invalid Configration";
+  }
+
+  shell_ = main->SpawnShell(std::move(run_configuration_),
+                            shell_args_->on_create_platform_view,
+                            shell_args_->on_create_rasterizer);
+
+  // // Reset the args no matter what. They will never be used to initialize a
+  // // shell again.
+  shell_args_.reset();
+
+  return IsValid();
+}
+
+std::unique_ptr<Shell> EmbedderEngine::SpawnShell(
+    RunConfiguration run_configuration,
+    const Shell::CreateCallback<PlatformView>& on_create_platform_view,
+    const Shell::CreateCallback<Rasterizer>& on_create_rasterizer) {
+  return shell_->Spawn(std::move(run_configuration), on_create_platform_view,
+                       on_create_rasterizer);
+}
+
 bool EmbedderEngine::CollectShell() {
   shell_.reset();
   return IsValid();

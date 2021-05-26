@@ -35,6 +35,13 @@ class EmbedderEngine {
 
   bool LaunchShell();
 
+  bool SpawnShell(EmbedderEngine* main);
+
+  std::unique_ptr<Shell> SpawnShell(
+      RunConfiguration run_configuration,
+      const Shell::CreateCallback<PlatformView>& on_create_platform_view,
+      const Shell::CreateCallback<Rasterizer>& on_create_rasterizer);
+
   bool CollectShell();
 
   const TaskRunners& GetTaskRunners() const;

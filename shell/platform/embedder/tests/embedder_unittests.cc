@@ -1434,5 +1434,39 @@ TEST_F(EmbedderTest, KeyDataResponseIsCorrectlyInvoked) {
   EXPECT_TRUE(user_data3.returned);
 }
 
+//------------------------------------------------------------------------------
+///
+TEST_F(EmbedderTest, CabRunFlutterEngineSpawnInitialized) {
+  EmbedderConfigBuilder builder(
+      GetEmbedderContext(EmbedderTestContextType::kSoftwareContext));
+  builder.SetSoftwareRendererConfig();
+  auto engine = builder.InitializeEngine();
+  auto main_engine = builder.InitializeEngine();
+
+  ASSERT_TRUE(engine.is_valid());
+  ASSERT_TRUE(main_engine.is_valid());
+
+  // Spawn with invalid parameter
+  ASSERT_EQ(FlutterEngineSpawnInitialized(nullptr, nullptr), kInvalidArguments);
+  ASSERT_EQ(FlutterEngineSpawnInitialized(engine.get(), nullptr),
+            kInvalidArguments);
+  ASSERT_EQ(FlutterEngineSpawnInitialized(nullptr, main_engine.get()),
+            kInvalidArguments);
+
+  // Test with the main engine not running
+  ASSERT_EQ(FlutterEngineSpawnInitialized(engine.get(), main_engine.get()),
+            kInvalidArguments);
+
+  // Execute main engine
+  ASSERT_EQ(FlutterEngineRunInitialized(main_engine.get()), kSuccess);
+
+  // Test spawn API
+  ASSERT_EQ(FlutterEngineSpawnInitialized(engine.get(), main_engine.get()),
+            kSuccess);
+
+  engine.reset();
+  main_engine.reset();
+}
+
 }  // namespace testing
 }  // namespace flutter
