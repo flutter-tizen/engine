@@ -26,7 +26,8 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 static void OnCollectTexture(void* textureGL) {
-  auto* weak_texture = (std::weak_ptr<ExternalTexture>*)textureGL;
+  auto* weak_texture =
+      reinterpret_cast<std::weak_ptr<ExternalTexture>*>(textureGL);
   auto strong_texture = weak_texture->lock();
   delete weak_texture;
   if (strong_texture) {
@@ -65,7 +66,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     FT_LOGD("[texture id:%ld] tbm_surface_ is null", texture_id_);
     return false;
   }
-  tbm_surface_h tbm_surface = (tbm_surface_h)gpu_buffer->buffer;
+  const tbm_surface_h tbm_surface =
+      reinterpret_cast<tbm_surface_h>(const_cast<void*>(gpu_buffer->buffer));
+
   tbm_surface_info_s info;
   if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
     FT_LOGD("[texture id:%ld] tbm_surface is invalid", texture_id_);

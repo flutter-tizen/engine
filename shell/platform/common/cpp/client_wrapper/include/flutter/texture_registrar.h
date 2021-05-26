@@ -48,7 +48,7 @@ class GpuBufferTexture {
   // A callback used for retrieving gpu buffers.
   typedef std::function<const FlutterDesktopGpuBuffer*(size_t width,
                                                        size_t height)>
-      AcquireGpuBufferCallback;
+      ObtainGpuBufferCallback;
 
   typedef std::function<void(void* buffer)> DestructionGpuBufferCallback;
 
@@ -57,26 +57,29 @@ class GpuBufferTexture {
   // As the callback is usually invoked from the render thread, the callee must
   // take care of proper synchronization. It also needs to be ensured that the
   // returned buffer isn't released prior to unregistering this texture.
-  GpuBufferTexture(AcquireGpuBufferCallback copy_buffer_callback,
+  GpuBufferTexture(ObtainGpuBufferCallback obtain_buffer_callback,
                    DestructionGpuBufferCallback destruction_callback)
-      : acquire_gpu_buffer_callback_(copy_buffer_callback),
-        destruction_gpu_buffer_callback_(destruction_callback),
+      : obtain_gpu_buffer_callback_(obtain_buffer_callback),
+        destruct_gpu_buffer_callback_(destruction_callback),
         buffer_(nullptr) {}
 
   // Returns the callback-provided FlutterDesktopGpuBuffer that contains the
   // actual gpu buffer pointer. The intended surface size is specified by
   // |width| and |height|.
-  const FlutterDesktopGpuBuffer* GetGpuBuffer(size_t width,
-                                              size_t height) const {
-    return acquire_gpu_buffer_callback_(width, height);
+  const FlutterDesktopGpuBuffer* ObtainGpuBuffer(size_t width, size_t height) {
+    const FlutterDesktopGpuBuffer* flutter_buffer =
+        obtain_gpu_buffer_callback_(width, height);
+    if (flutter_buffer) {
+      buffer_ = const_cast<void*>(flutter_buffer->buffer);
+    }
+    return flutter_buffer;
   }
 
-  void Destruction() { destruction_gpu_buffer_callback_(buffer_); }
-  void setBuffer(void* buffer) { buffer_ = buffer; }
+  void Destruct() { destruct_gpu_buffer_callback_(buffer_); }
 
  private:
-  const AcquireGpuBufferCallback acquire_gpu_buffer_callback_;
-  const DestructionGpuBufferCallback destruction_gpu_buffer_callback_;
+  const ObtainGpuBufferCallback obtain_gpu_buffer_callback_;
+  const DestructionGpuBufferCallback destruct_gpu_buffer_callback_;
   void* buffer_;
 };
 

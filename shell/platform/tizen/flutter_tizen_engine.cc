@@ -248,6 +248,13 @@ FlutterDesktopPluginRegistrarRef FlutterTizenEngine::GetPluginRegistrar() {
   return plugin_registrar_.get();
 }
 
+FlutterTizenTextureRegistrar* FlutterTizenEngine::GetTextureRegistrar() {
+  if (!IsHeaded()) {
+    FT_LOGW("Headless, texture is not supported.");
+  }
+  return texture_registrar_.get();
+}
+
 void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
     FlutterDesktopOnPluginRegistrarDestroyed callback) {
   plugin_registrar_destruction_callback_ = callback;
