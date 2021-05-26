@@ -50,15 +50,15 @@ class GpuBufferTexture {
                                                        size_t height)>
       ObtainGpuBufferCallback;
 
-  typedef std::function<void(void* buffer)> DestructionGpuBufferCallback;
+  typedef std::function<void(void* buffer)> DestructGpuBufferCallback;
 
-  // Creates a gpu buffer texture that uses the provided |copy_buffer_cb| to
+  // Creates a gpu buffer texture that uses the provided |obtain_buffer_cb| to
   // retrieve the buffer.
   // As the callback is usually invoked from the render thread, the callee must
   // take care of proper synchronization. It also needs to be ensured that the
   // returned buffer isn't released prior to unregistering this texture.
   GpuBufferTexture(ObtainGpuBufferCallback obtain_buffer_callback,
-                   DestructionGpuBufferCallback destruction_callback)
+                   DestructGpuBufferCallback destruction_callback)
       : obtain_gpu_buffer_callback_(obtain_buffer_callback),
         destruct_gpu_buffer_callback_(destruction_callback),
         buffer_(nullptr) {}
@@ -79,7 +79,7 @@ class GpuBufferTexture {
 
  private:
   const ObtainGpuBufferCallback obtain_gpu_buffer_callback_;
-  const DestructionGpuBufferCallback destruct_gpu_buffer_callback_;
+  const DestructGpuBufferCallback destruct_gpu_buffer_callback_;
   void* buffer_;
 };
 

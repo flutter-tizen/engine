@@ -81,7 +81,7 @@ typedef struct {
 typedef struct {
   // The callback used by the engine to obtain the GPU buffer object.
   FlutterDesktopGpuBufferTextureCallback callback;
-  // The callback used by the engine to destruct GPU buffer object.
+  // The callback used by the engine to destruct the GPU buffer object.
   FlutterDesktopGpuBufferDestructionCallback destruction_callback;
   // Opaque data that will get passed to the provided |callback|.
   void* user_data;

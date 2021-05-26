@@ -8,15 +8,12 @@
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-#include <Ecore.h>
-#include <Elementary.h>
 #include <Evas_GL_GLES3_Helpers.h>
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES3_DECLARE();
 #else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl32.h>
 #endif

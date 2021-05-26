@@ -12,31 +12,23 @@
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-#include <Ecore.h>
-#include <Elementary.h>
-#include <Evas_GL_GLES3_Helpers.h>
-extern Evas_GL* g_evas_gl;
-EVAS_GL_GLOBAL_GLES3_DECLARE();
+#include <Evas_GL.h>
 #else
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl32.h>
 #endif
 
 struct ExternalTextureGLState {
   GLuint gl_texture;
 };
 
-static std::atomic_long kNextTextureId = {1};
+static std::atomic_long next_texture_id = {1};
 
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
  public:
   ExternalTexture()
       : state_(std::make_unique<ExternalTextureGLState>()),
-        texture_id_(kNextTextureId++) {}
+        texture_id_(next_texture_id++) {}
   virtual ~ExternalTexture() = default;
 
   /**
