@@ -37,7 +37,7 @@ static void OnCollectTexture(void* textureGL) {
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
     FlutterDesktopGpuBufferTextureCallback texture_callback,
-    FlutterDesktopDestructionCallback destruction_callback,
+    FlutterDesktopGpuBufferDestructionCallback destruction_callback,
     void* user_data)
     : ExternalTexture(),
       texture_callback_(texture_callback),

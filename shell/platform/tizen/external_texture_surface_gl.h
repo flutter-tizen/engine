@@ -14,7 +14,7 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
  public:
   ExternalTextureSurfaceGL(
       FlutterDesktopGpuBufferTextureCallback texture_callback,
-      FlutterDesktopDestructionCallback destruction_callback,
+      FlutterDesktopGpuBufferDestructionCallback destruction_callback,
       void* user_data);
 
   virtual ~ExternalTextureSurfaceGL();
@@ -34,7 +34,7 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
 
  private:
   FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;
-  FlutterDesktopDestructionCallback destruction_callback_ = nullptr;
+  FlutterDesktopGpuBufferDestructionCallback destruction_callback_ = nullptr;
   void* user_data_ = nullptr;
 };
 

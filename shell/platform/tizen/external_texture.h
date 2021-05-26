@@ -29,14 +29,14 @@ struct ExternalTextureGLState {
   GLuint gl_texture;
 };
 
-static std::atomic_long nextTextureId = {1};
+static std::atomic_long kNextTextureId = {1};
 
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
  public:
   ExternalTexture()
       : state_(std::make_unique<ExternalTextureGLState>()),
-        texture_id_(nextTextureId++) {}
+        texture_id_(kNextTextureId++) {}
   virtual ~ExternalTexture() = default;
 
   /**
