@@ -2,110 +2,73 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "external_texture_gl.h"
+#include "external_texture_surface_gl.h"
+
+#include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-#include <Ecore.h>
-#include <Elementary.h>
 #include <Evas_GL_GLES3_Helpers.h>
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES3_DECLARE();
 #else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl32.h>
 #endif
 
-#include <atomic>
-#include <iostream>
+#include <tbm_surface.h>
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-struct ExternalTextureGLState {
-  GLuint gl_texture;
-};
-
-static std::atomic_long nextTextureId = {1};
-
-static void MarkTbmSurfaceToUse(void* surface) {
-#ifndef WEARABLE_PROFILE
-  FT_ASSERT(surface);
-  tbm_surface_h tbm_surface = (tbm_surface_h)surface;
-  tbm_surface_internal_ref(tbm_surface);
-#endif
+static void OnCollectTexture(void* textureGL) {
+  auto* weak_texture =
+      reinterpret_cast<std::weak_ptr<ExternalTexture>*>(textureGL);
+  auto strong_texture = weak_texture->lock();
+  delete weak_texture;
+  if (strong_texture) {
+    strong_texture->OnDestruction();
+  }
 }
 
-static void UnmarkTbmSurfaceToUse(void* surface) {
-  FT_ASSERT(surface);
-  tbm_surface_h tbm_surface = (tbm_surface_h)surface;
-#ifndef WEARABLE_PROFILE
-  tbm_surface_internal_unref(tbm_surface);
-#else
-  tbm_surface_destroy(tbm_surface);
-#endif
-}
+ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
+    FlutterDesktopGpuBufferTextureCallback texture_callback,
+    FlutterDesktopGpuBufferDestructionCallback destruction_callback,
+    void* user_data)
+    : ExternalTexture(),
+      texture_callback_(texture_callback),
+      destruction_callback_(destruction_callback),
+      user_data_(user_data) {}
 
-ExternalTextureGL::ExternalTextureGL()
-    : state_(std::make_unique<ExternalTextureGLState>()),
-      available_tbm_surface_(nullptr),
-      texture_id_(nextTextureId++) {}
-
-ExternalTextureGL::~ExternalTextureGL() {
+ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
   if (state_->gl_texture != 0) {
     glDeleteTextures(1, &state_->gl_texture);
   }
-
-  // If there is a available_tbm_surface_ that is not populated, remove it
-  if (available_tbm_surface_) {
-    UnmarkTbmSurfaceToUse(available_tbm_surface_);
-  }
-
   state_.release();
 }
 
-bool ExternalTextureGL::OnFrameAvailable(tbm_surface_h tbm_surface) {
-  if (!tbm_surface) {
-    FT_LOGE("[texture id:%ld] tbm_surface is null", texture_id_);
-    return false;
-  }
-
-  if (available_tbm_surface_) {
-    FT_LOGD(
-        "[texture id:%ld] Discard! an available tbm surface that has not yet "
-        "been used exists",
-        texture_id_);
-    return false;
-  }
-
-  tbm_surface_info_s info;
-  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
-    FT_LOGD("[texture id:%ld] tbm_surface not valid, pass", texture_id_);
-    return false;
-  }
-
-  available_tbm_surface_ = tbm_surface;
-  MarkTbmSurfaceToUse(available_tbm_surface_);
-
-  return true;
-}
-
-bool ExternalTextureGL::PopulateTextureWithIdentifier(
+bool ExternalTextureSurfaceGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
-  if (!available_tbm_surface_) {
-    FT_LOGD("[texture id:%ld] available_tbm_surface_ is null", texture_id_);
+  const FlutterDesktopGpuBuffer* gpu_buffer =
+      texture_callback_(width, height, user_data_);
+  if (!gpu_buffer) {
+    FT_LOGD("[texture id:%ld] gpu_buffer is null", texture_id_);
     return false;
   }
+
+  if (!gpu_buffer->buffer) {
+    FT_LOGD("[texture id:%ld] tbm_surface_ is null", texture_id_);
+    return false;
+  }
+  const tbm_surface_h tbm_surface =
+      reinterpret_cast<tbm_surface_h>(const_cast<void*>(gpu_buffer->buffer));
+
   tbm_surface_info_s info;
-  if (tbm_surface_get_info(available_tbm_surface_, &info) !=
-      TBM_SURFACE_ERROR_NONE) {
+  if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
     FT_LOGD("[texture id:%ld] tbm_surface is invalid", texture_id_);
-    UnmarkTbmSurfaceToUse(available_tbm_surface_);
-    available_tbm_surface_ = nullptr;
     return false;
   }
 
@@ -113,8 +76,7 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
   EvasGLImage egl_src_image = evasglCreateImageForContext(
       g_evas_gl, evas_gl_current_context_get(g_evas_gl),
-      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)available_tbm_surface_,
-      attribs);
+      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)tbm_surface, attribs);
   if (!egl_src_image) {
     return false;
   }
@@ -143,7 +105,7 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
                             EGL_NONE};
   EGLImageKHR egl_src_image = n_eglCreateImageKHR(
       eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-      (EGLClientBuffer)available_tbm_surface_, attribs);
+      (EGLClientBuffer)tbm_surface, attribs);
 
   if (!egl_src_image) {
     FT_LOGE("[texture id:%ld] egl_src_image create fail!!, errorcode == %d",
@@ -178,13 +140,14 @@ bool ExternalTextureGL::PopulateTextureWithIdentifier(
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = (VoidCallback)UnmarkTbmSurfaceToUse;
-
-  // Abandon ownership of tbm_surface
-  opengl_texture->user_data = available_tbm_surface_;
-  available_tbm_surface_ = nullptr;
-
+  opengl_texture->destruction_callback = (VoidCallback)OnCollectTexture;
+  auto* weak_texture = new std::weak_ptr<ExternalTexture>(shared_from_this());
+  opengl_texture->user_data = weak_texture;
   opengl_texture->width = width;
   opengl_texture->height = height;
   return true;
+}
+
+void ExternalTextureSurfaceGL::OnDestruction() {
+  destruction_callback_(user_data_);
 }

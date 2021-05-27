@@ -19,10 +19,9 @@
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
 #include "flutter/shell/platform/tizen/channels/settings_channel.h"
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
-#include "flutter/shell/platform/tizen/external_texture_gl.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
-#include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 #ifdef TIZEN_RENDERER_EVAS_GL
@@ -37,9 +36,6 @@
 struct FlutterDesktopPluginRegistrar {
   // The engine that owns this state object.
   FlutterTizenEngine* engine;
-
-  // The plugin texture registrar handle given to API clients.
-  std::unique_ptr<FlutterTextureRegistrar> texture_registrar;
 };
 
 // State associated with the messenger used to communicate with the engine.
@@ -53,15 +49,6 @@ struct AOTDataDeleter {
   void operator()(FlutterEngineAOTData aot_data) {
     FlutterEngineCollectAOTData(aot_data);
   }
-};
-
-// State associated with the texture registrar.
-struct FlutterTextureRegistrar {
-  FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine;
-
-  // The texture registrar managing external texture adapters.
-  std::map<int64_t, std::unique_ptr<ExternalTextureGL>> textures;
-  std::mutex mutex;
 };
 
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
@@ -85,6 +72,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // Returns the currently configured Plugin Registrar.
   FlutterDesktopPluginRegistrarRef GetPluginRegistrar();
+
+  FlutterTizenTextureRegistrar* GetTextureRegistrar();
 
   // Sets |callback| to be called when the plugin registrar is destroyed.
   void SetPluginRegistrarDestructionCallback(
@@ -134,6 +123,9 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // The plugin registrar handle given to API clients.
   std::unique_ptr<FlutterDesktopPluginRegistrar> plugin_registrar_;
+
+  // The texture registrar.
+  std::unique_ptr<FlutterTizenTextureRegistrar> texture_registrar_;
 
   // A callback to be called when the engine (and thus the plugin registrar)
   // is being destroyed.

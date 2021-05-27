@@ -210,12 +210,8 @@ bool FlutterTizenEngine::RunEngine(
   localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);
   localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(flutter_engine);
-
   if (IsHeaded()) {
-    auto texture_registrar = std::make_unique<FlutterTextureRegistrar>();
-    texture_registrar->flutter_engine = flutter_engine;
-    plugin_registrar_->texture_registrar = std::move(texture_registrar);
-
+    texture_registrar_ = std::make_unique<FlutterTizenTextureRegistrar>(this);
     key_event_channel = std::make_unique<KeyEventChannel>(
         internal_plugin_registrar_->messenger());
     navigation_channel = std::make_unique<NavigationChannel>(
@@ -250,6 +246,10 @@ bool FlutterTizenEngine::StopEngine() {
 
 FlutterDesktopPluginRegistrarRef FlutterTizenEngine::GetPluginRegistrar() {
   return plugin_registrar_.get();
+}
+
+FlutterTizenTextureRegistrar* FlutterTizenEngine::GetTextureRegistrar() {
+  return texture_registrar_.get();
 }
 
 void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
@@ -396,15 +396,11 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
         [](void* user_data, int64_t texture_id, size_t width, size_t height,
            FlutterOpenGLTexture* texture) -> bool {
       auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-      auto texture_registrar =
-          engine->plugin_registrar_->texture_registrar.get();
-      std::lock_guard<std::mutex> lock(texture_registrar->mutex);
-      auto it = texture_registrar->textures.find(texture_id);
-      int ret = false;
-      if (it != texture_registrar->textures.end()) {
-        ret = it->second->PopulateTextureWithIdentifier(width, height, texture);
+      if (!engine->GetTextureRegistrar()) {
+        return false;
       }
-      return ret;
+      return engine->GetTextureRegistrar()->PopulateTexture(texture_id, width,
+                                                            height, texture);
     };
   } else {
     config.type = kSoftware;

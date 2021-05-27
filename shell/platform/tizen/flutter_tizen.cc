@@ -12,7 +12,6 @@
 #include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
-#include "flutter/shell/platform/tizen/public/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Returns the engine corresponding to the given opaque API handle.
@@ -73,11 +72,6 @@ void FlutterDesktopPluginRegistrarSetDestructionHandler(
     FlutterDesktopPluginRegistrarRef registrar,
     FlutterDesktopOnPluginRegistrarDestroyed callback) {
   registrar->engine->SetPluginRegistrarDestructionCallback(callback);
-}
-
-FlutterTextureRegistrarRef FlutterPluginRegistrarGetTexture(
-    FlutterDesktopPluginRegistrarRef registrar) {
-  return registrar->texture_registrar.get();
 }
 
 bool FlutterDesktopMessengerSend(FlutterDesktopMessengerRef messenger,
@@ -161,52 +155,6 @@ void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
   FlutterEngineNotifyLowMemoryWarning(flutter_engine);
 }
 
-int64_t FlutterRegisterExternalTexture(
-    FlutterTextureRegistrarRef texture_registrar) {
-  FT_LOGD("FlutterDesktopRegisterExternalTexture");
-  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
-  auto texture_gl = std::make_unique<ExternalTextureGL>();
-  int64_t texture_id = texture_gl->TextureId();
-  texture_registrar->textures[texture_id] = std::move(texture_gl);
-  if (FlutterEngineRegisterExternalTexture(texture_registrar->flutter_engine,
-                                           texture_id) == kSuccess) {
-    return texture_id;
-  }
-  return -1;
-}
-
-bool FlutterUnregisterExternalTexture(
-    FlutterTextureRegistrarRef texture_registrar,
-    int64_t texture_id) {
-  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
-  auto it = texture_registrar->textures.find(texture_id);
-  if (it != texture_registrar->textures.end())
-    texture_registrar->textures.erase(it);
-  bool ret = FlutterEngineUnregisterExternalTexture(
-                 texture_registrar->flutter_engine, texture_id) == kSuccess;
-  return ret;
-}
-
-bool FlutterMarkExternalTextureFrameAvailable(
-    FlutterTextureRegistrarRef texture_registrar,
-    int64_t texture_id,
-    void* tbm_surface) {
-  std::lock_guard<std::mutex> lock(texture_registrar->mutex);
-  auto it = texture_registrar->textures.find(texture_id);
-  if (it == texture_registrar->textures.end()) {
-    FT_LOGE("can't find texture texture_id = %" PRId64, texture_id);
-    return false;
-  }
-  if (!texture_registrar->textures[texture_id]->OnFrameAvailable(
-          (tbm_surface_h)tbm_surface)) {
-    // If a texture that has not been used already exists, it can fail
-    return false;
-  }
-  bool ret = FlutterEngineMarkExternalTextureFrameAvailable(
-                 texture_registrar->flutter_engine, texture_id) == kSuccess;
-  return ret;
-}
-
 void FlutterRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
@@ -216,29 +164,40 @@ void FlutterRegisterViewFactory(
           view_type, std::move(view_factory)));
 }
 
+// Returns the texture registrar corresponding to the given opaque API handle.
+static FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
+    FlutterDesktopTextureRegistrarRef ref) {
+  return reinterpret_cast<FlutterTizenTextureRegistrar*>(ref);
+}
+
+// Returns the opaque API handle for the given texture registrar instance.
+static FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
+    FlutterTizenTextureRegistrar* registrar) {
+  return reinterpret_cast<FlutterDesktopTextureRegistrarRef>(registrar);
+}
+
 FlutterDesktopTextureRegistrarRef FlutterDesktopRegistrarGetTextureRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  FT_UNIMPLEMENTED();
-  return nullptr;
+  return HandleForTextureRegistrar(registrar->engine->GetTextureRegistrar());
 }
 
 int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(
     FlutterDesktopTextureRegistrarRef texture_registrar,
     const FlutterDesktopTextureInfo* texture_info) {
-  FT_UNIMPLEMENTED();
-  return -1;
+  return TextureRegistrarFromHandle(texture_registrar)
+      ->RegisterTexture(texture_info);
 }
 
 bool FlutterDesktopTextureRegistrarUnregisterExternalTexture(
     FlutterDesktopTextureRegistrarRef texture_registrar,
     int64_t texture_id) {
-  FT_UNIMPLEMENTED();
-  return false;
+  return TextureRegistrarFromHandle(texture_registrar)
+      ->UnregisterTexture(texture_id);
 }
 
 bool FlutterDesktopTextureRegistrarMarkExternalTextureFrameAvailable(
     FlutterDesktopTextureRegistrarRef texture_registrar,
     int64_t texture_id) {
-  FT_UNIMPLEMENTED();
-  return false;
+  return TextureRegistrarFromHandle(texture_registrar)
+      ->MarkTextureFrameAvailable(texture_id);
 }
