@@ -29,7 +29,8 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
     bool headed) {
   StartLogging();
 
-  auto engine = std::make_unique<FlutterTizenEngine>(headed);
+  auto engine = std::make_unique<FlutterTizenEngine>(
+      headed, engine_properties.custom_win);
   if (!engine->RunEngine(engine_properties)) {
     FT_LOGE("Failed to run the Flutter engine.");
     return nullptr;

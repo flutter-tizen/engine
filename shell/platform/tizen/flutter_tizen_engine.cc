@@ -38,8 +38,8 @@ static DeviceProfile GetDeviceProfile() {
   return DeviceProfile::kUnknown;
 }
 
-FlutterTizenEngine::FlutterTizenEngine(bool headed)
-    : device_profile(GetDeviceProfile()) {
+FlutterTizenEngine::FlutterTizenEngine(bool headed, void* win)
+    : device_profile(GetDeviceProfile()), custom_window_(win) {
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
   // thread). UI threads need to send flutter task to platform thread.
@@ -329,6 +329,13 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
 
 void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
   SetWindowOrientation(degree);
+}
+
+bool FlutterTizenEngine::hasCustomWindow() {
+  return custom_window_ != nullptr;
+}
+void* FlutterTizenEngine::CustomWindow() {
+  return custom_window_;
 }
 
 // The Flutter Engine calls out to this function when new platform messages are

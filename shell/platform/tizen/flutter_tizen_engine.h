@@ -58,7 +58,7 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
-  explicit FlutterTizenEngine(bool headed);
+  explicit FlutterTizenEngine(bool headed, void* win = nullptr);
   virtual ~FlutterTizenEngine();
 
   // Prevent copying.
@@ -83,6 +83,9 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   void SetWindowOrientation(int32_t degree);
   void OnOrientationChange(int32_t degree) override;
 
+  // This is an experimental feature to support partial window.
+  bool hasCustomWindow() override;
+  void* CustomWindow() override;
   // The Flutter engine instance.
   FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine;
 
@@ -152,6 +155,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // The current renderer transformation.
   FlutterTransformation transformation_;
+
+  void* custom_window_;
 };
 
 #endif  // EMBEDDER_TIZEN_EMBEDDER_ENGINE_H_
