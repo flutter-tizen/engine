@@ -57,6 +57,37 @@ static bool IsASCIIPrintableKey(char c) {
   return false;
 }
 
+static bool TextInputTypeToEcoreIMFInputPanelLayout(
+    std::string text_input_type,
+    Ecore_IMF_Input_Panel_Layout& panel_layout) {
+  if (text_input_type == "TextInputType.text" ||
+      text_input_type == "TextInputType.multiline") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+  } else if (text_input_type == "TextInputType.number") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER;
+  } else if (text_input_type == "TextInputType.phone") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
+  } else if (text_input_type == "TextInputType.datetime") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_DATETIME;
+  } else if (text_input_type == "TextInputType.emailAddress") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL;
+  } else if (text_input_type == "TextInputType.url") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_URL;
+  } else if (text_input_type == "TextInputType.visiblePassword") {
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
+  } else if (text_input_type == "TextInputType.name" ||
+             text_input_type == "TextInputType.address") {
+    FT_LOGW(
+        "Actual requested text input type is [%s], but select "
+        "TextInputType.text as fallback type",
+        text_input_type.c_str());
+    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+  } else {
+    return false;
+  }
+  return true;
+}
+
 void TextInputChannel::CommitCallback(void* data,
                                       Ecore_IMF_Context* ctx,
                                       void* event_info) {
@@ -586,6 +617,10 @@ void TextInputChannel::ShowSoftwareKeyboard() {
   FT_LOGD("Show input panel");
   if (imf_context_ && !is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = true;
+    Ecore_IMF_Input_Panel_Layout panel_layout;
+    if (TextInputTypeToEcoreIMFInputPanelLayout(input_type_, panel_layout)) {
+      ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
+    }
     ecore_imf_context_input_panel_show(imf_context_);
     ecore_imf_context_focus_in(imf_context_);
   }
