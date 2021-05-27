@@ -636,20 +636,24 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
                                                   int32_t& height) {
   elm_config_accel_preference_set("hw:opengl");
 
-  evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
-  auto* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-  int32_t x, y;
-  ecore_evas_screen_geometry_get(ecore_evas, &x, &y, &width, &height);
-  if (width == 0 || height == 0) {
-    FT_LOGE("Invalid screen size: %d x %d", width, height);
-    return nullptr;
-  }
+  if (delegate_.hasCustomWindow()) {
+    evas_window_ = reinterpret_cast<Evas_Object*>(delegate_.CustomWindow());
+  } else {
+    evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
+    auto* ecore_evas =
+        ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
+    int32_t x, y;
+    ecore_evas_screen_geometry_get(ecore_evas, &x, &y, &width, &height);
+    if (width == 0 || height == 0) {
+      FT_LOGE("Invalid screen size: %d x %d", width, height);
+      return nullptr;
+    }
 
-  elm_win_alpha_set(evas_window_, EINA_FALSE);
-  evas_object_move(evas_window_, 0, 0);
-  evas_object_resize(evas_window_, width, height);
-  evas_object_raise(evas_window_);
+    elm_win_alpha_set(evas_window_, EINA_FALSE);
+    evas_object_move(evas_window_, 0, 0);
+    evas_object_resize(evas_window_, width, height);
+    evas_object_raise(evas_window_);
+  }
 
   Evas_Object* bg = elm_bg_add(evas_window_);
   evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
