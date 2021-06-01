@@ -5,11 +5,11 @@
 #ifndef EMBEDDER_LIFECYCLE_CHANNEL_H_
 #define EMBEDDER_LIFECYCLE_CHANNEL_H_
 
-#include "flutter/shell/platform/embedder/embedder.h"
+class FlutterTizenEngine;
 
 class LifecycleChannel {
  public:
-  explicit LifecycleChannel(FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine);
+  explicit LifecycleChannel(FlutterTizenEngine* engine);
   virtual ~LifecycleChannel();
 
   void AppIsInactive();
@@ -19,7 +19,7 @@ class LifecycleChannel {
   void SendLifecycleMessage(const char message[]);
 
  private:
-  FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine_;
+  FlutterTizenEngine* engine_{nullptr};
 };
 
 #endif  // EMBEDDER_LIFECYCLE_CHANNEL_H_

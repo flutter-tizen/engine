@@ -153,10 +153,10 @@ void TizenVsyncWaiter::TdmClientVblankCallback(tdm_client_vblank* vblank,
       reinterpret_cast<TizenVsyncWaiter*>(user_data);
   FT_ASSERT(tizen_vsync_waiter != nullptr);
   FT_ASSERT(tizen_vsync_waiter->engine_ != nullptr);
-  FT_ASSERT(tizen_vsync_waiter->engine_->flutter_engine != nullptr);
+
   uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
   uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-  FlutterEngineOnVsync(tizen_vsync_waiter->engine_->flutter_engine,
-                       tizen_vsync_waiter->baton_, frame_start_time_nanos,
-                       frame_target_time_nanos);
+  tizen_vsync_waiter->engine_->OnVsync(tizen_vsync_waiter->baton_,
+                                       frame_start_time_nanos,
+                                       frame_target_time_nanos);
 }

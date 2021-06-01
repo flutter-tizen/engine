@@ -4,6 +4,7 @@
 
 #include "lifecycle_channel.h"
 
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 static constexpr char kChannelName[] = "flutter/lifecycle";
@@ -12,20 +13,15 @@ static constexpr char kResumed[] = "AppLifecycleState.resumed";
 static constexpr char kPaused[] = "AppLifecycleState.paused";
 static constexpr char kDetached[] = "AppLifecycleState.detached";
 
-LifecycleChannel::LifecycleChannel(FLUTTER_API_SYMBOL(FlutterEngine)
-                                       flutter_engine)
-    : flutter_engine_(flutter_engine) {}
+LifecycleChannel::LifecycleChannel(FlutterTizenEngine* engine)
+    : engine_(engine) {}
 
 LifecycleChannel::~LifecycleChannel() {}
 
 void LifecycleChannel::SendLifecycleMessage(const char message[]) {
-  FlutterPlatformMessage platformMessage = {};
-  platformMessage.struct_size = sizeof(FlutterPlatformMessage);
-  platformMessage.channel = kChannelName;
-  platformMessage.message = reinterpret_cast<const uint8_t*>(message);
-  platformMessage.message_size = strlen(message);
-  platformMessage.response_handle = nullptr;
-  FlutterEngineSendPlatformMessage(flutter_engine_, &platformMessage);
+  engine_->SendPlatformMessage(kChannelName,
+                               reinterpret_cast<const uint8_t*>(message),
+                               strlen(message), nullptr, nullptr);
 }
 
 void LifecycleChannel::AppIsInactive() {

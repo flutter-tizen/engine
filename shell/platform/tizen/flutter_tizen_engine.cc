@@ -40,13 +40,16 @@ static DeviceProfile GetDeviceProfile() {
 
 FlutterTizenEngine::FlutterTizenEngine(bool headed)
     : device_profile(GetDeviceProfile()) {
+  embedder_api_.struct_size = sizeof(FlutterEngineProcTable);
+  FlutterEngineGetProcAddresses(&embedder_api_);
+
   // Run flutter task on Tizen main loop.
   // Tizen engine has four threads (GPU thread, UI thread, IO thread, platform
   // thread). UI threads need to send flutter task to platform thread.
   event_loop_ = std::make_unique<TizenPlatformEventLoop>(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
-        if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
+        if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");
         }
       });
@@ -75,7 +78,7 @@ void FlutterTizenEngine::InitializeRenderer() {
   render_loop_ = std::make_unique<TizenRenderEventLoop>(
       std::this_thread::get_id(),  // main thread
       [this](const auto* task) {
-        if (FlutterEngineRunTask(this->flutter_engine, task) != kSuccess) {
+        if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");
         }
       },
@@ -87,9 +90,13 @@ void FlutterTizenEngine::InitializeRenderer() {
 #endif
 }
 
+void FlutterTizenEngine::NotifyLowMemoryWarning() {
+  embedder_api_.NotifyLowMemoryWarning(engine_);
+}
+
 // Attempts to load AOT data from the given path, which must be absolute and
 // non-empty. Logs and returns nullptr on failure.
-UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
+UniqueAotDataPtr FlutterTizenEngine::LoadAotData(std::string aot_data_path) {
   if (aot_data_path.empty()) {
     FT_LOGE(
         "Attempted to load AOT data, but no aot_library_path was provided.");
@@ -104,7 +111,7 @@ UniqueAotDataPtr LoadAotData(std::string aot_data_path) {
   source.type = kFlutterEngineAOTDataSourceTypeElfPath;
   source.elf_path = aot_data_path.c_str();
   FlutterEngineAOTData data = nullptr;
-  auto result = FlutterEngineCreateAOTData(&source, &data);
+  auto result = embedder_api_.CreateAOTData(&source, &data);
   if (result != kSuccess) {
     FT_LOGE("Failed to load AOT data from: %s", aot_data_path.c_str());
     return nullptr;
@@ -169,7 +176,18 @@ bool FlutterTizenEngine::RunEngine(
   args.icu_data_path = engine_properties.icu_data_path;
   args.command_line_argc = static_cast<int>(argv.size());
   args.command_line_argv = &argv[0];
-  args.platform_message_callback = OnFlutterPlatformMessage;
+  args.platform_message_callback =
+      [](const FlutterPlatformMessage* engine_message, void* user_data) {
+        if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
+          FT_LOGE(
+              "Invalid message size received. Expected: %zu, but received %zu",
+              sizeof(FlutterPlatformMessage), engine_message->struct_size);
+          return;
+        }
+        auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+        auto message = engine->ConvertToDesktopMessage(*engine_message);
+        engine->message_dispatcher->HandleMessage(message);
+      };
   args.custom_task_runners = &custom_task_runners;
 #ifndef TIZEN_RENDERER_EVAS_GL
   if (IsHeaded()) {
@@ -180,7 +198,7 @@ bool FlutterTizenEngine::RunEngine(
   }
 #endif
 
-  if (FlutterEngineRunsAOTCompiledDartCode()) {
+  if (embedder_api_.RunsAOTCompiledDartCode()) {
     aot_data_ = LoadAotData(engine_properties.aot_library_path);
     if (!aot_data_) {
       FT_LOGE("Unable to start engine without AOT data.");
@@ -191,9 +209,9 @@ bool FlutterTizenEngine::RunEngine(
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
 
-  auto result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &renderer_config,
-                                 &args, this, &flutter_engine);
-  if (result == kSuccess && flutter_engine != nullptr) {
+  auto result = embedder_api_.Run(FLUTTER_ENGINE_VERSION, &renderer_config,
+                                  &args, this, &engine_);
+  if (result == kSuccess && engine_ != nullptr) {
     FT_LOGD("FlutterEngineRun Success!");
   } else {
     FT_LOGE("FlutterEngineRun Failure! result: %d", result);
@@ -207,9 +225,10 @@ bool FlutterTizenEngine::RunEngine(
       internal_plugin_registrar_->messenger(), renderer.get());
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
-  localization_channel = std::make_unique<LocalizationChannel>(flutter_engine);
+  localization_channel = std::make_unique<LocalizationChannel>(this);
   localization_channel->SendLocales();
-  lifecycle_channel = std::make_unique<LifecycleChannel>(flutter_engine);
+  lifecycle_channel = std::make_unique<LifecycleChannel>(this);
+
   if (IsHeaded()) {
     texture_registrar_ = std::make_unique<FlutterTizenTextureRegistrar>(this);
     key_event_channel = std::make_unique<KeyEventChannel>(
@@ -230,15 +249,15 @@ bool FlutterTizenEngine::RunEngine(
 }
 
 bool FlutterTizenEngine::StopEngine() {
-  if (flutter_engine) {
+  if (engine_) {
     if (platform_view_channel) {
       platform_view_channel->Dispose();
     }
     if (plugin_registrar_destruction_callback_) {
       plugin_registrar_destruction_callback_(plugin_registrar_.get());
     }
-    FlutterEngineResult result = FlutterEngineShutdown(flutter_engine);
-    flutter_engine = nullptr;
+    FlutterEngineResult result = embedder_api_.Shutdown(engine_);
+    engine_ = nullptr;
     return (result == kSuccess);
   }
   return false;
@@ -255,6 +274,51 @@ FlutterTizenTextureRegistrar* FlutterTizenEngine::GetTextureRegistrar() {
 void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
     FlutterDesktopOnPluginRegistrarDestroyed callback) {
   plugin_registrar_destruction_callback_ = callback;
+}
+
+bool FlutterTizenEngine::SendPlatformMessage(
+    const char* channel,
+    const uint8_t* message,
+    const size_t message_size,
+    const FlutterDesktopBinaryReply reply,
+    void* user_data) {
+  FlutterPlatformMessageResponseHandle* response_handle = nullptr;
+  if (reply != nullptr && user_data != nullptr) {
+    FlutterEngineResult result =
+        embedder_api_.PlatformMessageCreateResponseHandle(
+            engine_, reply, user_data, &response_handle);
+    if (result != kSuccess) {
+      FT_LOGE("Failed to create response handle");
+      return false;
+    }
+  }
+
+  FlutterPlatformMessage platform_message = {
+      sizeof(FlutterPlatformMessage),
+      channel,
+      message,
+      message_size,
+      response_handle,
+  };
+
+  FlutterEngineResult message_result =
+      embedder_api_.SendPlatformMessage(engine_, &platform_message);
+  if (response_handle != nullptr) {
+    embedder_api_.PlatformMessageReleaseResponseHandle(engine_,
+                                                       response_handle);
+  }
+  return message_result == kSuccess;
+}
+
+void FlutterTizenEngine::SendPlatformMessageResponse(
+    const FlutterDesktopMessageResponseHandle* handle,
+    const uint8_t* data,
+    size_t data_length) {
+  embedder_api_.SendPlatformMessageResponse(engine_, handle, data, data_length);
+}
+
+void FlutterTizenEngine::SendPointerEvent(const FlutterPointerEvent& event) {
+  embedder_api_.SendPointerEvent(engine_, &event, 1);
 }
 
 void FlutterTizenEngine::SendWindowMetrics(int32_t width,
@@ -285,7 +349,7 @@ void FlutterTizenEngine::SendWindowMetrics(int32_t width,
   } else {
     event.pixel_ratio = pixel_ratio;
   }
-  FlutterEngineSendWindowMetricsEvent(flutter_engine, &event);
+  embedder_api_.SendWindowMetricsEvent(engine_, &event);
 }
 
 // This must be called at least once in order to initialize the value of
@@ -331,20 +395,35 @@ void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
   SetWindowOrientation(degree);
 }
 
+void FlutterTizenEngine::OnVsync(intptr_t baton,
+                                 uint64_t frame_start_time_nanos,
+                                 uint64_t frame_target_time_nanos) {
+  embedder_api_.OnVsync(engine_, baton, frame_start_time_nanos,
+                        frame_target_time_nanos);
+}
+
+void FlutterTizenEngine::UpdateLocales(const FlutterLocale** locales,
+                                       size_t locales_count) {
+  embedder_api_.UpdateLocales(engine_, locales, locales_count);
+}
+
+bool FlutterTizenEngine::RegisterExternalTexture(int64_t texture_id) {
+  return (embedder_api_.RegisterExternalTexture(engine_, texture_id) ==
+          kSuccess);
+}
+
+bool FlutterTizenEngine::UnregisterExternalTexture(int64_t texture_id) {
+  return (embedder_api_.UnregisterExternalTexture(engine_, texture_id) ==
+          kSuccess);
+}
+
+bool FlutterTizenEngine::MarkExternalTextureFrameAvailable(int64_t texture_id) {
+  return (embedder_api_.MarkExternalTextureFrameAvailable(
+              engine_, texture_id) == kSuccess);
+}
+
 // The Flutter Engine calls out to this function when new platform messages are
 // available.
-void FlutterTizenEngine::OnFlutterPlatformMessage(
-    const FlutterPlatformMessage* engine_message,
-    void* user_data) {
-  if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
-    FT_LOGE("Invalid message size received. Expected: %zu, but received %zu",
-            sizeof(FlutterPlatformMessage), engine_message->struct_size);
-    return;
-  }
-  auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-  auto message = engine->ConvertToDesktopMessage(*engine_message);
-  engine->message_dispatcher->HandleMessage(message);
-}
 
 // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
 FlutterDesktopMessage FlutterTizenEngine::ConvertToDesktopMessage(

@@ -88,29 +88,8 @@ bool FlutterDesktopMessengerSendWithReply(FlutterDesktopMessengerRef messenger,
                                           const size_t message_size,
                                           const FlutterDesktopBinaryReply reply,
                                           void* user_data) {
-  FlutterPlatformMessageResponseHandle* response_handle = nullptr;
-  if (reply != nullptr && user_data != nullptr) {
-    FlutterEngineResult result = FlutterPlatformMessageCreateResponseHandle(
-        messenger->engine->flutter_engine, reply, user_data, &response_handle);
-    if (result != kSuccess) {
-      FT_LOGE("Failed to create response handle");
-      return false;
-    }
-  }
-  FlutterPlatformMessage platform_message = {
-      sizeof(FlutterPlatformMessage),
-      channel,
-      message,
-      message_size,
-      response_handle,
-  };
-  FlutterEngineResult message_result = FlutterEngineSendPlatformMessage(
-      messenger->engine->flutter_engine, &platform_message);
-  if (response_handle != nullptr) {
-    FlutterPlatformMessageReleaseResponseHandle(
-        messenger->engine->flutter_engine, response_handle);
-  }
-  return message_result == kSuccess;
+  return messenger->engine->SendPlatformMessage(channel, message, message_size,
+                                                reply, user_data);
 }
 
 void FlutterDesktopMessengerSendResponse(
@@ -118,8 +97,7 @@ void FlutterDesktopMessengerSendResponse(
     const FlutterDesktopMessageResponseHandle* handle,
     const uint8_t* data,
     size_t data_length) {
-  FlutterEngineSendPlatformMessageResponse(messenger->engine->flutter_engine,
-                                           handle, data, data_length);
+  messenger->engine->SendPlatformMessageResponse(handle, data, data_length);
 }
 
 void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
@@ -151,8 +129,7 @@ void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
 }
 
 void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
-  auto flutter_engine = EngineFromHandle(engine)->flutter_engine;
-  FlutterEngineNotifyLowMemoryWarning(flutter_engine);
+  EngineFromHandle(engine)->NotifyLowMemoryWarning();
 }
 
 void FlutterRegisterViewFactory(

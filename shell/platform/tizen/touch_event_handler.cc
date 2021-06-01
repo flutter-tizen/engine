@@ -36,10 +36,6 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 double scroll_delta_y,
                                                 size_t timestamp,
                                                 int device_id = 0) {
-  if (!engine_->flutter_engine) {
-    return;
-  }
-
   // Correct errors caused by window rotation.
   auto window_geometry = engine_->renderer->GetGeometry();
   double width = window_geometry.w;
@@ -69,7 +65,8 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   event.scroll_delta_y = scroll_delta_y * 2;
   event.timestamp = timestamp * 1000;
   event.device = device_id;
-  FlutterEngineSendPointerEvent(engine_->flutter_engine, &event, 1);
+
+  engine_->SendPointerEvent(event);
 }
 
 Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {

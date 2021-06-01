@@ -5,18 +5,17 @@
 #include "localization_channel.h"
 
 #include <utils_i18n.h>
-
 #include <vector>
 
+#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
 static constexpr char kChannelName[] = "flutter/localization";
 
-LocalizationChannel::LocalizationChannel(FLUTTER_API_SYMBOL(FlutterEngine)
-                                             flutter_engine)
-    : flutter_engine_(flutter_engine) {}
+LocalizationChannel::LocalizationChannel(FlutterTizenEngine* engine)
+    : engine_(engine) {}
 
 LocalizationChannel::~LocalizationChannel() {}
 
@@ -54,9 +53,8 @@ void LocalizationChannel::SendLocales() {
   }
 
   FT_LOGD("Send %zu available locales", flutter_locales.size());
-  // send locales to engine
-  FlutterEngineUpdateLocales(
-      flutter_engine_,
+  // Send locales to engine
+  engine_->UpdateLocales(
       const_cast<const FlutterLocale**>(flutter_locales.data()),
       flutter_locales.size());
 
@@ -111,13 +109,9 @@ void LocalizationChannel::SendPlatformResolvedLocale() {
     return;
   }
 
-  FlutterPlatformMessage message = {};
-  message.struct_size = sizeof(FlutterPlatformMessage);
-  message.channel = kChannelName;
-  message.message = reinterpret_cast<const uint8_t*>(buffer.GetString());
-  message.message_size = buffer.GetSize();
-  message.response_handle = nullptr;
-  FlutterEngineSendPlatformMessage(flutter_engine_, &message);
+  engine_->SendPlatformMessage(
+      kChannelName, reinterpret_cast<const uint8_t*>(buffer.GetString()),
+      buffer.GetSize(), nullptr, nullptr);
 
   DestroyFlutterLocale(flutter_locale);
 }

@@ -45,7 +45,7 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
     textures_[texture_id] = std::move(texture_gl);
   }
 
-  FlutterEngineRegisterExternalTexture(engine_->flutter_engine, texture_id);
+  engine_->RegisterExternalTexture(texture_id);
   return texture_id;
 }
 
@@ -58,15 +58,12 @@ bool FlutterTizenTextureRegistrar::UnregisterTexture(int64_t texture_id) {
     }
     textures_.erase(it);
   }
-
-  return FlutterEngineUnregisterExternalTexture(engine_->flutter_engine,
-                                                texture_id) == kSuccess;
+  return engine_->UnregisterExternalTexture(texture_id);
 }
 
 bool FlutterTizenTextureRegistrar::MarkTextureFrameAvailable(
     int64_t texture_id) {
-  return FlutterEngineMarkExternalTextureFrameAvailable(engine_->flutter_engine,
-                                                        texture_id) == kSuccess;
+  return engine_->MarkExternalTextureFrameAvailable(texture_id);
 }
 
 bool FlutterTizenTextureRegistrar::PopulateTexture(

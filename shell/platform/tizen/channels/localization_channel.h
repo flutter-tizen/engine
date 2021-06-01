@@ -7,10 +7,11 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+class FlutterTizenEngine;
+
 class LocalizationChannel {
  public:
-  explicit LocalizationChannel(FLUTTER_API_SYMBOL(FlutterEngine)
-                                   flutter_engine);
+  explicit LocalizationChannel(FlutterTizenEngine* engine);
   virtual ~LocalizationChannel();
 
   void SendLocales();
@@ -20,7 +21,7 @@ class LocalizationChannel {
   FlutterLocale* GetFlutterLocale(const char* locale);
   void DestroyFlutterLocale(FlutterLocale* flutter_locale);
 
-  FLUTTER_API_SYMBOL(FlutterEngine) flutter_engine_;
+  FlutterTizenEngine* engine_;
 };
 
 #endif  // EMBEDDER_LOCALIZATION_CHANNEL_H_
