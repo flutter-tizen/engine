@@ -76,7 +76,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
   EvasGLImage egl_src_image = evasglCreateImageForContext(
       g_evas_gl, evas_gl_current_context_get(g_evas_gl),
-      EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)tbm_surface, attribs);
+      EVAS_GL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
   if (!egl_src_image) {
     return false;
   }
@@ -100,12 +100,13 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   }
 #else
   PFNEGLCREATEIMAGEKHRPROC n_eglCreateImageKHR =
-      (PFNEGLCREATEIMAGEKHRPROC)eglGetProcAddress("eglCreateImageKHR");
+      reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
+          eglGetProcAddress("eglCreateImageKHR"));
   const EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
                             EGL_NONE};
-  EGLImageKHR egl_src_image = n_eglCreateImageKHR(
-      eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-      (EGLClientBuffer)tbm_surface, attribs);
+  EGLImageKHR egl_src_image =
+      n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
+                          EGL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
 
   if (!egl_src_image) {
     FT_LOGE("[texture id:%ld] egl_src_image create fail!!, errorcode == %d",
@@ -127,12 +128,13 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
   }
   PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
-      (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress(
-          "glEGLImageTargetTexture2DOES");
+      reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+          eglGetProcAddress("glEGLImageTargetTexture2DOES"));
   glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
   if (egl_src_image) {
     PFNEGLDESTROYIMAGEKHRPROC n_eglDestroyImageKHR =
-        (PFNEGLDESTROYIMAGEKHRPROC)eglGetProcAddress("eglDestroyImageKHR");
+        reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
+            eglGetProcAddress("eglDestroyImageKHR"));
     n_eglDestroyImageKHR(eglGetCurrentDisplay(), egl_src_image);
   }
 #endif
@@ -140,7 +142,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = (VoidCallback)OnCollectTexture;
+  opengl_texture->destruction_callback = OnCollectTexture;
   auto* weak_texture = new std::weak_ptr<ExternalTexture>(shared_from_this());
   opengl_texture->user_data = weak_texture;
   opengl_texture->width = width;

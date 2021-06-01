@@ -14,7 +14,7 @@ static pthread_t stderr_thread;
 static bool is_running = false;
 
 static void* LoggingFunction(void* arg) {
-  int* pipe = (int*)arg;
+  int* pipe = static_cast<int*>(arg);
   auto priority = pipe == stdout_pipe ? DLOG_INFO : DLOG_ERROR;
 
   ssize_t size;

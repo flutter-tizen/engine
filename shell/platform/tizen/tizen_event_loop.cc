@@ -80,7 +80,7 @@ void TizenEventLoop::ExcuteTaskEvents(void* data,
   auto* p_task = reinterpret_cast<Task*>(buffer);
 
   const double flutter_duration =
-      ((double)(p_task->fire_time.time_since_epoch().count()) -
+      (static_cast<double>(p_task->fire_time.time_since_epoch().count()) -
        FlutterEngineGetCurrentTime()) /
       1000000000.0;
   if (flutter_duration > 0) {
@@ -118,10 +118,9 @@ TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
                                            TizenRenderer* renderer)
     : TizenEventLoop(main_thread_id, on_task_expired), renderer_(renderer) {
   evas_object_image_pixels_get_callback_set(
-      (Evas_Object*)static_cast<TizenRendererEvasGL*>(renderer_)
-          ->GetImageHandle(),
+      static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
       [](void* data, Evas_Object* o) {  // Render callback
-        TizenRenderEventLoop* self = (TizenRenderEventLoop*)data;
+        TizenRenderEventLoop* self = static_cast<TizenRenderEventLoop*>(data);
         {
           std::lock_guard<std::mutex> lock(self->expired_tasks_mutex_);
           for (const auto& task : self->expired_tasks_) {
@@ -142,8 +141,7 @@ void TizenRenderEventLoop::OnTaskExpired() {
   expired_tasks_count = expired_tasks_.size();
   if (!has_pending_renderer_callback_ && expired_tasks_count) {
     evas_object_image_pixels_dirty_set(
-        (Evas_Object*)static_cast<TizenRendererEvasGL*>(renderer_)
-            ->GetImageHandle(),
+        static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
         EINA_TRUE);
     has_pending_renderer_callback_ = true;
   } else {

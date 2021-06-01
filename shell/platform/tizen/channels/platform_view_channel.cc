@@ -19,8 +19,9 @@ std::string ExtractStringFromMap(const flutter::EncodableValue& arguments,
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<std::string>(value))
+    if (std::holds_alternative<std::string>(value)) {
       return std::get<std::string>(value);
+    }
   }
   return std::string();
 }
@@ -30,8 +31,9 @@ int ExtractIntFromMap(const flutter::EncodableValue& arguments,
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<int>(value))
+    if (std::holds_alternative<int>(value)) {
       return std::get<int>(value);
+    }
   }
   return -1;
 }
@@ -41,8 +43,9 @@ double ExtractDoubleFromMap(const flutter::EncodableValue& arguments,
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<double>(value))
+    if (std::holds_alternative<double>(value)) {
       return std::get<double>(value);
+    }
   }
   return -1;
 }
@@ -53,8 +56,9 @@ flutter::EncodableMap ExtractMapFromMap(
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<flutter::EncodableMap>(value))
+    if (std::holds_alternative<flutter::EncodableMap>(value)) {
       return std::get<flutter::EncodableMap>(value);
+    }
   }
   return flutter::EncodableMap();
 }
@@ -65,8 +69,9 @@ flutter::EncodableList ExtractListFromMap(
   if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<flutter::EncodableList>(value))
+    if (std::holds_alternative<flutter::EncodableList>(value)) {
       return std::get<flutter::EncodableList>(value);
+    }
   }
   return flutter::EncodableList();
 }

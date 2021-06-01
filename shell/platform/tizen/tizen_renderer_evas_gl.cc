@@ -562,8 +562,8 @@ uintptr_t TizenRendererEvasGL::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_)));
 }
 
-void* TizenRendererEvasGL::GetImageHandle() {
-  return (void*)graphics_adapter_;
+Evas_Object* TizenRendererEvasGL::GetImageHandle() {
+  return graphics_adapter_;
 }
 
 bool TizenRendererEvasGL::InitializeRenderer() {
@@ -577,7 +577,7 @@ bool TizenRendererEvasGL::InitializeRenderer() {
 }
 
 void TizenRendererEvasGL::Show() {
-  evas_object_show((Evas_Object*)GetImageHandle());
+  evas_object_show(GetImageHandle());
   evas_object_show(evas_window_);
 }
 
@@ -588,8 +588,7 @@ void TizenRendererEvasGL::DestroyRenderer() {
 
 bool TizenRendererEvasGL::SetupEvasGL() {
   int32_t width, height;
-  evas_gl_ = evas_gl_new(
-      evas_object_evas_get((Evas_Object*)SetupEvasWindow(width, height)));
+  evas_gl_ = evas_gl_new(evas_object_evas_get(SetupEvasWindow(width, height)));
   if (!evas_gl_) {
     FT_LOGE("SetupEvasWindow fail");
     return false;
@@ -628,12 +627,13 @@ bool TizenRendererEvasGL::SetupEvasGL() {
 
   Evas_Native_Surface ns;
   evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
-  evas_object_image_native_surface_set((Evas_Object*)GetImageHandle(), &ns);
+  evas_object_image_native_surface_set(GetImageHandle(), &ns);
 
   return true;
 }
 
-void* TizenRendererEvasGL::SetupEvasWindow(int32_t& width, int32_t& height) {
+Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
+                                                  int32_t& height) {
   elm_config_accel_preference_set("hw:opengl");
 
   evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
@@ -665,12 +665,11 @@ void* TizenRendererEvasGL::SetupEvasWindow(int32_t& width, int32_t& height) {
   evas_object_image_alpha_set(graphics_adapter_, EINA_TRUE);
   elm_win_resize_object_add(evas_window_, graphics_adapter_);
 
-  int rotations[4] = {0, 90, 180, 270};
-  elm_win_wm_rotation_available_rotations_set(evas_window_,
-                                              (const int*)(&rotations), 4);
+  const int rotations[4] = {0, 90, 180, 270};
+  elm_win_wm_rotation_available_rotations_set(evas_window_, &rotations[0], 4);
   evas_object_smart_callback_add(evas_window_, "rotation,changed",
                                  RotationEventCb, this);
-  return (void*)evas_window_;
+  return evas_window_;
 }
 
 void TizenRendererEvasGL::DestroyEvasGL() {
@@ -693,7 +692,6 @@ void TizenRendererEvasGL::RotationEventCb(void* data,
                                           Evas_Object* obj,
                                           void* event_info) {
   auto* self = reinterpret_cast<TizenRendererEvasGL*>(data);
-  // TODO : Use current window rotation degree
   FT_UNIMPLEMENTED();
   self->delegate_.OnOrientationChange(0);
 }

@@ -334,7 +334,7 @@ void FlutterTizenEngine::SendWindowMetrics(int32_t width,
     // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
     double dpi = 72.0;
     if (renderer && device_profile != DeviceProfile::kTV) {
-      dpi = (double)renderer->GetDpi();
+      dpi = static_cast<double>(renderer->GetDpi());
     }
     double profile_factor = 1.0;
     if (device_profile == DeviceProfile::kWearable) {

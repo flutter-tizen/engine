@@ -227,7 +227,7 @@ int32_t TizenRendererEcoreWl2::GetDpi() {
 }
 
 uintptr_t TizenRendererEcoreWl2::GetWindowId() {
-  return (uintptr_t)ecore_wl2_window_id_get(ecore_wl2_window_);
+  return ecore_wl2_window_id_get(ecore_wl2_window_);
 }
 
 bool TizenRendererEcoreWl2::InitializeRenderer() {
@@ -306,13 +306,11 @@ bool TizenRendererEcoreWl2::SetupEglWindow(int32_t width, int32_t height) {
 }
 
 EGLDisplay TizenRendererEcoreWl2::GetEGLDisplay() {
-  return eglGetDisplay(
-      (EGLNativeDisplayType)ecore_wl2_display_get(ecore_wl2_display_));
+  return eglGetDisplay(ecore_wl2_display_get(ecore_wl2_display_));
 }
 
 EGLNativeWindowType TizenRendererEcoreWl2::GetEGLNativeWindowType() {
-  return (EGLNativeWindowType)ecore_wl2_egl_window_native_get(
-      ecore_wl2_egl_window_);
+  return ecore_wl2_egl_window_native_get(ecore_wl2_egl_window_);
 }
 
 void TizenRendererEcoreWl2::DestroyEglWindow() {

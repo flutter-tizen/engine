@@ -41,11 +41,12 @@ static const char* GetImfMethod() {
   Eina_List* modules;
 
   modules = ecore_imf_context_available_ids_get();
-  if (!modules)
+  if (!modules) {
     return nullptr;
+  }
 
   void* module;
-  EINA_LIST_FREE(modules, module) { return (const char*)module; }
+  EINA_LIST_FREE(modules, module) { return static_cast<const char*>(module); }
 
   return nullptr;
 }
@@ -59,29 +60,29 @@ static bool IsASCIIPrintableKey(char c) {
 
 static bool TextInputTypeToEcoreIMFInputPanelLayout(
     std::string text_input_type,
-    Ecore_IMF_Input_Panel_Layout& panel_layout) {
+    Ecore_IMF_Input_Panel_Layout* panel_layout) {
   if (text_input_type == "TextInputType.text" ||
       text_input_type == "TextInputType.multiline") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else if (text_input_type == "TextInputType.number") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER;
   } else if (text_input_type == "TextInputType.phone") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
   } else if (text_input_type == "TextInputType.datetime") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_DATETIME;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_DATETIME;
   } else if (text_input_type == "TextInputType.emailAddress") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL;
   } else if (text_input_type == "TextInputType.url") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_URL;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_URL;
   } else if (text_input_type == "TextInputType.visiblePassword") {
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
   } else if (text_input_type == "TextInputType.name" ||
              text_input_type == "TextInputType.address") {
     FT_LOGW(
         "Actual requested text input type is [%s], but select "
         "TextInputType.text as fallback type",
         text_input_type.c_str());
-    panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else {
     return false;
   }
@@ -91,11 +92,11 @@ static bool TextInputTypeToEcoreIMFInputPanelLayout(
 void TextInputChannel::CommitCallback(void* data,
                                       Ecore_IMF_Context* ctx,
                                       void* event_info) {
-  TextInputChannel* self = (TextInputChannel*)data;
+  TextInputChannel* self = static_cast<TextInputChannel*>(data);
   if (!self) {
     return;
   }
-  char* str = (char*)event_info;
+  char* str = static_cast<char*>(event_info);
   if (self->engine_ && self->engine_->platform_view_channel &&
       self->engine_->platform_view_channel->CurrentFocusedViewId() > -1) {
     self->engine_->platform_view_channel->DispatchCompositionEndEvent(str);
@@ -108,7 +109,7 @@ void TextInputChannel::CommitCallback(void* data,
 void TextInputChannel::PreeditCallback(void* data,
                                        Ecore_IMF_Context* ctx,
                                        void* event_info) {
-  TextInputChannel* self = (TextInputChannel*)data;
+  TextInputChannel* self = static_cast<TextInputChannel*>(data);
   if (!self) {
     return;
   }
@@ -130,14 +131,12 @@ void TextInputChannel::PreeditCallback(void* data,
 void TextInputChannel::PrivateCommandCallback(void* data,
                                               Ecore_IMF_Context* ctx,
                                               void* event_info) {
-  // TODO
   FT_UNIMPLEMENTED();
 }
 
 void TextInputChannel::DeleteSurroundingCallback(void* data,
                                                  Ecore_IMF_Context* ctx,
                                                  void* event_info) {
-  // TODO
   FT_UNIMPLEMENTED();
 }
 
@@ -150,7 +149,7 @@ void TextInputChannel::InputPanelStateChangedCallback(
     FT_LOGW("No Data");
     return;
   }
-  TextInputChannel* self = (TextInputChannel*)data;
+  TextInputChannel* self = static_cast<TextInputChannel*>(data);
   switch (value) {
     case ECORE_IMF_INPUT_PANEL_STATE_SHOW:
       self->SetSoftwareKeyboardShowing();
@@ -173,7 +172,7 @@ void TextInputChannel::InputPanelGeometryChangedCallback(
     FT_LOGW("No Data");
     return;
   }
-  TextInputChannel* self = (TextInputChannel*)data;
+  TextInputChannel* self = static_cast<TextInputChannel*>(data);
   ecore_imf_context_input_panel_geometry_get(
       self->imf_context_, &self->current_keyboard_geometry_.x,
       &self->current_keyboard_geometry_.y, &self->current_keyboard_geometry_.w,
@@ -263,7 +262,8 @@ TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
   }
   if (imf_context_) {
     ecore_imf_context_client_window_set(
-        imf_context_, (void*)engine_->renderer->GetWindowId());
+        imf_context_,
+        reinterpret_cast<void*>(engine_->renderer->GetWindowId()));
     RegisterIMFCallback();
   } else {
     FT_LOGE("Failed to create imfContext");
@@ -296,7 +296,7 @@ void TextInputChannel::HandleMethodCall(
   } else if (method.compare(kHideMethod) == 0) {
     HideSoftwareKeyboard();
   } else if (method.compare(kSetPlatformViewClient) == 0) {
-    // TODO: implement if necessary
+    FT_UNIMPLEMENTED();
   } else if (method.compare(kClearClientMethod) == 0) {
     active_model_ = nullptr;
   } else if (method.compare(kSetClientMethod) == 0) {
@@ -403,7 +403,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
   bool handled = false;
 
 #ifdef TIZEN_RENDERER_EVAS_GL
-  // TODO: Hardware keyboard not supported when running in Evas GL mode.
+  // Hardware keyboard not supported when running in Evas GL mode.
   bool isIME = true;
 #else
   bool isIME = ecore_imf_context_keyboard_mode_get(imf_context_) ==
@@ -618,7 +618,7 @@ void TextInputChannel::ShowSoftwareKeyboard() {
   if (imf_context_ && !is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = true;
     Ecore_IMF_Input_Panel_Layout panel_layout;
-    if (TextInputTypeToEcoreIMFInputPanelLayout(input_type_, panel_layout)) {
+    if (TextInputTypeToEcoreIMFInputPanelLayout(input_type_, &panel_layout)) {
       ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
     }
     ecore_imf_context_input_panel_show(imf_context_);

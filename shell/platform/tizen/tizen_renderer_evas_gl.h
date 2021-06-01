@@ -36,7 +36,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
 
-  void* GetImageHandle();
+  Evas_Object* GetImageHandle();
 
  private:
   void ClearColor(float r, float g, float b, float a);
@@ -46,7 +46,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   void DestroyRenderer();
 
   bool SetupEvasGL();
-  void* SetupEvasWindow(int32_t& width, int32_t& height);
+  Evas_Object* SetupEvasWindow(int32_t& width, int32_t& height);
   void DestroyEvasGL();
   void DestroyEvasWindow();
 

@@ -55,7 +55,8 @@ void TizenVsyncWaiter::SendMessage(int val) {
   }
   Msg* msg;
   void* ref;
-  msg = (Msg*)eina_thread_queue_send(vblank_thread_queue, sizeof(Msg), &ref);
+  msg = static_cast<Msg*>(
+      eina_thread_queue_send(vblank_thread_queue, sizeof(Msg), &ref));
   msg->value = val;
   eina_thread_queue_send_done(vblank_thread_queue, ref);
 }
@@ -70,7 +71,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
       FT_LOGE("Vblank thread queue is not valid");
       return;
     }
-    msg = (Msg*)eina_thread_queue_wait(vblank_thread_queue, &ref);
+    msg = static_cast<Msg*>(eina_thread_queue_wait(vblank_thread_queue, &ref));
     if (msg) {
       eina_thread_queue_wait_done(vblank_thread_queue, ref);
     } else {
