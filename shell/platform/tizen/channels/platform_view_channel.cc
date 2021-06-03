@@ -220,7 +220,7 @@ void PlatformViewChannel::HandleMethodCall(
         double width = ExtractDoubleFromMap(arguments, "width");
         double height = ExtractDoubleFromMap(arguments, "height");
         it->second->Resize(width, height);
-        result->NotImplemented();
+        result->Success();
       } else if (method == "touch") {
         int type, button;
         double x, y, dx, dy;
