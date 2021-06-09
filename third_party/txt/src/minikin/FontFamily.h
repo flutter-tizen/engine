@@ -141,6 +141,7 @@ class FontFamily {
                            int* weight,
                            bool* italic);
   FakedFont getClosestMatch(FontStyle style) const;
+  FakedFont getClosestMatchWithChar(FontStyle style, uint32_t codepoint) const;
 
   uint32_t langId() const { return mLangId; }
   int variant() const { return mVariant; }
