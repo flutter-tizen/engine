@@ -509,6 +509,7 @@ void FontCollection::itemize(const uint16_t* string,
     if (!shouldContinueRun) {
       const std::shared_ptr<FontFamily>& family = getFamilyForChar(
           ch, isVariationSelector(nextCh) ? nextCh : 0, langListId, variant);
+
       if (utf16Pos == 0 || family.get() != lastFamily) {
         size_t start = utf16Pos;
         // Workaround for combining marks and emoji modifiers until we implement
@@ -529,7 +530,7 @@ void FontCollection::itemize(const uint16_t* string,
           start -= prevChLength;
         }
         result->push_back(
-            {family->getClosestMatch(style), static_cast<int>(start), 0});
+            {family->getClosestMatchWithChar(style,ch), static_cast<int>(start), 0});
         run = &result->back();
         lastFamily = family.get();
       }
