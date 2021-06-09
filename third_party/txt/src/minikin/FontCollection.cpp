@@ -529,8 +529,8 @@ void FontCollection::itemize(const uint16_t* string,
           }
           start -= prevChLength;
         }
-        result->push_back(
-            {family->getClosestMatchWithChar(style,ch), static_cast<int>(start), 0});
+        result->push_back({family->getClosestMatchWithChar(style, ch),
+                           static_cast<int>(start), 0});
         run = &result->back();
         lastFamily = family.get();
       }
