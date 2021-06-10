@@ -165,9 +165,17 @@ FakedFont FontFamily::getClosestMatch(FontStyle style) const {
 }
 
 FakedFont FontFamily::getClosestMatchWithChar(FontStyle style,
-                                              uint32_t codepoint) const {
+                                              uint32_t codepoint) {
+  int bestMatch = INT_MAX;
   const Font* bestFont = nullptr;
-  int bestMatch = 0;
+  if (mLastMatchedCodePoint == codepoint && style == mLastMatchedFontStyle) {
+    if (mFonts.size() > mLastMatchedFontIndex) {
+      bestFont = &mFonts[mLastMatchedFontIndex];
+      return FakedFont{bestFont->typeface.get(),
+                       computeFakery(style, bestFont->style)};
+    }
+  }
+
   for (size_t i = 0; i < mFonts.size(); i++) {
     const Font& font = mFonts[i];
     int match = computeMatch(font.style, style);
@@ -180,13 +188,16 @@ FakedFont FontFamily::getClosestMatchWithChar(FontStyle style,
     }
 
     if (result) {
-      if (i == 0 || match < bestMatch || bestMatch == 0) {
+      if (match < bestMatch) {
         bestFont = &font;
         bestMatch = match;
+        mLastMatchedFontIndex = i;
       }
     }
   }
   if (bestFont != nullptr) {
+    mLastMatchedFontStyle = style;
+    mLastMatchedCodePoint = codepoint;
     return FakedFont{bestFont->typeface.get(),
                      computeFakery(style, bestFont->style)};
   }
