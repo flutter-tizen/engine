@@ -147,8 +147,8 @@ static FontFakery computeFakery(FontStyle wanted, FontStyle actual) {
 }
 
 FakedFont FontFamily::getClosestMatch(FontStyle style,
-                                      uint32_t codepoint,
-                                      uint32_t variationSelector) const {
+                                      uint32_t codepoint /* = 0 */,
+                                      uint32_t variationSelector /* = 0 */) const {
   int bestMatch = INT_MAX;
   const Font* bestFont = nullptr;
   for (size_t i = 0; i < mFonts.size(); i++) {
@@ -157,7 +157,7 @@ FakedFont FontFamily::getClosestMatch(FontStyle style,
     bool result = false;
     if (codepoint != 0) {
       hb_font_t* hb_font = getHbFontLocked(font.typeface.get());
-      uint32_t unusedGlyph;
+      uint32_t unusedGlyph = 0;
       result = hb_font_get_glyph(hb_font, codepoint, variationSelector,
                                  &unusedGlyph);
       hb_font_destroy(hb_font);
