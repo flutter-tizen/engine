@@ -140,8 +140,9 @@ class FontFamily {
   static bool analyzeStyle(const std::shared_ptr<MinikinFont>& typeface,
                            int* weight,
                            bool* italic);
-  FakedFont getClosestMatch(FontStyle style) const;
-  FakedFont getClosestMatchWithChar(FontStyle style, uint32_t codepoint);
+  FakedFont getClosestMatch(FontStyle style,
+                            uint32_t codepoint = 0,
+                            uint32_t variationSelector = 0) const;
 
   uint32_t langId() const { return mLangId; }
   int variant() const { return mVariant; }
@@ -174,8 +175,6 @@ class FontFamily {
   std::shared_ptr<FontFamily> createFamilyWithVariation(
       const std::vector<FontVariation>& variations) const;
 
-  uint32_t getLastMatchedCodePoint() { return mLastMatchedCodePoint; }
-
  private:
   void computeCoverage();
 
@@ -186,10 +185,6 @@ class FontFamily {
 
   SparseBitSet mCoverage;
   bool mHasVSTable;
-
-  uint mLastMatchedFontIndex;
-  uint32_t mLastMatchedCodePoint;
-  FontStyle mLastMatchedFontStyle;
 
   // Forbid copying and assignment.
   FontFamily(const FontFamily&) = delete;

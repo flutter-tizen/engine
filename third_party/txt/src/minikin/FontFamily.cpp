@@ -146,58 +146,30 @@ static FontFakery computeFakery(FontStyle wanted, FontStyle actual) {
   return FontFakery(isFakeBold, isFakeItalic);
 }
 
-FakedFont FontFamily::getClosestMatch(FontStyle style) const {
-  const Font* bestFont = nullptr;
-  int bestMatch = 0;
-  for (size_t i = 0; i < mFonts.size(); i++) {
-    const Font& font = mFonts[i];
-    int match = computeMatch(font.style, style);
-    if (i == 0 || match < bestMatch) {
-      bestFont = &font;
-      bestMatch = match;
-    }
-  }
-  if (bestFont != nullptr) {
-    return FakedFont{bestFont->typeface.get(),
-                     computeFakery(style, bestFont->style)};
-  }
-  return FakedFont{nullptr, FontFakery()};
-}
-
-FakedFont FontFamily::getClosestMatchWithChar(FontStyle style,
-                                              uint32_t codepoint) {
+FakedFont FontFamily::getClosestMatch(FontStyle style,
+                                      uint32_t codepoint,
+                                      uint32_t variationSelector) const {
   int bestMatch = INT_MAX;
   const Font* bestFont = nullptr;
-  if (mLastMatchedCodePoint == codepoint && style == mLastMatchedFontStyle) {
-    if (mFonts.size() > mLastMatchedFontIndex) {
-      bestFont = &mFonts[mLastMatchedFontIndex];
-      return FakedFont{bestFont->typeface.get(),
-                       computeFakery(style, bestFont->style)};
-    }
-  }
-
   for (size_t i = 0; i < mFonts.size(); i++) {
     const Font& font = mFonts[i];
     int match = computeMatch(font.style, style);
     bool result = false;
-    {
+    if (codepoint != 0) {
       hb_font_t* hb_font = getHbFontLocked(font.typeface.get());
       uint32_t unusedGlyph;
-      result = hb_font_get_glyph(hb_font, codepoint, 0, &unusedGlyph);
+      result = hb_font_get_glyph(hb_font, codepoint, variationSelector,
+                                 &unusedGlyph);
       hb_font_destroy(hb_font);
     }
-
-    if (result) {
+    if (!codepoint || (codepoint && result)) {
       if (match < bestMatch) {
         bestFont = &font;
         bestMatch = match;
-        mLastMatchedFontIndex = i;
       }
     }
   }
   if (bestFont != nullptr) {
-    mLastMatchedFontStyle = style;
-    mLastMatchedCodePoint = codepoint;
     return FakedFont{bestFont->typeface.get(),
                      computeFakery(style, bestFont->style)};
   }
