@@ -88,10 +88,8 @@ class FeedbackManager {
         return method_name_with_args + " is not supported";
       case ResultCode::kPermissionDeniedError:
         return std::string{"No permission to run "} + method_name_with_args +
-               ". Add "
-               "\"http://tizen.org/privilege/feedback\" privilege to "
-               "tizen-manifest.xml "
-               "to use this method";
+               ". Add \"http://tizen.org/privilege/haptic\" privilege to "
+               "tizen-manifest.xml to use this method";
       case ResultCode::kUnknownError:
       default:
         return std::string{"An unknown error on "} + method_name_with_args +
