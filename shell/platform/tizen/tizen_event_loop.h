@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef TIZEN_EVENT_LOOP_H_
-#define TIZEN_EVENT_LOOP_H_
+#ifndef EMBEDDER_TIZEN_EVENT_LOOP_H_
+#define EMBEDDER_TIZEN_EVENT_LOOP_H_
 
 #include <Ecore.h>
 
@@ -99,4 +99,4 @@ class TizenRenderEventLoop : public TizenEventLoop {
 };
 #endif
 
-#endif  // TIZEN_EVENT_LOOP_H_
+#endif  // EMBEDDER_TIZEN_EVENT_LOOP_H_

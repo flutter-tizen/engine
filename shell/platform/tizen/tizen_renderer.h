@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_RENDERER_H
-#define EMBEDDER_TIZEN_RENDERER_H
+#ifndef EMBEDDER_TIZEN_RENDERER_H_
+#define EMBEDDER_TIZEN_RENDERER_H_
 
 #include <cstdint>
 #include <vector>
@@ -51,4 +51,4 @@ class TizenRenderer {
   TizenRenderer::Delegate& delegate_;
 };
 
-#endif  // EMBEDDER_TIZEN_RENDERER_H
+#endif  // EMBEDDER_TIZEN_RENDERER_H_

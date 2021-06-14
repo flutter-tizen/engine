@@ -366,8 +366,8 @@ void TextInputChannel::HandleMethodCall(
       return;
     }
     active_model_->SetText(text->value.GetString());
-    active_model_->SetSelection(TextRange(selection_base->value.GetInt(),
-                                          selection_extent->value.GetInt()));
+    active_model_->SetSelection(flutter::TextRange(
+        selection_base->value.GetInt(), selection_extent->value.GetInt()));
   } else {
     result->NotImplemented();
     return;
@@ -382,7 +382,7 @@ void TextInputChannel::SendStateUpdate(const flutter::TextInputModel& model) {
   auto& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
 
-  TextRange selection = model.selection();
+  flutter::TextRange selection = model.selection();
   rapidjson::Value editing_state(rapidjson::kObjectType);
   editing_state.AddMember(kComposingBaseKey, -1, allocator);
   editing_state.AddMember(kComposingExtentKey, -1, allocator);

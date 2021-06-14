@@ -3,10 +3,10 @@
 // found in the LICENSE file.
 #include "platform_view_channel.h"
 
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/plugin_registrar.h"
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_message_codec.h"
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/standard_method_codec.h"
-#include "flutter/shell/platform/common/cpp/json_method_codec.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
+#include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"

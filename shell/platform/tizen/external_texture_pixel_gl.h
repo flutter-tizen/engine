@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/external_texture.h"
 

@@ -3,14 +3,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_EMBEDDER_ENGINE_H_
-#define EMBEDDER_TIZEN_EMBEDDER_ENGINE_H_
+#ifndef EMBEDDER_FLUTTER_TIZEN_ENGINE_H_
+#define EMBEDDER_FLUTTER_TIZEN_ENGINE_H_
 
 #include <map>
 #include <memory>
 
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/plugin_registrar.h"
-#include "flutter/shell/platform/common/cpp/incoming_message_dispatcher.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
+#include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
@@ -189,4 +189,4 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterTransformation transformation_;
 };
 
-#endif  // EMBEDDER_TIZEN_EMBEDDER_ENGINE_H_
+#endif  // EMBEDDER_FLUTTER_TIZEN_ENGINE_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_RENDERER_EVAS_GL_H
-#define EMBEDDER_TIZEN_RENDERER_EVAS_GL_H
+#ifndef EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_
+#define EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_
 
 #undef EFL_BETA_API_SUPPORT
 #include <Ecore.h>
@@ -66,4 +66,4 @@ class TizenRendererEvasGL : public TizenRenderer {
   Evas_GL_Surface* gl_resource_surface_{nullptr};
 };
 
-#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
+#endif  // EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_

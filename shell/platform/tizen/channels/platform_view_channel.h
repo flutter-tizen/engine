@@ -9,8 +9,8 @@
 
 #include <map>
 
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/binary_messenger.h"
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/method_channel.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
 #include "rapidjson/document.h"
 
 class FlutterTizenEngine;

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
-#define EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
+#ifndef EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_
+#define EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_
 
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
@@ -69,4 +69,4 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 };
 
-#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H
+#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_

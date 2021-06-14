@@ -5,7 +5,7 @@
 #ifndef EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
 #define EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
 
-#include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/external_texture.h"
 

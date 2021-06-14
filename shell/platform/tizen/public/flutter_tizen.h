@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PUBLIC_FLUTTER_TIZEN_EMBEDDER_H_
-#define PUBLIC_FLUTTER_TIZEN_EMBEDDER_H_
+#ifndef FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_TIZEN_H_
+#define FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_TIZEN_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -84,4 +84,4 @@ FLUTTER_EXPORT void FlutterDesktopNotifyAppIsDetached(
 }  // extern "C"
 #endif
 
-#endif  // PUBLIC_FLUTTER_TIZEN_EMBEDDER_H_
+#endif  // FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_TIZEN_H_

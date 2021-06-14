@@ -7,9 +7,9 @@
 
 #include <system/system_settings.h>
 
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/basic_message_channel.h"
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/binary_messenger.h"
-#include "flutter/shell/platform/common/cpp/json_message_codec.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
+#include "flutter/shell/platform/common/json_message_codec.h"
 #include "rapidjson/document.h"
 
 class SettingsChannel {

@@ -7,7 +7,7 @@
 
 #include <atomic>
 #include <memory>
-#include "flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 
 #ifdef TIZEN_RENDERER_EVAS_GL

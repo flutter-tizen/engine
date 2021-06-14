@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//flutter/shell/platform/common/cpp/client_wrapper/publish.gni")
+import("//flutter/shell/platform/common/client_wrapper/publish.gni")
 import("//flutter/shell/platform/tizen/config.gni")
 
 # Sets the rpath of dependent targets (shared libs) to $ORIGIN.
@@ -153,7 +153,7 @@ template("embedder_for_profile") {
 
     configs += [
       ":tizen_rootstrap_include_dirs",
-      "//flutter/shell/platform/common/cpp:desktop_library_implementation",
+      "//flutter/shell/platform/common:desktop_library_implementation",
     ]
 
     public_configs = [ "//flutter:config" ]
@@ -161,10 +161,10 @@ template("embedder_for_profile") {
     public_deps = [ ":flutter_engine" ]
 
     deps = [
-      "//flutter/shell/platform/common/cpp:common_cpp",
-      "//flutter/shell/platform/common/cpp:common_cpp_input",
-      "//flutter/shell/platform/common/cpp:common_cpp_library_headers",
-      "//flutter/shell/platform/common/cpp/client_wrapper:client_wrapper",
+      "//flutter/shell/platform/common:common_cpp",
+      "//flutter/shell/platform/common:common_cpp_input",
+      "//flutter/shell/platform/common:common_cpp_library_headers",
+      "//flutter/shell/platform/common/client_wrapper:client_wrapper",
       "//third_party/rapidjson",
     ]
   }
@@ -193,10 +193,10 @@ publish_client_wrapper_core("publish_cpp_client_wrapper") {
 }
 
 _common_cpp_public_headers = [
-  "//flutter/shell/platform/common/cpp/public/flutter_export.h",
-  "//flutter/shell/platform/common/cpp/public/flutter_messenger.h",
-  "//flutter/shell/platform/common/cpp/public/flutter_plugin_registrar.h",
-  "//flutter/shell/platform/common/cpp/public/flutter_texture_registrar.h",
+  "//flutter/shell/platform/common/public/flutter_export.h",
+  "//flutter/shell/platform/common/public/flutter_messenger.h",
+  "//flutter/shell/platform/common/public/flutter_plugin_registrar.h",
+  "//flutter/shell/platform/common/public/flutter_texture_registrar.h",
 ]
 
 copy("publish_headers_tizen") {
