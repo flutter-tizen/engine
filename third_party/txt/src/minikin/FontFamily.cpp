@@ -146,9 +146,10 @@ static FontFakery computeFakery(FontStyle wanted, FontStyle actual) {
   return FontFakery(isFakeBold, isFakeItalic);
 }
 
-FakedFont FontFamily::getClosestMatch(FontStyle style,
-                                      uint32_t codepoint /* = 0 */,
-                                      uint32_t variationSelector /* = 0 */) const {
+FakedFont FontFamily::getClosestMatch(
+    FontStyle style,
+    uint32_t codepoint /* = 0 */,
+    uint32_t variationSelector /* = 0 */) const {
   int bestMatch = INT_MAX;
   const Font* bestFont = nullptr;
   for (size_t i = 0; i < mFonts.size(); i++) {
