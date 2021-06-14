@@ -250,6 +250,28 @@ void FontCollection::SortSkTypefaces(
         int a_delta = std::abs(a_style.width() - SkFontStyle::kNormal_Width);
         int b_delta = std::abs(b_style.width() - SkFontStyle::kNormal_Width);
 
+        {
+          // A workaround to prevent emoji fonts being selected for normal text
+          // when normal and emojis are mixed at same font family.
+
+          bool a_isContainEmoji = false;
+          bool b_isContainEmoji = false;
+          SkString postScriptName;
+          a->getPostScriptName(&postScriptName);
+          if (postScriptName.contains("Emoji")) {
+            a_isContainEmoji = true;
+          }
+          b->getPostScriptName(&postScriptName);
+          if (postScriptName.contains("Emoji")) {
+            b_isContainEmoji = true;
+          }
+          if (a_isContainEmoji && !b_isContainEmoji) {
+            return false;
+          } else if (!a_isContainEmoji && b_isContainEmoji) {
+            return true;
+          }
+        }
+
         if (a_delta != b_delta) {
           // If a family name query is so generic it ends up bringing in fonts
           // of multiple widths (e.g. condensed, expanded), opt to be
