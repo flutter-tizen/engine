@@ -83,7 +83,6 @@ uint32_t TizenRendererEvasGL::OnGetFBO() {
     FT_LOGE("Invalid TizenRenderer");
     return 999;
   }
-  FT_LOGD("OnGetFBO");
   return 0;
 }
 
@@ -538,7 +537,7 @@ void* TizenRendererEvasGL::OnProcResolver(const char* name) {
   GL_FUNC(glTexStorage3DMultisample)
 #undef GL_FUNC
 
-  FT_LOGD("Could not resolve: %s", name);
+  FT_LOGW("Could not resolve: %s", name);
   return nullptr;
 }
 

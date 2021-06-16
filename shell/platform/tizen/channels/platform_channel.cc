@@ -54,11 +54,6 @@ class FeedbackManager {
   };
 
   static std::string GetVibrateVariantName(const char* haptic_feedback_type) {
-    FT_LOGD(
-        "Enter FeedbackManager::GetVibrateVariantName(): haptic_feedback_type: "
-        "(%s)",
-        haptic_feedback_type);
-
     if (!haptic_feedback_type) {
       return "HapticFeedback.vibrate";
     }
@@ -76,11 +71,6 @@ class FeedbackManager {
   static std::string GetErrorMessage(ResultCode result_code,
                                      const std::string& method_name,
                                      const std::string& args = "") {
-    FT_LOGD(
-        "Enter FeedbackManager::GetErrorMessage(): result_code: [%d], "
-        "method_name: (%s), args: (%s)",
-        static_cast<int>(result_code), method_name.c_str(), args.c_str());
-
     const auto method_name_with_args = method_name + "(" + args + ")";
 
     switch (result_code) {
@@ -98,8 +88,6 @@ class FeedbackManager {
   }
 
   static FeedbackManager& GetInstance() {
-    FT_LOGD("Enter FeedbackManager::GetInstance()");
-
     static FeedbackManager instance;
     return instance;
   }
@@ -108,7 +96,7 @@ class FeedbackManager {
   FeedbackManager& operator=(const FeedbackManager&) = delete;
 
   ResultCode Play(FeedbackType type, FeedbackPattern pattern) {
-    FT_LOGD("Enter FeedbackManager::Play(): type: [%d], pattern: [%d]",
+    FT_LOGI("Enter FeedbackManager::Play(): type: [%d], pattern: [%d]",
             static_cast<int>(type), static_cast<int>(pattern));
 
     if (ResultCode::kOk != initialization_status_) {
@@ -120,7 +108,6 @@ class FeedbackManager {
     auto ret = feedback_play_type(static_cast<feedback_type_e>(type),
                                   static_cast<feedback_pattern_e>(pattern));
     if (FEEDBACK_ERROR_NONE == ret) {
-      FT_LOGD("feedback_play_type() succeeded");
       return ResultCode::kOk;
     }
     FT_LOGE("feedback_play_type() failed with error: [%d] (%s)", ret,
@@ -131,9 +118,6 @@ class FeedbackManager {
 
  private:
   static ResultCode NativeErrorToResultCode(int native_error_code) {
-    FT_LOGD("Enter NativeErrorToResultCode: native_error_code: [%d]",
-            native_error_code);
-
     switch (native_error_code) {
       case FEEDBACK_ERROR_NONE:
         return ResultCode::kOk;
@@ -150,8 +134,6 @@ class FeedbackManager {
   }
 
   FeedbackManager() {
-    FT_LOGD("Enter FeedbackManager::FeedbackManager()");
-
     auto ret = feedback_initialize();
     if (FEEDBACK_ERROR_NONE != ret) {
       FT_LOGE("feedback_initialize() failed with error: [%d] (%s)", ret,
@@ -159,21 +141,17 @@ class FeedbackManager {
       initialization_status_ = NativeErrorToResultCode(ret);
       return;
     }
-    FT_LOGD("feedback_initialize() succeeded");
 
     initialization_status_ = ResultCode::kOk;
   }
 
   ~FeedbackManager() {
-    FT_LOGD("Enter FeedbackManager::~FeedbackManager");
-
     auto ret = feedback_deinitialize();
     if (FEEDBACK_ERROR_NONE != ret) {
       FT_LOGE("feedback_deinitialize() failed with error: [%d] (%s)", ret,
               get_error_message(ret));
       return;
     }
-    FT_LOGD("feedback_deinitialize() succeeded");
   }
 
   ResultCode initialization_status_ = ResultCode::kUnknownError;
@@ -190,8 +168,6 @@ void PlatformChannel::HandleMethodCall(
     ui_app_exit();
     result->Success();
   } else if (method == "SystemSound.play") {
-    FT_LOGD("SystemSound.play() call received");
-
     const std::string pattern_str = call.arguments()[0].GetString();
 
     const FeedbackManager::FeedbackPattern pattern =
@@ -214,8 +190,6 @@ void PlatformChannel::HandleMethodCall(
     result->Error(error_cause, error_message);
 
   } else if (method == "HapticFeedback.vibrate") {
-    FT_LOGD("HapticFeedback.vibrate() call received");
-
     /*
      * We use a single type of vibration (FEEDBACK_PATTERN_SIP) to implement
      * HapticFeedback's vibrate, lightImpact, mediumImpact, heavyImpact
@@ -266,7 +240,6 @@ void PlatformChannel::HandleMethodCall(
       for (rapidjson::Value::ConstValueIterator itr = list.Begin();
            itr != list.End(); ++itr) {
         const std::string& rot = itr->GetString();
-        FT_LOGD("Passed rotation: %s", rot.c_str());
         rotations.push_back(orientation_mapping.at(rot));
       }
       if (rotations.size() == 0) {
@@ -274,7 +247,6 @@ void PlatformChannel::HandleMethodCall(
         // https://api.flutter.dev/flutter/services/SystemChrome/setPreferredOrientations.html
         // "The empty list causes the application to defer to the operating
         // system default."
-        FT_LOGD("No rotations passed, using default values");
         rotations = {0, 90, 180, 270};
       }
       renderer_->SetPreferredOrientations(rotations);

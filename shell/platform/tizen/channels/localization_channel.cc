@@ -37,7 +37,7 @@ void LocalizationChannel::SendLocales() {
 
   flutter_locale = GetFlutterLocale(without_encoding_type.data());
   if (flutter_locale) {
-    FT_LOGD("Choose Default locale[%s]", without_encoding_type.data());
+    FT_LOGI("Choose Default locale[%s]", without_encoding_type.data());
     flutter_locales.push_back(flutter_locale);
   }
 
@@ -52,7 +52,7 @@ void LocalizationChannel::SendLocales() {
     }
   }
 
-  FT_LOGD("Send %zu available locales", flutter_locales.size());
+  FT_LOGI("Send %zu available locales", flutter_locales.size());
   // Send locales to engine
   engine_->UpdateLocales(
       const_cast<const FlutterLocale**>(flutter_locales.data()),

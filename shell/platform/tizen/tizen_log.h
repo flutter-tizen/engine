@@ -14,6 +14,10 @@
 // The threads can be started only once per process.
 void StartLogging();
 
+// Handles filtering of logs.
+void SetMinLoggingLevel(log_priority p);
+log_priority GetMinLoggingLevel();
+
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
@@ -31,8 +35,13 @@ void StartLogging();
 #define __LOG(prio, fmt, args...) dlog_print(prio, LOG_TAG, fmt, ##args)
 #endif
 
-#define __FT_LOG(prio, fmt, args...) \
-  __LOG(prio, "%s: %s(%d) > " fmt, __MODULE__, __func__, __LINE__, ##args)
+#define __FT_LOG(prio, fmt, args...)                                   \
+  do {                                                                 \
+    if (prio >= GetMinLoggingLevel()) {                                \
+      __LOG(prio, "%s: %s(%d) > " fmt, __MODULE__, __func__, __LINE__, \
+            ##args);                                                   \
+    }                                                                  \
+  } while (0)
 
 #define FT_LOGD(fmt, args...) __FT_LOG(DLOG_DEBUG, fmt, ##args)
 #define FT_LOGI(fmt, args...) __FT_LOG(DLOG_INFO, fmt, ##args)
@@ -71,6 +80,6 @@ void StartLogging();
 #define FT_COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #endif
 
-#define FT_UNIMPLEMENTED() FT_LOGD("UNIMPLEMENTED!")
+#define FT_UNIMPLEMENTED() FT_LOGW("UNIMPLEMENTED!")
 
 #endif  // EMBEDDER_TIZEN_LOG_H_

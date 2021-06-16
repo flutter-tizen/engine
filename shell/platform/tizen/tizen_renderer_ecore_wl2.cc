@@ -84,7 +84,6 @@ uint32_t TizenRendererEcoreWl2::OnGetFBO() {
     FT_LOGE("Invalid TizenRenderer");
     return 999;
   }
-  FT_LOGD("OnGetFBO");
   return 0;
 }
 
@@ -274,7 +273,7 @@ bool TizenRendererEcoreWl2::SetupDisplay(int32_t& width, int32_t& height) {
     FT_LOGE("Display not found");
     return false;
   }
-  FT_LOGD("ecore_wl2_display_: %p", ecore_wl2_display_);
+
   ecore_wl2_sync();
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &width, &height);
   return true;

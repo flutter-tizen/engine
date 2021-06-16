@@ -135,6 +135,13 @@ bool FlutterTizenEngine::RunEngine(
                 &engine_properties.switches[engine_properties.switches_count]);
   }
 
+  for (size_t i = 0; i < engine_properties.switches_count; ++i) {
+    auto str = std::string{engine_properties.switches[i]};
+    if (str.find("verbose-logging") != std::string::npos) {
+      SetMinLoggingLevel(DLOG_INFO);
+    }
+  }
+
   // Configure task runners.
   FlutterTaskRunnerDescription platform_task_runner = {};
   platform_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
@@ -212,7 +219,7 @@ bool FlutterTizenEngine::RunEngine(
   auto result = embedder_api_.Run(FLUTTER_ENGINE_VERSION, &renderer_config,
                                   &args, this, &engine_);
   if (result == kSuccess && engine_ != nullptr) {
-    FT_LOGD("FlutterEngineRun Success!");
+    FT_LOGI("FlutterEngineRun Success!");
   } else {
     FT_LOGE("FlutterEngineRun Failure! result: %d", result);
     return false;

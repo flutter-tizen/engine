@@ -222,7 +222,7 @@ KeyEventChannel::KeyEventChannel(flutter::BinaryMessenger* messenger)
 KeyEventChannel::~KeyEventChannel() {}
 
 void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
-  FT_LOGD("code: %d, name: %s, mods: %d, type: %s", key->keycode, key->keyname,
+  FT_LOGI("code: %d, name: %s, mods: %d, type: %s", key->keycode, key->keyname,
           key->modifiers, is_down ? kKeyDown : kKeyUp);
 
   int gtk_keycode = 0;

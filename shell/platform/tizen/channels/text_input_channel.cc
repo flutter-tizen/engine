@@ -144,7 +144,7 @@ void TextInputChannel::InputPanelStateChangedCallback(
     void* data,
     Ecore_IMF_Context* context,
     int value) {
-  FT_LOGD("Change input panel state[%d]", value);
+  FT_LOGI("Change input panel state[%d]", value);
   if (!data) {
     FT_LOGW("No Data");
     return;
@@ -178,7 +178,7 @@ void TextInputChannel::InputPanelGeometryChangedCallback(
       &self->current_keyboard_geometry_.y, &self->current_keyboard_geometry_.w,
       &self->current_keyboard_geometry_.h);
 
-  FT_LOGD(
+  FT_LOGI(
       "Current keyboard geometry x:[%d] y:[%d] w:[%d] h:[%d]",
       self->current_keyboard_geometry_.x, self->current_keyboard_geometry_.y,
       self->current_keyboard_geometry_.w, self->current_keyboard_geometry_.h);
@@ -289,7 +289,7 @@ void TextInputChannel::HandleMethodCall(
     std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
   const std::string& method = method_call.method_name();
 
-  FT_LOGD("Method : %s", method.data());
+  FT_LOGI("Handle Method : %s", method.data());
 
   if (method.compare(kShowMethod) == 0) {
     ShowSoftwareKeyboard();
@@ -395,7 +395,7 @@ void TextInputChannel::SendStateUpdate(const flutter::TextInputModel& model) {
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
   args->PushBack(editing_state, allocator);
 
-  FT_LOGD("Send text[%s]", model.GetText().data());
+  FT_LOGI("Send text[%s]", model.GetText().data());
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
@@ -427,7 +427,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
     if (engine_->device_profile == DeviceProfile::kWearable) {
       // FIXME: for wearable
       in_select_mode_ = true;
-      FT_LOGD("Set select mode[true]");
+      FT_LOGI("Set select mode[true]");
     }
   }
 
@@ -447,7 +447,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
       // of the input panel is shifted to left!
       // What we want is to move only the cursor on the text editor.
       ResetCurrentContext();
-      FT_LOGD("Force redirect IME key-event[%s] to fallback",
+      FT_LOGW("Force redirect IME key-event[%s] to fallback",
               keyDownEvent->keyname);
       return false;
     }
@@ -461,27 +461,27 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
     last_handled_ecore_event_keyname_ = keyDownEvent->keyname;
   }
 
-  FT_LOGD("The %skey-event[%s] are%s filtered", isIME ? "IME " : "",
+  FT_LOGI("The %skey-event[%s] are%s filtered", isIME ? "IME " : "",
           keyDownEvent->keyname, handled ? "" : " not");
 
   if (!handled && !strcmp(keyDownEvent->key, "Return") && in_select_mode_ &&
       engine_->device_profile == DeviceProfile::kWearable) {
     in_select_mode_ = false;
     handled = true;
-    FT_LOGD("Set select mode[false]");
+    FT_LOGI("Set select mode[false]");
   }
 
   return handled;
 }
 
 void TextInputChannel::NonIMFFallback(Ecore_Event_Key* keyDownEvent) {
-  FT_LOGD("NonIMFFallback key name [%s]", keyDownEvent->keyname);
+  FT_LOGI("NonIMFFallback key name [%s]", keyDownEvent->keyname);
 
   // For mobile, fix me!
   if (engine_->device_profile == DeviceProfile::kMobile &&
       edit_status_ == EditStatus::kPreeditEnd) {
     SetEditStatus(EditStatus::kNone);
-    FT_LOGD("Ignore key-event[%s]!", keyDownEvent->keyname);
+    FT_LOGW("Ignore key-event[%s]!", keyDownEvent->keyname);
     return;
   }
 
@@ -548,20 +548,19 @@ void TextInputChannel::EnterPressed(flutter::TextInputModel* model,
 }
 
 void TextInputChannel::OnCommit(std::string str) {
-  FT_LOGD("OnCommit str[%s]", str.data());
+  FT_LOGI("OnCommit str[%s]", str.data());
   SetEditStatus(EditStatus::kCommit);
 
   ConsumeLastPreedit();
 
   active_model_->AddText(str);
-  FT_LOGD("Add Text[%s]", str.data());
 
   SendStateUpdate(*active_model_);
   SetEditStatus(EditStatus::kNone);
 }
 
 void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
-  FT_LOGD("OnPreedit str[%s], cursor_pos[%d]", str.data(), cursor_pos);
+  FT_LOGI("OnPreedit str[%s], cursor_pos[%d]", str.data(), cursor_pos);
   SetEditStatus(EditStatus::kPreeditStart);
   if (str.compare("") == 0) {
     SetEditStatus(EditStatus::kPreeditEnd);
@@ -571,8 +570,6 @@ void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
       (edit_status_ == EditStatus::kPreeditEnd &&
        // For tv, fix me
        last_handled_ecore_event_keyname_.compare("Return") != 0)) {
-    FT_LOGD("last_handled_ecore_event_keyname_[%s]",
-            last_handled_ecore_event_keyname_.data());
     last_handled_ecore_event_keyname_ = "";
     ConsumeLastPreedit();
   }
@@ -584,13 +581,13 @@ void TextInputChannel::OnPreedit(std::string str, int cursor_pos) {
     preedit_end_pos_ = active_model_->selection().base();
     have_preedit_ = true;
     SendStateUpdate(*active_model_);
-    FT_LOGD("preedit start pos[%d], preedit end pos[%d]", preedit_start_pos_,
+    FT_LOGI("preedit start pos[%d], preedit end pos[%d]", preedit_start_pos_,
             preedit_end_pos_);
   }
 }
 void TextInputChannel::OnPreeditForPlatformView(std::string str,
                                                 int cursor_pos) {
-  FT_LOGD("OnPreeditForPlatformView str[%s], cursor_pos[%d]", str.data(),
+  FT_LOGI("OnPreeditForPlatformView str[%s], cursor_pos[%d]", str.data(),
           cursor_pos);
 
   SetEditStatus(EditStatus::kPreeditStart);
@@ -602,8 +599,6 @@ void TextInputChannel::OnPreeditForPlatformView(std::string str,
       (edit_status_ == EditStatus::kPreeditEnd &&
        // For tv, fix me
        last_handled_ecore_event_keyname_.compare("Return") != 0)) {
-    FT_LOGD("last_handled_ecore_event_keyname_[%s]",
-            last_handled_ecore_event_keyname_.data());
     last_handled_ecore_event_keyname_ = "";
   }
 
@@ -614,7 +609,6 @@ void TextInputChannel::OnPreeditForPlatformView(std::string str,
 }
 
 void TextInputChannel::ShowSoftwareKeyboard() {
-  FT_LOGD("Show input panel");
   if (imf_context_ && !is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = true;
     Ecore_IMF_Input_Panel_Layout panel_layout;
@@ -627,7 +621,6 @@ void TextInputChannel::ShowSoftwareKeyboard() {
 }
 
 void TextInputChannel::HideSoftwareKeyboard() {
-  FT_LOGD("Hide input panel");
   if (imf_context_ && is_software_keyboard_showing_) {
     is_software_keyboard_showing_ = false;
     ResetCurrentContext();
@@ -636,7 +629,6 @@ void TextInputChannel::HideSoftwareKeyboard() {
 }
 
 void TextInputChannel::SetEditStatus(EditStatus edit_status) {
-  FT_LOGD("Set edit status[%d]", edit_status);
   edit_status_ = edit_status;
 }
 
@@ -699,7 +691,7 @@ void TextInputChannel::ConsumeLastPreedit() {
     int count = preedit_end_pos_ - preedit_start_pos_;
     active_model_->DeleteSurrounding(-count, count);
     std::string after = active_model_->GetText();
-    FT_LOGD("Consume last preedit count:[%d] text:[%s] -> [%s]", count,
+    FT_LOGI("Consume last preedit count:[%d] text:[%s] -> [%s]", count,
             before.data(), after.data());
     SendStateUpdate(*active_model_);
   }

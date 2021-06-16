@@ -25,21 +25,21 @@ void LifecycleChannel::SendLifecycleMessage(const char message[]) {
 }
 
 void LifecycleChannel::AppIsInactive() {
-  FT_LOGD("send app lifecycle state inactive.");
+  FT_LOGI("send app lifecycle state inactive.");
   SendLifecycleMessage(kInactive);
 }
 
 void LifecycleChannel::AppIsResumed() {
-  FT_LOGD("send app lifecycle state resumed.");
+  FT_LOGI("send app lifecycle state resumed.");
   SendLifecycleMessage(kResumed);
 }
 
 void LifecycleChannel::AppIsPaused() {
-  FT_LOGD("send app lifecycle state paused.");
+  FT_LOGI("send app lifecycle state paused.");
   SendLifecycleMessage(kPaused);
 }
 
 void LifecycleChannel::AppIsDetached() {
-  FT_LOGD("send app lifecycle state detached.");
+  FT_LOGI("send app lifecycle state detached.");
   SendLifecycleMessage(kDetached);
 }

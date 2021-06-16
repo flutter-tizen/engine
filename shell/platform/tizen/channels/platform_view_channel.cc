@@ -152,14 +152,14 @@ void PlatformViewChannel::HandleMethodCall(
   const auto method = call.method_name();
   const auto& arguments = *call.arguments();
 
-  FT_LOGD("PlatformViewChannel method: %s", method.c_str());
+  FT_LOGI("PlatformViewChannel method: %s", method.c_str());
   if (method == "create") {
     std::string viewType = ExtractStringFromMap(arguments, "viewType");
     int viewId = ExtractIntFromMap(arguments, "id");
     double width = ExtractDoubleFromMap(arguments, "width");
     double height = ExtractDoubleFromMap(arguments, "height");
 
-    FT_LOGD(
+    FT_LOGI(
         "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
         viewType.c_str(), viewId, width, height);
 
@@ -213,7 +213,6 @@ void PlatformViewChannel::HandleMethodCall(
     auto it = view_instances_.find(viewId);
     if (viewId >= 0 && it != view_instances_.end()) {
       if (method == "dispose") {
-        FT_LOGD("PlatformViewChannel dispose");
         it->second->Dispose();
         result->Success();
       } else if (method == "resize") {
@@ -254,10 +253,10 @@ void PlatformViewChannel::HandleMethodCall(
 
         result->Success();
       } else if (method == "setDirection") {
-        FT_LOGD("PlatformViewChannel setDirection");
+        FT_LOGW("PlatformViewChannel setDirection - not implemented");
         result->NotImplemented();
       } else {
-        FT_LOGD("Unimplemented method: %s", method.c_str());
+        FT_LOGW("Unimplemented method: %s", method.c_str());
         result->NotImplemented();
       }
     } else {

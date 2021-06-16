@@ -12,6 +12,15 @@ static int stderr_pipe[2];
 static pthread_t stdout_thread;
 static pthread_t stderr_thread;
 static bool is_running = false;
+static log_priority min_log_priority = DLOG_ERROR;
+
+void SetMinLoggingLevel(log_priority p) {
+  min_log_priority = p;
+};
+
+log_priority GetMinLoggingLevel() {
+  return min_log_priority;
+};
 
 static void* LoggingFunction(void* arg) {
   int* pipe = static_cast<int*>(arg);
@@ -33,7 +42,7 @@ static void* LoggingFunction(void* arg) {
 
 void StartLogging() {
   if (is_running) {
-    FT_LOGD("The threads are already running.");
+    FT_LOGI("The threads are already running.");
     return;
   }
 
