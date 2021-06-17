@@ -642,7 +642,7 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
     evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
     auto* ecore_evas =
         ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-    int32_t x, y;
+    int32_t x = 0, y = 0;
     ecore_evas_screen_geometry_get(ecore_evas, &x, &y, &width, &height);
     if (width == 0 || height == 0) {
       FT_LOGE("Invalid screen size: %d x %d", width, height);

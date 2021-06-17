@@ -59,7 +59,7 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
-  explicit FlutterTizenEngine(bool headed, void* win = nullptr);
+  explicit FlutterTizenEngine(bool headed, void* win );
   virtual ~FlutterTizenEngine();
 
   // Prevent copying.
