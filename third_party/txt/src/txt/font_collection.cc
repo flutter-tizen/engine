@@ -254,20 +254,20 @@ void FontCollection::SortSkTypefaces(
           // A workaround to prevent emoji fonts being selected for normal text
           // when normal and emojis are mixed at same font family.
 
-          bool a_isContainEmoji = false;
-          bool b_isContainEmoji = false;
+          bool a_isEmojiFont = false;
+          bool b_isEmojiFont = false;
           SkString postScriptName;
           a->getPostScriptName(&postScriptName);
           if (postScriptName.contains("Emoji")) {
-            a_isContainEmoji = true;
+            a_isEmojiFont = true;
           }
           b->getPostScriptName(&postScriptName);
           if (postScriptName.contains("Emoji")) {
-            b_isContainEmoji = true;
+            b_isEmojiFont = true;
           }
-          if (a_isContainEmoji && !b_isContainEmoji) {
+          if (a_isEmojiFont && !b_isEmojiFont) {
             return false;
-          } else if (!a_isContainEmoji && b_isContainEmoji) {
+          } else if (!a_isEmojiFont && b_isEmojiFont) {
             return true;
           }
         }

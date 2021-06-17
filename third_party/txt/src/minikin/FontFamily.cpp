@@ -150,20 +150,20 @@ FakedFont FontFamily::getClosestMatch(
     FontStyle style,
     uint32_t codepoint /* = 0 */,
     uint32_t variationSelector /* = 0 */) const {
-  int bestMatch = INT_MAX;
   const Font* bestFont = nullptr;
+  int bestMatch = INT_MAX;
   for (size_t i = 0; i < mFonts.size(); i++) {
     const Font& font = mFonts[i];
     int match = computeMatch(font.style, style);
     bool result = false;
     if (codepoint != 0) {
-      hb_font_t* hb_font = getHbFontLocked(font.typeface.get());
+      hb_font_t* hbFont = getHbFontLocked(font.typeface.get());
       uint32_t unusedGlyph = 0;
-      result = hb_font_get_glyph(hb_font, codepoint, variationSelector,
-                                 &unusedGlyph);
-      hb_font_destroy(hb_font);
+      result =
+          hb_font_get_glyph(hbFont, codepoint, variationSelector, &unusedGlyph);
+      hb_font_destroy(hbFont);
     }
-    if (!codepoint || (codepoint && result)) {
+    if (codepoint == 0 || (codepoint != 0 && result)) {
       if (match < bestMatch) {
         bestFont = &font;
         bestMatch = match;

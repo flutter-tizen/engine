@@ -539,8 +539,8 @@ void FontCollection::itemize(const uint16_t* string,
                  !(U_GET_GC_MASK(prevCh) & U_GC_L_MASK) &&
                  (U_GET_GC_MASK(ch) & U_GC_L_MASK)) {
         size_t start = utf16Pos;
-        auto current_font = family->getClosestMatch(style, ch, variant);
-        if (result->back().fakedFont.font != current_font.font) {
+        auto currentFont = family->getClosestMatch(style, ch, variant);
+        if (result->back().fakedFont.font != currentFont.font) {
           const size_t prevChLength = U16_LENGTH(prevCh);
           run->end -= prevChLength;
           if (run->start == run->end) {
@@ -548,7 +548,7 @@ void FontCollection::itemize(const uint16_t* string,
           }
           start -= prevChLength;
         }
-        result->push_back({current_font, static_cast<int>(start), 0});
+        result->push_back({currentFont, static_cast<int>(start), 0});
         run = &result->back();
         lastFamily = family.get();
       }
