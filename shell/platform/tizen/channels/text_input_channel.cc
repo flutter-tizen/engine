@@ -65,7 +65,7 @@ static bool TextInputTypeToEcoreIMFInputPanelLayout(
       text_input_type == "TextInputType.multiline") {
     *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else if (text_input_type == "TextInputType.number") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER;
+    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY;
   } else if (text_input_type == "TextInputType.phone") {
     *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
   } else if (text_input_type == "TextInputType.datetime") {
