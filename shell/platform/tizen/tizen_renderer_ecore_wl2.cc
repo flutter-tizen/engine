@@ -285,13 +285,19 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
     FT_LOGE("Invalid screen size: %d x %d", width, height);
     return false;
   }
-  ecore_wl2_window_ =
-      ecore_wl2_window_new(ecore_wl2_display_, nullptr, 0, 0, width, height);
-  ecore_wl2_window_type_set(ecore_wl2_window_, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
-  ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_FALSE);
-  ecore_wl2_window_position_set(ecore_wl2_window_, 0, 0);
-  ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
-                                "wm.policy.win.user.geometry", "1");
+  if (delegate_.hasCustomWindow()) {
+    ecore_wl2_window_ =
+        reinterpret_cast<Ecore_Wl2_Window*>(delegate_.CustomWindow());
+  } else {
+    ecore_wl2_window_ =
+        ecore_wl2_window_new(ecore_wl2_display_, nullptr, 0, 0, width, height);
+    ecore_wl2_window_type_set(ecore_wl2_window_,
+                              ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+    ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_FALSE);
+    ecore_wl2_window_position_set(ecore_wl2_window_, 0, 0);
+    ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
+                                  "wm.policy.win.user.geometry", "1");
+  }
   int rotations[4] = {0, 90, 180, 270};
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations,
                                            sizeof(rotations) / sizeof(int));

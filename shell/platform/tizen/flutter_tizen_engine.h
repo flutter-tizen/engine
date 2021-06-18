@@ -59,7 +59,7 @@ enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
-  explicit FlutterTizenEngine(bool headed);
+  explicit FlutterTizenEngine(bool headed, void* win );
   virtual ~FlutterTizenEngine();
 
   // Prevent copying.
@@ -118,6 +118,10 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // Notifies the engine about a new frame being available for the
   // given |texture_id|.
   bool MarkExternalTextureFrameAvailable(int64_t texture_id);
+
+  // This is an experimental feature to support partial window.
+  bool hasCustomWindow() override;
+  void* CustomWindow() override;
 
   // The plugin messenger handle given to API clients.
   std::unique_ptr<FlutterDesktopMessenger> messenger;
@@ -187,6 +191,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // The current renderer transformation.
   FlutterTransformation transformation_;
+
+  void* custom_window_;
 };
 
 #endif  // EMBEDDER_FLUTTER_TIZEN_ENGINE_H_

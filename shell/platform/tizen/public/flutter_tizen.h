@@ -36,6 +36,8 @@ typedef struct {
   const char** switches;
   // The number of elements in |switches|.
   size_t switches_count;
+  // This is an experimental feature to support partial window.
+  void* custom_win;
 } FlutterDesktopEngineProperties;
 
 // Runs an instance of a Flutter engine with the given properties.

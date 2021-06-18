@@ -17,6 +17,9 @@ class TizenRenderer {
   class Delegate {
    public:
     virtual void OnOrientationChange(int32_t degree) = 0;
+    // This is an experimental feature to support partial window.
+    virtual bool hasCustomWindow() = 0;
+    virtual void* CustomWindow() = 0;
   };
 
   virtual ~TizenRenderer();

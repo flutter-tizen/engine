@@ -38,8 +38,8 @@ static DeviceProfile GetDeviceProfile() {
   return DeviceProfile::kUnknown;
 }
 
-FlutterTizenEngine::FlutterTizenEngine(bool headed)
-    : device_profile(GetDeviceProfile()) {
+FlutterTizenEngine::FlutterTizenEngine(bool headed, void* win)
+    : device_profile(GetDeviceProfile()), custom_window_(win) {
   embedder_api_.struct_size = sizeof(FlutterEngineProcTable);
   FlutterEngineGetProcAddresses(&embedder_api_);
 
@@ -420,6 +420,13 @@ bool FlutterTizenEngine::UnregisterExternalTexture(int64_t texture_id) {
 bool FlutterTizenEngine::MarkExternalTextureFrameAvailable(int64_t texture_id) {
   return (embedder_api_.MarkExternalTextureFrameAvailable(
               engine_, texture_id) == kSuccess);
+}
+
+bool FlutterTizenEngine::hasCustomWindow() {
+  return custom_window_ != nullptr;
+}
+void* FlutterTizenEngine::CustomWindow() {
+  return custom_window_;
 }
 
 // The Flutter Engine calls out to this function when new platform messages are
