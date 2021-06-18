@@ -244,12 +244,6 @@ void FontCollection::SortSkTypefaces(
   std::sort(
       sk_typefaces.begin(), sk_typefaces.end(),
       [](const sk_sp<SkTypeface>& a, const sk_sp<SkTypeface>& b) {
-        SkFontStyle a_style = a->fontStyle();
-        SkFontStyle b_style = b->fontStyle();
-
-        int a_delta = std::abs(a_style.width() - SkFontStyle::kNormal_Width);
-        int b_delta = std::abs(b_style.width() - SkFontStyle::kNormal_Width);
-
         {
           // A workaround to prevent emoji fonts being selected for normal text
           // when normal and emojis are mixed at same font family.
@@ -271,6 +265,12 @@ void FontCollection::SortSkTypefaces(
             return true;
           }
         }
+
+        SkFontStyle a_style = a->fontStyle();
+        SkFontStyle b_style = b->fontStyle();
+
+        int a_delta = std::abs(a_style.width() - SkFontStyle::kNormal_Width);
+        int b_delta = std::abs(b_style.width() - SkFontStyle::kNormal_Width);
 
         if (a_delta != b_delta) {
           // If a family name query is so generic it ends up bringing in fonts
