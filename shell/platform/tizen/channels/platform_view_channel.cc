@@ -14,66 +14,20 @@
 
 static constexpr char kChannelName[] = "flutter/platform_views";
 
-std::string ExtractStringFromMap(const flutter::EncodableValue& arguments,
-                                 const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<std::string>(value)) {
-      return std::get<std::string>(value);
+template <typename T>
+bool GetValueFromEncodableMap(const flutter::EncodableValue& arguments,
+                              std::string key,
+                              T* out) {
+  if (auto pmap = std::get_if<flutter::EncodableMap>(&arguments)) {
+    auto iter = pmap->find(flutter::EncodableValue(key));
+    if (iter != pmap->end() && !iter->second.IsNull()) {
+      if (auto pval = std::get_if<T>(&iter->second)) {
+        *out = *pval;
+        return true;
+      }
     }
   }
-  return std::string();
-}
-
-int ExtractIntFromMap(const flutter::EncodableValue& arguments,
-                      const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<int>(value)) {
-      return std::get<int>(value);
-    }
-  }
-  return -1;
-}
-
-double ExtractDoubleFromMap(const flutter::EncodableValue& arguments,
-                            const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<double>(value)) {
-      return std::get<double>(value);
-    }
-  }
-  return -1;
-}
-
-flutter::EncodableMap ExtractMapFromMap(
-    const flutter::EncodableValue& arguments,
-    const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<flutter::EncodableMap>(value)) {
-      return std::get<flutter::EncodableMap>(value);
-    }
-  }
-  return flutter::EncodableMap();
-}
-
-flutter::EncodableList ExtractListFromMap(
-    const flutter::EncodableValue& arguments,
-    const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<flutter::EncodableList>(value)) {
-      return std::get<flutter::EncodableList>(value);
-    }
-  }
-  return flutter::EncodableList();
+  return false;
 }
 
 PlatformViewChannel::PlatformViewChannel(flutter::BinaryMessenger* messenger,
@@ -96,14 +50,14 @@ PlatformViewChannel::~PlatformViewChannel() {
 
 void PlatformViewChannel::Dispose() {
   // Clean-up view_instances_
-  for (auto const& [viewId, viewInstance] : view_instances_) {
-    delete viewInstance;
+  for (auto const& [view_id, view_instance] : view_instances_) {
+    delete view_instance;
   }
   view_instances_.clear();
 
   // Clean-up view_factories_
-  for (auto const& [viewType, viewFactory] : view_factories_) {
-    viewFactory->Dispose();
+  for (auto const& [view_type, view_factory] : view_factories_) {
+    view_factory->Dispose();
   }
   view_factories_.clear();
 }
@@ -152,56 +106,61 @@ void PlatformViewChannel::HandleMethodCall(
   const auto method = call.method_name();
   const auto& arguments = *call.arguments();
 
-  FT_LOGI("PlatformViewChannel method: %s", method.c_str());
   if (method == "create") {
-    std::string viewType = ExtractStringFromMap(arguments, "viewType");
-    int viewId = ExtractIntFromMap(arguments, "id");
-    double width = ExtractDoubleFromMap(arguments, "width");
-    double height = ExtractDoubleFromMap(arguments, "height");
+    std::string view_type;
+    int view_id = -1;
+    double width = 0.0, height = 0.0;
+    if (!GetValueFromEncodableMap(arguments, "viewType", &view_type) ||
+        !GetValueFromEncodableMap(arguments, "id", &view_id) ||
+        !GetValueFromEncodableMap(arguments, "width", &width) ||
+        !GetValueFromEncodableMap(arguments, "height", &height)) {
+      result->Error("Invalid arguments");
+      return;
+    }
 
     FT_LOGI(
         "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
-        viewType.c_str(), viewId, width, height);
+        view_type.c_str(), view_id, width, height);
 
     flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
     flutter::EncodableValue value = values[flutter::EncodableValue("params")];
-    ByteMessage byteMessage;
+    ByteMessage byte_message;
     if (std::holds_alternative<ByteMessage>(value)) {
-      byteMessage = std::get<ByteMessage>(value);
+      byte_message = std::get<ByteMessage>(value);
     }
-    auto it = view_factories_.find(viewType);
+    auto it = view_factories_.find(view_type);
     if (it != view_factories_.end()) {
-      auto focuesdView = view_instances_.find(CurrentFocusedViewId());
-      if (focuesdView != view_instances_.end()) {
-        focuesdView->second->SetFocus(false);
+      auto focused_view = view_instances_.find(CurrentFocusedViewId());
+      if (focused_view != view_instances_.end()) {
+        focused_view->second->SetFocus(false);
       }
 
-      auto viewInstance =
-          it->second->Create(viewId, width, height, byteMessage);
-      if (viewInstance) {
+      auto view_instance =
+          it->second->Create(view_id, width, height, byte_message);
+      if (view_instance) {
         view_instances_.insert(
-            std::pair<int, PlatformView*>(viewId, viewInstance));
+            std::pair<int, PlatformView*>(view_id, view_instance));
 
         if (engine_ && engine_->text_input_channel) {
           Ecore_IMF_Context* context =
               engine_->text_input_channel->GetImfContext();
-          viewInstance->SetSoftwareKeyboardContext(context);
+          view_instance->SetSoftwareKeyboardContext(context);
         }
-        result->Success(flutter::EncodableValue(viewInstance->GetTextureId()));
+        result->Success(flutter::EncodableValue(view_instance->GetTextureId()));
       } else {
         result->Error("Can't create a webview instance!!");
       }
     } else {
-      FT_LOGE("can't find view type = %s", viewType.c_str());
+      FT_LOGE("can't find view type = %s", view_type.c_str());
       result->Error("Can't find view type");
     }
   } else if (method == "clearFocus") {
-    int viewId = -1;
+    int view_id = -1;
     if (std::holds_alternative<int>(arguments)) {
-      viewId = std::get<int>(arguments);
+      view_id = std::get<int>(arguments);
     };
-    auto it = view_instances_.find(viewId);
-    if (viewId >= 0 && it != view_instances_.end()) {
+    auto it = view_instances_.find(view_id);
+    if (view_id >= 0 && it != view_instances_.end()) {
       it->second->SetFocus(false);
       it->second->ClearFocus();
       result->Success();
@@ -209,26 +168,37 @@ void PlatformViewChannel::HandleMethodCall(
       result->Error("Can't find view id");
     }
   } else {
-    int viewId = ExtractIntFromMap(arguments, "id");
-    auto it = view_instances_.find(viewId);
-    if (viewId >= 0 && it != view_instances_.end()) {
+    int view_id = -1;
+    if (!GetValueFromEncodableMap(arguments, "id", &view_id)) {
+      result->Error("Invalid arguments");
+      return;
+    }
+
+    auto it = view_instances_.find(view_id);
+    if (view_id >= 0 && it != view_instances_.end()) {
       if (method == "dispose") {
         it->second->Dispose();
         result->Success();
       } else if (method == "resize") {
-        double width = ExtractDoubleFromMap(arguments, "width");
-        double height = ExtractDoubleFromMap(arguments, "height");
+        double width = 0.0, height = 0.0;
+        if (!GetValueFromEncodableMap(arguments, "width", &width) ||
+            !GetValueFromEncodableMap(arguments, "height", &height)) {
+          result->Error("Invalid arguments");
+          return;
+        }
         it->second->Resize(width, height);
         result->Success();
       } else if (method == "touch") {
-        int type, button;
-        double x, y, dx, dy;
+        int type = 0, button = 0;
+        double x = 0.0, y = 0.0, dx = 0.0, dy = 0.0;
 
-        flutter::EncodableList event = ExtractListFromMap(arguments, "event");
-        if (event.size() != 6) {
+        flutter::EncodableList event;
+        if (!GetValueFromEncodableMap(arguments, "event", &event) ||
+            event.size() != 6) {
           result->Error("Invalid Arguments");
           return;
         }
+
         type = std::get<int>(event[0]);
         button = std::get<int>(event[1]);
         x = std::get<double>(event[2]);
@@ -239,14 +209,14 @@ void PlatformViewChannel::HandleMethodCall(
         it->second->Touch(type, button, x, y, dx, dy);
 
         if (!it->second->IsFocused()) {
-          auto focuesdView = view_instances_.find(CurrentFocusedViewId());
-          if (focuesdView != view_instances_.end()) {
-            focuesdView->second->SetFocus(false);
+          auto focused_view = view_instances_.find(CurrentFocusedViewId());
+          if (focused_view != view_instances_.end()) {
+            focused_view->second->SetFocus(false);
           }
 
           it->second->SetFocus(true);
           if (channel_ != nullptr) {
-            auto id = std::make_unique<flutter::EncodableValue>(viewId);
+            auto id = std::make_unique<flutter::EncodableValue>(view_id);
             channel_->InvokeMethod("viewFocused", std::move(id));
           }
         }
