@@ -135,6 +135,12 @@ void PlatformViewChannel::HandleMethodCall(
         focused_view->second->SetFocus(false);
       }
 
+      auto existing_view = view_instances_.find(view_id);
+      if (existing_view != view_instances_.end()) {
+        existing_view->second->Dispose();
+        view_instances_.erase(existing_view);
+      }
+
       auto view_instance =
           it->second->Create(view_id, width, height, byte_message);
       if (view_instance) {
