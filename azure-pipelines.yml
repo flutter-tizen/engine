@@ -16,10 +16,10 @@ jobs:
   - checkout: self
     path: src/flutter
   - bash: |
-      git reset --hard HEAD
-      gclient sync -D
+      gclient sync -f -D
       sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
       sed -i 's/"-Wno-psabi",//g' build/config/compiler/BUILD.gn
+      sed -i 's/defined(__ELF__) && defined(__GNUC__)/0/g' third_party/boringssl/src/crypto/mem.c
     displayName: Run gclient sync
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
@@ -69,8 +69,8 @@ jobs:
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
-        --target-toolchain `pwd`/tizen_tools/toolchains \
-        --target-sysroot `pwd`/tizen_tools/sysroot/$(arch) \
+        --target-toolchain $HOME/tizen_tools/toolchains \
+        --target-sysroot $HOME/tizen_tools/sysroot/$(arch) \
         --target-triple $(targetTriple) \
         --runtime-mode $(mode) \
         --embedder-for-target \
