@@ -153,8 +153,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   const DeviceProfile device_profile;
 
-  FLUTTER_API_SYMBOL(FlutterEngine) Engine() { return engine_; }
-
  private:
   bool IsHeaded() { return renderer != nullptr; }
   UniqueAotDataPtr LoadAotData(std::string aot_data_path);

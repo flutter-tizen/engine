@@ -288,7 +288,7 @@ bool FlutterTizenEngine::RunSpawnedEngine(
   FlutterRendererConfig renderer_config = GetRendererConfig();
   auto result =
       embedder_api_.Spawn(FLUTTER_ENGINE_VERSION, &renderer_config, &args, this,
-                          &engine_, main_engine_->Engine());
+                          &engine_, main_engine_->engine_);
   if (result == kSuccess && engine_ != nullptr) {
     FT_LOGD("FlutterEngineRun Success!");
   } else {
