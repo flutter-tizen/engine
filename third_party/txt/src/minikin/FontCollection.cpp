@@ -509,7 +509,9 @@ void FontCollection::itemize(const uint16_t* string,
     if (!shouldContinueRun) {
       const std::shared_ptr<FontFamily>& family = getFamilyForChar(
           ch, isVariationSelector(nextCh) ? nextCh : 0, langListId, variant);
-      if (utf16Pos == 0 || family.get() != lastFamily) {
+      if (utf16Pos == 0 || family.get() != lastFamily ||
+          (!(U_GET_GC_MASK(prevCh) & U_GC_L_MASK) &&
+           (U_GET_GC_MASK(ch) & U_GC_L_MASK))) {
         size_t start = utf16Pos;
         // Workaround for combining marks and emoji modifiers until we implement
         // per-cluster font selection: if a combining mark or an emoji modifier
@@ -528,8 +530,8 @@ void FontCollection::itemize(const uint16_t* string,
           }
           start -= prevChLength;
         }
-        result->push_back(
-            {family->getClosestMatch(style), static_cast<int>(start), 0});
+        result->push_back({family->getClosestMatch(style, ch, variant),
+                           static_cast<int>(start), 0});
         run = &result->back();
         lastFamily = family.get();
       }

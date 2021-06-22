@@ -13,6 +13,9 @@
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
+#ifdef FLUTTER_USE_FONTCONFIG
+  return {"TizenDefaultFont"};
+#else
   return {
       "SamsungOneUI",
       "SamsungOneUIArabic",
@@ -72,11 +75,12 @@ std::vector<std::string> GetDefaultFontFamilies() {
       "BreezeSansFallback",
       "BreezeColorEmoji",
   };
+#endif
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data) {
 #ifdef FLUTTER_USE_FONTCONFIG
-  return SkFontMgr_New_FontConfig(nullptr);
+  return SkFontMgr::RefDefault();
 #else
   return SkFontMgr_New_Custom_Directory("/usr/share/fonts");
 #endif

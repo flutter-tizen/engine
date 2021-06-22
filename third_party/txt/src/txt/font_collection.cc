@@ -245,6 +245,28 @@ void FontCollection::SortSkTypefaces(
   std::sort(
       sk_typefaces.begin(), sk_typefaces.end(),
       [](const sk_sp<SkTypeface>& a, const sk_sp<SkTypeface>& b) {
+        {
+          // A workaround to prevent emoji fonts being selected for normal text
+          // when normal and emojis are mixed at same font family.
+
+          bool a_isEmojiFont = false;
+          bool b_isEmojiFont = false;
+          SkString postScriptName;
+          a->getPostScriptName(&postScriptName);
+          if (postScriptName.contains("Emoji")) {
+            a_isEmojiFont = true;
+          }
+          b->getPostScriptName(&postScriptName);
+          if (postScriptName.contains("Emoji")) {
+            b_isEmojiFont = true;
+          }
+          if (a_isEmojiFont && !b_isEmojiFont) {
+            return false;
+          } else if (!a_isEmojiFont && b_isEmojiFont) {
+            return true;
+          }
+        }
+
         SkFontStyle a_style = a->fontStyle();
         SkFontStyle b_style = b->fontStyle();
 
