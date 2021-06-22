@@ -126,8 +126,12 @@ UniqueAotDataPtr FlutterTizenEngine::LoadAotData(std::string aot_data_path) {
   return UniqueAotDataPtr(data);
 }
 
-bool FlutterTizenEngine::RunEngine(
-    const FlutterDesktopEngineProperties& engine_properties) {
+bool FlutterTizenEngine::PrepareFlutterProjectArgs(
+    const FlutterDesktopEngineProperties& engine_properties,
+    FlutterProjectArgs* args,
+    FlutterTaskRunnerDescription* platform_task_runner,
+    FlutterTaskRunnerDescription* render_task_runner,
+    FlutterCustomTaskRunners* custom_task_runners) {
   if (IsHeaded() && !renderer->IsValid()) {
     FT_LOGE("The display was not valid.");
     return false;
@@ -143,47 +147,43 @@ bool FlutterTizenEngine::RunEngine(
   }
 
   // Configure task runners.
-  FlutterTaskRunnerDescription platform_task_runner = {};
-  platform_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
-  platform_task_runner.user_data = event_loop_.get();
-  platform_task_runner.runs_task_on_current_thread_callback =
+  platform_task_runner->struct_size = sizeof(FlutterTaskRunnerDescription);
+  platform_task_runner->user_data = event_loop_.get();
+  platform_task_runner->runs_task_on_current_thread_callback =
       [](void* data) -> bool {
     return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
   };
-  platform_task_runner.post_task_callback =
+  platform_task_runner->post_task_callback =
       [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
     static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
   };
-  platform_task_runner.identifier = kPlatformTaskRunnerIdentifier;
-  FlutterCustomTaskRunners custom_task_runners = {};
-  custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
-  custom_task_runners.platform_task_runner = &platform_task_runner;
+  platform_task_runner->identifier = kPlatformTaskRunnerIdentifier;
+  custom_task_runners->struct_size = sizeof(FlutterCustomTaskRunners);
+  custom_task_runners->platform_task_runner = platform_task_runner;
 
 #ifdef TIZEN_RENDERER_EVAS_GL
-  FlutterTaskRunnerDescription render_task_runner = {};
   if (IsHeaded()) {
-    render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
-    render_task_runner.user_data = render_loop_.get();
-    render_task_runner.runs_task_on_current_thread_callback =
+    render_task_runner->struct_size = sizeof(FlutterTaskRunnerDescription);
+    render_task_runner->user_data = render_loop_.get();
+    render_task_runner->runs_task_on_current_thread_callback =
         [](void* data) -> bool {
       return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
     };
-    render_task_runner.post_task_callback =
+    render_task_runner->post_task_callback =
         [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
       static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
     };
-    render_task_runner.identifier = kRenderTaskRunnerIdentifier;
-    custom_task_runners.render_task_runner = &render_task_runner;
+    render_task_runner->identifier = kRenderTaskRunnerIdentifier;
+    custom_task_runners->render_task_runner = render_task_runner;
   }
 #endif
 
-  FlutterProjectArgs args = {};
-  args.struct_size = sizeof(FlutterProjectArgs);
-  args.assets_path = engine_properties.assets_path;
-  args.icu_data_path = engine_properties.icu_data_path;
-  args.command_line_argc = static_cast<int>(argv.size());
-  args.command_line_argv = &argv[0];
-  args.platform_message_callback =
+  args->struct_size = sizeof(FlutterProjectArgs);
+  args->assets_path = engine_properties.assets_path;
+  args->icu_data_path = engine_properties.icu_data_path;
+  args->command_line_argc = static_cast<int>(argv.size());
+  args->command_line_argv = &argv[0];
+  args->platform_message_callback =
       [](const FlutterPlatformMessage* engine_message, void* user_data) {
         if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
           FT_LOGE(
@@ -195,12 +195,12 @@ bool FlutterTizenEngine::RunEngine(
         auto message = engine->ConvertToDesktopMessage(*engine_message);
         engine->message_dispatcher->HandleMessage(message);
       };
-  args.custom_task_runners = &custom_task_runners;
+  args->custom_task_runners = custom_task_runners;
 #ifndef TIZEN_RENDERER_EVAS_GL
   if (IsHeaded()) {
     // Disable temporary
     /*
-    args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
+    args->vsync_callback = [](void* user_data, intptr_t baton) -> void {
       reinterpret_cast<FlutterTizenEngine*>(user_data)
           ->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
     };
@@ -214,20 +214,12 @@ bool FlutterTizenEngine::RunEngine(
       FT_LOGE("Unable to start engine without AOT data.");
       return false;
     }
-    args.aot_data = aot_data_.get();
+    args->aot_data = aot_data_.get();
   }
+  return true;
+}
 
-  FlutterRendererConfig renderer_config = GetRendererConfig();
-
-  auto result = embedder_api_.Run(FLUTTER_ENGINE_VERSION, &renderer_config,
-                                  &args, this, &engine_);
-  if (result == kSuccess && engine_ != nullptr) {
-    FT_LOGD("FlutterEngineRun Success!");
-  } else {
-    FT_LOGE("FlutterEngineRun Failure! result: %d", result);
-    return false;
-  }
-
+void FlutterTizenEngine::PreparePlatformResource() {
   internal_plugin_registrar_ =
       std::make_unique<flutter::PluginRegistrar>(plugin_registrar_.get());
 
@@ -254,100 +246,46 @@ bool FlutterTizenEngine::RunEngine(
 
     SetWindowOrientation(0);
   }
+}
 
+bool FlutterTizenEngine::RunEngine(
+    const FlutterDesktopEngineProperties& engine_properties) {
+  FlutterProjectArgs args = {};
+  FlutterTaskRunnerDescription platform_task_runner = {};
+  FlutterTaskRunnerDescription render_task_runner = {};
+  FlutterCustomTaskRunners custom_task_runners = {};
+
+  if (!PrepareFlutterProjectArgs(engine_properties, &args,
+                                 &platform_task_runner, &render_task_runner,
+                                 &custom_task_runners)) {
+    return false;
+  }
+  FlutterRendererConfig renderer_config = GetRendererConfig();
+  auto result = embedder_api_.Run(FLUTTER_ENGINE_VERSION, &renderer_config,
+                                  &args, this, &engine_);
+  if (result == kSuccess && engine_ != nullptr) {
+    FT_LOGD("FlutterEngineRun Success!");
+  } else {
+    FT_LOGE("FlutterEngineRun Failure! result: %d", result);
+    return false;
+  }
+  PreparePlatformResource();
   return true;
 }
 
 bool FlutterTizenEngine::RunSpawnedEngine(
     const FlutterDesktopEngineProperties& engine_properties) {
-  if (IsHeaded() && !renderer->IsValid()) {
-    FT_LOGE("The display was not valid.");
+  FlutterProjectArgs args = {};
+  FlutterTaskRunnerDescription platform_task_runner = {};
+  FlutterTaskRunnerDescription render_task_runner = {};
+  FlutterCustomTaskRunners custom_task_runners = {};
+
+  if (!PrepareFlutterProjectArgs(engine_properties, &args,
+                                 &platform_task_runner, &render_task_runner,
+                                 &custom_task_runners)) {
     return false;
   }
-
-  // FlutterProjectArgs is expecting a full argv, so when processing it for
-  // flags the first item is treated as the executable and ignored. Add a dummy
-  // value so that all provided arguments are used.
-  std::vector<const char*> argv = {"placeholder"};
-  if (engine_properties.switches_count > 0) {
-    argv.insert(argv.end(), &engine_properties.switches[0],
-                &engine_properties.switches[engine_properties.switches_count]);
-  }
-
-  // Configure task runners.
-  FlutterTaskRunnerDescription platform_task_runner = {};
-  platform_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
-  platform_task_runner.user_data = event_loop_.get();
-  platform_task_runner.runs_task_on_current_thread_callback =
-      [](void* data) -> bool {
-    return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
-  };
-  platform_task_runner.post_task_callback =
-      [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
-    static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
-  };
-  platform_task_runner.identifier = kPlatformTaskRunnerIdentifier;
-  FlutterCustomTaskRunners custom_task_runners = {};
-  custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
-  custom_task_runners.platform_task_runner = &platform_task_runner;
-
-#ifdef TIZEN_RENDERER_EVAS_GL
-  FlutterTaskRunnerDescription render_task_runner = {};
-  if (IsHeaded()) {
-    render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
-    render_task_runner.user_data = render_loop_.get();
-    render_task_runner.runs_task_on_current_thread_callback =
-        [](void* data) -> bool {
-      return static_cast<TizenEventLoop*>(data)->RunsTasksOnCurrentThread();
-    };
-    render_task_runner.post_task_callback =
-        [](FlutterTask task, uint64_t target_time_nanos, void* data) -> void {
-      static_cast<TizenEventLoop*>(data)->PostTask(task, target_time_nanos);
-    };
-    render_task_runner.identifier = kRenderTaskRunnerIdentifier;
-    custom_task_runners.render_task_runner = &render_task_runner;
-  }
-#endif
-
-  FlutterProjectArgs args = {};
-  args.struct_size = sizeof(FlutterProjectArgs);
-  args.assets_path = engine_properties.assets_path;
-  args.icu_data_path = engine_properties.icu_data_path;
-  args.command_line_argc = static_cast<int>(argv.size());
-  args.command_line_argv = &argv[0];
-  args.platform_message_callback =
-      [](const FlutterPlatformMessage* engine_message, void* user_data) {
-        if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
-          FT_LOGE(
-              "Invalid message size received. Expected: %zu, but received %zu",
-              sizeof(FlutterPlatformMessage), engine_message->struct_size);
-          return;
-        }
-        auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-        auto message = engine->ConvertToDesktopMessage(*engine_message);
-        engine->message_dispatcher->HandleMessage(message);
-      };
-  args.custom_task_runners = &custom_task_runners;
-#ifndef TIZEN_RENDERER_EVAS_GL
-  if (IsHeaded()) {
-    // args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
-    //   reinterpret_cast<FlutterTizenEngine*>(user_data)
-    //       ->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
-    // };
-  }
-#endif
-
-  if (embedder_api_.RunsAOTCompiledDartCode()) {
-    aot_data_ = LoadAotData(engine_properties.aot_library_path);
-    if (!aot_data_) {
-      FT_LOGE("Unable to start engine without AOT data.");
-      return false;
-    }
-    args.aot_data = aot_data_.get();
-  }
-
   FlutterRendererConfig renderer_config = GetRendererConfig();
-
   auto result =
       embedder_api_.Spawn(FLUTTER_ENGINE_VERSION, &renderer_config, &args, this,
                           &engine_, main_engine_->Engine());
@@ -357,34 +295,7 @@ bool FlutterTizenEngine::RunSpawnedEngine(
     FT_LOGE("FlutterEngineRun Failure! result: %d", result);
     return false;
   }
-
-  internal_plugin_registrar_ =
-      std::make_unique<flutter::PluginRegistrar>(plugin_registrar_.get());
-
-  platform_channel = std::make_unique<PlatformChannel>(
-      internal_plugin_registrar_->messenger(), renderer.get());
-  settings_channel = std::make_unique<SettingsChannel>(
-      internal_plugin_registrar_->messenger());
-  localization_channel = std::make_unique<LocalizationChannel>(this);
-  localization_channel->SendLocales();
-  lifecycle_channel = std::make_unique<LifecycleChannel>(this);
-
-  if (IsHeaded()) {
-    texture_registrar_ = std::make_unique<FlutterTizenTextureRegistrar>(this);
-    key_event_channel = std::make_unique<KeyEventChannel>(
-        internal_plugin_registrar_->messenger());
-    navigation_channel = std::make_unique<NavigationChannel>(
-        internal_plugin_registrar_->messenger());
-    text_input_channel = std::make_unique<TextInputChannel>(
-        internal_plugin_registrar_->messenger(), this);
-    platform_view_channel = std::make_unique<PlatformViewChannel>(
-        internal_plugin_registrar_->messenger(), this);
-    key_event_handler_ = std::make_unique<KeyEventHandler>(this);
-    touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
-
-    SetWindowOrientation(0);
-  }
-
+  PreparePlatformResource();
   return true;
 }
 

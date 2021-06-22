@@ -161,6 +161,13 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
   FlutterRendererConfig GetRendererConfig();
+  bool PrepareFlutterProjectArgs(
+      const FlutterDesktopEngineProperties& engine_properties,
+      FlutterProjectArgs* args,
+      FlutterTaskRunnerDescription* platform_task_runner,
+      FlutterTaskRunnerDescription* render_task_runner,
+      FlutterCustomTaskRunners* custom_task_runners);
+  void PreparePlatformResource();
 
   FlutterEngineProcTable embedder_api_ = {};
 
