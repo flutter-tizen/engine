@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import("//flutter/common/config.gni")
+import("//flutter/shell/platform/config.gni")
 import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 
@@ -181,6 +182,7 @@ if (enable_unittests) {
       ":common_cpp_switches",
       "//flutter/shell/platform/common/client_wrapper:client_wrapper",
       "//flutter/shell/platform/common/client_wrapper:client_wrapper_library_stubs",
+      "//flutter/shell/platform/embedder:embedder_as_internal_library",
       "//flutter/testing",
     ]
 

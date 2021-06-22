@@ -18,6 +18,9 @@ TizenEventLoop::TizenEventLoop(std::thread::id main_thread_id,
                                TaskExpiredCallback on_task_expired)
     : main_thread_id_(main_thread_id),
       on_task_expired_(std::move(on_task_expired)) {
+#ifdef __X64_SHELL__
+  ecore_init();
+#endif
   ecore_pipe_ = ecore_pipe_add(ExcuteTaskEvents, this);
 }
 

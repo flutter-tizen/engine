@@ -5,7 +5,18 @@
 #ifndef EMBEDDER_TIZEN_LOG_H_
 #define EMBEDDER_TIZEN_LOG_H_
 
+#ifndef __X64_SHELL__
 #include <dlog.h>
+#else
+#include <stdio.h>
+#define log_priority int
+#define DLOG_DEBUG 0
+#define DLOG_WARN 1
+#define DLOG_INFO 2
+#define DLOG_ERROR 3
+#define __MODULE__ "X64_SHELL"
+int dlog_print(log_priority prio, const char* tag, const char* fmt, ...);
+#endif
 
 #include <cassert>
 #include <cstdlib>
@@ -27,7 +38,10 @@ log_priority GetMinLoggingLevel();
 #define LOG_TAG "ConsoleMessage"
 
 #undef __LOG
-#ifdef TV_PROFILE
+
+#ifdef __X64_SHELL__
+#define __LOG(prio, fmt, args...) dlog_print(prio, LOG_TAG, fmt, ##args)
+#elif TV_PROFILE
 // dlog_print() cannot be used because it implicitly passes LOG_ID_APPS as
 // a log id, which is ignored by TV devices. Instead, an internal function
 // __dlog_print() that takes a log id as a parameter is used.

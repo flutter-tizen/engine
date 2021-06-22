@@ -6,6 +6,8 @@
 
 #include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 
+#ifndef __X64_SHELL__
+
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
 #include <Evas_GL_GLES3_Helpers.h>
@@ -157,3 +159,32 @@ void ExternalTextureSurfaceGL::OnDestruction() {
 }
 
 }  // namespace flutter
+
+#else
+namespace flutter {
+ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
+    FlutterDesktopGpuBufferTextureCallback texture_callback,
+    FlutterDesktopGpuBufferDestructionCallback destruction_callback,
+    void* user_data)
+    : ExternalTexture(),
+      texture_callback_(texture_callback),
+      destruction_callback_(destruction_callback),
+      user_data_(user_data) {
+  if (!texture_callback_ && destruction_callback_ && user_data_) {
+    user_data_ = nullptr;
+  }
+}
+
+ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {}
+
+bool ExternalTextureSurfaceGL::PopulateTexture(
+    size_t width,
+    size_t height,
+    FlutterOpenGLTexture* opengl_texture) {
+  return true;
+}
+
+void ExternalTextureSurfaceGL::OnDestruction() {}
+}  // namespace flutter
+
+#endif

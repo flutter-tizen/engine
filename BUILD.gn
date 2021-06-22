@@ -5,6 +5,7 @@
 import("//flutter/common/config.gni")
 import("//flutter/shell/platform/config.gni")
 import("//flutter/shell/platform/glfw/config.gni")
+import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 
 # Whether to build the dartdevc sdk, libraries, and source files
@@ -158,6 +159,10 @@ group("flutter") {
         if (build_glfw_shell) {
           public_deps +=
               [ "//flutter/shell/platform/glfw:flutter_glfw_unittests" ]
+        }
+        if (build_tizen_shell) {
+          public_deps +=
+              [ "//flutter/shell/platform/tizen:flutter_tizen_unittests" ]
         }
       }
 

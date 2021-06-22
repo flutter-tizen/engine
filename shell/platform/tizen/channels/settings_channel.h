@@ -5,7 +5,24 @@
 #ifndef EMBEDDER_SETTINGS_CHANNEL_H_
 #define EMBEDDER_SETTINGS_CHANNEL_H_
 
+#ifndef __X64_SHELL__
 #include <system/system_settings.h>
+#else
+typedef enum {
+  SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR, /**< (bool) Indicates whether
+                                                   the 24-hour clock is used. If
+                                                   the value is @c false, the
+                                                   12-hour clock is used. */
+  SYSTEM_SETTINGS_KEY_MAX,
+} system_settings_key_e;
+
+typedef enum {
+  SYSTEM_SETTINGS_ERROR_NONE, /**< Successful */
+} system_settings_error_e;
+
+typedef void (*system_settings_changed_cb)(system_settings_key_e key,
+                                           void* user_data);
+#endif
 
 #include <memory>
 
