@@ -29,6 +29,9 @@ class PlatformViewChannel {
   virtual ~PlatformViewChannel();
 
   void Dispose();
+  void RemoveViewInstanceIfNeeded(int view_id);
+  void ClearViewInstances();
+  void ClearViewFactories();
 
   std::map<std::string, std::unique_ptr<PlatformViewFactory>>& ViewFactories() {
     return view_factories_;

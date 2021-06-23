@@ -52,12 +52,30 @@ PlatformViewChannel::~PlatformViewChannel() {
 }
 
 void PlatformViewChannel::Dispose() {
+  ClearViewInstances();
+  ClearViewFactories();
+}
+
+void PlatformViewChannel::RemoveViewInstanceIfNeeded(int view_id) {
+  auto it = view_instances_.find(view_id);
+  if (view_id >= 0 && it != view_instances_.end()) {
+    auto view_instance = it->second;
+    view_instance->Dispose();
+    delete view_instance;
+    view_instances_.erase(it);
+  }
+}
+
+void PlatformViewChannel::ClearViewInstances() {
   // Clean-up view_instances_
   for (auto const& [view_id, view_instance] : view_instances_) {
+    view_instance->Dispose();
     delete view_instance;
   }
   view_instances_.clear();
+}
 
+void PlatformViewChannel::ClearViewFactories() {
   // Clean-up view_factories_
   for (auto const& [view_type, view_factory] : view_factories_) {
     view_factory->Dispose();
@@ -124,6 +142,7 @@ void PlatformViewChannel::HandleMethodCall(
     FT_LOGI(
         "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
         view_type.c_str(), view_id, width, height);
+    RemoveViewInstanceIfNeeded(view_id);
 
     EncodableMap values = std::get<EncodableMap>(arguments);
     EncodableValue value = values[EncodableValue("params")];
@@ -170,6 +189,17 @@ void PlatformViewChannel::HandleMethodCall(
     } else {
       result->Error("Can't find view id");
     }
+  } else if (method == "dispose") {
+    int view_id = -1;
+    if (std::holds_alternative<int>(arguments)) {
+      view_id = std::get<int>(arguments);
+    };
+    if (view_id < 0 || view_instances_.find(view_id) == view_instances_.end()) {
+      result->Error("Can't find view id");
+    } else {
+      RemoveViewInstanceIfNeeded(view_id);
+      result->Success();
+    }
   } else {
     int view_id = -1;
     if (!GetValueFromEncodableMap(arguments, "id", &view_id)) {
@@ -179,10 +209,7 @@ void PlatformViewChannel::HandleMethodCall(
 
     auto it = view_instances_.find(view_id);
     if (view_id >= 0 && it != view_instances_.end()) {
-      if (method == "dispose") {
-        it->second->Dispose();
-        result->Success();
-      } else if (method == "resize") {
+      if (method == "resize") {
         double width = 0.0, height = 0.0;
         if (!GetValueFromEncodableMap(arguments, "width", &width) ||
             !GetValueFromEncodableMap(arguments, "height", &height)) {
