@@ -9,8 +9,10 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static const int QUEUE_QUIT = -1;
-static const int QUEUE_REQUEST_VBLANK = 0;
+static const int kMessageQuit = -1;
+static const int kMessageRequestVblank = 0;
+
+namespace flutter {
 
 typedef struct {
   Eina_Thread_Queue_Msg head;
@@ -33,7 +35,7 @@ TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  SendMessage(QUEUE_QUIT);
+  SendMessage(kMessageQuit);
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
@@ -44,7 +46,7 @@ TizenVsyncWaiter::~TizenVsyncWaiter() {
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
   baton_ = baton;
   if (TDMValid()) {
-    SendMessage(QUEUE_REQUEST_VBLANK);
+    SendMessage(kMessageRequestVblank);
   }
 }
 
@@ -78,7 +80,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
       FT_LOGE("Message is null");
       continue;
     }
-    if (msg->value == QUEUE_QUIT) {
+    if (msg->value == kMessageQuit) {
       return;
     }
     if (!tizen_vsync_waiter->TDMValid()) {
@@ -159,3 +161,5 @@ void TizenVsyncWaiter::TdmClientVblankCallback(tdm_client_vblank* vblank,
                                        frame_start_time_nanos,
                                        frame_target_time_nanos);
 }
+
+}  // namespace flutter

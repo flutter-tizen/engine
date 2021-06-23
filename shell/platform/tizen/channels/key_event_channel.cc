@@ -8,25 +8,29 @@
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static constexpr char kChannelName[] = "flutter/keyevent";
+namespace flutter {
 
-static constexpr char kKeyMapKey[] = "keymap";
-static constexpr char kKeyCodeKey[] = "keyCode";
-static constexpr char kScanCodeKey[] = "scanCode";
-static constexpr char kTypeKey[] = "type";
-static constexpr char kModifiersKey[] = "modifiers";
-static constexpr char kToolkitKey[] = "toolkit";
-static constexpr char kUnicodeScalarValuesKey[] = "unicodeScalarValues";
+namespace {
 
-static constexpr char kKeyUp[] = "keyup";
-static constexpr char kKeyDown[] = "keydown";
-static constexpr char kGtkToolkit[] = "gtk";
-static constexpr char kLinuxKeyMap[] = "linux";
+constexpr char kChannelName[] = "flutter/keyevent";
+
+constexpr char kKeyMapKey[] = "keymap";
+constexpr char kKeyCodeKey[] = "keyCode";
+constexpr char kScanCodeKey[] = "scanCode";
+constexpr char kTypeKey[] = "type";
+constexpr char kModifiersKey[] = "modifiers";
+constexpr char kToolkitKey[] = "toolkit";
+constexpr char kUnicodeScalarValuesKey[] = "unicodeScalarValues";
+
+constexpr char kKeyUp[] = "keyup";
+constexpr char kKeyDown[] = "keydown";
+constexpr char kGtkToolkit[] = "gtk";
+constexpr char kLinuxKeyMap[] = "linux";
 
 // Mapping from physical (xkb) to logical (GTK) key codes.
 // The values are defined in:
 // - flutter/keyboard_maps.dart (kLinuxToPhysicalKey, kGtkToLogicalKey)
-static const std::map<int, int> kKeyCodeMap = {
+const std::map<int, int> kKeyCodeMap = {
     {0x00000009, 65307},      // LogicalKeyboardKey.escape
     {0x0000000a, 49},         // LogicalKeyboardKey.digit1
     {0x0000000b, 50},         // LogicalKeyboardKey.digit2
@@ -202,7 +206,7 @@ static const std::map<int, int> kKeyCodeMap = {
 // The values are defined in:
 // - efl/Ecore_Input.h
 // - flutter/raw_keyboard_linux.dart (GtkKeyHelper)
-static const std::map<int, int> kModifierMap = {
+const std::map<int, int> kModifierMap = {
     {0x0001, 1 << 0},   // SHIFT (modifierShift)
     {0x0002, 1 << 2},   // CTRL (modifierControl)
     {0x0004, 1 << 3},   // ALT (modifierMod1)
@@ -212,12 +216,13 @@ static const std::map<int, int> kModifierMap = {
     {0x0040, 1 << 1},   // CAPS (modifierCapsLock)
 };
 
-KeyEventChannel::KeyEventChannel(flutter::BinaryMessenger* messenger)
-    : channel_(
-          std::make_unique<flutter::BasicMessageChannel<rapidjson::Document>>(
-              messenger,
-              kChannelName,
-              &flutter::JsonMessageCodec::GetInstance())) {}
+}  // namespace
+
+KeyEventChannel::KeyEventChannel(BinaryMessenger* messenger)
+    : channel_(std::make_unique<BasicMessageChannel<rapidjson::Document>>(
+          messenger,
+          kChannelName,
+          &JsonMessageCodec::GetInstance())) {}
 
 KeyEventChannel::~KeyEventChannel() {}
 
@@ -251,3 +256,5 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
   }
   channel_->Send(event);
 }
+
+}  // namespace flutter

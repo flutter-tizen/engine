@@ -5,6 +5,8 @@
 #ifndef EMBEDDER_LIFECYCLE_CHANNEL_H_
 #define EMBEDDER_LIFECYCLE_CHANNEL_H_
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 class LifecycleChannel {
@@ -21,5 +23,7 @@ class LifecycleChannel {
  private:
   FlutterTizenEngine* engine_{nullptr};
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_LIFECYCLE_CHANNEL_H_

@@ -7,11 +7,18 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static constexpr char kChannelName[] = "flutter/lifecycle";
-static constexpr char kInactive[] = "AppLifecycleState.inactive";
-static constexpr char kResumed[] = "AppLifecycleState.resumed";
-static constexpr char kPaused[] = "AppLifecycleState.paused";
-static constexpr char kDetached[] = "AppLifecycleState.detached";
+namespace flutter {
+
+namespace {
+
+constexpr char kChannelName[] = "flutter/lifecycle";
+
+constexpr char kInactive[] = "AppLifecycleState.inactive";
+constexpr char kResumed[] = "AppLifecycleState.resumed";
+constexpr char kPaused[] = "AppLifecycleState.paused";
+constexpr char kDetached[] = "AppLifecycleState.detached";
+
+}  // namespace
 
 LifecycleChannel::LifecycleChannel(FlutterTizenEngine* engine)
     : engine_(engine) {}
@@ -43,3 +50,5 @@ void LifecycleChannel::AppIsDetached() {
   FT_LOGI("send app lifecycle state detached.");
   SendLifecycleMessage(kDetached);
 }
+
+}  // namespace flutter

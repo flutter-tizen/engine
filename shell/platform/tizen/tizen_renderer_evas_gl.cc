@@ -10,6 +10,8 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
+namespace flutter {
+
 TizenRendererEvasGL::TizenRendererEvasGL(TizenRenderer::Delegate& delegate)
     : TizenRenderer(delegate) {
   InitializeRenderer();
@@ -720,3 +722,5 @@ void TizenRendererEvasGL::SetPreferredOrientations(
       evas_window_, static_cast<const int*>(rotations.data()),
       rotations.size());
 }
+
+}  // namespace flutter

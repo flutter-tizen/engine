@@ -5,13 +5,18 @@
 #ifndef EMBEDDER_NAVIGATION_CHANNEL_H_
 #define EMBEDDER_NAVIGATION_CHANNEL_H_
 
+#include <memory>
+#include <string>
+
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
 #include "rapidjson/document.h"
 
+namespace flutter {
+
 class NavigationChannel {
  public:
-  explicit NavigationChannel(flutter::BinaryMessenger* messenger);
+  explicit NavigationChannel(BinaryMessenger* messenger);
   virtual ~NavigationChannel();
 
   void SetInitialRoute(const std::string& initialRoute);
@@ -19,7 +24,9 @@ class NavigationChannel {
   void PopRoute();
 
  private:
-  std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
+  std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
 };
 
-#endif  //  EMBEDDER_NAVIGATION_CHANNEL_H_
+}  // namespace flutter
+
+#endif  // EMBEDDER_NAVIGATION_CHANNEL_H_

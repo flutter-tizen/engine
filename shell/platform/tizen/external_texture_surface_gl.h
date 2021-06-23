@@ -9,6 +9,8 @@
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/external_texture.h"
 
+namespace flutter {
+
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTextureSurfaceGL : public ExternalTexture {
  public:
@@ -37,5 +39,7 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
   FlutterDesktopGpuBufferDestructionCallback destruction_callback_ = nullptr;
   void* user_data_ = nullptr;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_

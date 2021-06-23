@@ -14,6 +14,8 @@
 
 static constexpr char kChannelName[] = "flutter/localization";
 
+namespace flutter {
+
 LocalizationChannel::LocalizationChannel(FlutterTizenEngine* engine)
     : engine_(engine) {}
 
@@ -197,3 +199,5 @@ void LocalizationChannel::DestroyFlutterLocale(FlutterLocale* flutter_locale) {
     flutter_locale = nullptr;
   }
 }
+
+}  // namespace flutter

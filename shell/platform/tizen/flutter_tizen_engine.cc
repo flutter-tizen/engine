@@ -19,6 +19,8 @@ static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
 static constexpr size_t kRenderTaskRunnerIdentifier = 2;
 #endif
 
+namespace flutter {
+
 static DeviceProfile GetDeviceProfile() {
   char* feature_profile;
   system_info_get_platform_string("http://tizen.org/feature/profile",
@@ -57,7 +59,7 @@ FlutterTizenEngine::FlutterTizenEngine(bool headed)
   messenger = std::make_unique<FlutterDesktopMessenger>();
   messenger->engine = this;
   message_dispatcher =
-      std::make_unique<flutter::IncomingMessageDispatcher>(messenger.get());
+      std::make_unique<IncomingMessageDispatcher>(messenger.get());
 
   plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
   plugin_registrar_->engine = this;
@@ -226,7 +228,7 @@ bool FlutterTizenEngine::RunEngine(
   }
 
   internal_plugin_registrar_ =
-      std::make_unique<flutter::PluginRegistrar>(plugin_registrar_.get());
+      std::make_unique<PluginRegistrar>(plugin_registrar_.get());
 
   platform_channel = std::make_unique<PlatformChannel>(
       internal_plugin_registrar_->messenger(), renderer.get());
@@ -497,3 +499,5 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
   }
   return config;
 }
+
+}  // namespace flutter

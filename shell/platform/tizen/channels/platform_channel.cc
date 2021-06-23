@@ -12,26 +12,29 @@
 #include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static constexpr char kChannelName[] = "flutter/platform";
-
-PlatformChannel::PlatformChannel(flutter::BinaryMessenger* messenger,
-                                 TizenRenderer* renderer)
-    : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
-          messenger,
-          kChannelName,
-          &flutter::JsonMethodCodec::GetInstance())),
-      renderer_(renderer) {
-  channel_->SetMethodCallHandler(
-      [this](
-          const flutter::MethodCall<rapidjson::Document>& call,
-          std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
-        HandleMethodCall(call, std::move(result));
-      });
-}
-
-PlatformChannel::~PlatformChannel() {}
+namespace flutter {
 
 namespace {
+
+constexpr char kChannelName[] = "flutter/platform";
+
+constexpr char kGetClipboardDataMethod[] = "Clipboard.getData";
+constexpr char kSetClipboardDataMethod[] = "Clipboard.setData";
+constexpr char kPlaySoundMethod[] = "SystemSound.play";
+constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
+constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
+constexpr char kSetPreferredOrientationsMethod[] =
+    "SystemChrome.setPreferredOrientations";
+constexpr char kSetApplicationSwitcherDescriptionMethod[] =
+    "SystemChrome.setApplicationSwitcherDescription";
+constexpr char kSetEnabledSystemUIOverlaysMethod[] =
+    "SystemChrome.setEnabledSystemUIOverlays";
+constexpr char kRestoreSystemUIOverlaysMethod[] =
+    "SystemChrome.restoreSystemUIOverlays";
+constexpr char kSetSystemUIOverlayStyleMethod[] =
+    "SystemChrome.setSystemUIOverlayStyle";
+
+constexpr char kSoundTypeClick[] = "SystemSoundType.click";
 
 class FeedbackManager {
  public:
@@ -157,21 +160,37 @@ class FeedbackManager {
   ResultCode initialization_status_ = ResultCode::kUnknownError;
 };
 
-}  //  namespace
+}  // namespace
+
+PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
+                                 TizenRenderer* renderer)
+    : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
+          messenger,
+          kChannelName,
+          &JsonMethodCodec::GetInstance())),
+      renderer_(renderer) {
+  channel_->SetMethodCallHandler(
+      [this](const MethodCall<rapidjson::Document>& call,
+             std::unique_ptr<MethodResult<rapidjson::Document>> result) {
+        HandleMethodCall(call, std::move(result));
+      });
+}
+
+PlatformChannel::~PlatformChannel() {}
 
 void PlatformChannel::HandleMethodCall(
-    const flutter::MethodCall<rapidjson::Document>& call,
-    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
+    const MethodCall<rapidjson::Document>& call,
+    std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const auto method = call.method_name();
 
-  if (method == "SystemNavigator.pop") {
+  if (method == kSystemNavigatorPopMethod) {
     ui_app_exit();
     result->Success();
-  } else if (method == "SystemSound.play") {
+  } else if (method == kPlaySoundMethod) {
     const std::string pattern_str = call.arguments()[0].GetString();
 
     const FeedbackManager::FeedbackPattern pattern =
-        (pattern_str == "SystemSoundType.click")
+        (pattern_str == kSoundTypeClick)
             ? FeedbackManager::FeedbackPattern::kClick
             : FeedbackManager::FeedbackPattern::kAlert;
 
@@ -183,13 +202,13 @@ void PlatformChannel::HandleMethodCall(
     }
 
     const auto error_cause =
-        FeedbackManager::GetErrorMessage(ret, "SystemSound.play", pattern_str);
+        FeedbackManager::GetErrorMessage(ret, kPlaySoundMethod, pattern_str);
     const std::string error_message = "Could not play sound";
     FT_LOGE("%s: %s", error_cause.c_str(), error_message.c_str());
 
     result->Error(error_cause, error_message);
 
-  } else if (method == "HapticFeedback.vibrate") {
+  } else if (method == kHapticFeedbackVibrateMethod) {
     /*
      * We use a single type of vibration (FEEDBACK_PATTERN_SIP) to implement
      * HapticFeedback's vibrate, lightImpact, mediumImpact, heavyImpact
@@ -216,11 +235,11 @@ void PlatformChannel::HandleMethodCall(
     FT_LOGE("%s: %s", error_cause.c_str(), error_message.c_str());
 
     result->Error(error_cause, error_message);
-  } else if (method == "Clipboard.getData") {
-    Clipboard::GetData(call, std::move(result));
-  } else if (method == "Clipboard.setData") {
-    Clipboard::SetData(call, std::move(result));
-  } else if (method == "SystemChrome.setPreferredOrientations") {
+  } else if (method == kGetClipboardDataMethod) {
+    clipboard::GetData(call, std::move(result));
+  } else if (method == kSetClipboardDataMethod) {
+    clipboard::SetData(call, std::move(result));
+  } else if (method == kSetPreferredOrientationsMethod) {
     if (renderer_) {
       static const std::string kPortraitUp = "DeviceOrientation.portraitUp";
       static const std::string kPortraitDown = "DeviceOrientation.portraitDown";
@@ -254,13 +273,13 @@ void PlatformChannel::HandleMethodCall(
     } else {
       result->Error("Not supported for service applications");
     }
-  } else if (method == "SystemChrome.setApplicationSwitcherDescription") {
+  } else if (method == kSetApplicationSwitcherDescriptionMethod) {
     result->NotImplemented();
-  } else if (method == "SystemChrome.setEnabledSystemUIOverlays") {
+  } else if (method == kSetEnabledSystemUIOverlaysMethod) {
     result->NotImplemented();
-  } else if (method == "SystemChrome.restoreSystemUIOverlays") {
+  } else if (method == kRestoreSystemUIOverlaysMethod) {
     result->NotImplemented();
-  } else if (method == "SystemChrome.setSystemUIOverlayStyle") {
+  } else if (method == kSetSystemUIOverlayStyleMethod) {
     result->NotImplemented();
   } else {
     FT_LOGI("Unimplemented method: %s", method.c_str());
@@ -269,7 +288,7 @@ void PlatformChannel::HandleMethodCall(
 }
 
 // Clipboard constants and variables
-namespace Clipboard {
+namespace clipboard {
 
 // naive implementation using std::string as a container of internal clipboard
 // data
@@ -282,9 +301,8 @@ static constexpr char kUnknownClipboardFormatError[] =
 static constexpr char kUnknownClipboardError[] =
     "Unknown error during clipboard data retrieval";
 
-void GetData(
-    const flutter::MethodCall<rapidjson::Document>& call,
-    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
+void GetData(const MethodCall<rapidjson::Document>& call,
+             std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const rapidjson::Value& format = call.arguments()[0];
 
   // https://api.flutter.dev/flutter/services/Clipboard/kTextPlain-constant.html
@@ -303,9 +321,8 @@ void GetData(
   result->Success(document);
 }
 
-void SetData(
-    const flutter::MethodCall<rapidjson::Document>& call,
-    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
+void SetData(const MethodCall<rapidjson::Document>& call,
+             std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const rapidjson::Value& document = *call.arguments();
   rapidjson::Value::ConstMemberIterator itr = document.FindMember(kTextKey);
   if (itr == document.MemberEnd()) {
@@ -315,4 +332,7 @@ void SetData(
   string_clipboard = itr->value.GetString();
   result->Success();
 }
-}  // namespace Clipboard
+
+}  // namespace clipboard
+
+}  // namespace flutter

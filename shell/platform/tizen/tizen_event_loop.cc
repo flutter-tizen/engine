@@ -12,6 +12,8 @@
 #include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
 #endif
 
+namespace flutter {
+
 TizenEventLoop::TizenEventLoop(std::thread::id main_thread_id,
                                TaskExpiredCallback on_task_expired)
     : main_thread_id_(main_thread_id),
@@ -149,3 +151,5 @@ void TizenRenderEventLoop::OnTaskExpired() {
   }
 }
 #endif
+
+}  // namespace flutter

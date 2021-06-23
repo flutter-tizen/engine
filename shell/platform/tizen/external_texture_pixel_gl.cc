@@ -16,6 +16,8 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #include <GLES3/gl32.h>
 #endif
 
+namespace flutter {
+
 bool ExternalTexturePixelGL::PopulateTexture(
     size_t width,
     size_t height,
@@ -68,3 +70,5 @@ bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
                pixel_buffer->buffer);
   return true;
 }
+
+}  // namespace flutter

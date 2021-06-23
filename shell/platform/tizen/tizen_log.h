@@ -10,6 +10,8 @@
 #include <cassert>
 #include <cstdlib>
 
+namespace flutter {
+
 // Starts logging threads which constantly redirect stdout/stderr to dlog.
 // The threads can be started only once per process.
 void StartLogging();
@@ -37,7 +39,7 @@ log_priority GetMinLoggingLevel();
 
 #define __FT_LOG(prio, fmt, args...)                                   \
   do {                                                                 \
-    if (prio >= GetMinLoggingLevel()) {                                \
+    if (prio >= flutter::GetMinLoggingLevel()) {                       \
       __LOG(prio, "%s: %s(%d) > " fmt, __MODULE__, __func__, __LINE__, \
             ##args);                                                   \
     }                                                                  \
@@ -81,5 +83,7 @@ log_priority GetMinLoggingLevel();
 #endif
 
 #define FT_UNIMPLEMENTED() FT_LOGW("UNIMPLEMENTED!")
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_LOG_H_

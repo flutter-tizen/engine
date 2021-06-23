@@ -9,14 +9,19 @@
 #include <Ecore_IMF.h>
 #include <Ecore_Input.h>
 
+#include <map>
+#include <memory>
 #include <string>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/common/text_input_model.h"
+#include "rapidjson/document.h"
+
+namespace flutter {
 
 class FlutterTizenEngine;
+
 class TextInputChannel {
  public:
   struct SoftwareKeyboardGeometry {
@@ -25,7 +30,7 @@ class TextInputChannel {
 
   enum EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
 
-  explicit TextInputChannel(flutter::BinaryMessenger* messenger,
+  explicit TextInputChannel(BinaryMessenger* messenger,
                             FlutterTizenEngine* engine);
   virtual ~TextInputChannel();
 
@@ -50,19 +55,19 @@ class TextInputChannel {
 
  private:
   void HandleMethodCall(
-      const flutter::MethodCall<rapidjson::Document>& method_call,
-      std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result);
-  void SendStateUpdate(const flutter::TextInputModel& model);
+      const MethodCall<rapidjson::Document>& method_call,
+      std::unique_ptr<MethodResult<rapidjson::Document>> result);
+  void SendStateUpdate(const TextInputModel& model);
   bool FilterEvent(Ecore_Event_Key* keyDownEvent);
   void NonIMFFallback(Ecore_Event_Key* keyDownEvent);
-  void EnterPressed(flutter::TextInputModel* model, bool select);
+  void EnterPressed(TextInputModel* model, bool select);
   void RegisterIMFCallback();
   void UnregisterIMFCallback();
   void ConsumeLastPreedit();
   void ResetCurrentContext();
 
-  std::unique_ptr<flutter::MethodChannel<rapidjson::Document>> channel_;
-  std::unique_ptr<flutter::TextInputModel> active_model_;
+  std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
+  std::unique_ptr<TextInputModel> active_model_;
 
   static void CommitCallback(void* data,
                              Ecore_IMF_Context* ctx,
@@ -102,5 +107,7 @@ class TextInputChannel {
   FlutterTizenEngine* engine_{nullptr};
   Ecore_IMF_Context* imf_context_{nullptr};
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TEXT_INPUT_CHANNEL_H_

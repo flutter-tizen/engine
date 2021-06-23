@@ -22,6 +22,8 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
+namespace flutter {
+
 static void OnCollectTexture(void* textureGL) {
   auto* weak_texture =
       reinterpret_cast<std::weak_ptr<ExternalTexture>*>(textureGL);
@@ -153,3 +155,5 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
 void ExternalTextureSurfaceGL::OnDestruction() {
   destruction_callback_(user_data_);
 }
+
+}  // namespace flutter

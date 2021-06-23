@@ -5,8 +5,6 @@
 
 #include "public/flutter_tizen.h"
 
-#include <inttypes.h>
-
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
@@ -15,21 +13,23 @@
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Returns the engine corresponding to the given opaque API handle.
-static FlutterTizenEngine* EngineFromHandle(FlutterDesktopEngineRef ref) {
-  return reinterpret_cast<FlutterTizenEngine*>(ref);
+static flutter::FlutterTizenEngine* EngineFromHandle(
+    FlutterDesktopEngineRef ref) {
+  return reinterpret_cast<flutter::FlutterTizenEngine*>(ref);
 }
 
 // Returns the opaque API handle for the given engine instance.
-static FlutterDesktopEngineRef HandleForEngine(FlutterTizenEngine* engine) {
+static FlutterDesktopEngineRef HandleForEngine(
+    flutter::FlutterTizenEngine* engine) {
   return reinterpret_cast<FlutterDesktopEngineRef>(engine);
 }
 
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopEngineProperties& engine_properties,
     bool headed) {
-  StartLogging();
+  flutter::StartLogging();
 
-  auto engine = std::make_unique<FlutterTizenEngine>(headed);
+  auto engine = std::make_unique<flutter::FlutterTizenEngine>(headed);
   if (!engine->RunEngine(engine_properties)) {
     FT_LOGE("Failed to run the Flutter engine.");
     return nullptr;
@@ -142,14 +142,14 @@ void FlutterRegisterViewFactory(
 }
 
 // Returns the texture registrar corresponding to the given opaque API handle.
-static FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
+static flutter::FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
     FlutterDesktopTextureRegistrarRef ref) {
-  return reinterpret_cast<FlutterTizenTextureRegistrar*>(ref);
+  return reinterpret_cast<flutter::FlutterTizenTextureRegistrar*>(ref);
 }
 
 // Returns the opaque API handle for the given texture registrar instance.
 static FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
-    FlutterTizenTextureRegistrar* registrar) {
+    flutter::FlutterTizenTextureRegistrar* registrar) {
   return reinterpret_cast<FlutterDesktopTextureRegistrarRef>(registrar);
 }
 

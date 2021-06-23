@@ -36,14 +36,16 @@
 // State associated with the plugin registrar.
 struct FlutterDesktopPluginRegistrar {
   // The engine that owns this state object.
-  FlutterTizenEngine* engine;
+  flutter::FlutterTizenEngine* engine = nullptr;
 };
 
 // State associated with the messenger used to communicate with the engine.
 struct FlutterDesktopMessenger {
   // The engine that owns this state object.
-  FlutterTizenEngine* engine = nullptr;
+  flutter::FlutterTizenEngine* engine = nullptr;
 };
+
+namespace flutter {
 
 // Custom deleter for FlutterEngineAOTData.
 struct AOTDataDeleter {
@@ -123,7 +125,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   std::unique_ptr<FlutterDesktopMessenger> messenger;
 
   // Message dispatch manager for messages from the Flutter engine.
-  std::unique_ptr<flutter::IncomingMessageDispatcher> message_dispatcher;
+  std::unique_ptr<IncomingMessageDispatcher> message_dispatcher;
 
   // The interface between the Flutter rasterizer and the platform.
   std::unique_ptr<TizenRenderer> renderer;
@@ -168,7 +170,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
       plugin_registrar_destruction_callback_{nullptr};
 
   // The plugin registrar managing internal plugins.
-  std::unique_ptr<flutter::PluginRegistrar> internal_plugin_registrar_;
+  std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;
@@ -188,5 +190,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The current renderer transformation.
   FlutterTransformation transformation_;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_FLUTTER_TIZEN_ENGINE_H_

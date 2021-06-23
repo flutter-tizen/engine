@@ -12,6 +12,8 @@
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 
+namespace flutter {
+
 class TizenRendererEvasGL : public TizenRenderer {
  public:
   explicit TizenRendererEvasGL(TizenRenderer::Delegate& delegate);
@@ -65,5 +67,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   Evas_GL_Surface* gl_surface_{nullptr};
   Evas_GL_Surface* gl_resource_surface_{nullptr};
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_

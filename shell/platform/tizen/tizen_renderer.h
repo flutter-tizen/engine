@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <vector>
 
+namespace flutter {
+
 class TizenRenderer {
  public:
   struct TizenWindowGeometry {
@@ -50,5 +52,7 @@ class TizenRenderer {
   bool received_rotation_{false};
   TizenRenderer::Delegate& delegate_;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_RENDERER_H_

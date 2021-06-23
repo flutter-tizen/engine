@@ -8,6 +8,8 @@
 
 static constexpr char kPlatformBackButtonName[] = "XF86Back";
 
+namespace flutter {
+
 KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));
@@ -48,3 +50,5 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
   }
   return ECORE_CALLBACK_PASS_ON;
 }
+
+}  // namespace flutter

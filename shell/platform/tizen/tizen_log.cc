@@ -14,6 +14,8 @@ static pthread_t stderr_thread;
 static bool is_running = false;
 static log_priority min_log_priority = DLOG_ERROR;
 
+namespace flutter {
+
 void SetMinLoggingLevel(log_priority p) {
   min_log_priority = p;
 };
@@ -68,3 +70,5 @@ void StartLogging() {
   }
   is_running = true;
 }
+
+}  // namespace flutter

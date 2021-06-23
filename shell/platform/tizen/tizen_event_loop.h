@@ -19,6 +19,8 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+namespace flutter {
+
 class TizenRenderer;
 
 class TizenEventLoop {
@@ -98,5 +100,7 @@ class TizenRenderEventLoop : public TizenEventLoop {
   std::atomic_bool has_pending_renderer_callback_{false};
 };
 #endif
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_EVENT_LOOP_H_

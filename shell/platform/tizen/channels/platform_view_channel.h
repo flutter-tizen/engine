@@ -8,17 +8,23 @@
 #include <Ecore_Input.h>
 
 #include <map>
+#include <memory>
+#include <string>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
 #include "rapidjson/document.h"
 
-class FlutterTizenEngine;
 class PlatformView;
 class PlatformViewFactory;
+
+namespace flutter {
+
+class FlutterTizenEngine;
+
 class PlatformViewChannel {
  public:
-  explicit PlatformViewChannel(flutter::BinaryMessenger* messenger,
+  explicit PlatformViewChannel(BinaryMessenger* messenger,
                                FlutterTizenEngine* engine);
   virtual ~PlatformViewChannel();
 
@@ -36,14 +42,15 @@ class PlatformViewChannel {
   void DispatchCompositionEndEvent(const std::string& key);
 
  private:
-  void HandleMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue>& call,
-      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleMethodCall(const MethodCall<EncodableValue>& call,
+                        std::unique_ptr<MethodResult<EncodableValue>> result);
 
   FlutterTizenEngine* engine_;
-  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
+  std::unique_ptr<MethodChannel<EncodableValue>> channel_;
   std::map<std::string, std::unique_ptr<PlatformViewFactory>> view_factories_;
   std::map<int, PlatformView*> view_instances_;
 };
 
-#endif  //  EMBEDDER_PLATFORM_VIEW_CHANNEL_H_
+}  // namespace flutter
+
+#endif  // EMBEDDER_PLATFORM_VIEW_CHANNEL_H_

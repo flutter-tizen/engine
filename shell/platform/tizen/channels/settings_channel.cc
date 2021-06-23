@@ -4,17 +4,25 @@
 
 #include "settings_channel.h"
 
-static constexpr char kChannelName[] = "flutter/settings";
-static constexpr char kTextScaleFactorKey[] = "textScaleFactor";
-static constexpr char kAlwaysUse24HourFormatKey[] = "alwaysUse24HourFormat";
-static constexpr char kPlatformBrightnessKey[] = "platformBrightness";
+#include "flutter/shell/platform/common/json_message_codec.h"
 
-SettingsChannel::SettingsChannel(flutter::BinaryMessenger* messenger)
-    : channel_(
-          std::make_unique<flutter::BasicMessageChannel<rapidjson::Document>>(
-              messenger,
-              kChannelName,
-              &flutter::JsonMessageCodec::GetInstance())) {
+namespace flutter {
+
+namespace {
+
+constexpr char kChannelName[] = "flutter/settings";
+
+constexpr char kTextScaleFactorKey[] = "textScaleFactor";
+constexpr char kAlwaysUse24HourFormatKey[] = "alwaysUse24HourFormat";
+constexpr char kPlatformBrightnessKey[] = "platformBrightness";
+
+}  // namespace
+
+SettingsChannel::SettingsChannel(BinaryMessenger* messenger)
+    : channel_(std::make_unique<BasicMessageChannel<rapidjson::Document>>(
+          messenger,
+          kChannelName,
+          &JsonMessageCodec::GetInstance())) {
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR,
                                  OnSettingsChangedCallback, this);
   SendSettingsEvent();
@@ -44,3 +52,5 @@ void SettingsChannel::OnSettingsChangedCallback(system_settings_key_e key,
   auto settings_channel = reinterpret_cast<SettingsChannel*>(user_data);
   settings_channel->SendSettingsEvent();
 }
+
+}  // namespace flutter

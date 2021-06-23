@@ -12,6 +12,8 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
+namespace flutter {
+
 FlutterTizenTextureRegistrar::FlutterTizenTextureRegistrar(
     FlutterTizenEngine* engine)
     : engine_(engine) {}
@@ -103,3 +105,5 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
       return nullptr;
   }
 }
+
+}  // namespace flutter

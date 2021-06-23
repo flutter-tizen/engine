@@ -7,35 +7,41 @@
 #include <Ecore.h>
 #include <Ecore_IMF_Evas.h>
 
+#include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static constexpr char kSetEditingStateMethod[] = "TextInput.setEditingState";
-static constexpr char kClearClientMethod[] = "TextInput.clearClient";
-static constexpr char kSetClientMethod[] = "TextInput.setClient";
-static constexpr char kShowMethod[] = "TextInput.show";
-static constexpr char kHideMethod[] = "TextInput.hide";
-static constexpr char kMultilineInputType[] = "TextInputType.multiline";
-static constexpr char kUpdateEditingStateMethod[] =
+namespace flutter {
+
+namespace {
+
+constexpr char kChannelName[] = "flutter/textinput";
+
+constexpr char kSetEditingStateMethod[] = "TextInput.setEditingState";
+constexpr char kClearClientMethod[] = "TextInput.clearClient";
+constexpr char kSetClientMethod[] = "TextInput.setClient";
+constexpr char kShowMethod[] = "TextInput.show";
+constexpr char kHideMethod[] = "TextInput.hide";
+constexpr char kMultilineInputType[] = "TextInputType.multiline";
+constexpr char kUpdateEditingStateMethod[] =
     "TextInputClient.updateEditingState";
-static constexpr char kPerformActionMethod[] = "TextInputClient.performAction";
-static constexpr char kSetPlatformViewClient[] =
-    "TextInput.setPlatformViewClient";
-static constexpr char kTextInputAction[] = "inputAction";
-static constexpr char kTextInputType[] = "inputType";
-static constexpr char kTextInputTypeName[] = "name";
-static constexpr char kComposingBaseKey[] = "composingBase";
-static constexpr char kComposingExtentKey[] = "composingExtent";
-static constexpr char kSelectionAffinityKey[] = "selectionAffinity";
-static constexpr char kAffinityDownstream[] = "TextAffinity.downstream";
-static constexpr char kSelectionBaseKey[] = "selectionBase";
-static constexpr char kSelectionExtentKey[] = "selectionExtent";
-static constexpr char kSelectionIsDirectionalKey[] = "selectionIsDirectional";
-static constexpr char kTextKey[] = "text";
-static constexpr char kChannelName[] = "flutter/textinput";
-static constexpr char kBadArgumentError[] = "Bad Arguments";
-static constexpr char kInternalConsistencyError[] =
-    "Internal Consistency Error";
+constexpr char kPerformActionMethod[] = "TextInputClient.performAction";
+constexpr char kSetPlatformViewClient[] = "TextInput.setPlatformViewClient";
+constexpr char kTextInputAction[] = "inputAction";
+constexpr char kTextInputType[] = "inputType";
+constexpr char kTextInputTypeName[] = "name";
+constexpr char kComposingBaseKey[] = "composingBase";
+constexpr char kComposingExtentKey[] = "composingExtent";
+constexpr char kSelectionAffinityKey[] = "selectionAffinity";
+constexpr char kAffinityDownstream[] = "TextAffinity.downstream";
+constexpr char kSelectionBaseKey[] = "selectionBase";
+constexpr char kSelectionExtentKey[] = "selectionExtent";
+constexpr char kSelectionIsDirectionalKey[] = "selectionIsDirectional";
+constexpr char kTextKey[] = "text";
+constexpr char kBadArgumentError[] = "Bad Arguments";
+constexpr char kInternalConsistencyError[] = "Internal Consistency Error";
+
+}  // namespace
 
 static const char* GetImfMethod() {
   Eina_List* modules;
@@ -239,17 +245,16 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifierToEcoreIMFLock(
   return static_cast<Ecore_IMF_Keyboard_Locks>(lock);
 }
 
-TextInputChannel::TextInputChannel(flutter::BinaryMessenger* messenger,
+TextInputChannel::TextInputChannel(BinaryMessenger* messenger,
                                    FlutterTizenEngine* engine)
-    : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
+    : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
-          &flutter::JsonMethodCodec::GetInstance())),
+          &JsonMethodCodec::GetInstance())),
       engine_(engine) {
   channel_->SetMethodCallHandler(
-      [this](
-          const flutter::MethodCall<rapidjson::Document>& call,
-          std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
+      [this](const MethodCall<rapidjson::Document>& call,
+             std::unique_ptr<MethodResult<rapidjson::Document>> result) {
         HandleMethodCall(call, std::move(result));
       });
 
@@ -285,8 +290,8 @@ void TextInputChannel::OnKeyDown(Ecore_Event_Key* key) {
 }
 
 void TextInputChannel::HandleMethodCall(
-    const flutter::MethodCall<rapidjson::Document>& method_call,
-    std::unique_ptr<flutter::MethodResult<rapidjson::Document>> result) {
+    const MethodCall<rapidjson::Document>& method_call,
+    std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const std::string& method = method_call.method_name();
 
   FT_LOGI("Handle Method : %s", method.data());
@@ -336,7 +341,7 @@ void TextInputChannel::HandleMethodCall(
         input_type_ = input_type_json->value.GetString();
       }
     }
-    active_model_ = std::make_unique<flutter::TextInputModel>();
+    active_model_ = std::make_unique<TextInputModel>();
   } else if (method.compare(kSetEditingStateMethod) == 0) {
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
       result->Error(kBadArgumentError, "Method invoked without args");
@@ -366,8 +371,8 @@ void TextInputChannel::HandleMethodCall(
       return;
     }
     active_model_->SetText(text->value.GetString());
-    active_model_->SetSelection(flutter::TextRange(
-        selection_base->value.GetInt(), selection_extent->value.GetInt()));
+    active_model_->SetSelection(TextRange(selection_base->value.GetInt(),
+                                          selection_extent->value.GetInt()));
   } else {
     result->NotImplemented();
     return;
@@ -377,12 +382,12 @@ void TextInputChannel::HandleMethodCall(
   result->Success();
 }
 
-void TextInputChannel::SendStateUpdate(const flutter::TextInputModel& model) {
+void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
   auto& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
 
-  flutter::TextRange selection = model.selection();
+  TextRange selection = model.selection();
   rapidjson::Value editing_state(rapidjson::kObjectType);
   editing_state.AddMember(kComposingBaseKey, -1, allocator);
   editing_state.AddMember(kComposingExtentKey, -1, allocator);
@@ -533,8 +538,7 @@ void TextInputChannel::NonIMFFallback(Ecore_Event_Key* keyDownEvent) {
   SetEditStatus(EditStatus::kNone);
 }
 
-void TextInputChannel::EnterPressed(flutter::TextInputModel* model,
-                                    bool select) {
+void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
   if (!select && input_type_ == kMultilineInputType) {
     model->AddCodePoint('\n');
     SendStateUpdate(*model);
@@ -707,3 +711,5 @@ void TextInputChannel::ResetCurrentContext() {
   preedit_end_pos_ = 0;
   have_preedit_ = false;
 }
+
+}  // namespace flutter

@@ -4,7 +4,11 @@
 
 #include "tizen_renderer.h"
 
+namespace flutter {
+
 TizenRenderer::TizenRenderer(TizenRenderer::Delegate& delegate)
     : delegate_(delegate) {}
 
 TizenRenderer::~TizenRenderer() = default;
+
+}  // namespace flutter

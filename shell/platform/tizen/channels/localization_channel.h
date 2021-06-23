@@ -7,6 +7,8 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 class LocalizationChannel {
@@ -23,5 +25,7 @@ class LocalizationChannel {
 
   FlutterTizenEngine* engine_;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_LOCALIZATION_CHANNEL_H_

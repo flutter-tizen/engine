@@ -1,6 +1,7 @@
 // Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 #include "platform_view_channel.h"
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
@@ -14,12 +15,14 @@
 
 static constexpr char kChannelName[] = "flutter/platform_views";
 
+namespace flutter {
+
 template <typename T>
-bool GetValueFromEncodableMap(const flutter::EncodableValue& arguments,
+bool GetValueFromEncodableMap(const EncodableValue& arguments,
                               std::string key,
                               T* out) {
-  if (auto pmap = std::get_if<flutter::EncodableMap>(&arguments)) {
-    auto iter = pmap->find(flutter::EncodableValue(key));
+  if (auto pmap = std::get_if<EncodableMap>(&arguments)) {
+    auto iter = pmap->find(EncodableValue(key));
     if (iter != pmap->end() && !iter->second.IsNull()) {
       if (auto pval = std::get_if<T>(&iter->second)) {
         *out = *pval;
@@ -30,18 +33,18 @@ bool GetValueFromEncodableMap(const flutter::EncodableValue& arguments,
   return false;
 }
 
-PlatformViewChannel::PlatformViewChannel(flutter::BinaryMessenger* messenger,
+PlatformViewChannel::PlatformViewChannel(BinaryMessenger* messenger,
                                          FlutterTizenEngine* engine)
     : engine_(engine),
-      channel_(
-          std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-              messenger,
-              kChannelName,
-              &flutter::StandardMethodCodec::GetInstance())) {
+      channel_(std::make_unique<MethodChannel<EncodableValue>>(
+          messenger,
+          kChannelName,
+          &StandardMethodCodec::GetInstance())) {
   channel_->SetMethodCallHandler(
-      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
-             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
-                 result) { HandleMethodCall(call, std::move(result)); });
+      [this](const MethodCall<EncodableValue>& call,
+             std::unique_ptr<MethodResult<EncodableValue>> result) {
+        HandleMethodCall(call, std::move(result));
+      });
 }
 
 PlatformViewChannel::~PlatformViewChannel() {
@@ -101,8 +104,8 @@ int PlatformViewChannel::CurrentFocusedViewId() {
 }
 
 void PlatformViewChannel::HandleMethodCall(
-    const flutter::MethodCall<flutter::EncodableValue>& call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+    const MethodCall<EncodableValue>& call,
+    std::unique_ptr<MethodResult<EncodableValue>> result) {
   const auto method = call.method_name();
   const auto& arguments = *call.arguments();
 
@@ -122,8 +125,8 @@ void PlatformViewChannel::HandleMethodCall(
         "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
         view_type.c_str(), view_id, width, height);
 
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue("params")];
+    EncodableMap values = std::get<EncodableMap>(arguments);
+    EncodableValue value = values[EncodableValue("params")];
     ByteMessage byte_message;
     if (std::holds_alternative<ByteMessage>(value)) {
       byte_message = std::get<ByteMessage>(value);
@@ -146,7 +149,7 @@ void PlatformViewChannel::HandleMethodCall(
               engine_->text_input_channel->GetImfContext();
           view_instance->SetSoftwareKeyboardContext(context);
         }
-        result->Success(flutter::EncodableValue(view_instance->GetTextureId()));
+        result->Success(EncodableValue(view_instance->GetTextureId()));
       } else {
         result->Error("Can't create a webview instance!!");
       }
@@ -192,7 +195,7 @@ void PlatformViewChannel::HandleMethodCall(
         int type = 0, button = 0;
         double x = 0.0, y = 0.0, dx = 0.0, dy = 0.0;
 
-        flutter::EncodableList event;
+        EncodableList event;
         if (!GetValueFromEncodableMap(arguments, "event", &event) ||
             event.size() != 6) {
           result->Error("Invalid Arguments");
@@ -216,7 +219,7 @@ void PlatformViewChannel::HandleMethodCall(
 
           it->second->SetFocus(true);
           if (channel_ != nullptr) {
-            auto id = std::make_unique<flutter::EncodableValue>(view_id);
+            auto id = std::make_unique<EncodableValue>(view_id);
             channel_->InvokeMethod("viewFocused", std::move(id));
           }
         }
@@ -234,3 +237,5 @@ void PlatformViewChannel::HandleMethodCall(
     }
   }
 }
+
+}  // namespace flutter

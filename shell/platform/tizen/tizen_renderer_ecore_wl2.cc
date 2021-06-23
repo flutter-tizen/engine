@@ -9,6 +9,8 @@
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
+namespace flutter {
+
 TizenRendererEcoreWl2::TizenRendererEcoreWl2(TizenRenderer::Delegate& delegate)
     : TizenRenderer(delegate) {
   InitializeRenderer();
@@ -594,3 +596,5 @@ void TizenRendererEcoreWl2::SetPreferredOrientations(
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations.data(),
                                            rotations.size());
 }
+
+}  // namespace flutter

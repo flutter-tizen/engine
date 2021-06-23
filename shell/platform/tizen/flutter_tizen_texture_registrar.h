@@ -11,6 +11,8 @@
 
 #include "flutter/shell/platform/tizen/external_texture.h"
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 // An object managing the registration of an external texture.
@@ -49,5 +51,7 @@ class FlutterTizenTextureRegistrar {
   std::unordered_map<int64_t, std::shared_ptr<ExternalTexture>> textures_;
   std::mutex map_mutex_;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_FLUTTER_TIZEN_TEXTURE_REGISTRAR_H_

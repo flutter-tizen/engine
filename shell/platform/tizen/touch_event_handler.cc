@@ -7,8 +7,10 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static const int DIRECTION_VERTICAL = 0;
-static const int DIRECTION_HORIZONTAL = 1;
+static const int kScrollDirectionVertical = 0;
+static const int kScrollDirectionHorizontal = 1;
+
+namespace flutter {
 
 TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
     : engine_(engine) {
@@ -94,9 +96,9 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
     auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
     double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
-    if (wheel_event->direction == DIRECTION_VERTICAL) {
+    if (wheel_event->direction == kScrollDirectionVertical) {
       scroll_delta_y += wheel_event->z;
-    } else if (wheel_event->direction == DIRECTION_HORIZONTAL) {
+    } else if (wheel_event->direction == kScrollDirectionHorizontal) {
       scroll_delta_x += wheel_event->z;
     }
     const int kScrollOffsetMultiplier = 20;
@@ -108,3 +110,5 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   }
   return ECORE_CALLBACK_PASS_ON;
 }
+
+}  // namespace flutter

@@ -11,6 +11,8 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 class TouchEventHandler {
@@ -35,5 +37,7 @@ class TouchEventHandler {
 
   static Eina_Bool OnTouch(void* data, int type, void* event);
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TOUCH_EVENT_HANDLER_H_

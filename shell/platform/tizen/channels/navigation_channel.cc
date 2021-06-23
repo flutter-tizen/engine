@@ -6,17 +6,23 @@
 
 #include "flutter/shell/platform/common/json_method_codec.h"
 
-static constexpr char kChannelName[] = "flutter/navigation";
+namespace flutter {
 
-static constexpr char kSetInitialRouteMethod[] = "setInitialRoute";
-static constexpr char kPushRouteMethod[] = "pushRoute";
-static constexpr char kPopRouteMethod[] = "popRoute";
+namespace {
 
-NavigationChannel::NavigationChannel(flutter::BinaryMessenger* messenger)
-    : channel_(std::make_unique<flutter::MethodChannel<rapidjson::Document>>(
+constexpr char kChannelName[] = "flutter/navigation";
+
+constexpr char kSetInitialRouteMethod[] = "setInitialRoute";
+constexpr char kPushRouteMethod[] = "pushRoute";
+constexpr char kPopRouteMethod[] = "popRoute";
+
+}  // namespace
+
+NavigationChannel::NavigationChannel(BinaryMessenger* messenger)
+    : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
-          &flutter::JsonMethodCodec::GetInstance())) {}
+          &JsonMethodCodec::GetInstance())) {}
 
 NavigationChannel::~NavigationChannel() {}
 
@@ -41,3 +47,5 @@ void NavigationChannel::PushRoute(const std::string& route) {
 void NavigationChannel::PopRoute() {
   channel_->InvokeMethod(kPopRouteMethod, nullptr);
 }
+
+}  // namespace flutter

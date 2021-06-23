@@ -11,6 +11,8 @@
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 
+namespace flutter {
+
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
   explicit TizenRendererEcoreWl2(TizenRenderer::Delegate& delegate);
@@ -68,5 +70,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLContext egl_resource_context_ = EGL_NO_CONTEXT;
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_

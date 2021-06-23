@@ -17,6 +17,8 @@
 #include <GLES2/gl2.h>
 #endif
 
+namespace flutter {
+
 struct ExternalTextureGLState {
   GLuint gl_texture;
 };
@@ -45,5 +47,7 @@ class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
   std::unique_ptr<ExternalTextureGLState> state_;
   const long texture_id_{0};
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_EXTERNAL_TEXTURE_H_

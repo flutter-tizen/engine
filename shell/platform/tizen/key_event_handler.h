@@ -9,6 +9,8 @@
 
 #include <vector>
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 class KeyEventHandler {
@@ -22,5 +24,7 @@ class KeyEventHandler {
 
   static Eina_Bool OnKey(void* data, int type, void* event);
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_KEY_EVENT_HANDLER_H_

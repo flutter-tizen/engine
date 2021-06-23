@@ -10,6 +10,8 @@
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
+namespace flutter {
+
 class FlutterTizenEngine;
 
 class TizenVsyncWaiter {
@@ -38,5 +40,7 @@ class TizenVsyncWaiter {
   intptr_t baton_{0};
   Ecore_Thread* vblank_thread_{nullptr};
 };
+
+}  // namespace flutter
 
 #endif  // EMBEDDER_TIZEN_VSYNC_WAITER_H_
