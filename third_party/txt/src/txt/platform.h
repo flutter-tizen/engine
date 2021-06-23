@@ -17,8 +17,6 @@ std::vector<std::string> GetDefaultFontFamilies();
 
 sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data);
 
-sk_sp<SkFontMgr> GetFallbackFontManager(uint32_t font_initialization_data);
-
 }  // namespace txt
 
 #endif  // TXT_PLATFORM_H_

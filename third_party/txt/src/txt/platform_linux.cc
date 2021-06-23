@@ -13,84 +13,14 @@
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
-#ifdef FLUTTER_USE_FONTCONFIG
-  return {"TizenDefaultFont"};
-#else
-  return {
-      "SamsungOneUI",
-      "SamsungOneUIArabic",
-      "SamsungOneUIArmenian",
-      "SamsungOneUIBangla",
-      "SamsungOneUIDevanagari",
-      "SamsungOneUIEthiopic",
-      "SamsungOneUIFallback",
-      "SamsungOneUIGeorgian",
-      "SamsungOneUIGujarati",
-      "SamsungOneUIGurmukhi",
-      "SamsungOneUIHebrew",
-      "SamsungOneUIJP",
-      "SamsungOneUIKannada",
-      "SamsungOneUIKhmer",
-      "SamsungOneUIKorean",
-      "SamsungOneUIKoreanH",
-      "SamsungOneUILao",
-      "SamsungOneUIMalayalam",
-      "SamsungOneUIMyanmar",
-      "SamsungOneUIOdia",
-      "SamsungOneUIOlChiki",
-      "SamsungOneUISCN",
-      "SamsungOneUISinhala",
-      "SamsungOneUITCN",
-      "SamsungOneUITagalog",
-      "SamsungOneUITamil",
-      "SamsungOneUITelugu",
-      "SamsungOneUIThai",
-      "SamsungOneFallback",
-      "SECEmoji",
-      "BreezeSans",
-      "BreezeSansArabic",
-      "BreezeSansArmenian",
-      "BreezeSansBengali",
-      "BreezeSansChinese",
-      "BreezeSansEthiopic",
-      "BreezeSansGeorgian",
-      "BreezeSansGujarathi",
-      "BreezeSansHebrew",
-      "BreezeSansHindi",
-      "BreezeSansJapanese",
-      "BreezeSansKannada",
-      "BreezeSansKhmer",
-      "BreezeSansKorean",
-      "BreezeSansLao",
-      "BreezeSansMalayalam",
-      "BreezeSansMeeteiMayek",
-      "BreezeSansMyanmar",
-      "BreezeSansOriya",
-      "BreezeSansPunjabi",
-      "BreezeSansSinhala",
-      "BreezeSansTamilBreezeSansTamil",
-      "BreezeSansTelugu",
-      "BreezeSansThai",
-      "BreezeSansTibetan",
-      "BreezeSansFallback",
-      "BreezeColorEmoji",
-  };
-#endif
+  return {"TizenDefaultFont", "SamsungOneUI"};
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data) {
 #ifdef FLUTTER_USE_FONTCONFIG
   return SkFontMgr::RefDefault();
 #else
-  return SkFontMgr_New_Custom_Directory("/usr/share/fonts");
-#endif
-}
-
-sk_sp<SkFontMgr> GetFallbackFontManager(uint32_t font_initialization_data) {
-#ifdef FLUTTER_USE_FONTCONFIG
-  return nullptr;
-#else
-  return SkFontMgr_New_Custom_Directory("/usr/share/fallback_fonts");
+  return SkFontMgr_New_Custom_Directory("/usr/share/fonts/");
 #endif
 }
 
