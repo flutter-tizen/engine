@@ -404,31 +404,28 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
-bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
+bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
   bool handled = false;
 
-#ifdef TIZEN_RENDERER_EVAS_GL
-  // Hardware keyboard not supported when running in Evas GL mode.
-  bool isIME = true;
+#ifdef WEARABLE_PROFILE
+  // Hardware keyboard not supported on watches.
+  bool is_ime = true;
 #else
-  bool isIME = ecore_imf_context_keyboard_mode_get(imf_context_) ==
-               ECORE_IMF_INPUT_PANEL_SW_KEYBOARD_MODE;
+  bool is_ime = strcmp(ecore_device_name_get(event->dev), "ime") == 0;
 #endif
 
-  Ecore_IMF_Event_Key_Down ecoreKeyDownEvent;
-  ecoreKeyDownEvent.keyname = keyDownEvent->keyname;
-  ecoreKeyDownEvent.key = keyDownEvent->key;
-  ecoreKeyDownEvent.string = keyDownEvent->string;
-  ecoreKeyDownEvent.compose = keyDownEvent->compose;
-  ecoreKeyDownEvent.timestamp = keyDownEvent->timestamp;
-  ecoreKeyDownEvent.modifiers =
-      EcoreInputModifierToEcoreIMFModifier(keyDownEvent->modifiers);
-  ecoreKeyDownEvent.locks =
-      EcoreInputModifierToEcoreIMFLock(keyDownEvent->modifiers);
-  ecoreKeyDownEvent.dev_name = isIME ? "ime" : "";
-  ecoreKeyDownEvent.keycode = keyDownEvent->keycode;
+  Ecore_IMF_Event_Key_Down imf_event;
+  imf_event.keyname = event->keyname;
+  imf_event.key = event->key;
+  imf_event.string = event->string;
+  imf_event.compose = event->compose;
+  imf_event.timestamp = event->timestamp;
+  imf_event.modifiers = EcoreInputModifierToEcoreIMFModifier(event->modifiers);
+  imf_event.locks = EcoreInputModifierToEcoreIMFLock(event->modifiers);
+  imf_event.dev_name = is_ime ? "ime" : "";
+  imf_event.keycode = event->keycode;
 
-  if (isIME && strcmp(keyDownEvent->key, "Select") == 0) {
+  if (is_ime && strcmp(event->key, "Select") == 0) {
     if (engine_->device_profile == DeviceProfile::kWearable) {
       // FIXME: for wearable
       in_select_mode_ = true;
@@ -436,40 +433,32 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
     }
   }
 
-  if (isIME) {
-    if (!strcmp(keyDownEvent->key, "Left") ||
-        !strcmp(keyDownEvent->key, "Right") ||
-        !strcmp(keyDownEvent->key, "Up") ||
-        !strcmp(keyDownEvent->key, "Down") ||
-        !strcmp(keyDownEvent->key, "End") ||
-        !strcmp(keyDownEvent->key, "Home") ||
-        !strcmp(keyDownEvent->key, "BackSpace") ||
-        !strcmp(keyDownEvent->key, "Delete") ||
-        (!strcmp(keyDownEvent->key, "Select") && !in_select_mode_)) {
+  if (is_ime) {
+    if (!strcmp(event->key, "Left") || !strcmp(event->key, "Right") ||
+        !strcmp(event->key, "Up") || !strcmp(event->key, "Down") ||
+        !strcmp(event->key, "End") || !strcmp(event->key, "Home") ||
+        !strcmp(event->key, "BackSpace") || !strcmp(event->key, "Delete") ||
+        (!strcmp(event->key, "Select") && !in_select_mode_)) {
       // Force redirect to fallback!(especially on TV)
       // If you don't do this, it affects the input panel.
       // For example, when the left key of the input panel is pressed, the focus
       // of the input panel is shifted to left!
       // What we want is to move only the cursor on the text editor.
       ResetCurrentContext();
-      FT_LOGW("Force redirect IME key-event[%s] to fallback",
-              keyDownEvent->keyname);
+      FT_LOGW("Force redirect IME key-event[%s] to fallback", event->keyname);
       return false;
     }
   }
 
   handled = ecore_imf_context_filter_event(
       imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
-      reinterpret_cast<Ecore_IMF_Event*>(&ecoreKeyDownEvent));
+      reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
 
   if (handled) {
-    last_handled_ecore_event_keyname_ = keyDownEvent->keyname;
+    last_handled_ecore_event_keyname_ = event->keyname;
   }
 
-  FT_LOGI("The %skey-event[%s] are%s filtered", isIME ? "IME " : "",
-          keyDownEvent->keyname, handled ? "" : " not");
-
-  if (!handled && !strcmp(keyDownEvent->key, "Return") && in_select_mode_ &&
+  if (!handled && !strcmp(event->key, "Return") && in_select_mode_ &&
       engine_->device_profile == DeviceProfile::kWearable) {
     in_select_mode_ = false;
     handled = true;
@@ -479,61 +468,58 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* keyDownEvent) {
   return handled;
 }
 
-void TextInputChannel::NonIMFFallback(Ecore_Event_Key* keyDownEvent) {
-  FT_LOGI("NonIMFFallback key name [%s]", keyDownEvent->keyname);
-
+void TextInputChannel::NonIMFFallback(Ecore_Event_Key* event) {
   // For mobile, fix me!
   if (engine_->device_profile == DeviceProfile::kMobile &&
       edit_status_ == EditStatus::kPreeditEnd) {
     SetEditStatus(EditStatus::kNone);
-    FT_LOGW("Ignore key-event[%s]!", keyDownEvent->keyname);
+    FT_LOGW("Ignore key-event[%s]!", event->keyname);
     return;
   }
 
-  bool select = !strcmp(keyDownEvent->key, "Select");
+  bool select = !strcmp(event->key, "Select");
   bool is_filtered = true;
-  if (!strcmp(keyDownEvent->key, "Left")) {
+  if (!strcmp(event->key, "Left")) {
     if (active_model_ && active_model_->MoveCursorBack()) {
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "Right")) {
+  } else if (!strcmp(event->key, "Right")) {
     if (active_model_ && active_model_->MoveCursorForward()) {
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "End")) {
+  } else if (!strcmp(event->key, "End")) {
     if (active_model_) {
       active_model_->MoveCursorToEnd();
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "Home")) {
+  } else if (!strcmp(event->key, "Home")) {
     if (active_model_) {
       active_model_->MoveCursorToBeginning();
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "BackSpace")) {
+  } else if (!strcmp(event->key, "BackSpace")) {
     if (active_model_ && active_model_->Backspace()) {
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "Delete")) {
+  } else if (!strcmp(event->key, "Delete")) {
     if (active_model_ && active_model_->Delete()) {
       SendStateUpdate(*active_model_);
     }
-  } else if (!strcmp(keyDownEvent->key, "Return") ||
-             (select && !in_select_mode_)) {
+  } else if (!strcmp(event->key, "Return") || (select && !in_select_mode_)) {
     if (active_model_) {
       EnterPressed(active_model_.get(), select);
     }
-  } else if (keyDownEvent->string && strlen(keyDownEvent->string) == 1 &&
-             IsASCIIPrintableKey(keyDownEvent->string[0])) {
+  } else if (event->string && strlen(event->string) == 1 &&
+             IsASCIIPrintableKey(event->string[0])) {
     if (active_model_) {
-      active_model_->AddCodePoint(keyDownEvent->string[0]);
+      active_model_->AddCodePoint(event->string[0]);
       SendStateUpdate(*active_model_);
     }
   } else {
     is_filtered = false;
   }
   if (!active_model_ && is_filtered) {
-    engine_->platform_view_channel->SendKeyEvent(keyDownEvent, true);
+    engine_->platform_view_channel->SendKeyEvent(event, true);
   }
   SetEditStatus(EditStatus::kNone);
 }

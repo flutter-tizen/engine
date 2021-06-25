@@ -58,8 +58,8 @@ class TextInputChannel {
       const MethodCall<rapidjson::Document>& method_call,
       std::unique_ptr<MethodResult<rapidjson::Document>> result);
   void SendStateUpdate(const TextInputModel& model);
-  bool FilterEvent(Ecore_Event_Key* keyDownEvent);
-  void NonIMFFallback(Ecore_Event_Key* keyDownEvent);
+  bool FilterEvent(Ecore_Event_Key* event);
+  void NonIMFFallback(Ecore_Event_Key* event);
   void EnterPressed(TextInputModel* model, bool select);
   void RegisterIMFCallback();
   void UnregisterIMFCallback();
