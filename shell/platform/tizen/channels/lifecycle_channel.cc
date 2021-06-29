@@ -4,7 +4,7 @@
 
 #include "lifecycle_channel.h"
 
-#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
+#include "flutter/shell/platform/tizen/channels/string_codec.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 namespace flutter {
@@ -20,35 +20,32 @@ constexpr char kDetached[] = "AppLifecycleState.detached";
 
 }  // namespace
 
-LifecycleChannel::LifecycleChannel(FlutterTizenEngine* engine)
-    : engine_(engine) {}
+LifecycleChannel::LifecycleChannel(BinaryMessenger* messenger)
+    : channel_(std::make_unique<BasicMessageChannel<EncodableValue>>(
+          messenger,
+          kChannelName,
+          &StringCodec::GetInstance())) {}
 
 LifecycleChannel::~LifecycleChannel() {}
 
-void LifecycleChannel::SendLifecycleMessage(const char message[]) {
-  engine_->SendPlatformMessage(kChannelName,
-                               reinterpret_cast<const uint8_t*>(message),
-                               strlen(message), nullptr, nullptr);
-}
-
 void LifecycleChannel::AppIsInactive() {
-  FT_LOGI("send app lifecycle state inactive.");
-  SendLifecycleMessage(kInactive);
+  FT_LOGI("Sending %s message.", kInactive);
+  channel_->Send(EncodableValue(kInactive));
 }
 
 void LifecycleChannel::AppIsResumed() {
-  FT_LOGI("send app lifecycle state resumed.");
-  SendLifecycleMessage(kResumed);
+  FT_LOGI("Sending %s message.", kResumed);
+  channel_->Send(EncodableValue(kResumed));
 }
 
 void LifecycleChannel::AppIsPaused() {
-  FT_LOGI("send app lifecycle state paused.");
-  SendLifecycleMessage(kPaused);
+  FT_LOGI("Sending %s message.", kPaused);
+  channel_->Send(EncodableValue(kPaused));
 }
 
 void LifecycleChannel::AppIsDetached() {
-  FT_LOGI("send app lifecycle state detached.");
-  SendLifecycleMessage(kDetached);
+  FT_LOGI("Sending %s message.", kDetached);
+  channel_->Send(EncodableValue(kDetached));
 }
 
 }  // namespace flutter
