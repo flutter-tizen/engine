@@ -19,7 +19,6 @@ jobs:
       gclient sync -f -D
       sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
       sed -i 's/"-Wno-psabi",//g' build/config/compiler/BUILD.gn
-      sed -i 's/defined(__ELF__) && defined(__GNUC__)/0/g' third_party/boringssl/src/crypto/mem.c
     displayName: Run gclient sync
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
