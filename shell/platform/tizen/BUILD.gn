@@ -39,9 +39,7 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/base",
     "$custom_sysroot/usr/include/dlog",
     "$custom_sysroot/usr/include/ecore-1",
-    "$custom_sysroot/usr/include/ecore-evas-1",
     "$custom_sysroot/usr/include/ecore-imf-1",
-    "$custom_sysroot/usr/include/ecore-imf-evas-1",
     "$custom_sysroot/usr/include/ecore-input-1",
     "$custom_sysroot/usr/include/ecore-wayland-1",
     "$custom_sysroot/usr/include/ecore-wl2-1",
@@ -50,13 +48,15 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/eina-1/eina",
     "$custom_sysroot/usr/include/emile-1",
     "$custom_sysroot/usr/include/eo-1",
-    "$custom_sysroot/usr/include/evas-1",
     "$custom_sysroot/usr/include/feedback",
     "$custom_sysroot/usr/include/system",
     "$custom_sysroot/usr/include/wayland-extension",
+  ]
 
-    # For Evas_GL.
+  # Contain headers that the Evas_GL renderer depends on.
+  include_dirs += [
     "$custom_sysroot/usr/include/ecore-con-1",
+    "$custom_sysroot/usr/include/ecore-evas-1",
     "$custom_sysroot/usr/include/ecore-file-1",
     "$custom_sysroot/usr/include/edje-1",
     "$custom_sysroot/usr/include/eet-1",
@@ -65,6 +65,7 @@ config("tizen_rootstrap_include_dirs") {
     "$custom_sysroot/usr/include/elementary-1",
     "$custom_sysroot/usr/include/ethumb-1",
     "$custom_sysroot/usr/include/ethumb-client-1",
+    "$custom_sysroot/usr/include/evas-1",
   ]
 
   lib_dirs = [ "$custom_sysroot/usr/lib" ]
@@ -117,7 +118,6 @@ template("embedder_for_profile") {
       "ecore_imf",
       "ecore_input",
       "eina",
-      "evas",
       "EGL",
       "feedback",
       "GLESv2",
@@ -134,6 +134,7 @@ template("embedder_for_profile") {
       libs += [
         "ecore_evas",
         "elementary",
+        "evas",
       ]
 
       defines += [ "TIZEN_RENDERER_EVAS_GL" ]
