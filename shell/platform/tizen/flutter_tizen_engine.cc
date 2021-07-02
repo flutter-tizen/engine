@@ -5,43 +5,35 @@
 
 #include "flutter_tizen_engine.h"
 
-#include <system_info.h>
-
 #include <filesystem>
 #include <string>
 #include <vector>
 
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-// Unique number associated with platform tasks.
-static constexpr size_t kPlatformTaskRunnerIdentifier = 1;
-#ifdef TIZEN_RENDERER_EVAS_GL
-static constexpr size_t kRenderTaskRunnerIdentifier = 2;
-#endif
-
 namespace flutter {
 
-static DeviceProfile GetDeviceProfile() {
-  char* feature_profile;
-  system_info_get_platform_string("http://tizen.org/feature/profile",
-                                  &feature_profile);
-  std::string profile(feature_profile);
-  free(feature_profile);
+namespace {
 
-  if (profile == "mobile") {
-    return DeviceProfile::kMobile;
-  } else if (profile == "wearable") {
-    return DeviceProfile::kWearable;
-  } else if (profile == "tv") {
-    return DeviceProfile::kTV;
-  } else if (profile == "common") {
-    return DeviceProfile::kCommon;
-  }
-  return DeviceProfile::kUnknown;
-}
+// Unique number associated with platform tasks.
+constexpr size_t kPlatformTaskRunnerIdentifier = 1;
+#ifdef TIZEN_RENDERER_EVAS_GL
+constexpr size_t kRenderTaskRunnerIdentifier = 2;
+#endif
 
-FlutterTizenEngine::FlutterTizenEngine(bool headed)
-    : device_profile(GetDeviceProfile()) {
+#if defined(MOBILE_PROFILE)
+constexpr double kProfileFactor = 0.7;
+#elif defined(WEARABLE_PROFILE)
+constexpr double kProfileFactor = 0.4;
+#elif defined(TV_PROFILE)
+constexpr double kProfileFactor = 2.0;
+#else
+constexpr double kProfileFactor = 1.0;
+#endif
+
+}  // namespace
+
+FlutterTizenEngine::FlutterTizenEngine(bool headed) {
   embedder_api_.struct_size = sizeof(FlutterEngineProcTable);
   FlutterEngineGetProcAddresses(&embedder_api_);
 
@@ -342,19 +334,12 @@ void FlutterTizenEngine::SendWindowMetrics(int32_t width,
     // The scale factor is computed based on the display DPI and the current
     // profile. A fixed DPI value (72) is used on TVs. See:
     // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
+#ifdef TV_PROFILE
     double dpi = 72.0;
-    if (renderer && device_profile != DeviceProfile::kTV) {
-      dpi = static_cast<double>(renderer->GetDpi());
-    }
-    double profile_factor = 1.0;
-    if (device_profile == DeviceProfile::kWearable) {
-      profile_factor = 0.4;
-    } else if (device_profile == DeviceProfile::kMobile) {
-      profile_factor = 0.7;
-    } else if (device_profile == DeviceProfile::kTV) {
-      profile_factor = 2.0;
-    }
-    double scale_factor = dpi / 90.0 * profile_factor;
+#else
+    double dpi = static_cast<double>(renderer->GetDpi());
+#endif
+    double scale_factor = dpi / 90.0 * kProfileFactor;
     event.pixel_ratio = std::max(scale_factor, 1.0);
   } else {
     event.pixel_ratio = pixel_ratio;

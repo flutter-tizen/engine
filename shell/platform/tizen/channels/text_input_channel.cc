@@ -424,13 +424,13 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
   imf_event.dev_name = is_ime ? "ime" : "";
   imf_event.keycode = event->keycode;
 
+#ifdef WEARABLE_PROFILE
+  // FIXME: Only for wearable.
   if (is_ime && strcmp(event->key, "Select") == 0) {
-    if (engine_->device_profile == DeviceProfile::kWearable) {
-      // FIXME: for wearable
-      in_select_mode_ = true;
-      FT_LOGI("Set select mode[true]");
-    }
+    in_select_mode_ = true;
+    FT_LOGI("Set select mode[true]");
   }
+#endif
 
   if (is_ime) {
     if (!strcmp(event->key, "Left") || !strcmp(event->key, "Right") ||
@@ -457,24 +457,26 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
     last_handled_ecore_event_keyname_ = event->keyname;
   }
 
-  if (!handled && !strcmp(event->key, "Return") && in_select_mode_ &&
-      engine_->device_profile == DeviceProfile::kWearable) {
+#ifdef WEARABLE_PROFILE
+  if (!handled && !strcmp(event->key, "Return") && in_select_mode_) {
     in_select_mode_ = false;
     handled = true;
     FT_LOGI("Set select mode[false]");
   }
+#endif
 
   return handled;
 }
 
 void TextInputChannel::NonIMFFallback(Ecore_Event_Key* event) {
-  // For mobile, fix me!
-  if (engine_->device_profile == DeviceProfile::kMobile &&
-      edit_status_ == EditStatus::kPreeditEnd) {
+#ifdef MOBILE_PROFILE
+  // FIXME: Only for mobile.
+  if (edit_status_ == EditStatus::kPreeditEnd) {
     SetEditStatus(EditStatus::kNone);
     FT_LOGW("Ignore key-event[%s]!", event->keyname);
     return;
   }
+#endif
 
   bool select = !strcmp(event->key, "Select");
   bool is_filtered = true;

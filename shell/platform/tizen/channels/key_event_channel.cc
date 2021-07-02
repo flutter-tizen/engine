@@ -258,8 +258,8 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
   channel_->Send(event, [callback = std::move(callback)](const uint8_t* reply,
                                                          size_t reply_size) {
     if (reply != nullptr) {
-      auto decoded = flutter::JsonMessageCodec::GetInstance().DecodeMessage(
-          reply, reply_size);
+      auto decoded =
+          JsonMessageCodec::GetInstance().DecodeMessage(reply, reply_size);
       bool handled = (*decoded)[kHandledKey].GetBool();
       callback(handled);
     }

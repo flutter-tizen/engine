@@ -111,7 +111,6 @@ template("embedder_for_profile") {
       "base-utils-i18n",
       "capi-appfw-application",
       "capi-base-common",
-      "capi-system-info",
       "capi-system-system-settings",
       "dlog",
       "ecore",

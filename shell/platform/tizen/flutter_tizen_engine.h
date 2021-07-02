@@ -56,8 +56,6 @@ struct AOTDataDeleter {
 
 using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
 
-enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
-
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
@@ -139,8 +137,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   std::unique_ptr<SettingsChannel> settings_channel;
   std::unique_ptr<TextInputChannel> text_input_channel;
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
-
-  const DeviceProfile device_profile;
 
  private:
   bool IsHeaded() { return renderer != nullptr; }
