@@ -84,9 +84,9 @@ jobs:
       OUTDIR=$(Build.StagingDirectory)
       cp out/linux_$(mode)_$(arch)/libflutter_*.so $OUTDIR
       if [[ $(System.JobName) == "tizen-arm-release" ]]; then
-        mkdir $OUTDIR/common
-        cp -r out/linux_$(mode)_$(arch)/{cpp_client_wrapper,icu,public} $OUTDIR/common
-        rm $OUTDIR/common/cpp_client_wrapper/engine_method_result.cc
+        mkdir $OUTDIR/tizen-common
+        cp -r out/linux_$(mode)_$(arch)/{cpp_client_wrapper,icu,public} $OUTDIR/tizen-common
+        rm $OUTDIR/tizen-common/cpp_client_wrapper/engine_method_result.cc
       fi
     displayName: Copy artifacts
     workingDirectory: $(Pipeline.Workspace)/src
@@ -100,25 +100,16 @@ jobs:
     demands: agent.os -equals Linux
   workspace:
     clean: outputs
-  variables:
-  - name: upstreamVersion
-    value: 0fdb562ac8068ce3dda6b69aca3f355f4d1d2718
   steps:
   - checkout: self
     path: src/flutter
   - download: current
   - bash: |
-      mv $(Pipeline.Workspace)/tizen-arm-release/common .
+      mv $(Pipeline.Workspace)/tizen-arm-release/tizen-common .
       mv $(Pipeline.Workspace)/tizen-* .
-      for platform in linux windows darwin; do
-        for arch in arm arm64; do
-          for mode in release profile; do
-            curl -o tmp.zip https://storage.googleapis.com/flutter_infra/flutter/$(upstreamVersion)/android-$arch-$mode/$platform-x64.zip 2> /dev/null
-            unzip tmp.zip -d tizen-$arch-$mode/$platform-x64 && rm tmp.zip
-          done
-          zip -r $(Build.StagingDirectory)/$platform-x64.zip *
-          rm -r tizen-$arch-*/$platform-x64
-        done
+      for x in $(ls -d1 tizen-*); do
+        echo "Archiving $x.zip..."
+        (cd $x; zip -rq $(Build.StagingDirectory)/$x.zip *)
       done
     displayName: Create releases
     workingDirectory: $(Build.BinariesDirectory)
