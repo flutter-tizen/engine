@@ -6,13 +6,7 @@
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-
-#ifdef __X64_SHELL__
-#include "tizen_evas_gl_helper.h"
-#else
 #include <Evas_GL_GLES3_Helpers.h>
-#endif
-
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES3_DECLARE();
 #else
