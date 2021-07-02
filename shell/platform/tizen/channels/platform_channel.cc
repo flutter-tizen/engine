@@ -4,65 +4,8 @@
 
 #include "platform_channel.h"
 
-#ifndef __X64_SHELL__
 #include <app.h>
 #include <feedback.h>
-#else
-
-namespace {
-
-typedef enum {
-  FEEDBACK_PATTERN_NONE = -1,
-  FEEDBACK_PATTERN_TAP = 0, /**< Feedback pattern when general touch */
-  FEEDBACK_PATTERN_SIP,     /**< Feedback pattern when touch text key */
-  FEEDBACK_PATTERN_GENERAL =
-      33, /**< Feedback pattern when alert general event */
-  FEEDBACK_PATTERN_VIBRATION_ON =
-      55, /**< Feedback pattern when turn on vibration mode */
-  FEEDBACK_PATTERN_SILENT_OFF, /**< Feedback pattern when turn off silent mode
-                                */
-} feedback_pattern_e;
-
-typedef enum {
-  FEEDBACK_TYPE_NONE,  /**< Feedback type none */
-  FEEDBACK_TYPE_SOUND, /**< Feedback type for sound */
-
-  FEEDBACK_TYPE_VIBRATION, /**< Feedback type for vibration */
-  FEEDBACK_TYPE_END,
-} feedback_type_e;
-
-typedef enum {
-  FEEDBACK_ERROR_NONE,             /**< Successful */
-  FEEDBACK_ERROR_OPERATION_FAILED, /**< Operation failed */
-
-  FEEDBACK_ERROR_INVALID_PARAMETER, /**< Invalid parameter */
-  FEEDBACK_ERROR_NOT_SUPPORTED,     /**< Not supported in this device */
-  FEEDBACK_ERROR_PERMISSION_DENIED, /**< Permission denied */
-  FEEDBACK_ERROR_NOT_INITIALIZED,   /**< Not initialized */
-} feedback_error_e;
-
-int feedback_initialize(void) {
-  return 0;
-}
-
-int feedback_play_type(feedback_type_e type, feedback_pattern_e pattern) {
-  return 0;
-}
-
-int feedback_deinitialize(void) {
-  return 0;
-}
-
-void ui_app_exit(void) {
-  exit(0);
-}
-
-char* get_error_message(int err_code) {
-  return (char*)"NOT SUPPORTED";
-}
-
-};  // namespace
-#endif
 
 #include <map>
 

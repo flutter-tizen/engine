@@ -29,9 +29,7 @@ source_set("flutter_engine") {
 _flutter_tizen_source = [
   "channels/key_event_channel.cc",
   "channels/lifecycle_channel.cc",
-  "channels/localization_channel.cc",
   "channels/navigation_channel.cc",
-  "channels/platform_channel.cc",
   "channels/platform_view_channel.cc",
   "channels/settings_channel.cc",
   "channels/text_input_channel.cc",
@@ -130,6 +128,10 @@ template("embedder_for_profile") {
     public = _public_headers
 
     sources = _flutter_tizen_source
+    sources += [
+      "channels/localization_channel.cc",
+      "channels/platform_channel.cc",
+    ]
 
     libs = _libs_minimum
 
@@ -236,8 +238,11 @@ template("embedder_executable") {
     public = _public_headers
 
     sources = _flutter_tizen_source
-
-    sources += [ "tizen_renderer_evas_gl.cc" ]
+    sources += [
+      "channels/localization_channel_stub.cc",
+      "channels/platform_channel_stub.cc",
+      "tizen_renderer_evas_gl.cc",
+    ]
 
     if (defined(invoker.sources)) {
       sources += invoker.sources
@@ -336,14 +341,19 @@ copy("copy_icu") {
 group("tizen") {
   deps = [
     ":copy_icu",
-    ":flutter_tizen_common",
-    ":flutter_tizen_mobile",
-    ":flutter_tizen_tv",
-    ":flutter_tizen_wearable",
     ":publish_cpp_client_wrapper",
     ":publish_headers_tizen",
   ]
   if (enable_desktop_embeddings) {
-    deps += [ ":flutter_tizen_shell" ]
+    deps += [
+      ":flutter_tizen_shell",
+    ]
+  } else {
+    deps += [
+      ":flutter_tizen_common",
+      ":flutter_tizen_mobile",
+      ":flutter_tizen_tv",
+      ":flutter_tizen_wearable",
+    ]
   }
 }
