@@ -72,4 +72,5 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
 };
 
 }  // namespace flutter
+
 #endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_

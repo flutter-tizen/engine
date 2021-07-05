@@ -13,7 +13,6 @@
 #define DLOG_WARN 1
 #define DLOG_INFO 2
 #define DLOG_ERROR 3
-#define __MODULE__ "X64_SHELL"
 int dlog_print(log_priority prio, const char* tag, const char* fmt, ...);
 #endif
 
@@ -35,6 +34,10 @@ log_priority GetMinLoggingLevel();
 #endif
 // This is the only valid log tag that TV devices can understand.
 #define LOG_TAG "ConsoleMessage"
+
+#ifndef __MODULE__
+#define __MODULE__ strrchr("/" __FILE__, '/') + 1
+#endif
 
 #undef __LOG
 

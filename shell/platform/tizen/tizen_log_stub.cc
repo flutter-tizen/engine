@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tizen_log.h"
 #include <stdio.h>
+#include "tizen_log.h"
 
 int dlog_print(log_priority prio, const char* tag, const char* fmt, ...) {
   va_list arglist;
@@ -15,14 +15,12 @@ int dlog_print(log_priority prio, const char* tag, const char* fmt, ...) {
 
 namespace flutter {
 
-void SetMinLoggingLevel(log_priority p) {
-};
+void SetMinLoggingLevel(log_priority p){};
 
 log_priority GetMinLoggingLevel() {
   return DLOG_ERROR;
 };
 
-void StartLogging() {
-}
+void StartLogging() {}
 
 }  // namespace flutter

@@ -42,4 +42,5 @@ class TizenVsyncWaiter {
 };
 
 }  // namespace flutter
+
 #endif  // EMBEDDER_TIZEN_VSYNC_WAITER_H_

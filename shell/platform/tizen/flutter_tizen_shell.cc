@@ -50,8 +50,7 @@ class FlutterApp {
     engine_prop.aot_library_path = aot_lib_path.c_str();
     engine_prop.switches = switches.data();
     engine_prop.switches_count = switches.size();
-    engine_ = reinterpret_cast<flutter::FlutterTizenEngine*>(
-        FlutterDesktopRunEngine(engine_prop, true));
+    engine_ = FlutterDesktopRunEngine(engine_prop, true);
 
     if (!engine_) {
       printf("Could not launch a Flutter application.\n");
@@ -60,18 +59,16 @@ class FlutterApp {
     // RegisterPlugins(this);
     return true;
   }
-  void OnResume() {}
-  void OnPause() {}
+
   void OnTerminate() {
     printf("Shutting down the application...");
 
-    FlutterDesktopShutdownEngine(
-        reinterpret_cast<FlutterDesktopEngineRef>(engine_));
-    delete engine_;
+    FlutterDesktopShutdownEngine(engine_);
     engine_ = nullptr;
 
     ecore_shutdown();
   }
+
   int Run(int argc, char** argv) {
     ecore_init();
     elm_init(0, 0);
@@ -96,22 +93,21 @@ class FlutterApp {
         },
         this);
     ecore_main_loop_begin();
+    OnTerminate();
     return 0;
   }
 
   FlutterDesktopPluginRegistrarRef GetRegistrarForPlugin(
       const std::string& plugin_name) {
     if (engine_) {
-      return FlutterDesktopGetPluginRegistrar(
-          reinterpret_cast<FlutterDesktopEngineRef>(engine_),
-          plugin_name.c_str());
+      return FlutterDesktopGetPluginRegistrar(engine_, plugin_name.c_str());
     }
     return nullptr;
   }
 
  private:
   std::string app_path_ = {};
-  flutter::FlutterTizenEngine* engine_ = nullptr;
+  FlutterDesktopEngineRef engine_ = nullptr;
 };
 
 int main(int argc, char* argv[]) {

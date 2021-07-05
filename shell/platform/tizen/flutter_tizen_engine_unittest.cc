@@ -9,7 +9,12 @@
 namespace flutter {
 namespace testing {
 
-TEST(FlutterTizenEngineTestSimple, Create_Headless) {
+class FlutterTizenEngineTestSimple : public ::testing::Test {
+ protected:
+  void SetUp() { ecore_init(); }
+};
+
+TEST_F(FlutterTizenEngineTestSimple, Create_Headless) {
   flutter::FlutterTizenEngine* tizen_engine =
       new flutter::FlutterTizenEngine(false);
   EXPECT_TRUE(tizen_engine != nullptr);
@@ -17,7 +22,7 @@ TEST(FlutterTizenEngineTestSimple, Create_Headless) {
 }
 
 // TODO
-TEST(FlutterTizenEngineTestSimple, DISABLED_Create_Headed) {
+TEST_F(FlutterTizenEngineTestSimple, DISABLED_Create_Headed) {
   flutter::FlutterTizenEngine* tizen_engine =
       new flutter::FlutterTizenEngine(true);
   EXPECT_TRUE(tizen_engine != nullptr);
@@ -27,6 +32,8 @@ TEST(FlutterTizenEngineTestSimple, DISABLED_Create_Headed) {
 class FlutterTizenEngineTest : public ::testing::Test {
  public:
   FlutterTizenEngineTest() {
+    ecore_init();
+
     std::string tpk_root;
     char path[256];
     EXPECT_TRUE(getcwd(path, sizeof(path)) != NULL);
@@ -37,9 +44,6 @@ class FlutterTizenEngineTest : public ::testing::Test {
     aot_lib_path_ = tpk_root + "/lib/libapp.so";
 
     switches_.push_back("--disable-observatory");
-    // switches_.push_back("--verbose-logging");
-    // switches_.push_back("--enable-dart-profiling");
-    // switches_.push_back("--enable-checked-mode");
   }
 
  protected:
