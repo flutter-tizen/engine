@@ -14,16 +14,6 @@ static pthread_t stderr_thread;
 static bool is_running = false;
 static log_priority min_log_priority = DLOG_ERROR;
 
-#ifdef __X64_SHELL__
-int dlog_print(log_priority prio, const char* tag, const char* fmt, ...) {
-  va_list arglist;
-  va_start(arglist, fmt);
-  printf(fmt, arglist);
-  va_end(arglist);
-  return 0;
-}
-#endif
-
 namespace flutter {
 
 void SetMinLoggingLevel(log_priority p) {

@@ -10,4 +10,9 @@ SettingsChannel::SettingsChannel(BinaryMessenger* messenger) {}
 
 SettingsChannel::~SettingsChannel() {}
 
+void SettingsChannel::SendSettingsEvent() {}
+
+void SettingsChannel::OnSettingsChangedCallback(system_settings_key_e key,
+                                                void* user_data) {}
+
 }  // namespace flutter
