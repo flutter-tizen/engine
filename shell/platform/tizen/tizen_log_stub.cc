@@ -8,8 +8,9 @@
 int dlog_print(log_priority prio, const char* tag, const char* fmt, ...) {
   va_list arglist;
   va_start(arglist, fmt);
-  printf(fmt, arglist);
+  vprintf(fmt, arglist);
   va_end(arglist);
+  printf("\n");
   return 0;
 }
 
