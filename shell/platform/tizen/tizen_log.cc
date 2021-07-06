@@ -70,5 +70,4 @@ void StartLogging() {
   }
   is_running = true;
 }
-
 }  // namespace flutter

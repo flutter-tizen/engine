@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
+#include "flutter_tizen_texture_registrar.h"
 
 #include <iostream>
 #include <mutex>
 
+#ifndef __X64_SHELL__
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
 #include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
+#endif
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
@@ -88,6 +90,10 @@ bool FlutterTizenTextureRegistrar::PopulateTexture(
 std::unique_ptr<ExternalTexture>
 FlutterTizenTextureRegistrar::CreateExternalTexture(
     const FlutterDesktopTextureInfo* texture_info) {
+#ifdef __X64_SHELL__
+  FT_UNIMPLEMENTED();
+  return nullptr;
+#else
   switch (texture_info->type) {
     case kFlutterDesktopPixelBufferTexture:
       return std::make_unique<ExternalTexturePixelGL>(
@@ -104,6 +110,7 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
       FT_LOGE("Invalid texture type.");
       return nullptr;
   }
+#endif
 }
 
 }  // namespace flutter

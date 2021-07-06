@@ -5,6 +5,10 @@
 #ifndef EMBEDDER_KEY_EVENT_HANDLER_H_
 #define EMBEDDER_KEY_EVENT_HANDLER_H_
 
+#ifdef __X64_SHELL__
+#include <Efl_Core.h>
+#endif
+
 #include <Ecore_Input.h>
 
 #include <vector>

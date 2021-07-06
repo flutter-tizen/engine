@@ -4,7 +4,18 @@
 
 #include "key_event_handler.h"
 
+#ifndef __X64_SHELL__
 #include <app.h>
+#else
+
+namespace {
+
+void ui_app_exit(void) {
+  exit(0);
+}
+
+};  // namespace
+#endif
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"

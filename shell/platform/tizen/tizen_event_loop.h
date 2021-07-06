@@ -72,6 +72,7 @@ class TizenEventLoop {
   TizenEventLoop& operator=(const TizenEventLoop&) = delete;
 
   static void ExcuteTaskEvents(void* data, void* buffer, unsigned int nbyte);
+
   static Eina_Bool TaskTimerCallback(void* data);
 
   static TaskTimePoint TimePointFromFlutterTime(

@@ -4,7 +4,13 @@
 
 #include "tizen_renderer_evas_gl.h"
 
+#ifdef __X64_SHELL__
+#include "tizen_evas_gl_helper.h"
+int gApp_width = 800;
+int gApp_height = 600;
+#else
 #include <Evas_GL_GLES3_Helpers.h>
+#endif
 Evas_GL* g_evas_gl = nullptr;
 EVAS_GL_GLOBAL_GLES3_DEFINE();
 
@@ -601,11 +607,12 @@ bool TizenRendererEvasGL::SetupEvasGL() {
   gl_config_->depth_bits = EVAS_GL_DEPTH_NONE;
   gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
 
+#ifndef __X64_SHELL__
   gl_context_ =
       evas_gl_context_version_create(evas_gl_, NULL, EVAS_GL_GLES_3_X);
   gl_resource_context_ =
       evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
-
+#endif
   if (gl_context_ == nullptr) {
     FT_LOGW(
         "Failed to create evas gl context with EVAS_GL_GLES_3_X, try to use "
@@ -647,6 +654,10 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
     return nullptr;
   }
 
+#ifdef __X64_SHELL__
+  width = gApp_width;
+  height = gApp_height;
+#endif
   elm_win_alpha_set(evas_window_, EINA_FALSE);
   evas_object_move(evas_window_, 0, 0);
   evas_object_resize(evas_window_, width, height);

@@ -13,11 +13,10 @@ group("platform") {
     deps = [ "android" ]
   } else if (is_linux) {
     deps = []
-    if (enable_desktop_embeddings) {
-      deps += [ "linux" ]
-    }
     if (build_tizen_shell) {
       deps += [ "tizen" ]
+    } else if (enable_desktop_embeddings) {
+      deps += [ "linux" ]
     }
   } else if (is_win) {
     deps = []

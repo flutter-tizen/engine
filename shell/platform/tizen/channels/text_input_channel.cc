@@ -409,6 +409,8 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
 #ifdef WEARABLE_PROFILE
   // Hardware keyboard not supported on watches.
   bool is_ime = true;
+#elif __X64_SHELL__
+  bool is_ime = false;
 #else
   bool is_ime = strcmp(ecore_device_name_get(event->dev), "ime") == 0;
 #endif

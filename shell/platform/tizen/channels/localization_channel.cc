@@ -5,6 +5,7 @@
 #include "localization_channel.h"
 
 #include <utils_i18n.h>
+
 #include <vector>
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
