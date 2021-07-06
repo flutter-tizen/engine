@@ -9,9 +9,14 @@
 namespace flutter {
 namespace testing {
 
+void efl_init() {
+  ecore_init();
+  elm_init(0, 0);
+}
+
 class FlutterTizenEngineTestSimple : public ::testing::Test {
  protected:
-  void SetUp() { ecore_init(); }
+  void SetUp() { efl_init(); }
 };
 
 TEST_F(FlutterTizenEngineTestSimple, Create_Headless) {
@@ -21,8 +26,7 @@ TEST_F(FlutterTizenEngineTestSimple, Create_Headless) {
   delete tizen_engine;
 }
 
-// TODO
-TEST_F(FlutterTizenEngineTestSimple, DISABLED_Create_Headed) {
+TEST_F(FlutterTizenEngineTestSimple, Create_Headed) {
   flutter::FlutterTizenEngine* tizen_engine =
       new flutter::FlutterTizenEngine(true);
   EXPECT_TRUE(tizen_engine != nullptr);
@@ -32,7 +36,7 @@ TEST_F(FlutterTizenEngineTestSimple, DISABLED_Create_Headed) {
 class FlutterTizenEngineTest : public ::testing::Test {
  public:
   FlutterTizenEngineTest() {
-    ecore_init();
+    efl_init();
 
     std::string tpk_root;
     char path[256];
@@ -46,18 +50,15 @@ class FlutterTizenEngineTest : public ::testing::Test {
     switches_.push_back("--disable-observatory");
   }
 
- protected:
-  void SetUp() {
+  void init() {
     engine_prop_.assets_path = assets_path_.c_str();
     engine_prop_.icu_data_path = icu_data_path_.c_str();
     engine_prop_.aot_library_path = aot_lib_path_.c_str();
     engine_prop_.switches = switches_.data();
     engine_prop_.switches_count = switches_.size();
-
-    auto engine = std::make_unique<flutter::FlutterTizenEngine>(false);
-    engine_ = engine.release();
   }
 
+ protected:
   void TearDown() {
     if (engine_) {
       delete engine_;
@@ -73,41 +74,93 @@ class FlutterTizenEngineTest : public ::testing::Test {
   std::vector<const char*> switches_;
 };
 
-TEST_F(FlutterTizenEngineTest, Run) {
+class FlutterTizenEngineHeadless : public FlutterTizenEngineTest {
+ protected:
+  void SetUp() {
+    FlutterTizenEngineTest::init();
+    auto engine = std::make_unique<flutter::FlutterTizenEngine>(false);
+    engine_ = engine.release();
+  }
+};
+
+TEST_F(FlutterTizenEngineHeadless, Run) {
   EXPECT_TRUE(engine_ != nullptr);
   EXPECT_TRUE(engine_->RunEngine(engine_prop_));
-  EXPECT_TRUE(true);
 }
 
-// TODO
-TEST_F(FlutterTizenEngineTest, DISABLED_Run_Twice) {
+TEST_F(FlutterTizenEngineHeadless, Run_Twice) {
   EXPECT_TRUE(engine_ != nullptr);
   EXPECT_TRUE(engine_->RunEngine(engine_prop_));
   EXPECT_FALSE(engine_->RunEngine(engine_prop_));
-  EXPECT_TRUE(true);
 }
 
-TEST_F(FlutterTizenEngineTest, Stop) {
+TEST_F(FlutterTizenEngineHeadless, Stop) {
   EXPECT_TRUE(engine_ != nullptr);
   EXPECT_TRUE(engine_->RunEngine(engine_prop_));
   EXPECT_TRUE(engine_->StopEngine());
 }
 
-TEST_F(FlutterTizenEngineTest, Stop_Twice) {
+TEST_F(FlutterTizenEngineHeadless, Stop_Twice) {
   EXPECT_TRUE(engine_ != nullptr);
   EXPECT_TRUE(engine_->RunEngine(engine_prop_));
   EXPECT_TRUE(engine_->StopEngine());
   EXPECT_FALSE(engine_->StopEngine());
 }
 
-TEST_F(FlutterTizenEngineTest, GetPluginRegistrar) {
+TEST_F(FlutterTizenEngineHeadless, GetPluginRegistrar) {
   EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
   EXPECT_TRUE(engine_->GetPluginRegistrar() != nullptr);
 }
 
-// TODO
-TEST_F(FlutterTizenEngineTest, DISABLED_GetTextureRegistrar) {
+TEST_F(FlutterTizenEngineHeadless, GetTextureRegistrar) {
   EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+  EXPECT_TRUE(engine_->GetTextureRegistrar() == nullptr);
+}
+
+class FlutterTizenEngineHeaded : public FlutterTizenEngineTest {
+ protected:
+  void SetUp() {
+    FlutterTizenEngineTest::init();
+    auto engine = std::make_unique<flutter::FlutterTizenEngine>(true);
+    engine_ = engine.release();
+  }
+};
+
+TEST_F(FlutterTizenEngineHeaded, Run) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+}
+
+TEST_F(FlutterTizenEngineHeaded, Run_Twice) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+  EXPECT_FALSE(engine_->RunEngine(engine_prop_));
+}
+
+TEST_F(FlutterTizenEngineHeaded, Stop) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+  EXPECT_TRUE(engine_->StopEngine());
+}
+
+TEST_F(FlutterTizenEngineHeaded, Stop_Twice) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+  EXPECT_TRUE(engine_->StopEngine());
+  EXPECT_FALSE(engine_->StopEngine());
+}
+
+TEST_F(FlutterTizenEngineHeaded, GetPluginRegistrar) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
+  EXPECT_TRUE(engine_->GetPluginRegistrar() != nullptr);
+}
+
+TEST_F(FlutterTizenEngineHeaded, GetTextureRegistrar) {
+  EXPECT_TRUE(engine_ != nullptr);
+  EXPECT_TRUE(engine_->RunEngine(engine_prop_));
   EXPECT_TRUE(engine_->GetTextureRegistrar() != nullptr);
 }
 
