@@ -16,8 +16,9 @@ using ByteMessage = std::vector<uint8_t>;
 
 class PlatformView {
  public:
-  PlatformView(flutter::PluginRegistrar* registrar, int viewId)
-      : registrar_(registrar),
+  PlatformView(flutter::PluginRegistrar* registrar, int viewId, void* win)
+      : win_(win),
+        registrar_(registrar),
         viewId_(viewId),
         textureId_(0),
         isFocused_(false) {}
@@ -47,6 +48,9 @@ class PlatformView {
 
   virtual void SetSoftwareKeyboardContext(Ecore_IMF_Context* context) = 0;
 
+ protected:
+  void* win_;
+
  private:
   flutter::PluginRegistrar* registrar_;
   int viewId_;
@@ -69,6 +73,10 @@ class PlatformViewFactory {
                                double height,
                                const ByteMessage& createParams) = 0;
   virtual void Dispose() = 0;
+  void SetWindow(void* win) { win_ = win; }
+
+ protected:
+  void* win_;
 
  private:
   flutter::PluginRegistrar* registrar_;
