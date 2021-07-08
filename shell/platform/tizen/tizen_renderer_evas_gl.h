@@ -16,7 +16,7 @@ namespace flutter {
 
 class TizenRendererEvasGL : public TizenRenderer {
  public:
-  explicit TizenRendererEvasGL(TizenRenderer::Delegate& delegate);
+  explicit TizenRendererEvasGL(WindowGeometry geometry, Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 
   bool OnMakeCurrent() override;
@@ -26,7 +26,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   uint32_t OnGetFBO() override;
   void* OnProcResolver(const char* name) override;
 
-  TizenWindowGeometry GetGeometry() override;
+  WindowGeometry GetCurrentGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
 
@@ -48,7 +48,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   void DestroyRenderer();
 
   bool SetupEvasGL();
-  Evas_Object* SetupEvasWindow(int32_t& width, int32_t& height);
+  Evas_Object* SetupEvasWindow(int32_t* width, int32_t* height);
   void DestroyEvasGL();
   void DestroyEvasWindow();
 

@@ -6,7 +6,6 @@
 #ifndef EMBEDDER_FLUTTER_TIZEN_ENGINE_H_
 #define EMBEDDER_FLUTTER_TIZEN_ENGINE_H_
 
-#include <map>
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
@@ -20,6 +19,7 @@
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
 #include "flutter/shell/platform/tizen/channels/settings_channel.h"
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
+#include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
@@ -47,27 +47,25 @@ struct FlutterDesktopMessenger {
 
 namespace flutter {
 
-// Custom deleter for FlutterEngineAOTData.
-struct AOTDataDeleter {
-  void operator()(FlutterEngineAOTData aot_data) {
-    FlutterEngineCollectAOTData(aot_data);
-  }
-};
-
-using UniqueAotDataPtr = std::unique_ptr<_FlutterEngineAOTData, AOTDataDeleter>;
-
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
-  explicit FlutterTizenEngine(bool headed);
+  // Creates a new Flutter engine object configured to run |project|.
+  explicit FlutterTizenEngine(const FlutterProjectBundle& project);
+
   virtual ~FlutterTizenEngine();
 
   // Prevent copying.
   FlutterTizenEngine(FlutterTizenEngine const&) = delete;
   FlutterTizenEngine& operator=(FlutterTizenEngine const&) = delete;
 
-  void InitializeRenderer();
-  bool RunEngine(const FlutterDesktopEngineProperties& engine_properties);
+  // Sets up an instance of TizenRenderer.
+  void InitializeRenderer(int32_t x, int32_t y, int32_t width, int32_t height);
+
+  // Starts running the engine.
+  bool RunEngine();
+
+  // Stops the engine.
   bool StopEngine();
 
   // Returns the currently configured Plugin Registrar.
@@ -139,16 +137,29 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
 
  private:
+  // Whether the engine is running in headed or headless mode.
   bool IsHeaded() { return renderer != nullptr; }
-  UniqueAotDataPtr LoadAotData(std::string aot_data_path);
+
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
+
+  // Creates and returns a FlutterRendererConfig depending on the current
+  // display mode (headed or headless).
+  // The user_data received by the render callbacks refers to the
+  // FlutterTizenEngine.
   FlutterRendererConfig GetRendererConfig();
 
+  // The Flutter engine instance.
+  FLUTTER_API_SYMBOL(FlutterEngine) engine_ = nullptr;
+
+  // The proc table of the embedder APIs.
   FlutterEngineProcTable embedder_api_ = {};
 
-  // The Flutter engine instance.
-  FLUTTER_API_SYMBOL(FlutterEngine) engine_;
+  // The data required for configuring a Flutter engine instance.
+  std::unique_ptr<FlutterProjectBundle> project_;
+
+  // AOT data for this engine instance, if applicable.
+  UniqueAotDataPtr aot_data_;
 
   // The handlers listening to platform events.
   std::unique_ptr<KeyEventHandler> key_event_handler_;
@@ -179,9 +190,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The vsync waiter for the embedder.
   std::unique_ptr<TizenVsyncWaiter> tizen_vsync_waiter_;
 #endif
-
-  // AOT data for this engine instance, if applicable.
-  UniqueAotDataPtr aot_data_;
 
   // The current renderer transformation.
   FlutterTransformation transformation_;

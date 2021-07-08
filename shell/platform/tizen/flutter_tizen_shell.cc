@@ -1,18 +1,14 @@
-#include <assert.h>
+// Copyright 2021 Samsung Electronics Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include <unistd.h>
-#include <chrono>
-#include <iostream>
-#include <thread>
+
+#include <string>
+#include <vector>
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
-
-extern int gApp_width;
-extern int gApp_height;
-
-std::string TPK_ROOT_PATH = "/tpkroot";
-std::string LIB_PATH = "/lib";
-std::string RES_PATH = "/res";
 
 class FlutterApp {
  public:
@@ -21,47 +17,42 @@ class FlutterApp {
 
   bool OnCreate() {
     printf("Launching a Flutter application...\n");
-    std::string assets_path;
-    std::string icu_data_path;
-    std::string aot_lib_path;
-    FlutterDesktopEngineProperties engine_prop = {};
+
+    FlutterDesktopWindowProperties window_prop = {};
+    window_prop.headed = true;
+    window_prop.x = 0;
+    window_prop.y = 0;
+    window_prop.width = window_width_;
+    window_prop.height = window_height_;
+
+    std::string assets_path = app_path_ + "/res/flutter_assets";
+    std::string icu_data_path = app_path_ + "/res/icudtl.dat";
+    std::string aot_lib_path = app_path_ + "/lib/libapp.so";
+
     std::vector<const char*> switches;
-
-    std::string tpk_root;
-    if (app_path_.empty()) {
-      char path[256];
-      getcwd(path, sizeof(path));
-      tpk_root = path + std::string("/tpkroot");
-    } else {
-      tpk_root = app_path_;
-    }
-
-    assets_path = tpk_root + "/res/flutter_assets";
-    icu_data_path = tpk_root + "/res/icudtl.dat";
-    aot_lib_path = tpk_root + "/lib/libapp.so";
-
     switches.push_back("--disable-observatory");
     switches.push_back("--verbose-logging");
     switches.push_back("--enable-dart-profiling");
     switches.push_back("--enable-checked-mode");
 
+    FlutterDesktopEngineProperties engine_prop = {};
     engine_prop.assets_path = assets_path.c_str();
     engine_prop.icu_data_path = icu_data_path.c_str();
     engine_prop.aot_library_path = aot_lib_path.c_str();
     engine_prop.switches = switches.data();
     engine_prop.switches_count = switches.size();
-    engine_ = FlutterDesktopRunEngine(engine_prop, true);
+    engine_ = FlutterDesktopRunEngine(window_prop, engine_prop);
 
     if (!engine_) {
       printf("Could not launch a Flutter application.\n");
       return false;
     }
-    // RegisterPlugins(this);
+
     return true;
   }
 
   void OnTerminate() {
-    printf("Shutting down the application...");
+    printf("Shutting down the application...\n");
 
     FlutterDesktopShutdownEngine(engine_);
     engine_ = nullptr;
@@ -71,18 +62,24 @@ class FlutterApp {
 
   int Run(int argc, char** argv) {
     ecore_init();
-    elm_init(0, 0);
+    elm_init(0, nullptr);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
     elm_config_accel_preference_set("opengl");
 
     for (int i = 1; i < argc; i++) {
       if (strstr(argv[i], "--width=") == argv[i]) {
-        gApp_width = std::atoi(argv[i] + strlen("--width="));
+        window_width_ = std::atoi(argv[i] + strlen("--width="));
       } else if (strstr(argv[i], "--height=") == argv[i]) {
-        gApp_height = std::atoi(argv[i] + strlen("--height="));
+        window_height_ = std::atoi(argv[i] + strlen("--height="));
       } else if (strstr(argv[i], "--tpkroot=") == argv[i]) {
         app_path_ = argv[i] + strlen("--tpkroot=");
       }
+    }
+
+    if (app_path_.empty()) {
+      char path[256];
+      getcwd(path, sizeof(path));
+      app_path_ = path + std::string("/tpkroot");
     }
 
     ecore_idler_add(
@@ -94,6 +91,7 @@ class FlutterApp {
         this);
     ecore_main_loop_begin();
     OnTerminate();
+
     return 0;
   }
 
@@ -107,6 +105,9 @@ class FlutterApp {
 
  private:
   std::string app_path_ = {};
+  int32_t window_width_ = 0;
+  int32_t window_height_ = 0;
+
   FlutterDesktopEngineRef engine_ = nullptr;
 };
 

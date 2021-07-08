@@ -11,8 +11,9 @@
 
 namespace flutter {
 
-TizenRendererEcoreWl2::TizenRendererEcoreWl2(TizenRenderer::Delegate& delegate)
-    : TizenRenderer(delegate) {
+TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
+                                             Delegate& delegate)
+    : TizenRenderer(geometry, delegate) {
   InitializeRenderer();
 }
 
@@ -211,8 +212,8 @@ void* TizenRendererEcoreWl2::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::TizenWindowGeometry TizenRendererEcoreWl2::GetGeometry() {
-  TizenWindowGeometry result;
+TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetCurrentGeometry() {
+  WindowGeometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.x, &result.y,
                                 &result.w, &result.h);
   return result;
@@ -233,20 +234,20 @@ uintptr_t TizenRendererEcoreWl2::GetWindowId() {
 
 bool TizenRendererEcoreWl2::InitializeRenderer() {
   int32_t width, height;
-  if (!SetupDisplay(width, height)) {
-    FT_LOGE("SetupDisplay fail");
+  if (!SetupDisplay(&width, &height)) {
+    FT_LOGE("SetupDisplay failed.");
     return false;
   }
   if (!SetupEcoreWlWindow(width, height)) {
-    FT_LOGE("SetupEcoreWlWindow fail");
+    FT_LOGE("SetupEcoreWlWindow failed.");
     return false;
   }
   if (!SetupEglWindow(width, height)) {
-    FT_LOGE("SetupEglWindow fail");
+    FT_LOGE("SetupEglWindow failed.");
     return false;
   }
   if (!SetupEglSurface()) {
-    FT_LOGE("SetupEglSurface fail");
+    FT_LOGE("SetupEglSurface failed.");
     return false;
   }
   Show();
@@ -265,38 +266,50 @@ void TizenRendererEcoreWl2::DestroyRenderer() {
   ShutdownDisplay();
 }
 
-bool TizenRendererEcoreWl2::SetupDisplay(int32_t& width, int32_t& height) {
+bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
   if (!ecore_wl2_init()) {
-    FT_LOGE("Could not initialize ecore_wl2");
+    FT_LOGE("Could not initialize ecore_wl2.");
     return false;
   }
   ecore_wl2_display_ = ecore_wl2_display_connect(nullptr);
   if (ecore_wl2_display_ == nullptr) {
-    FT_LOGE("Display not found");
+    FT_LOGE("Display not found.");
     return false;
   }
-
   ecore_wl2_sync();
-  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &width, &height);
+
+  ecore_wl2_display_screen_size_get(ecore_wl2_display_, width, height);
+  if (*width == 0 || *height == 0) {
+    FT_LOGE("Invalid screen size: %d x %d", *width, *height);
+    return false;
+  }
+  if (initial_geometry_.w > 0) {
+    *width = initial_geometry_.w;
+  }
+  if (initial_geometry_.h > 0) {
+    *height = initial_geometry_.h;
+  }
+
   return true;
 }
 
 bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
-  if (width == 0 || height == 0) {
-    FT_LOGE("Invalid screen size: %d x %d", width, height);
-    return false;
-  }
+  int32_t x = initial_geometry_.x;
+  int32_t y = initial_geometry_.y;
+
   ecore_wl2_window_ =
-      ecore_wl2_window_new(ecore_wl2_display_, nullptr, 0, 0, width, height);
+      ecore_wl2_window_new(ecore_wl2_display_, nullptr, x, y, width, height);
   ecore_wl2_window_type_set(ecore_wl2_window_, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
   ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_FALSE);
-  ecore_wl2_window_position_set(ecore_wl2_window_, 0, 0);
+  ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
+
   int rotations[4] = {0, 90, 180, 270};
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations,
                                            sizeof(rotations) / sizeof(int));
   ecore_event_handler_add(ECORE_WL2_EVENT_WINDOW_ROTATE, RotationEventCb, this);
+
   return true;
 }
 

@@ -6,8 +6,6 @@
 
 #ifdef __X64_SHELL__
 #include "tizen_evas_gl_helper.h"
-int gApp_width = 800;
-int gApp_height = 600;
 #else
 #include <Evas_GL_GLES3_Helpers.h>
 #endif
@@ -18,8 +16,9 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 namespace flutter {
 
-TizenRendererEvasGL::TizenRendererEvasGL(TizenRenderer::Delegate& delegate)
-    : TizenRenderer(delegate) {
+TizenRendererEvasGL::TizenRendererEvasGL(WindowGeometry geometry,
+                                         Delegate& delegate)
+    : TizenRenderer(geometry, delegate) {
   InitializeRenderer();
 
   // Clear once to remove noise.
@@ -549,8 +548,8 @@ void* TizenRendererEvasGL::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::TizenWindowGeometry TizenRendererEvasGL::GetGeometry() {
-  TizenWindowGeometry result;
+TizenRenderer::WindowGeometry TizenRendererEvasGL::GetCurrentGeometry() {
+  WindowGeometry result;
   evas_object_geometry_get(evas_window_, &result.x, &result.y, &result.w,
                            &result.h);
   return result;
@@ -595,9 +594,10 @@ void TizenRendererEvasGL::DestroyRenderer() {
 
 bool TizenRendererEvasGL::SetupEvasGL() {
   int32_t width, height;
-  evas_gl_ = evas_gl_new(evas_object_evas_get(SetupEvasWindow(width, height)));
+  evas_gl_ =
+      evas_gl_new(evas_object_evas_get(SetupEvasWindow(&width, &height)));
   if (!evas_gl_) {
-    FT_LOGE("SetupEvasWindow fail");
+    FT_LOGE("Could not set up an Evas window object.");
     return false;
   }
 
@@ -640,27 +640,34 @@ bool TizenRendererEvasGL::SetupEvasGL() {
   return true;
 }
 
-Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
-                                                  int32_t& height) {
+Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
+                                                  int32_t* height) {
   elm_config_accel_preference_set("hw:opengl");
 
   evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
-  auto* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-  int32_t x, y;
-  ecore_evas_screen_geometry_get(ecore_evas, &x, &y, &width, &height);
-  if (width == 0 || height == 0) {
-    FT_LOGE("Invalid screen size: %d x %d", width, height);
+  if (!evas_window_) {
     return nullptr;
   }
+  auto* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
 
-#ifdef __X64_SHELL__
-  width = gApp_width;
-  height = gApp_height;
-#endif
+  ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, width, height);
+  if (*width == 0 || *height == 0) {
+    FT_LOGE("Invalid screen size: %d x %d", *width, *height);
+    return nullptr;
+  }
+  if (initial_geometry_.w > 0) {
+    *width = initial_geometry_.w;
+  }
+  if (initial_geometry_.h > 0) {
+    *height = initial_geometry_.h;
+  }
+  int32_t x = initial_geometry_.x;
+  int32_t y = initial_geometry_.y;
+
   elm_win_alpha_set(evas_window_, EINA_FALSE);
-  evas_object_move(evas_window_, 0, 0);
-  evas_object_resize(evas_window_, width, height);
+  evas_object_move(evas_window_, x, y);
+  evas_object_resize(evas_window_, *width, *height);
   evas_object_raise(evas_window_);
 
   Evas_Object* bg = elm_bg_add(evas_window_);
@@ -671,9 +678,9 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t& width,
 
   graphics_adapter_ =
       evas_object_image_filled_add(evas_object_evas_get(evas_window_));
-  evas_object_resize(graphics_adapter_, width, height);
-  evas_object_move(graphics_adapter_, 0, 0);
-  evas_object_image_size_set(graphics_adapter_, width, height);
+  evas_object_resize(graphics_adapter_, *width, *height);
+  evas_object_move(graphics_adapter_, x, y);
+  evas_object_image_size_set(graphics_adapter_, *width, *height);
   evas_object_image_alpha_set(graphics_adapter_, EINA_TRUE);
   elm_win_resize_object_add(evas_window_, graphics_adapter_);
 

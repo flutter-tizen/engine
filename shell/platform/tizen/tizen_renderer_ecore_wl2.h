@@ -15,7 +15,7 @@ namespace flutter {
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2(TizenRenderer::Delegate& delegate);
+  explicit TizenRendererEcoreWl2(WindowGeometry geometry, Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
   bool OnMakeCurrent() override;
@@ -25,7 +25,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   uint32_t OnGetFBO() override;
   void* OnProcResolver(const char* name) override;
 
-  TizenWindowGeometry GetGeometry() override;
+  WindowGeometry GetCurrentGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
 
@@ -42,7 +42,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void Show();
   void DestroyRenderer();
 
-  bool SetupDisplay(int32_t& width, int32_t& height);
+  bool SetupDisplay(int32_t* width, int32_t* height);
   bool SetupEcoreWlWindow(int32_t width, int32_t height);
   bool SetupEglWindow(int32_t width, int32_t height);
   EGLDisplay GetEGLDisplay();
