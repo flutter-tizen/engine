@@ -43,7 +43,7 @@ void TizenVsyncWaiter::SetThreadQueue(Eina_Thread_Queue* vblank_thread_queue) {
 }
 
 void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
-  if (vblank_thread_ && !ecore_thread_check(vblank_thread_)) {
+  if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
     FT_LOGE("vblank thread not valid");
     return;
   }
