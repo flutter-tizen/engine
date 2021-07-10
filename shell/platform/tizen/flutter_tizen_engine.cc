@@ -44,7 +44,7 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
   // thread). UI threads need to send flutter task to platform thread.
   event_loop_ = std::make_unique<TizenPlatformEventLoop>(
       std::this_thread::get_id(),  // main thread
-      [this](const auto* task) {
+      embedder_api_.GetCurrentTime, [this](const auto* task) {
         if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");
         }
@@ -74,6 +74,7 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
 
   render_loop_ = std::make_unique<TizenRenderEventLoop>(
       std::this_thread::get_id(),  // main thread
+      embedder_api_.GetCurrentTime,
       [this](const auto* task) {
         if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");

@@ -15,8 +15,10 @@
 namespace flutter {
 
 TizenEventLoop::TizenEventLoop(std::thread::id main_thread_id,
+                               CurrentTimeProc get_current_time,
                                TaskExpiredCallback on_task_expired)
     : main_thread_id_(main_thread_id),
+      get_current_time_(get_current_time),
       on_task_expired_(std::move(on_task_expired)) {
   ecore_pipe_ = ecore_pipe_add(ExcuteTaskEvents, this);
 }
@@ -54,7 +56,7 @@ TizenEventLoop::TaskTimePoint TizenEventLoop::TimePointFromFlutterTime(
     uint64_t flutter_target_time_nanos) {
   const auto now = TaskTimePoint::clock::now();
   const int64_t flutter_duration =
-      flutter_target_time_nanos - FlutterEngineGetCurrentTime();
+      flutter_target_time_nanos - get_current_time_();
   return now + std::chrono::nanoseconds(flutter_duration);
 }
 
@@ -83,7 +85,7 @@ void TizenEventLoop::ExcuteTaskEvents(void* data,
 
   const double flutter_duration =
       (static_cast<double>(p_task->fire_time.time_since_epoch().count()) -
-       FlutterEngineGetCurrentTime()) /
+       self->get_current_time_()) /
       1000000000.0;
   if (flutter_duration > 0) {
     {
@@ -102,8 +104,9 @@ void TizenEventLoop::ExcuteTaskEvents(void* data,
 
 TizenPlatformEventLoop::TizenPlatformEventLoop(
     std::thread::id main_thread_id,
+    CurrentTimeProc get_current_time,
     TaskExpiredCallback on_task_expired)
-    : TizenEventLoop(main_thread_id, on_task_expired) {}
+    : TizenEventLoop(main_thread_id, get_current_time, on_task_expired) {}
 
 TizenPlatformEventLoop::~TizenPlatformEventLoop() {}
 
@@ -116,9 +119,11 @@ void TizenPlatformEventLoop::OnTaskExpired() {
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
+                                           CurrentTimeProc get_current_time,
                                            TaskExpiredCallback on_task_expired,
                                            TizenRenderer* renderer)
-    : TizenEventLoop(main_thread_id, on_task_expired), renderer_(renderer) {
+    : TizenEventLoop(main_thread_id, get_current_time, on_task_expired),
+      renderer_(renderer) {
   evas_object_image_pixels_get_callback_set(
       static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
       [](void* data, Evas_Object* o) {  // Render callback
@@ -150,6 +155,6 @@ void TizenRenderEventLoop::OnTaskExpired() {
     // Do nothing
   }
 }
-#endif
+#endif  // TIZEN_RENDERER_EVAS_GL
 
 }  // namespace flutter

@@ -154,6 +154,7 @@ template("embedder_for_profile") {
     }
 
     defines = invoker.defines
+    defines += [ "FLUTTER_ENGINE_NO_PROTOTYPES" ]
 
     if (use_evas_gl_renderer || enable_desktop_embeddings) {
       sources += [ "tizen_renderer_evas_gl.cc" ]
@@ -260,7 +261,10 @@ template("embedder_executable") {
       "evas",
     ]
 
-    defines = [ "TIZEN_RENDERER_EVAS_GL" ]
+    defines = [
+      "FLUTTER_ENGINE_NO_PROTOTYPES",
+      "TIZEN_RENDERER_EVAS_GL",
+    ]
 
     cflags_cc = [
       "-Wno-newline-eof",
