@@ -28,6 +28,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   WindowGeometry GetCurrentGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
+  void* GetWindowHandle() override;
 
   void ResizeWithRotation(int32_t x,
                           int32_t y,

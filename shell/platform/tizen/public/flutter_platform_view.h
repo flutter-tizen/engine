@@ -16,15 +16,18 @@ using ByteMessage = std::vector<uint8_t>;
 
 class PlatformView {
  public:
-  PlatformView(flutter::PluginRegistrar* registrar, int viewId)
-      : registrar_(registrar),
-        viewId_(viewId),
-        textureId_(0),
-        isFocused_(false) {}
+  PlatformView(flutter::PluginRegistrar* registrar,
+               int view_id,
+               void* platform_window)
+      : platform_window_(platform_window),
+        registrar_(registrar),
+        view_id_(view_id),
+        texture_id_(0),
+        is_focused_(false) {}
   virtual ~PlatformView() {}
-  int GetViewId() { return viewId_; }
-  int GetTextureId() { return textureId_; }
-  void SetTextureId(int textureId) { textureId_ = textureId; }
+  int GetViewId() { return view_id_; }
+  int GetTextureId() { return texture_id_; }
+  void SetTextureId(int texture_id) { texture_id_ = texture_id; }
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
   virtual void Dispose() = 0;
   virtual void Resize(double width, double height) = 0;
@@ -36,8 +39,8 @@ class PlatformView {
                      double dy) = 0;
   virtual void SetDirection(int direction) = 0;
   virtual void ClearFocus() = 0;
-  void SetFocus(bool f) { isFocused_ = f; }
-  bool IsFocused() { return isFocused_; }
+  void SetFocus(bool f) { is_focused_ = f; }
+  bool IsFocused() { return is_focused_; }
 
   // Key input event
   virtual void DispatchKeyDownEvent(Ecore_Event_Key* key) = 0;
@@ -47,11 +50,14 @@ class PlatformView {
 
   virtual void SetSoftwareKeyboardContext(Ecore_IMF_Context* context) = 0;
 
+ protected:
+  void* platform_window_;
+
  private:
   flutter::PluginRegistrar* registrar_;
-  int viewId_;
-  int textureId_;
-  bool isFocused_;
+  int view_id_;
+  int texture_id_;
+  bool is_focused_;
 };
 
 class PlatformViewFactory {
@@ -64,11 +70,15 @@ class PlatformViewFactory {
   const flutter::MessageCodec<flutter::EncodableValue>& GetCodec() {
     return codec_;
   }
-  virtual PlatformView* Create(int viewId,
+  virtual PlatformView* Create(int view_id,
                                double width,
                                double height,
-                               const ByteMessage& createParams) = 0;
+                               const ByteMessage& parameters) = 0;
   virtual void Dispose() = 0;
+  void SetWindow(void* platform_window) { platform_window_ = platform_window; }
+
+ protected:
+  void* platform_window_;
 
  private:
   flutter::PluginRegistrar* registrar_;

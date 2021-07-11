@@ -143,6 +143,7 @@ void FlutterRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
+  view_factory->SetWindow(registrar->engine->renderer->GetWindowHandle());
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));

@@ -232,6 +232,10 @@ uintptr_t TizenRendererEcoreWl2::GetWindowId() {
   return ecore_wl2_window_id_get(ecore_wl2_window_);
 }
 
+void* TizenRendererEcoreWl2::GetWindowHandle() {
+  return ecore_wl2_window_;
+}
+
 bool TizenRendererEcoreWl2::InitializeRenderer() {
   int32_t width, height;
   if (!SetupDisplay(&width, &height)) {
