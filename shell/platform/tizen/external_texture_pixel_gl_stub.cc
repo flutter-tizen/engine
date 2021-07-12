@@ -1,4 +1,4 @@
-// Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
+// Copyright 2021 Samsung Electronics Co., Ltd. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,7 @@
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-#include <Evas_GL_GLES3_Helpers.h>
+#include "tizen_evas_gl_helper.h"
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES3_DECLARE();
 #else
@@ -17,6 +17,13 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #endif
 
 namespace flutter {
+
+ExternalTexturePixelGL::ExternalTexturePixelGL(
+    FlutterDesktopPixelBufferTextureCallback texture_callback,
+    void* user_data)
+    : ExternalTexture(),
+      texture_callback_(texture_callback),
+      user_data_(user_data) {}
 
 bool ExternalTexturePixelGL::PopulateTexture(
     size_t width,
@@ -36,13 +43,6 @@ bool ExternalTexturePixelGL::PopulateTexture(
   opengl_texture->height = height;
   return true;
 }
-
-ExternalTexturePixelGL::ExternalTexturePixelGL(
-    FlutterDesktopPixelBufferTextureCallback texture_callback,
-    void* user_data)
-    : ExternalTexture(),
-      texture_callback_(texture_callback),
-      user_data_(user_data) {}
 
 bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
   if (!texture_callback_) {
@@ -74,5 +74,4 @@ bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
                pixel_buffer->buffer);
   return true;
 }
-
 }  // namespace flutter
