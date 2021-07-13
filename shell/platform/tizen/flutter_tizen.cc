@@ -10,8 +10,8 @@
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
+#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Returns the engine corresponding to the given opaque API handle.
 static flutter::FlutterTizenEngine* EngineFromHandle(

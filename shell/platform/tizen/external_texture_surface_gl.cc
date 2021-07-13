@@ -20,7 +20,7 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include <tbm_surface.h>
 
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 

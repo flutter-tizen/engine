@@ -10,7 +10,7 @@
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
 #include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "tizen_log.h"
+#include "logger.h"
 
 #ifndef __X64_SHELL__
 #include <dlog.h>
