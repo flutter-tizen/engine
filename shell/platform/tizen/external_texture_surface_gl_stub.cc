@@ -26,21 +26,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
-  if (!texture_callback_) {
-    return false;
+  if (texture_callback_ && destruction_callback_ && user_data_) {
+    return true;
   }
-
-  const FlutterDesktopGpuBuffer* gpu_buffer =
-      texture_callback_(width, height, user_data_);
-  if (!gpu_buffer) {
-    FT_LOGI("[texture id:%ld] gpu_buffer is null", texture_id_);
-    return false;
-  }
-  if (!gpu_buffer->buffer) {
-    FT_LOGI("[texture id:%ld] tbm_surface_ is null", texture_id_);
-    return false;
-  }
-  FT_UNIMPLEMENTED();
   return false;
 }
 

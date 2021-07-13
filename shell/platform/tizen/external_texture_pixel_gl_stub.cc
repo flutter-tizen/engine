@@ -29,49 +29,13 @@ bool ExternalTexturePixelGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
-  if (!CopyPixelBuffer(width, height)) {
-    return false;
-  }
-
-  // Populate the texture object used by the engine.
-  opengl_texture->target = GL_TEXTURE_2D;
-  opengl_texture->name = state_->gl_texture;
-  opengl_texture->format = GL_RGBA8;
-  opengl_texture->destruction_callback = nullptr;
-  opengl_texture->user_data = nullptr;
-  opengl_texture->width = width;
-  opengl_texture->height = height;
-  return true;
+  return CopyPixelBuffer(width, height);
 }
 
 bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
-  if (!texture_callback_) {
-    return false;
+  if (texture_callback_ && user_data_) {
+    return true;
   }
-
-  const FlutterDesktopPixelBuffer* pixel_buffer =
-      texture_callback_(width, height, user_data_);
-
-  if (!pixel_buffer || !pixel_buffer->buffer) {
-    return false;
-  }
-
-  width = pixel_buffer->width;
-  height = pixel_buffer->height;
-
-  if (state_->gl_texture == 0) {
-    glGenTextures(1, &state_->gl_texture);
-    glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  } else {
-    glBindTexture(GL_TEXTURE_2D, state_->gl_texture);
-  }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pixel_buffer->width,
-               pixel_buffer->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               pixel_buffer->buffer);
-  return true;
+  return false;
 }
 }  // namespace flutter
