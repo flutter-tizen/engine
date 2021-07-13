@@ -6,8 +6,13 @@
 
 namespace flutter {
 
-SettingsChannel::SettingsChannel(BinaryMessenger* messenger) {}
+void SettingsChannel::Init() {}
 
-SettingsChannel::~SettingsChannel() {}
+void SettingsChannel::Dispose() {}
+
+bool SettingsChannel::GetSettingValueOf24Format(bool* value) {
+  *value = false;
+  return true;
+}
 
 }  // namespace flutter
