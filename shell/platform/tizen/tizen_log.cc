@@ -4,36 +4,30 @@
 
 #include "tizen_log.h"
 
-#include <pthread.h>
+#ifndef __X64_SHELL__
+#include <dlog.h>
+#endif
 #include <unistd.h>
 
-static int stdout_pipe[2];
-static int stderr_pipe[2];
-static pthread_t stdout_thread;
-static pthread_t stderr_thread;
-static bool is_running = false;
-static log_priority min_log_priority = DLOG_ERROR;
+#include <iostream>
 
 namespace flutter {
 
-void SetMinLoggingLevel(log_priority p) {
-  min_log_priority = p;
-};
+namespace {
 
-log_priority GetMinLoggingLevel() {
-  return min_log_priority;
-};
+constexpr char kLogTag[] = "ConsoleMessage";
 
-static void* LoggingFunction(void* arg) {
+}  // namespace
+
+void* Logger::Redirect(void* arg) {
   int* pipe = static_cast<int*>(arg);
-  auto priority = pipe == stdout_pipe ? DLOG_INFO : DLOG_ERROR;
-
   ssize_t size;
   char buffer[1024];
 
   while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
     buffer[size] = 0;
-    __LOG(priority, "%s", buffer);
+    Print(pipe == stdout_pipe_ ? kLogLevelInfo : kLogLevelError,
+          std::string(buffer));
   }
 
   close(pipe[0]);
@@ -42,32 +36,85 @@ static void* LoggingFunction(void* arg) {
   return nullptr;
 }
 
-void StartLogging() {
-  if (is_running) {
-    FT_LOGI("The threads are already running.");
+void Logger::Start() {
+  if (started_) {
+    FT_LOG(Info) << "The threads are already running.";
     return;
   }
-
-  if (pipe(stdout_pipe) < 0 || pipe(stderr_pipe) < 0) {
-    FT_LOGE("Failed to create pipes.");
+  if (pipe(stdout_pipe_) < 0 || pipe(stderr_pipe_) < 0) {
+    FT_LOG(Error) << "Failed to create pipes.";
     return;
   }
-
-  if (dup2(stdout_pipe[1], 1) < 0 || dup2(stderr_pipe[1], 2) < 0) {
-    FT_LOGE("Failed to duplicate file descriptors.");
+  if (dup2(stdout_pipe_[1], 1) < 0 || dup2(stderr_pipe_[1], 2) < 0) {
+    FT_LOG(Error) << "Failed to duplicate file descriptors.";
     return;
   }
-
-  if (pthread_create(&stdout_thread, 0, LoggingFunction, stdout_pipe) != 0 ||
-      pthread_create(&stderr_thread, 0, LoggingFunction, stderr_pipe) != 0) {
-    FT_LOGE("Failed to create threads.");
+  if (pthread_create(&stdout_thread_, 0, Redirect, stdout_pipe_) != 0 ||
+      pthread_create(&stderr_thread_, 0, Redirect, stderr_pipe_) != 0) {
+    FT_LOG(Error) << "Failed to create threads.";
     return;
   }
-
-  if (pthread_detach(stdout_thread) != 0 ||
-      pthread_detach(stderr_thread) != 0) {
-    FT_LOGW("Failed to detach threads.");
+  if (pthread_detach(stdout_thread_) != 0 ||
+      pthread_detach(stderr_thread_) != 0) {
+    FT_LOG(Warn) << "Failed to detach threads.";
   }
-  is_running = true;
+  started_ = true;
 }
+
+int Logger::GetLoggingLevel() {
+  return logging_level_;
+}
+
+void Logger::SetLoggingLevel(int level) {
+  logging_level_ = level;
+}
+
+void Logger::Print(int level, std::string message) {
+#ifdef __X64_SHELL__
+  std::cerr << message << std::endl;
+  std::cerr.flush();
+#else
+  log_priority priority;
+  if (level == kLogLevelDebug) {
+    priority = DLOG_DEBUG;
+  } else if (level == kLogLevelInfo) {
+    priority = DLOG_INFO;
+  } else if (level == kLogLevelWarn) {
+    priority = DLOG_WARN;
+  } else if (level == kLogLevelError) {
+    priority = DLOG_ERROR;
+  } else if (level == kLogLevelFatal) {
+    priority = DLOG_FATAL;
+  } else {
+    priority = DLOG_INFO;
+  }
+#ifdef TV_PROFILE
+  // LOG_ID_MAIN must be used to display logs properly on TV devices.
+  // Note: dlog_print(...) is an alias of __dlog_print(LOG_ID_APPS, ...).
+  __dlog_print(LOG_ID_MAIN, priority, kLogTag, "%s", message.c_str());
+#else
+  dlog_print(priority, kLogTag, "%s", message.c_str());
+#endif
+#endif  // __X64_SHELL__
+}
+
+LogMessage::LogMessage(int level,
+                       const char* file,
+                       const char* function,
+                       int line)
+    : level_(level), file_(file), function_(function), line_(line) {
+  stream_ << file_ << ": " << function_ << "(" << line_ << ") > ";
+}
+
+LogMessage::~LogMessage() {
+  if (level_ < Logger::GetLoggingLevel()) {
+    return;
+  }
+  Logger::Print(level_, stream_.str());
+
+  if (level_ >= kLogLevelFatal) {
+    abort();
+  }
+}
+
 }  // namespace flutter

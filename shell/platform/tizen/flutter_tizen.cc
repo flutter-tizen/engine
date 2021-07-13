@@ -28,7 +28,9 @@ static FlutterDesktopEngineRef HandleForEngine(
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {
-  flutter::StartLogging();
+#ifndef __X64_SHELL__
+  flutter::Logger::Start();
+#endif
 
   flutter::FlutterProjectBundle project(engine_properties);
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
