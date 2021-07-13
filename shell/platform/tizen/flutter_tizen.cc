@@ -41,7 +41,7 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
         window_properties.focusable);
   }
   if (!engine->RunEngine()) {
-    FT_LOGE("Failed to run the Flutter engine.");
+    FT_LOG(Error) << "Failed to start the Flutter engine.";
     return nullptr;
   }
   return HandleForEngine(engine.release());

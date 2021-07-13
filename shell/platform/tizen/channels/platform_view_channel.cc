@@ -121,9 +121,7 @@ void PlatformViewChannel::HandleMethodCall(
       return;
     }
 
-    FT_LOGI(
-        "PlatformViewChannel create viewType: %s id: %d width: %f height: %f ",
-        view_type.c_str(), view_id, width, height);
+    FT_LOG(Info) << "Creating a platform view: " << view_type;
     RemoveViewInstanceIfNeeded(view_id);
 
     EncodableMap values = std::get<EncodableMap>(arguments);
@@ -149,7 +147,7 @@ void PlatformViewChannel::HandleMethodCall(
         result->Error("Can't create a webview instance!!");
       }
     } else {
-      FT_LOGE("can't find view type = %s", view_type.c_str());
+      FT_LOG(Error) << "Can't find view type: " << view_type;
       result->Error("Can't find view type");
     }
   } else if (method == "clearFocus") {
@@ -228,11 +226,8 @@ void PlatformViewChannel::HandleMethodCall(
         }
 
         result->Success();
-      } else if (method == "setDirection") {
-        FT_LOGW("PlatformViewChannel setDirection - not implemented");
-        result->NotImplemented();
       } else {
-        FT_LOGW("Unimplemented method: %s", method.c_str());
+        FT_LOG(Warn) << "Unimplemented method: " << method;
         result->NotImplemented();
       }
     } else {
