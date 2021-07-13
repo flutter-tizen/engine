@@ -6,9 +6,7 @@
 
 namespace flutter {
 
-LocalizationChannel::LocalizationChannel(FlutterTizenEngine* engine) {
-  engine_ = nullptr;
-}
+LocalizationChannel::LocalizationChannel(FlutterTizenEngine* engine) {}
 
 LocalizationChannel::~LocalizationChannel() {}
 

@@ -6,15 +6,6 @@
 
 #ifndef __X64_SHELL__
 #include <app.h>
-#else
-
-namespace {
-
-void ui_app_exit(void) {
-  exit(0);
-}
-
-};  // namespace
 #endif
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
@@ -73,7 +64,9 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
               engine->navigation_channel->PopRoute();
             }
           } else if (keyname == kExitKey && !is_down) {
+#ifndef __X64_SHELL__
             ui_app_exit();
+#endif
           }
         });
   }
