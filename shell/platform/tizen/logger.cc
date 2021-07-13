@@ -9,15 +9,10 @@
 #endif
 #include <unistd.h>
 
+#include <cstdlib>
 #include <iostream>
 
 namespace flutter {
-
-namespace {
-
-constexpr char kLogTag[] = "ConsoleMessage";
-
-}  // namespace
 
 void* Logger::Redirect(void* arg) {
   int* pipe = static_cast<int*>(arg);
@@ -38,7 +33,7 @@ void* Logger::Redirect(void* arg) {
 
 void Logger::Start() {
   if (started_) {
-    FT_LOG(Info) << "The threads are already running.";
+    FT_LOG(Info) << "The threads have already started.";
     return;
   }
   if (pipe(stdout_pipe_) < 0 || pipe(stderr_pipe_) < 0) {
@@ -91,9 +86,9 @@ void Logger::Print(int level, std::string message) {
 #ifdef TV_PROFILE
   // LOG_ID_MAIN must be used to display logs properly on TV devices.
   // Note: dlog_print(...) is an alias of __dlog_print(LOG_ID_APPS, ...).
-  __dlog_print(LOG_ID_MAIN, priority, kLogTag, "%s", message.c_str());
+  __dlog_print(LOG_ID_MAIN, priority, "ConsoleMessage", "%s", message.c_str());
 #else
-  dlog_print(priority, kLogTag, "%s", message.c_str());
+  dlog_print(priority, "ConsoleMessage", "%s", message.c_str());
 #endif
 #endif  // __X64_SHELL__
 }

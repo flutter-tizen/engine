@@ -463,10 +463,10 @@ bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
 void TizenRendererEcoreWl2::PrintEGLError() {
   EGLint error = eglGetError();
   switch (error) {
-#define CASE_PRINT(value)    \
-  case value: {              \
-    FT_LOG(Error) << #value; \
-    break;                   \
+#define CASE_PRINT(value)                     \
+  case value: {                               \
+    FT_LOG(Error) << "EGL error: " << #value; \
+    break;                                    \
   }
     CASE_PRINT(EGL_NOT_INITIALIZED)
     CASE_PRINT(EGL_BAD_ACCESS)

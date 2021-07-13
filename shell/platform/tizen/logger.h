@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_LOG_H_
-#define EMBEDDER_TIZEN_LOG_H_
+#ifndef EMBEDDER_LOGGER_H_
+#define EMBEDDER_LOGGER_H_
 
 #include <pthread.h>
 
@@ -61,8 +61,13 @@ class LogMessage {
 
 }  // namespace flutter
 
-#define FT_LOG(level)                                                          \
-  flutter::LogMessage(flutter::kLogLevel##level, __FILE__, __func__, __LINE__) \
+#ifndef __MODULE__
+#define __MODULE__ strrchr("/" __FILE__, '/') + 1
+#endif
+
+#define FT_LOG(level)                                                  \
+  flutter::LogMessage(flutter::kLogLevel##level, __MODULE__, __func__, \
+                      __LINE__)                                        \
       .stream()
 
 #if defined(NDEBUG)
@@ -77,4 +82,4 @@ class LogMessage {
 
 #define FT_UNIMPLEMENTED() FT_LOG(Warn) << "UNIMPLEMENTED!"
 
-#endif  // EMBEDDER_TIZEN_LOG_H_
+#endif  // EMBEDDER_LOGGER_H_

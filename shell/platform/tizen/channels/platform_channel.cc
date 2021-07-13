@@ -99,7 +99,7 @@ class FeedbackManager {
   FeedbackManager& operator=(const FeedbackManager&) = delete;
 
   ResultCode Play(FeedbackType type, FeedbackPattern pattern) {
-    if (initialization_status_ != ResultCode::kOk) {
+    if (ResultCode::kOk != initialization_status_) {
       return initialization_status_;
     }
 

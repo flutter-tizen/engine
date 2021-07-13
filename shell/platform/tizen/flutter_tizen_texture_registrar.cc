@@ -35,7 +35,7 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
 
   if (texture_info->type == kFlutterDesktopGpuBufferTexture) {
     if (!texture_info->gpu_buffer_config.callback) {
-      FT_LOG(Error) << "Invalid gpu buffer texture callback.";
+      FT_LOG(Error) << "Invalid GPU buffer texture callback.";
       return -1;
     }
   }
