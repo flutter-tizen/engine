@@ -60,7 +60,12 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterTizenEngine& operator=(FlutterTizenEngine const&) = delete;
 
   // Sets up an instance of TizenRenderer.
-  void InitializeRenderer(int32_t x, int32_t y, int32_t width, int32_t height);
+  void InitializeRenderer(int32_t x,
+                          int32_t y,
+                          int32_t width,
+                          int32_t height,
+                          bool transparent,
+                          bool focusable);
 
   // Starts running the engine.
   bool RunEngine();

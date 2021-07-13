@@ -16,7 +16,10 @@ namespace flutter {
 
 class TizenRendererEvasGL : public TizenRenderer {
  public:
-  explicit TizenRendererEvasGL(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRendererEvasGL(WindowGeometry geometry,
+                               bool transparent,
+                               bool focusable,
+                               Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 
   bool OnMakeCurrent() override;

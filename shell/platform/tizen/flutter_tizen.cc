@@ -33,9 +33,10 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
   flutter::FlutterProjectBundle project(engine_properties);
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
   if (window_properties.headed) {
-    engine->InitializeRenderer(window_properties.x, window_properties.y,
-                               window_properties.width,
-                               window_properties.height);
+    engine->InitializeRenderer(
+        window_properties.x, window_properties.y, window_properties.width,
+        window_properties.height, window_properties.transparent,
+        window_properties.focusable);
   }
   if (!engine->RunEngine()) {
     FT_LOGE("Failed to run the Flutter engine.");

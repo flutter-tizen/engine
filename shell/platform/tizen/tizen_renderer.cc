@@ -6,8 +6,14 @@
 
 namespace flutter {
 
-TizenRenderer::TizenRenderer(WindowGeometry geometry, Delegate& delegate)
-    : initial_geometry_(geometry), delegate_(delegate) {}
+TizenRenderer::TizenRenderer(WindowGeometry geometry,
+                             bool transparent,
+                             bool focusable,
+                             Delegate& delegate)
+    : initial_geometry_(geometry),
+      transparent_(transparent),
+      focusable_(focusable),
+      delegate_(delegate) {}
 
 TizenRenderer::~TizenRenderer() = default;
 

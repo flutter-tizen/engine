@@ -46,9 +46,14 @@ class TizenRenderer {
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
  protected:
-  explicit TizenRenderer(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRenderer(WindowGeometry geometry,
+                         bool transparent,
+                         bool focusable,
+                         Delegate& delegate);
 
   WindowGeometry initial_geometry_;
+  bool transparent_;
+  bool focusable_;
   Delegate& delegate_;
 
   bool is_valid_ = false;

@@ -15,7 +15,10 @@ namespace flutter {
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRendererEcoreWl2(WindowGeometry geometry,
+                                 bool transparent,
+                                 bool focusable,
+                                 Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
   bool OnMakeCurrent() override;

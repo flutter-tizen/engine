@@ -24,6 +24,8 @@ class FlutterApp {
     window_prop.y = 0;
     window_prop.width = window_width_;
     window_prop.height = window_height_;
+    window_prop.transparent = false;
+    window_prop.focusable = true;
 
     std::string assets_path = app_path_ + "/res/flutter_assets";
     std::string icu_data_path = app_path_ + "/res/icudtl.dat";

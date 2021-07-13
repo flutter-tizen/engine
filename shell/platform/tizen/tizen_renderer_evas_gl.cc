@@ -17,8 +17,10 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 namespace flutter {
 
 TizenRendererEvasGL::TizenRendererEvasGL(WindowGeometry geometry,
+                                         bool transparent,
+                                         bool focusable,
                                          Delegate& delegate)
-    : TizenRenderer(geometry, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, delegate) {
   InitializeRenderer();
 
   // Clear once to remove noise.

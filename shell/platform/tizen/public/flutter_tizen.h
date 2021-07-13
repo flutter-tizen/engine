@@ -34,6 +34,10 @@ typedef struct {
   int32_t width;
   // The height of the window, or the maximum height if the value is zero.
   int32_t height;
+  // Whether the window should have a transparent background or not.
+  bool transparent;
+  // Whether the window should be focusable or not.
+  bool focusable;
 } FlutterDesktopWindowProperties;
 
 // Properties for configuring a Flutter engine instance.
