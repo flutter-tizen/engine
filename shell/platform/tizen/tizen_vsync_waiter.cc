@@ -27,7 +27,7 @@ TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  SendMessage(kMessageQuit, 0);
+  Send(kMessageQuit, 0);
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
@@ -35,14 +35,15 @@ TizenVsyncWaiter::~TizenVsyncWaiter() {
 }
 
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
-  SendMessage(kMessageRequestVblank, baton);
+  Send(kMessageRequestVblank, baton);
 }
 
-void TizenVsyncWaiter::SetThreadQueue(Eina_Thread_Queue* vblank_thread_queue) {
+void TizenVsyncWaiter::OnThreadQueueCreate(
+    Eina_Thread_Queue* vblank_thread_queue) {
   vblank_thread_queue_ = vblank_thread_queue;
 }
 
-void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
+void TizenVsyncWaiter::Send(int event, intptr_t baton) {
   if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
     FT_LOGE("vblank thread not valid");
     return;
@@ -77,7 +78,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     ecore_thread_cancel(thread);
     return;
   }
-  tizen_vsync_waiter->SetThreadQueue(vblank_thread_queue);
+  tizen_vsync_waiter->OnThreadQueueCreate(vblank_thread_queue);
   while (!ecore_thread_check(thread)) {
     void* ref;
     Msg* msg;
