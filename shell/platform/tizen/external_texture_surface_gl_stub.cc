@@ -4,9 +4,6 @@
 
 #include "external_texture_surface_gl.h"
 
-#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
-
 namespace flutter {
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
