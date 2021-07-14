@@ -8,6 +8,7 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
+#include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
@@ -25,12 +26,19 @@ static FlutterDesktopEngineRef HandleForEngine(
 }
 
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
-    const FlutterDesktopEngineProperties& engine_properties,
-    bool headed) {
+    const FlutterDesktopWindowProperties& window_properties,
+    const FlutterDesktopEngineProperties& engine_properties) {
   flutter::StartLogging();
 
-  auto engine = std::make_unique<flutter::FlutterTizenEngine>(headed);
-  if (!engine->RunEngine(engine_properties)) {
+  flutter::FlutterProjectBundle project(engine_properties);
+  auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
+  if (window_properties.headed) {
+    engine->InitializeRenderer(
+        window_properties.x, window_properties.y, window_properties.width,
+        window_properties.height, window_properties.transparent,
+        window_properties.focusable);
+  }
+  if (!engine->RunEngine()) {
     FT_LOGE("Failed to run the Flutter engine.");
     return nullptr;
   }
@@ -136,6 +144,7 @@ void FlutterRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
+  view_factory->SetWindow(registrar->engine->renderer->GetWindowHandle());
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));

@@ -12,7 +12,7 @@ namespace flutter {
 
 class TizenRenderer {
  public:
-  struct TizenWindowGeometry {
+  struct WindowGeometry {
     int32_t x{0}, y{0}, w{0}, h{0};
   };
 
@@ -32,9 +32,10 @@ class TizenRenderer {
   virtual uint32_t OnGetFBO() = 0;
   virtual void* OnProcResolver(const char* name) = 0;
 
-  virtual TizenWindowGeometry GetGeometry() = 0;
+  virtual WindowGeometry GetCurrentGeometry() = 0;
   virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
+  virtual void* GetWindowHandle() = 0;
 
   virtual void SetRotate(int angle) = 0;
   virtual void ResizeWithRotation(int32_t x,
@@ -45,12 +46,18 @@ class TizenRenderer {
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
  protected:
-  explicit TizenRenderer(TizenRenderer::Delegate& delegate);
+  explicit TizenRenderer(WindowGeometry geometry,
+                         bool transparent,
+                         bool focusable,
+                         Delegate& delegate);
+
+  WindowGeometry initial_geometry_;
+  bool transparent_;
+  bool focusable_;
+  Delegate& delegate_;
 
   bool is_valid_ = false;
-
-  bool received_rotation_{false};
-  TizenRenderer::Delegate& delegate_;
+  bool received_rotation_ = false;
 };
 
 }  // namespace flutter

@@ -7,10 +7,6 @@
 
 #ifndef __X64_SHELL__
 #include <system/system_settings.h>
-#else
-typedef enum {
-  SYSTEM_SETTINGS_KEY_MAX,
-} system_settings_key_e;
 #endif
 
 #include <memory>
@@ -27,11 +23,13 @@ class SettingsChannel {
   virtual ~SettingsChannel();
 
  private:
+#ifndef __X64_SHELL__
   static void OnSettingsChangedCallback(system_settings_key_e key,
                                         void* user_data);
   void SendSettingsEvent();
 
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;
+#endif
 };
 
 }  // namespace flutter
