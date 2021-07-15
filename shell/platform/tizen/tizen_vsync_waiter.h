@@ -20,7 +20,7 @@ class TdmClient {
   virtual ~TdmClient();
   bool CreateTdm();
   void DestroyTdm();
-  bool TdmValid();
+  bool IsValid();
   void WaitVblank(intptr_t baton);
   static void VblankCallback(tdm_client_vblank* vblank,
                              tdm_error error,
@@ -43,13 +43,13 @@ class TizenVsyncWaiter {
   virtual ~TizenVsyncWaiter();
   void AsyncWaitForVsync(intptr_t baton);
   void OnThreadQueueCreate(Eina_Thread_Queue* vblank_thread_queue);
-  FlutterTizenEngine* engine_{nullptr};
 
  private:
   void Send(int event, intptr_t baton);
   static void RequestVblankLoop(void* data, Ecore_Thread* thread);
   Ecore_Thread* vblank_thread_{nullptr};
   Eina_Thread_Queue* vblank_thread_queue_{nullptr};
+  FlutterTizenEngine* engine_{nullptr};
 };
 
 }  // namespace flutter

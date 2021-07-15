@@ -67,7 +67,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(data);
   TdmClient tdmClient(tizen_vsync_waiter->engine_);
-  if (!tdmClient.TdmValid()) {
+  if (!tdmClient.IsValid()) {
     FT_LOGE("Tdm client not valid");
     ecore_thread_cancel(thread);
     return;
@@ -155,7 +155,7 @@ void TdmClient::DestroyTdm() {
   }
 }
 
-bool TdmClient::TdmValid() {
+bool TdmClient::IsValid() {
   return vblank_ && client_;
 }
 
