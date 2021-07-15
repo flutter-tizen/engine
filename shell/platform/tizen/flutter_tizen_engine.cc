@@ -146,7 +146,7 @@ bool FlutterTizenEngine::RunEngine() {
 
   if (std::find(switches.begin(), switches.end(), "--verbose-logging") !=
       switches.end()) {
-    Logger::SetLoggingLevel(kLogLevelInfo);
+    Logger::SetLoggingLevel(kLogLevelDebug);
   }
 
   // Configure task runners.
