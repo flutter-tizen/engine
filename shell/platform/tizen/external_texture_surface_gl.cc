@@ -54,6 +54,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
+  if (!texture_callback_) {
+    return false;
+  }
   const FlutterDesktopGpuBuffer* gpu_buffer =
       texture_callback_(width, height, user_data_);
   if (!gpu_buffer) {
@@ -153,7 +156,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
 }
 
 void ExternalTextureSurfaceGL::OnDestruction() {
-  destruction_callback_(user_data_);
+  if (destruction_callback_) {
+    destruction_callback_(user_data_);
+  }
 }
 
 }  // namespace flutter

@@ -245,6 +245,8 @@ template("embedder_executable") {
       "channels/localization_channel_stub.cc",
       "channels/platform_channel_stub.cc",
       "channels/settings_channel_stub.cc",
+      "external_texture_pixel_gl_stub.cc",
+      "external_texture_surface_gl_stub.cc",
       "tizen_log_stub.cc",
       "tizen_renderer_evas_gl.cc",
     ]
@@ -303,6 +305,7 @@ embedder_executable("flutter_tizen_unittests") {
 
   sources = [
     "flutter_tizen_engine_unittest.cc",
+    "flutter_tizen_texture_registrar_unittests.cc",
     "testing/mock_engine.cc",
   ]
 

@@ -142,6 +142,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   std::unique_ptr<PlatformViewChannel> platform_view_channel;
 
  private:
+  friend class EngineModifier;
+
   // Whether the engine is running in headed or headless mode.
   bool IsHeaded() { return renderer != nullptr; }
 
