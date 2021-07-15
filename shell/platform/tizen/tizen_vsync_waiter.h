@@ -42,7 +42,6 @@ class TizenVsyncWaiter {
   TizenVsyncWaiter(FlutterTizenEngine* engine);
   virtual ~TizenVsyncWaiter();
   void AsyncWaitForVsync(intptr_t baton);
-  void OnThreadQueueCreate(Eina_Thread_Queue* vblank_thread_queue);
 
  private:
   void Send(int event, intptr_t baton);

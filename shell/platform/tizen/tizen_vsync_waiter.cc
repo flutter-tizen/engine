@@ -38,11 +38,6 @@ void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
   Send(kMessageRequestVblank, baton);
 }
 
-void TizenVsyncWaiter::OnThreadQueueCreate(
-    Eina_Thread_Queue* vblank_thread_queue) {
-  vblank_thread_queue_ = vblank_thread_queue;
-}
-
 void TizenVsyncWaiter::Send(int event, intptr_t baton) {
   if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
     FT_LOGE("vblank thread not valid");
@@ -66,8 +61,8 @@ void TizenVsyncWaiter::Send(int event, intptr_t baton) {
 void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(data);
-  TdmClient tdmClient(tizen_vsync_waiter->engine_);
-  if (!tdmClient.IsValid()) {
+  TdmClient tdm_client(tizen_vsync_waiter->engine_);
+  if (!tdm_client.IsValid()) {
     FT_LOGE("Tdm client not valid");
     ecore_thread_cancel(thread);
     return;
@@ -78,7 +73,8 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     ecore_thread_cancel(thread);
     return;
   }
-  tizen_vsync_waiter->OnThreadQueueCreate(vblank_thread_queue);
+
+  tizen_vsync_waiter->vblank_thread_queue_ = vblank_thread_queue;
   while (!ecore_thread_check(thread)) {
     void* ref;
     Msg* msg;
@@ -92,7 +88,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     if (msg->event == kMessageQuit) {
       break;
     }
-    tdmClient.WaitVblank(msg->baton);
+    tdm_client.WaitVblank(msg->baton);
   }
   if (vblank_thread_queue) {
     eina_thread_queue_free(vblank_thread_queue);
@@ -105,6 +101,7 @@ TdmClient::TdmClient(FlutterTizenEngine* engine) {
   }
   engine_ = engine;
 }
+
 TdmClient::~TdmClient() {
   DestroyTdm();
 }
@@ -165,14 +162,14 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                unsigned int tv_sec,
                                unsigned int tv_usec,
                                void* user_data) {
-  TdmClient* tdmClient = reinterpret_cast<TdmClient*>(user_data);
-  FT_ASSERT(tdmClient != nullptr);
-  FT_ASSERT(tdmClient->engine_ != nullptr);
+  TdmClient* client = reinterpret_cast<TdmClient*>(user_data);
+  FT_ASSERT(client != nullptr);
+  FT_ASSERT(client->engine_ != nullptr);
 
   uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
   uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-  tdmClient->engine_->OnVsync(tdmClient->baton_, frame_start_time_nanos,
-                              frame_target_time_nanos);
+  client->engine_->OnVsync(client->baton_, frame_start_time_nanos,
+                           frame_target_time_nanos);
 }
 
 }  // namespace flutter
