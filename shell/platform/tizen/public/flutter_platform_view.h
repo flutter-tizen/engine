@@ -45,10 +45,6 @@ class PlatformView {
   // Key input event
   virtual void DispatchKeyDownEvent(Ecore_Event_Key* key) = 0;
   virtual void DispatchKeyUpEvent(Ecore_Event_Key* key) = 0;
-  virtual void DispatchCompositionUpdateEvent(const char* str, int size) = 0;
-  virtual void DispatchCompositionEndEvent(const char* str, int size) = 0;
-
-  virtual void SetSoftwareKeyboardContext(Ecore_IMF_Context* context) = 0;
 
  protected:
   void* platform_window_;

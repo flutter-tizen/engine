@@ -38,6 +38,7 @@ _flutter_tizen_source = [
   "flutter_tizen_texture_registrar.cc",
   "key_event_handler.cc",
   "tizen_event_loop.cc",
+  "tizen_input_method_context.cc",
   "tizen_renderer.cc",
   "touch_event_handler.cc",
 ]

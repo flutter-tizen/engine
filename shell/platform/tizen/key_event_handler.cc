@@ -44,12 +44,13 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
           key->keyname, key->modifiers, is_down);
 
   if (engine->text_input_channel) {
-    if (is_down) {
-      engine->text_input_channel->OnKeyDown(key);
-    }
-    if (engine->text_input_channel->IsSoftwareKeyboardShowing()) {
+    if (engine->text_input_channel->SendKeyEvent(key, is_down)) {
       return ECORE_CALLBACK_PASS_ON;
     }
+  }
+
+  if (engine->platform_view_channel) {
+    engine->platform_view_channel->SendKeyEvent(key, is_down);
   }
 
   if (engine->key_event_channel) {

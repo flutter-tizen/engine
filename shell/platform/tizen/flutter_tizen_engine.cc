@@ -129,7 +129,7 @@ bool FlutterTizenEngine::RunEngine() {
       switches.begin(), switches.end(), std::back_inserter(argv),
       [](const std::string& arg) -> const char* { return arg.c_str(); });
 
-  if (std::find(switches.begin(), switches.end(), "verbose-logging") !=
+  if (std::find(switches.begin(), switches.end(), "--verbose-logging") !=
       switches.end()) {
     SetMinLoggingLevel(DLOG_INFO);
   }
@@ -232,7 +232,7 @@ bool FlutterTizenEngine::RunEngine() {
     text_input_channel = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(), this);
     platform_view_channel = std::make_unique<PlatformViewChannel>(
-        internal_plugin_registrar_->messenger(), this);
+        internal_plugin_registrar_->messenger());
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
@@ -368,7 +368,6 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
       0.0,      0.0,       1.0       // perspective
   };
   touch_event_handler_->rotation = degree;
-  text_input_channel->rotation = degree;
   if (degree == 90 || degree == 270) {
     renderer->ResizeWithRotation(geometry.x, geometry.y, height, width, degree);
     SendWindowMetrics(height, width, 0.0);
