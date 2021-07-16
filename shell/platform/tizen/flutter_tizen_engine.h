@@ -63,7 +63,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   void InitializeRenderer(int32_t x, int32_t y, int32_t width, int32_t height);
 
   // Starts running the engine.
-  bool RunEngine();
+  bool RunEngine(const char* entrypoint);
 
   // Stops the engine.
   bool StopEngine();

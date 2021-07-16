@@ -91,7 +91,7 @@ void FlutterTizenEngine::NotifyLowMemoryWarning() {
   embedder_api_.NotifyLowMemoryWarning(engine_);
 }
 
-bool FlutterTizenEngine::RunEngine() {
+bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   if (engine_ != nullptr) {
     FT_LOGE("The engine has already started.");
     return false;
@@ -128,6 +128,14 @@ bool FlutterTizenEngine::RunEngine() {
       switches.end()) {
     SetMinLoggingLevel(DLOG_INFO);
   }
+
+  const std::vector<std::string>& entrypoint_args =
+      project_->dart_entrypoint_arguments();
+  std::vector<const char*> entrypoint_argv;
+  std::transform(
+      entrypoint_args.begin(), entrypoint_args.end(),
+      std::back_inserter(entrypoint_argv),
+      [](const std::string& arg) -> const char* { return arg.c_str(); });
 
   // Configure task runners.
   FlutterTaskRunnerDescription platform_task_runner = {};
@@ -193,6 +201,10 @@ bool FlutterTizenEngine::RunEngine() {
 #endif
   if (aot_data_) {
     args.aot_data = aot_data_.get();
+  }
+
+  if (entrypoint) {
+    args.custom_dart_entrypoint = entrypoint;
   }
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
