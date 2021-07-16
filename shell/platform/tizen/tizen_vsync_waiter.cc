@@ -96,7 +96,9 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
 }
 
 TdmClient::TdmClient(FlutterTizenEngine* engine) {
-  CreateTdm();
+  if (!CreateTdm()) {
+    FT_LOG(Error) << "CreateTdm() failed.";
+  }
   engine_ = engine;
 }
 
@@ -130,7 +132,7 @@ bool TdmClient::CreateTdm() {
 
   vblank_ = tdm_client_output_create_vblank(output_, &ret);
   if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    FT_LOG(Error) << "Failed to create a vblank object";
+    FT_LOG(Error) << "Failed to create a vblank object.";
     return false;
   }
 
