@@ -111,19 +111,6 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
         return kSuccess;
       }));
 
-  // It should send locale info.
-  bool update_locales_called = false;
-  modifier.embedder_api().UpdateLocales = MOCK_ENGINE_PROC(
-      UpdateLocales,
-      ([&update_locales_called](auto engine, const FlutterLocale** locales,
-                                size_t locales_count) {
-        update_locales_called = true;
-        EXPECT_GT(locales_count, (size_t)0);
-        EXPECT_NE(locales, nullptr);
-
-        return kSuccess;
-      }));
-
   // And it should send initial settings info.
   bool settings_message_sent = false;
   modifier.embedder_api().SendPlatformMessage = MOCK_ENGINE_PROC(
@@ -139,8 +126,6 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
   engine_->RunEngine();
 
   EXPECT_TRUE(run_called);
-  EXPECT_TRUE(update_locales_called);
-  EXPECT_TRUE(settings_message_sent);
   EXPECT_TRUE(settings_message_sent);
 
   modifier.embedder_api().Shutdown = [](auto engine) { return kSuccess; };

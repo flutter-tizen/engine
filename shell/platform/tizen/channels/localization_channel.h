@@ -5,8 +5,6 @@
 #ifndef EMBEDDER_LOCALIZATION_CHANNEL_H_
 #define EMBEDDER_LOCALIZATION_CHANNEL_H_
 
-#include <vector>
-
 #include "flutter/shell/platform/embedder/embedder.h"
 
 namespace flutter {
@@ -22,7 +20,6 @@ class LocalizationChannel {
 
  private:
   void SendPlatformResolvedLocale();
-  std::vector<FlutterLocale*> GetFlutterLocales();
   FlutterLocale* GetFlutterLocale(const char* locale);
   void DestroyFlutterLocale(FlutterLocale* flutter_locale);
 

@@ -128,7 +128,6 @@ template("embedder_for_profile") {
     sources = _flutter_tizen_source
     sources += [
       "channels/localization_channel.cc",
-      "channels/localization_channel_device.cc",
       "channels/platform_channel.cc",
       "channels/settings_channel.cc",
       "channels/settings_channel_device.cc",
@@ -245,7 +244,6 @@ template("embedder_executable") {
 
     sources = _flutter_tizen_source
     sources += [
-      "channels/localization_channel.cc",
       "channels/localization_channel_stub.cc",
       "channels/platform_channel_stub.cc",
       "channels/settings_channel.cc",
