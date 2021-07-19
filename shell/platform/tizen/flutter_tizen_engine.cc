@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 namespace flutter {
@@ -30,6 +31,24 @@ constexpr double kProfileFactor = 2.0;
 #else
 constexpr double kProfileFactor = 1.0;
 #endif
+
+// Converts a LanguageInfo struct to a FlutterLocale struct. |info| must outlive
+// the returned value, since the returned FlutterLocale has pointers into it.
+FlutterLocale CovertToFlutterLocale(const LanguageInfo& info) {
+  FlutterLocale locale = {};
+  locale.struct_size = sizeof(FlutterLocale);
+  locale.language_code = info.language.c_str();
+  if (!info.country.empty()) {
+    locale.country_code = info.country.c_str();
+  }
+  if (!info.script.empty()) {
+    locale.script_code = info.script.c_str();
+  }
+  if (!info.variant.empty()) {
+    locale.variant_code = info.variant.c_str();
+  }
+  return locale;
+}
 
 }  // namespace
 
@@ -90,10 +109,6 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
 
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
-}
-
-void FlutterTizenEngine::NotifyLowMemoryWarning() {
-  embedder_api_.NotifyLowMemoryWarning(engine_);
 }
 
 bool FlutterTizenEngine::RunEngine() {
@@ -218,8 +233,6 @@ bool FlutterTizenEngine::RunEngine() {
       internal_plugin_registrar_->messenger(), renderer.get());
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
-  localization_channel = std::make_unique<LocalizationChannel>(this);
-  localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(
       internal_plugin_registrar_->messenger());
 
@@ -238,6 +251,8 @@ bool FlutterTizenEngine::RunEngine() {
 
     SetWindowOrientation(0);
   }
+
+  SetupLocales();
 
   return true;
 }
@@ -388,9 +403,27 @@ void FlutterTizenEngine::OnVsync(intptr_t baton,
                         frame_target_time_nanos);
 }
 
-void FlutterTizenEngine::UpdateLocales(const FlutterLocale** locales,
-                                       size_t locales_count) {
-  embedder_api_.UpdateLocales(engine_, locales, locales_count);
+void FlutterTizenEngine::SetupLocales() {
+  std::vector<LanguageInfo> languages = GetPreferredLanguageInfo();
+  std::vector<FlutterLocale> flutter_locales;
+  flutter_locales.reserve(languages.size());
+  for (const auto& info : languages) {
+    flutter_locales.push_back(CovertToFlutterLocale(info));
+  }
+  // Convert the locale list to the locale pointer list that must be provided.
+  std::vector<const FlutterLocale*> flutter_locale_list;
+  flutter_locale_list.reserve(flutter_locales.size());
+  std::transform(
+      flutter_locales.begin(), flutter_locales.end(),
+      std::back_inserter(flutter_locale_list),
+      [](const auto& arg) -> const auto* { return &arg; });
+
+  embedder_api_.UpdateLocales(engine_, flutter_locale_list.data(),
+                              flutter_locale_list.size());
+}
+
+void FlutterTizenEngine::NotifyLowMemoryWarning() {
+  embedder_api_.NotifyLowMemoryWarning(engine_);
 }
 
 bool FlutterTizenEngine::RegisterExternalTexture(int64_t texture_id) {

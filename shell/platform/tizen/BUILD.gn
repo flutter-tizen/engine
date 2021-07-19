@@ -127,12 +127,12 @@ template("embedder_for_profile") {
 
     sources = _flutter_tizen_source
     sources += [
-      "channels/localization_channel.cc",
       "channels/platform_channel.cc",
       "channels/settings_channel.cc",
       "channels/settings_channel_tizen.cc",
       "external_texture_pixel_gl.cc",
       "external_texture_surface_gl.cc",
+      "system_utils_tizen.cc",
       "tizen_log.cc",
     ]
 
@@ -244,12 +244,12 @@ template("embedder_executable") {
 
     sources = _flutter_tizen_source
     sources += [
-      "channels/localization_channel_stub.cc",
       "channels/platform_channel_stub.cc",
       "channels/settings_channel.cc",
       "channels/settings_channel_linux.cc",
       "external_texture_pixel_gl_stub.cc",
       "external_texture_surface_gl_stub.cc",
+      "system_utils_linux.cc",
       "tizen_log_stub.cc",
       "tizen_renderer_evas_gl.cc",
     ]

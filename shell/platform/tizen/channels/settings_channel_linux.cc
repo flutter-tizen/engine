@@ -4,8 +4,7 @@
 
 #include "settings_channel.h"
 
-#include <chrono>
-#include <ctime>
+#include <locale>
 
 namespace flutter {
 

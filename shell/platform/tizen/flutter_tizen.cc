@@ -117,7 +117,11 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
 }
 
 void FlutterDesktopNotifyLocaleChange(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->localization_channel->SendLocales();
+  EngineFromHandle(engine)->SetupLocales();
+}
+
+void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->NotifyLowMemoryWarning();
 }
 
 void FlutterDesktopNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
@@ -134,10 +138,6 @@ void FlutterDesktopNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
 
 void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel->AppIsDetached();
-}
-
-void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->NotifyLowMemoryWarning();
 }
 
 void FlutterRegisterViewFactory(

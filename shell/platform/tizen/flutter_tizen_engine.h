@@ -13,7 +13,6 @@
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
-#include "flutter/shell/platform/tizen/channels/localization_channel.h"
 #include "flutter/shell/platform/tizen/channels/navigation_channel.h"
 #include "flutter/shell/platform/tizen/channels/platform_channel.h"
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
@@ -109,8 +108,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
                uint64_t frame_start_time_nanos,
                uint64_t frame_target_time_nanos);
 
+  // Passes locale information to the Flutter engine.
+  void SetupLocales();
+
+  // Posts a low memory notification to the Flutter engine.
   void NotifyLowMemoryWarning();
-  void UpdateLocales(const FlutterLocale** locales, size_t locales_count);
 
   // Attempts to register the texture with the given |texture_id|.
   bool RegisterExternalTexture(int64_t texture_id);
@@ -134,7 +136,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The system channels for communicating between Flutter and the platform.
   std::unique_ptr<KeyEventChannel> key_event_channel;
   std::unique_ptr<LifecycleChannel> lifecycle_channel;
-  std::unique_ptr<LocalizationChannel> localization_channel;
   std::unique_ptr<NavigationChannel> navigation_channel;
   std::unique_ptr<PlatformChannel> platform_channel;
   std::unique_ptr<SettingsChannel> settings_channel;

@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gtest/gtest.h>
+#include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
+
 #include <iostream>
 
 #include "flutter/shell/platform/embedder/test_utils/proc_table_replacement.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/testing/engine_modifier.h"
+#include "gtest/gtest.h"
 
 namespace flutter {
 namespace testing {

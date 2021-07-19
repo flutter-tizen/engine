@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <system/system_settings.h>
 #include "settings_channel.h"
+
+#include <system/system_settings.h>
 
 namespace flutter {
 
