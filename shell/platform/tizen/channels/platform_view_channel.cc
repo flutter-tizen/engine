@@ -12,9 +12,11 @@
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
-static constexpr char kChannelName[] = "flutter/platform_views";
-
 namespace flutter {
+
+namespace {
+constexpr char kChannelName[] = "flutter/platform_views";
+}  // namespace
 
 template <typename T>
 bool GetValueFromEncodableMap(const EncodableValue& arguments,

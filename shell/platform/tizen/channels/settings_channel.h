@@ -5,10 +5,6 @@
 #ifndef EMBEDDER_SETTINGS_CHANNEL_H_
 #define EMBEDDER_SETTINGS_CHANNEL_H_
 
-#ifndef __X64_SHELL__
-#include <system/system_settings.h>
-#endif
-
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"
@@ -21,15 +17,14 @@ class SettingsChannel {
  public:
   explicit SettingsChannel(BinaryMessenger* messenger);
   virtual ~SettingsChannel();
-
- private:
-#ifndef __X64_SHELL__
-  static void OnSettingsChangedCallback(system_settings_key_e key,
-                                        void* user_data);
   void SendSettingsEvent();
 
+ private:
+  bool Prefer24HourTime();
+  void Init();
+  void Dispose();
+
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;
-#endif
 };
 
 }  // namespace flutter

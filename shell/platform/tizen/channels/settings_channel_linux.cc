@@ -4,10 +4,19 @@
 
 #include "settings_channel.h"
 
+#include <chrono>
+#include <ctime>
+
 namespace flutter {
 
-SettingsChannel::SettingsChannel(BinaryMessenger* messenger) {}
+void SettingsChannel::Init() {
+  std::locale::global(std::locale(""));
+}
 
-SettingsChannel::~SettingsChannel() {}
+void SettingsChannel::Dispose() {}
+
+bool SettingsChannel::Prefer24HourTime() {
+  return false;
+}
 
 }  // namespace flutter
