@@ -20,7 +20,7 @@ class SettingsChannel {
   void SendSettingsEvent();
 
  private:
-  bool GetSettingValueOf24Format(bool* value);
+  bool Prefer24HourTime();
   void Init();
   void Dispose();
 

@@ -93,7 +93,6 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
                 size_t version, const FlutterRendererConfig* config,
                 const FlutterProjectArgs* args, void* user_data,
                 FLUTTER_API_SYMBOL(FlutterEngine) * engine_out) {
-        std::string current_path = std::filesystem::current_path().string();
         run_called = true;
         *engine_out = reinterpret_cast<FLUTTER_API_SYMBOL(FlutterEngine)>(1);
 
@@ -144,5 +143,6 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
 
   modifier.embedder_api().Shutdown = [](auto engine) { return kSuccess; };
 }
+
 }  // namespace testing
 }  // namespace flutter

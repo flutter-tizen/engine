@@ -23,13 +23,13 @@ void SettingsChannel::Dispose() {
       SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR);
 }
 
-bool SettingsChannel::GetSettingValueOf24Format(bool* value) {
+bool SettingsChannel::Prefer24HourTime() {
+  bool value = false;
   if (system_settings_get_value_bool(
-          SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR, value) ==
+          SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR, &value) ==
       SYSTEM_SETTINGS_ERROR_NONE) {
-    return true;
   }
-  return false;
+  return value;
 }
 
 }  // namespace flutter

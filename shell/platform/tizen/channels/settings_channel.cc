@@ -32,15 +32,12 @@ SettingsChannel::~SettingsChannel() {
 }
 
 void SettingsChannel::SendSettingsEvent() {
-  bool value = false;
-  if (GetSettingValueOf24Format(&value)) {
-    rapidjson::Document event(rapidjson::kObjectType);
-    auto& allocator = event.GetAllocator();
-    event.AddMember(kTextScaleFactorKey, 1.0, allocator);
-    event.AddMember(kPlatformBrightnessKey, "light", allocator);
-    event.AddMember(kAlwaysUse24HourFormatKey, value, allocator);
-    channel_->Send(event);
-  }
+  rapidjson::Document event(rapidjson::kObjectType);
+  auto& allocator = event.GetAllocator();
+  event.AddMember(kTextScaleFactorKey, 1.0, allocator);
+  event.AddMember(kPlatformBrightnessKey, "light", allocator);
+  event.AddMember(kAlwaysUse24HourFormatKey, Prefer24HourTime(), allocator);
+  channel_->Send(event);
 }
 
 }  // namespace flutter
