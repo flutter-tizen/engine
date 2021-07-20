@@ -198,6 +198,9 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   args.icu_data_path = icu_path_string.c_str();
   args.command_line_argc = static_cast<int>(argv.size());
   args.command_line_argv = argv.size() > 0 ? argv.data() : nullptr;
+  args.dart_entrypoint_argc = static_cast<int>(entrypoint_argv.size());
+  args.dart_entrypoint_argv =
+      entrypoint_argv.size() > 0 ? entrypoint_argv.data() : nullptr;
   args.platform_message_callback =
       [](const FlutterPlatformMessage* engine_message, void* user_data) {
         if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
