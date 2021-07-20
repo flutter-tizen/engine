@@ -66,7 +66,10 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
                           bool transparent,
                           bool focusable);
 
-  // Starts running the engine.
+  // Starts running the engine with the given entrypoint. If null, defaults to
+  // main().
+  //
+  // Returns false if the engine couldn't be started.
   bool RunEngine(const char* entrypoint);
 
   // Stops the engine.
