@@ -6,7 +6,7 @@
 
 #include <utils_i18n.h>
 
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -17,7 +17,7 @@ std::vector<LanguageInfo> GetPreferredLanguageInfo() {
   i18n_ulocale_set_default(getenv("LANG"));
   int ret = i18n_ulocale_get_default(&locale);
   if (ret != I18N_ERROR_NONE) {
-    FT_LOGE("i18n_ulocale_get_default() failed.");
+    FT_LOG(Error) << "i18n_ulocale_get_default() failed.";
     return languages;
   }
   std::string preferred_locale(locale);
@@ -60,7 +60,7 @@ std::vector<LanguageInfo> GetPreferredLanguageInfo() {
       languages.push_back(info);
     }
   }
-  FT_LOGI("Found %zu locales.", languages.size());
+  FT_LOG(Info) << "Found " << languages.size() << " locales.";
 
   return languages;
 }
