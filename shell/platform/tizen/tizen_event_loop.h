@@ -21,14 +21,23 @@
 
 namespace flutter {
 
+typedef uint64_t (*CurrentTimeProc)();
+
 class TizenRenderer;
 
 class TizenEventLoop {
  public:
   using TaskExpiredCallback = std::function<void(const FlutterTask*)>;
+
   TizenEventLoop(std::thread::id main_thread_id,
+                 CurrentTimeProc get_current_time,
                  TaskExpiredCallback on_task_expired);
   virtual ~TizenEventLoop();
+
+  // Prevent copying.
+  TizenEventLoop(const TizenEventLoop&) = delete;
+  TizenEventLoop& operator=(const TizenEventLoop&) = delete;
+
   bool RunsTasksOnCurrentThread() const;
 
   void ExcuteTaskEvents(
@@ -41,6 +50,7 @@ class TizenEventLoop {
 
  protected:
   using TaskTimePoint = std::chrono::steady_clock::time_point;
+
   struct Task {
     uint64_t order;
     TaskTimePoint fire_time;
@@ -55,7 +65,9 @@ class TizenEventLoop {
       }
     };
   };
+
   std::thread::id main_thread_id_;
+  CurrentTimeProc get_current_time_;
   TaskExpiredCallback on_task_expired_;
   std::mutex task_queue_mutex_;
   std::priority_queue<Task, std::deque<Task>, Task::Comparer> task_queue_;
@@ -67,23 +79,21 @@ class TizenEventLoop {
  private:
   Ecore_Pipe* ecore_pipe_;
 
-  TizenEventLoop(const TizenEventLoop&) = delete;
-
-  TizenEventLoop& operator=(const TizenEventLoop&) = delete;
+  // Returns a TaskTimePoint computed from the given target time from Flutter.
+  TaskTimePoint TimePointFromFlutterTime(uint64_t flutter_target_time_nanos);
 
   static void ExcuteTaskEvents(void* data, void* buffer, unsigned int nbyte);
 
   static Eina_Bool TaskTimerCallback(void* data);
-
-  static TaskTimePoint TimePointFromFlutterTime(
-      uint64_t flutter_target_time_nanos);
 };
 
 class TizenPlatformEventLoop : public TizenEventLoop {
  public:
   TizenPlatformEventLoop(std::thread::id main_thread_id,
+                         CurrentTimeProc get_current_time,
                          TaskExpiredCallback on_task_expired);
   virtual ~TizenPlatformEventLoop();
+
   virtual void OnTaskExpired() override;
 };
 
@@ -91,16 +101,18 @@ class TizenPlatformEventLoop : public TizenEventLoop {
 class TizenRenderEventLoop : public TizenEventLoop {
  public:
   TizenRenderEventLoop(std::thread::id main_thread_id,
+                       CurrentTimeProc get_current_time,
                        TaskExpiredCallback on_task_expired,
                        TizenRenderer* renderer);
   virtual ~TizenRenderEventLoop();
+
   virtual void OnTaskExpired() override;
 
  private:
   TizenRenderer* renderer_{nullptr};
   std::atomic_bool has_pending_renderer_callback_{false};
 };
-#endif
+#endif  // TIZEN_RENDERER_EVAS_GL
 
 }  // namespace flutter
 

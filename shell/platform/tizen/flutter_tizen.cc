@@ -33,9 +33,10 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
   flutter::FlutterProjectBundle project(engine_properties);
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
   if (window_properties.headed) {
-    engine->InitializeRenderer(window_properties.x, window_properties.y,
-                               window_properties.width,
-                               window_properties.height);
+    engine->InitializeRenderer(
+        window_properties.x, window_properties.y, window_properties.width,
+        window_properties.height, window_properties.transparent,
+        window_properties.focusable);
   }
   if (!engine->RunEngine(engine_properties.entry_point)) {
     FT_LOGE("Failed to run the Flutter engine.");
@@ -116,7 +117,11 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
 }
 
 void FlutterDesktopNotifyLocaleChange(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->localization_channel->SendLocales();
+  EngineFromHandle(engine)->SetupLocales();
+}
+
+void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
+  EngineFromHandle(engine)->NotifyLowMemoryWarning();
 }
 
 void FlutterDesktopNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
@@ -135,14 +140,11 @@ void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel->AppIsDetached();
 }
 
-void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->NotifyLowMemoryWarning();
-}
-
 void FlutterRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
+  view_factory->SetWindow(registrar->engine->renderer->GetWindowHandle());
   registrar->engine->platform_view_channel->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));

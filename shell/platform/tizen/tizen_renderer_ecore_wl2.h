@@ -15,7 +15,10 @@ namespace flutter {
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRendererEcoreWl2(WindowGeometry geometry,
+                                 bool transparent,
+                                 bool focusable,
+                                 Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
   bool OnMakeCurrent() override;
@@ -28,6 +31,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   WindowGeometry GetCurrentGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
+  void* GetWindowHandle() override;
 
   void ResizeWithRotation(int32_t x,
                           int32_t y,

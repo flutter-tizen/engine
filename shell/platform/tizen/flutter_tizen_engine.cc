@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_log.h"
 
 namespace flutter {
@@ -31,6 +32,24 @@ constexpr double kProfileFactor = 2.0;
 constexpr double kProfileFactor = 1.0;
 #endif
 
+// Converts a LanguageInfo struct to a FlutterLocale struct. |info| must outlive
+// the returned value, since the returned FlutterLocale has pointers into it.
+FlutterLocale CovertToFlutterLocale(const LanguageInfo& info) {
+  FlutterLocale locale = {};
+  locale.struct_size = sizeof(FlutterLocale);
+  locale.language_code = info.language.c_str();
+  if (!info.country.empty()) {
+    locale.country_code = info.country.c_str();
+  }
+  if (!info.script.empty()) {
+    locale.script_code = info.script.c_str();
+  }
+  if (!info.variant.empty()) {
+    locale.variant_code = info.variant.c_str();
+  }
+  return locale;
+}
+
 }  // namespace
 
 FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
@@ -44,7 +63,7 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
   // thread). UI threads need to send flutter task to platform thread.
   event_loop_ = std::make_unique<TizenPlatformEventLoop>(
       std::this_thread::get_id(),  // main thread
-      [this](const auto* task) {
+      embedder_api_.GetCurrentTime, [this](const auto* task) {
         if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");
         }
@@ -66,14 +85,18 @@ FlutterTizenEngine::~FlutterTizenEngine() {
 void FlutterTizenEngine::InitializeRenderer(int32_t x,
                                             int32_t y,
                                             int32_t width,
-                                            int32_t height) {
+                                            int32_t height,
+                                            bool transparent,
+                                            bool focusable) {
   TizenRenderer::WindowGeometry geometry = {x, y, width, height};
 
 #ifdef TIZEN_RENDERER_EVAS_GL
-  renderer = std::make_unique<TizenRendererEvasGL>(geometry, *this);
+  renderer = std::make_unique<TizenRendererEvasGL>(geometry, transparent,
+                                                   focusable, *this);
 
   render_loop_ = std::make_unique<TizenRenderEventLoop>(
       std::this_thread::get_id(),  // main thread
+      embedder_api_.GetCurrentTime,
       [this](const auto* task) {
         if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
           FT_LOGE("Could not post an engine task.");
@@ -81,14 +104,11 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
       },
       renderer.get());
 #else
-  renderer = std::make_unique<TizenRendererEcoreWl2>(geometry, *this);
+  renderer = std::make_unique<TizenRendererEcoreWl2>(geometry, transparent,
+                                                     focusable, *this);
 
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
-}
-
-void FlutterTizenEngine::NotifyLowMemoryWarning() {
-  embedder_api_.NotifyLowMemoryWarning(engine_);
 }
 
 bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
@@ -124,7 +144,7 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
       switches.begin(), switches.end(), std::back_inserter(argv),
       [](const std::string& arg) -> const char* { return arg.c_str(); });
 
-  if (std::find(switches.begin(), switches.end(), "verbose-logging") !=
+  if (std::find(switches.begin(), switches.end(), "--verbose-logging") !=
       switches.end()) {
     SetMinLoggingLevel(DLOG_INFO);
   }
@@ -225,8 +245,6 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
       internal_plugin_registrar_->messenger(), renderer.get());
   settings_channel = std::make_unique<SettingsChannel>(
       internal_plugin_registrar_->messenger());
-  localization_channel = std::make_unique<LocalizationChannel>(this);
-  localization_channel->SendLocales();
   lifecycle_channel = std::make_unique<LifecycleChannel>(
       internal_plugin_registrar_->messenger());
 
@@ -239,12 +257,14 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     text_input_channel = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(), this);
     platform_view_channel = std::make_unique<PlatformViewChannel>(
-        internal_plugin_registrar_->messenger(), this);
+        internal_plugin_registrar_->messenger());
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
     SetWindowOrientation(0);
   }
+
+  SetupLocales();
 
   return true;
 }
@@ -375,7 +395,6 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
       0.0,      0.0,       1.0       // perspective
   };
   touch_event_handler_->rotation = degree;
-  text_input_channel->rotation = degree;
   if (degree == 90 || degree == 270) {
     renderer->ResizeWithRotation(geometry.x, geometry.y, height, width, degree);
     SendWindowMetrics(height, width, 0.0);
@@ -396,9 +415,27 @@ void FlutterTizenEngine::OnVsync(intptr_t baton,
                         frame_target_time_nanos);
 }
 
-void FlutterTizenEngine::UpdateLocales(const FlutterLocale** locales,
-                                       size_t locales_count) {
-  embedder_api_.UpdateLocales(engine_, locales, locales_count);
+void FlutterTizenEngine::SetupLocales() {
+  std::vector<LanguageInfo> languages = GetPreferredLanguageInfo();
+  std::vector<FlutterLocale> flutter_locales;
+  flutter_locales.reserve(languages.size());
+  for (const auto& info : languages) {
+    flutter_locales.push_back(CovertToFlutterLocale(info));
+  }
+  // Convert the locale list to the locale pointer list that must be provided.
+  std::vector<const FlutterLocale*> flutter_locale_list;
+  flutter_locale_list.reserve(flutter_locales.size());
+  std::transform(
+      flutter_locales.begin(), flutter_locales.end(),
+      std::back_inserter(flutter_locale_list),
+      [](const auto& arg) -> const auto* { return &arg; });
+
+  embedder_api_.UpdateLocales(engine_, flutter_locale_list.data(),
+                              flutter_locale_list.size());
+}
+
+void FlutterTizenEngine::NotifyLowMemoryWarning() {
+  embedder_api_.NotifyLowMemoryWarning(engine_);
 }
 
 bool FlutterTizenEngine::RegisterExternalTexture(int64_t texture_id) {

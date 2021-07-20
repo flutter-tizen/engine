@@ -2,16 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "localization_channel.h"
+#include "settings_channel.h"
+
+#include <locale>
 
 namespace flutter {
 
-LocalizationChannel::LocalizationChannel(FlutterTizenEngine* engine) {
-  engine_ = nullptr;
+void SettingsChannel::Init() {
+  std::locale::global(std::locale(""));
 }
 
-LocalizationChannel::~LocalizationChannel() {}
+void SettingsChannel::Dispose() {}
 
-void LocalizationChannel::SendLocales() {}
+bool SettingsChannel::Prefer24HourTime() {
+  return false;
+}
 
 }  // namespace flutter

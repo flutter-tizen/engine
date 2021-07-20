@@ -45,6 +45,10 @@ ExternalTexturePixelGL::ExternalTexturePixelGL(
       user_data_(user_data) {}
 
 bool ExternalTexturePixelGL::CopyPixelBuffer(size_t& width, size_t& height) {
+  if (!texture_callback_) {
+    return false;
+  }
+
   const FlutterDesktopPixelBuffer* pixel_buffer =
       texture_callback_(width, height, user_data_);
 

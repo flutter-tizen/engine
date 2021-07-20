@@ -5,14 +5,6 @@
 #ifndef EMBEDDER_SETTINGS_CHANNEL_H_
 #define EMBEDDER_SETTINGS_CHANNEL_H_
 
-#ifndef __X64_SHELL__
-#include <system/system_settings.h>
-#else
-typedef enum {
-  SYSTEM_SETTINGS_KEY_MAX,
-} system_settings_key_e;
-#endif
-
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"
@@ -25,11 +17,12 @@ class SettingsChannel {
  public:
   explicit SettingsChannel(BinaryMessenger* messenger);
   virtual ~SettingsChannel();
+  void SendSettingsEvent();
 
  private:
-  static void OnSettingsChangedCallback(system_settings_key_e key,
-                                        void* user_data);
-  void SendSettingsEvent();
+  bool Prefer24HourTime();
+  void Init();
+  void Dispose();
 
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;
 };

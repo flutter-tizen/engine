@@ -16,7 +16,10 @@ namespace flutter {
 
 class TizenRendererEvasGL : public TizenRenderer {
  public:
-  explicit TizenRendererEvasGL(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRendererEvasGL(WindowGeometry geometry,
+                               bool transparent,
+                               bool focusable,
+                               Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 
   bool OnMakeCurrent() override;
@@ -29,6 +32,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   WindowGeometry GetCurrentGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
+  void* GetWindowHandle() override;
 
   void ResizeWithRotation(int32_t x,
                           int32_t y,

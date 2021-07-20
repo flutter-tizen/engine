@@ -16,42 +16,33 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
 #include "flutter/shell/platform/common/text_input_model.h"
+#include "flutter/shell/platform/tizen/tizen_input_method_context.h"
 #include "rapidjson/document.h"
 
 namespace flutter {
 
 class FlutterTizenEngine;
 
+enum class EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
+
+struct TextEditingContext {
+  EditStatus edit_status_ = EditStatus::kNone;
+  bool has_preedit_ = false;
+  bool is_in_select_mode_ = false;
+  std::string last_handled_ecore_event_keyname_ = "";
+  int preedit_end_pos_ = 0;
+  int preedit_start_pos_ = 0;
+};
+
 class TextInputChannel {
  public:
-  struct SoftwareKeyboardGeometry {
-    int32_t x = 0, y = 0, w = 0, h = 0;
-  };
-
-  enum EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
-
   explicit TextInputChannel(BinaryMessenger* messenger,
                             FlutterTizenEngine* engine);
   virtual ~TextInputChannel();
 
-  void OnKeyDown(Ecore_Event_Key* key);
-  void OnCommit(std::string str);
-  void OnPreedit(std::string str, int cursor_pos);
-  void OnPreeditForPlatformView(std::string str, int cursor_pos);
-
-  void ShowSoftwareKeyboard();
-  void HideSoftwareKeyboard();
   bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
-  void SetSoftwareKeyboardShowing() { is_software_keyboard_showing_ = true; }
 
-  void SetEditStatus(EditStatus edit_status);
-  SoftwareKeyboardGeometry GetCurrentKeyboardGeometry() {
-    return current_keyboard_geometry_;
-  }
-
-  Ecore_IMF_Context* GetImfContext() { return imf_context_; }
-
-  int32_t rotation = 0;
+  bool SendKeyEvent(Ecore_Event_Key* key, bool is_down);
 
  private:
   void HandleMethodCall(
@@ -59,53 +50,23 @@ class TextInputChannel {
       std::unique_ptr<MethodResult<rapidjson::Document>> result);
   void SendStateUpdate(const TextInputModel& model);
   bool FilterEvent(Ecore_Event_Key* event);
-  void NonIMFFallback(Ecore_Event_Key* event);
+  void HandleUnfilteredEvent(Ecore_Event_Key* event);
   void EnterPressed(TextInputModel* model, bool select);
-  void RegisterIMFCallback();
-  void UnregisterIMFCallback();
   void ConsumeLastPreedit();
-  void ResetCurrentContext();
+  void ResetTextEditingContext() {
+    text_editing_context_ = TextEditingContext();
+  }
+  bool ShouldNotFilterEvent(std::string key, bool is_ime);
 
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
   std::unique_ptr<TextInputModel> active_model_;
+  std::unique_ptr<TizenInputMethodContext> input_method_context_;
 
-  static void CommitCallback(void* data,
-                             Ecore_IMF_Context* ctx,
-                             void* event_info);
-  static void PreeditCallback(void* data,
-                              Ecore_IMF_Context* ctx,
-                              void* event_info);
-  static void PrivateCommandCallback(void* data,
-                                     Ecore_IMF_Context* ctx,
-                                     void* event_info);
-  static void DeleteSurroundingCallback(void* data,
-                                        Ecore_IMF_Context* ctx,
-                                        void* event_info);
-  static void InputPanelStateChangedCallback(void* data,
-                                             Ecore_IMF_Context* context,
-                                             int value);
-  static void InputPanelGeometryChangedCallback(void* data,
-                                                Ecore_IMF_Context* context,
-                                                int value);
-  static Eina_Bool RetrieveSurroundingCallback(void* data,
-                                               Ecore_IMF_Context* ctx,
-                                               char** text,
-                                               int* cursor_pos);
-
-  int client_id_{0};
-  SoftwareKeyboardGeometry current_keyboard_geometry_;
-  bool is_software_keyboard_showing_{false};
+  int client_id_ = 0;
+  bool is_software_keyboard_showing_ = false;
   std::string input_action_;
   std::string input_type_;
-
-  EditStatus edit_status_{EditStatus::kNone};
-  bool have_preedit_{false};
-  bool in_select_mode_{false};
-  int preedit_end_pos_{0};
-  int preedit_start_pos_{0};
-  std::string last_handled_ecore_event_keyname_;
-  FlutterTizenEngine* engine_{nullptr};
-  Ecore_IMF_Context* imf_context_{nullptr};
+  TextEditingContext text_editing_context_;
 };
 
 }  // namespace flutter

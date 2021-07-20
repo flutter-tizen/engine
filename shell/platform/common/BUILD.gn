@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import("//flutter/common/config.gni")
-import("//flutter/shell/platform/config.gni")
 import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 

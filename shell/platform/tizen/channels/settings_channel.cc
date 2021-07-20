@@ -23,34 +23,21 @@ SettingsChannel::SettingsChannel(BinaryMessenger* messenger)
           messenger,
           kChannelName,
           &JsonMessageCodec::GetInstance())) {
-  system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR,
-                                 OnSettingsChangedCallback, this);
+  Init();
   SendSettingsEvent();
 }
 
 SettingsChannel::~SettingsChannel() {
-  system_settings_unset_changed_cb(
-      SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR);
+  Dispose();
 }
 
 void SettingsChannel::SendSettingsEvent() {
   rapidjson::Document event(rapidjson::kObjectType);
   auto& allocator = event.GetAllocator();
-  bool value = false;
-  int ret = system_settings_get_value_bool(
-      SYSTEM_SETTINGS_KEY_LOCALE_TIMEFORMAT_24HOUR, &value);
-  if (ret == SYSTEM_SETTINGS_ERROR_NONE) {
-    event.AddMember(kTextScaleFactorKey, 1.0, allocator);
-    event.AddMember(kPlatformBrightnessKey, "light", allocator);
-    event.AddMember(kAlwaysUse24HourFormatKey, value, allocator);
-    channel_->Send(event);
-  }
-}
-
-void SettingsChannel::OnSettingsChangedCallback(system_settings_key_e key,
-                                                void* user_data) {
-  auto settings_channel = reinterpret_cast<SettingsChannel*>(user_data);
-  settings_channel->SendSettingsEvent();
+  event.AddMember(kTextScaleFactorKey, 1.0, allocator);
+  event.AddMember(kPlatformBrightnessKey, "light", allocator);
+  event.AddMember(kAlwaysUse24HourFormatKey, Prefer24HourTime(), allocator);
+  channel_->Send(event);
 }
 
 }  // namespace flutter

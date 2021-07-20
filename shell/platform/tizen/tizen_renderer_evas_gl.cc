@@ -17,8 +17,10 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 namespace flutter {
 
 TizenRendererEvasGL::TizenRendererEvasGL(WindowGeometry geometry,
+                                         bool transparent,
+                                         bool focusable,
                                          Delegate& delegate)
-    : TizenRenderer(geometry, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, delegate) {
   InitializeRenderer();
 
   // Clear once to remove noise.
@@ -566,6 +568,10 @@ int32_t TizenRendererEvasGL::GetDpi() {
 uintptr_t TizenRendererEvasGL::GetWindowId() {
   return ecore_evas_window_get(
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_)));
+}
+
+void* TizenRendererEvasGL::GetWindowHandle() {
+  return nullptr;
 }
 
 Evas_Object* TizenRendererEvasGL::GetImageHandle() {

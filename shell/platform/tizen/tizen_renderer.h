@@ -35,6 +35,7 @@ class TizenRenderer {
   virtual WindowGeometry GetCurrentGeometry() = 0;
   virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
+  virtual void* GetWindowHandle() = 0;
 
   virtual void SetRotate(int angle) = 0;
   virtual void ResizeWithRotation(int32_t x,
@@ -45,9 +46,14 @@ class TizenRenderer {
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
  protected:
-  explicit TizenRenderer(WindowGeometry geometry, Delegate& delegate);
+  explicit TizenRenderer(WindowGeometry geometry,
+                         bool transparent,
+                         bool focusable,
+                         Delegate& delegate);
 
   WindowGeometry initial_geometry_;
+  bool transparent_;
+  bool focusable_;
   Delegate& delegate_;
 
   bool is_valid_ = false;

@@ -59,7 +59,7 @@ jobs:
   pool:
     name: Default
     demands: agent.os -equals Linux
-  timeoutInMinutes: 60
+  timeoutInMinutes: 80
   cancelTimeoutInMinutes: 1
   steps:
   - checkout: self
@@ -80,6 +80,13 @@ jobs:
     displayName: Build
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
+  - bash: |
+      ../check_symbols.py out/linux_$(mode)_$(arch)/libflutter_engine.so
+      ../check_symbols.py out/linux_$(mode)_$(arch)/libflutter_tizen_wearable.so
+    displayName: Verify symbol references
+    workingDirectory: $(Pipeline.Workspace)/src
+    failOnStderr: true
+    condition: eq(variables['System.JobName'], 'tizen-arm-release')
   - bash: |
       OUTDIR=$(Build.StagingDirectory)
       cp out/linux_$(mode)_$(arch)/libflutter_*.so $OUTDIR
