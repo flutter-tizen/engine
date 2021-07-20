@@ -4,8 +4,6 @@
 
 #include "external_texture_surface_gl.h"
 
-#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
-
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
 #include <Evas_GL_GLES3_Helpers.h>
@@ -20,7 +18,8 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include <tbm_surface.h>
 
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -60,12 +59,12 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   const FlutterDesktopGpuBuffer* gpu_buffer =
       texture_callback_(width, height, user_data_);
   if (!gpu_buffer) {
-    FT_LOGI("[texture id:%ld] gpu_buffer is null", texture_id_);
+    FT_LOG(Info) << "gpu_buffer is null for texture ID: " << texture_id_;
     return false;
   }
 
   if (!gpu_buffer->buffer) {
-    FT_LOGI("[texture id:%ld] tbm_surface_ is null", texture_id_);
+    FT_LOG(Info) << "tbm_surface is null for texture ID: " << texture_id_;
     return false;
   }
   const tbm_surface_h tbm_surface =
@@ -73,7 +72,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
 
   tbm_surface_info_s info;
   if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
-    FT_LOGI("[texture id:%ld] tbm_surface is invalid", texture_id_);
+    FT_LOG(Info) << "tbm_surface is invalid for texture ID: " << texture_id_;
     return false;
   }
 
@@ -114,8 +113,8 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
                           EGL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
 
   if (!egl_src_image) {
-    FT_LOGE("[texture id:%ld] egl_src_image create fail!!, errorcode == %d",
-            texture_id_, eglGetError());
+    FT_LOG(Error) << "eglCreateImageKHR failed with an error " << eglGetError()
+                  << " for texture ID: " << texture_id_;
     return false;
   }
   if (state_->gl_texture == 0) {

@@ -5,7 +5,7 @@
 #include "lifecycle_channel.h"
 
 #include "flutter/shell/platform/tizen/channels/string_codec.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -29,22 +29,22 @@ LifecycleChannel::LifecycleChannel(BinaryMessenger* messenger)
 LifecycleChannel::~LifecycleChannel() {}
 
 void LifecycleChannel::AppIsInactive() {
-  FT_LOGI("Sending %s message.", kInactive);
+  FT_LOG(Info) << "Sending " << kInactive << " message.";
   channel_->Send(EncodableValue(kInactive));
 }
 
 void LifecycleChannel::AppIsResumed() {
-  FT_LOGI("Sending %s message.", kResumed);
+  FT_LOG(Info) << "Sending " << kResumed << " message.";
   channel_->Send(EncodableValue(kResumed));
 }
 
 void LifecycleChannel::AppIsPaused() {
-  FT_LOGI("Sending %s message.", kPaused);
+  FT_LOG(Info) << "Sending " << kPaused << " message.";
   channel_->Send(EncodableValue(kPaused));
 }
 
 void LifecycleChannel::AppIsDetached() {
-  FT_LOGI("Sending %s message.", kDetached);
+  FT_LOG(Info) << "Sending " << kDetached << " message.";
   channel_->Send(EncodableValue(kDetached));
 }
 

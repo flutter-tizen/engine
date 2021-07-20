@@ -5,7 +5,6 @@
 #include "touch_event_handler.h"
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
 
 static const int kScrollDirectionVertical = 0;
 static const int kScrollDirectionHorizontal = 1;

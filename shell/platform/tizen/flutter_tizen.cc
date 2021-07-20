@@ -10,8 +10,8 @@
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
+#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
 
 // Returns the engine corresponding to the given opaque API handle.
 static flutter::FlutterTizenEngine* EngineFromHandle(
@@ -28,7 +28,9 @@ static FlutterDesktopEngineRef HandleForEngine(
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {
-  flutter::StartLogging();
+#ifndef __X64_SHELL__
+  flutter::Logger::Start();
+#endif
 
   flutter::FlutterProjectBundle project(engine_properties);
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
@@ -39,7 +41,7 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
         window_properties.focusable);
   }
   if (!engine->RunEngine()) {
-    FT_LOGE("Failed to run the Flutter engine.");
+    FT_LOG(Error) << "Failed to start the Flutter engine.";
     return nullptr;
   }
   return HandleForEngine(engine.release());

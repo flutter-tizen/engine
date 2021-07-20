@@ -10,7 +10,7 @@
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
 #include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -22,20 +22,20 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
     const FlutterDesktopTextureInfo* texture_info) {
   if (texture_info->type != kFlutterDesktopPixelBufferTexture &&
       texture_info->type != kFlutterDesktopGpuBufferTexture) {
-    FT_LOGE("Attempted to register texture of unsupport type.");
+    FT_LOG(Error) << "Attempted to register texture of unsupport type.";
     return -1;
   }
 
   if (texture_info->type == kFlutterDesktopPixelBufferTexture) {
     if (!texture_info->pixel_buffer_config.callback) {
-      FT_LOGE("Invalid pixel buffer texture callback.");
+      FT_LOG(Error) << "Invalid pixel buffer texture callback.";
       return -1;
     }
   }
 
   if (texture_info->type == kFlutterDesktopGpuBufferTexture) {
     if (!texture_info->gpu_buffer_config.callback) {
-      FT_LOGE("Invalid gpu buffer texture callback.");
+      FT_LOG(Error) << "Invalid GPU buffer texture callback.";
       return -1;
     }
   }
@@ -101,7 +101,7 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
           texture_info->gpu_buffer_config.user_data);
       break;
     default:
-      FT_LOGE("Invalid texture type.");
+      FT_LOG(Error) << "Invalid texture type.";
       return nullptr;
   }
 }

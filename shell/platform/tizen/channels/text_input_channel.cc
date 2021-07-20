@@ -8,7 +8,7 @@
 
 #include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -46,6 +46,7 @@ bool IsASCIIPrintableKey(char c) {
   }
   return false;
 }
+
 }  // namespace
 
 TextInputChannel::TextInputChannel(BinaryMessenger* messenger,
@@ -63,7 +64,7 @@ TextInputChannel::TextInputChannel(BinaryMessenger* messenger,
 
   // Set input method callbacks
   input_method_context_->SetOnCommitCallback([this](std::string str) -> void {
-    FT_LOGI("OnCommit str[%s]", str.data());
+    FT_LOG(Debug) << "OnCommit: " << str;
     text_editing_context_.edit_status_ = EditStatus::kCommit;
     ConsumeLastPreedit();
     active_model_->AddText(str);
@@ -95,9 +96,10 @@ TextInputChannel::TextInputChannel(BinaryMessenger* messenger,
               active_model_->selection().base();
           text_editing_context_.has_preedit_ = true;
           SendStateUpdate(*active_model_);
-          FT_LOGI("preedit start pos[%d], preedit end pos[%d]",
-                  text_editing_context_.preedit_start_pos_,
-                  text_editing_context_.preedit_end_pos_);
+          FT_LOG(Debug) << "Preedit start position: "
+                        << text_editing_context_.preedit_start_pos_
+                        << ", end position: "
+                        << text_editing_context_.preedit_end_pos_;
         }
       });
 
@@ -133,8 +135,7 @@ void TextInputChannel::HandleMethodCall(
     const MethodCall<rapidjson::Document>& method_call,
     std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const std::string& method = method_call.method_name();
-
-  FT_LOGI("Handle Method : %s", method.data());
+  FT_LOG(Debug) << "Handle a method: " << method;
 
   if (method.compare(kShowMethod) == 0) {
     input_method_context_->ShowInputPannel();
@@ -253,7 +254,7 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
   args->PushBack(editing_state, allocator);
 
-  FT_LOGI("Send text[%s]", model.GetText().data());
+  FT_LOG(Info) << "Send text: " << model.GetText();
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
@@ -268,7 +269,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
   // FIXME: Only for wearable.
   if (is_ime && strcmp(event->key, "Select") == 0) {
     text_editing_context_.is_in_select_mode_ = true;
-    FT_LOGI("Set select mode[true]");
+    FT_LOG(Debug) << "Entering select mode.";
   }
 #else
   bool is_ime = strcmp(ecore_device_name_get(event->dev), "ime") == 0;
@@ -277,7 +278,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
   if (ShouldNotFilterEvent(event->key, is_ime)) {
     ResetTextEditingContext();
     input_method_context_->ResetInputMethodContext();
-    FT_LOGW("Force redirect IME key-event[%s] to fallback", event->keyname);
+    FT_LOG(Info) << "Force redirect an IME key event: " << event->keyname;
     return false;
   }
 
@@ -292,7 +293,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
       text_editing_context_.is_in_select_mode_) {
     text_editing_context_.is_in_select_mode_ = false;
     handled = true;
-    FT_LOGI("Set select mode[false]");
+    FT_LOG(Debug) << "Leaving select mode.";
   }
 #endif
 
@@ -303,7 +304,7 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
 #ifdef MOBILE_PROFILE
   // FIXME: Only for mobile.
   if (text_editing_context_.edit_status_ == EditStatus::kPreeditEnd) {
-    FT_LOGW("Ignore key-event[%s]!", event->keyname);
+    FT_LOG(Warn) << "Ignore a key event: " << event->keyname;
     ResetTextEditingContext();
     return;
   }
@@ -372,8 +373,8 @@ void TextInputChannel::ConsumeLastPreedit() {
                 text_editing_context_.preedit_start_pos_;
     active_model_->DeleteSurrounding(-count, count);
     std::string after = active_model_->GetText();
-    FT_LOGI("Consume last preedit count:[%d] text:[%s] -> [%s]", count,
-            before.data(), after.data());
+    FT_LOG(Debug) << "Last preedit count: " << count << ", text: " << before
+                  << " -> " << after;
     SendStateUpdate(*active_model_);
   }
   text_editing_context_.has_preedit_ = false;

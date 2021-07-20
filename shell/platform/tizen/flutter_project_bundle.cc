@@ -13,7 +13,7 @@
 
 #include <filesystem>
 
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -48,7 +48,8 @@ FlutterProjectBundle::FlutterProjectBundle(
       (!aot_library_path_.empty() && aot_library_path_.is_relative())) {
     std::filesystem::path executable_location = GetExecutableDirectory();
     if (executable_location.empty()) {
-      FT_LOGE("Unable to find executable location to resolve resource paths.");
+      FT_LOG(Error)
+          << "Unable to find executable location to resolve resource paths.";
       assets_path_ = std::filesystem::path();
       icu_path_ = std::filesystem::path();
     } else {
@@ -74,13 +75,13 @@ bool FlutterProjectBundle::HasValidPaths() {
 UniqueAotDataPtr FlutterProjectBundle::LoadAotData(
     const FlutterEngineProcTable& engine_procs) {
   if (aot_library_path_.empty()) {
-    FT_LOGE(
-        "Attempted to load AOT data, but no aot_library_path was provided.");
+    FT_LOG(Error)
+        << "Attempted to load AOT data, but no aot_library_path was provided.";
     return UniqueAotDataPtr(nullptr, nullptr);
   }
   if (!std::filesystem::exists(aot_library_path_)) {
-    FT_LOGE("Can't load AOT data from %s; no such file.",
-            aot_library_path_.u8string().c_str());
+    FT_LOG(Error) << "Can't load AOT data from " << aot_library_path_.u8string()
+                  << "; no such file.";
     return UniqueAotDataPtr(nullptr, nullptr);
   }
   std::string path_string = aot_library_path_.u8string();
@@ -90,7 +91,7 @@ UniqueAotDataPtr FlutterProjectBundle::LoadAotData(
   FlutterEngineAOTData data = nullptr;
   auto result = engine_procs.CreateAOTData(&source, &data);
   if (result != kSuccess) {
-    FT_LOGE("Failed to load AOT data from: %s", path_string.c_str());
+    FT_LOG(Error) << "Failed to load AOT data from: " << path_string;
     return UniqueAotDataPtr(nullptr, nullptr);
   }
   return UniqueAotDataPtr(data, engine_procs.CollectAOTData);

@@ -7,7 +7,7 @@
 #include <eina_thread_queue.h>
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 static const int kMessageQuit = -1;
 static const int kMessageRequestVblank = 0;
@@ -40,12 +40,12 @@ void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
 
 void TizenVsyncWaiter::Send(int event, intptr_t baton) {
   if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
-    FT_LOGE("vblank thread not valid");
+    FT_LOG(Error) << "Invalid vblank thread.";
     return;
   }
 
   if (!vblank_thread_queue_) {
-    FT_LOGE("vblank thread queue not valid");
+    FT_LOG(Error) << "Invalid vblank thread queue.";
     return;
   }
 
@@ -63,13 +63,13 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
       reinterpret_cast<TizenVsyncWaiter*>(data);
   TdmClient tdm_client(tizen_vsync_waiter->engine_);
   if (!tdm_client.IsValid()) {
-    FT_LOGE("Tdm client not valid");
+    FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
     return;
   }
   Eina_Thread_Queue* vblank_thread_queue = eina_thread_queue_new();
   if (!vblank_thread_queue) {
-    FT_LOGE("Vblank thread queue is not valid");
+    FT_LOG(Error) << "Invalid vblank thread queue.";
     ecore_thread_cancel(thread);
     return;
   }
@@ -82,7 +82,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     if (msg) {
       eina_thread_queue_wait_done(vblank_thread_queue, ref);
     } else {
-      FT_LOGE("Message is null");
+      FT_LOG(Error) << "Received a null message.";
       continue;
     }
     if (msg->event == kMessageQuit) {
@@ -97,7 +97,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
 
 TdmClient::TdmClient(FlutterTizenEngine* engine) {
   if (!CreateTdm()) {
-    FT_LOGE("Create tdm client failed");
+    FT_LOG(Error) << "CreateTdm() failed.";
   }
   engine_ = engine;
 }
@@ -110,7 +110,7 @@ void TdmClient::WaitVblank(intptr_t baton) {
   baton_ = baton;
   tdm_error error = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
   if (error != TDM_ERROR_NONE) {
-    FT_LOGE("tdm client wait vblank error  %d", error);
+    FT_LOG(Error) << "tdm_client_vblank_wait() failed.";
     return;
   }
   tdm_client_handle_events(client_);
@@ -120,19 +120,19 @@ bool TdmClient::CreateTdm() {
   tdm_error ret;
   client_ = tdm_client_create(&ret);
   if (ret != TDM_ERROR_NONE && client_ != NULL) {
-    FT_LOGE("create client fail");
+    FT_LOG(Error) << "Failed to create a TDM client.";
     return false;
   }
 
   output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
   if (ret != TDM_ERROR_NONE && output_ != NULL) {
-    FT_LOGE("get output fail");
+    FT_LOG(Error) << "Could not obtain the default client output.";
     return false;
   }
 
   vblank_ = tdm_client_output_create_vblank(output_, &ret);
   if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    FT_LOGE("create vblank fail");
+    FT_LOG(Error) << "Failed to create a vblank object.";
     return false;
   }
 

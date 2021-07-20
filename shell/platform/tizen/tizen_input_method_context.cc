@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flutter/shell/platform/tizen/tizen_input_method_context.h"
+#include "tizen_input_method_context.h"
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace {
 
@@ -44,10 +44,8 @@ bool TextInputTypeToEcoreIMFInputPanelLayout(
     *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
   } else if (text_input_type == "TextInputType.name" ||
              text_input_type == "TextInputType.address") {
-    FT_LOGW(
-        "Actual requested text input type is [%s], but select "
-        "TextInputType.text as fallback type",
-        text_input_type.c_str());
+    FT_LOG(Warn) << "The requested input type " << text_input_type
+                 << "is not supported.";
     *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else {
     return false;
@@ -138,6 +136,7 @@ void InputPanelStateChangedCallback(void* data,
 
   self->OnInputPannelStateChanged(value);
 }
+
 }  // namespace
 
 namespace flutter {
@@ -158,18 +157,17 @@ void TizenInputMethodContext::Init() {
 
   const char* imf_id = ecore_imf_context_default_id_get();
   if (imf_id == nullptr) {
-    // Try to get fallback id
+    // Try to get a fallback ID.
     imf_id = GetEcoreImfContextAvailableID();
   }
-
   if (imf_id == nullptr) {
-    FT_LOGE("Failed to get imf context id");
+    FT_LOG(Error) << "Failed to get an IMF context ID.";
     return;
   }
 
   imf_context_ = ecore_imf_context_add(imf_id);
   if (imf_context_ == nullptr) {
-    FT_LOGE("Failed to create Ecore_IMF_Context");
+    FT_LOG(Error) << "Failed to create Ecore_IMF_Context.";
     return;
   }
 
@@ -241,7 +239,7 @@ void TizenInputMethodContext::HideInputPannel() {
 
 void TizenInputMethodContext::OnCommit(std::string str) {
   if (!on_commit_callback_) {
-    FT_LOGW("Please, set OnCommitCallback");
+    FT_LOG(Warn) << "SetOnCommitCallback() has not been called.";
     return;
   }
   on_commit_callback_(str);
@@ -249,7 +247,7 @@ void TizenInputMethodContext::OnCommit(std::string str) {
 
 void TizenInputMethodContext::OnPreedit(std::string str, int cursor_pos) {
   if (!on_preedit_callback_) {
-    FT_LOGW("Please, set OnInputPannelStateChangedCallback");
+    FT_LOG(Warn) << "SetOnPreeditCallback() has not been called.";
     return;
   }
   on_preedit_callback_(str, cursor_pos);
@@ -257,7 +255,8 @@ void TizenInputMethodContext::OnPreedit(std::string str, int cursor_pos) {
 
 void TizenInputMethodContext::OnInputPannelStateChanged(int state) {
   if (!on_input_pannel_state_changed_callback_) {
-    FT_LOGW("Please, set OnPreeditCallback");
+    FT_LOG(Warn)
+        << "SetOnInputPannelStateChangedCallback() has not been called.";
     return;
   }
   on_input_pannel_state_changed_callback_(state);
@@ -310,4 +309,5 @@ void TizenInputMethodContext::SetInputPannelOptions() {
   ecore_imf_context_input_panel_language_set(
       imf_context_, ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC);
 }
+
 }  // namespace flutter
