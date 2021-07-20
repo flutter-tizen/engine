@@ -12,7 +12,7 @@
 Evas_GL* g_evas_gl = nullptr;
 EVAS_GL_GLOBAL_GLES3_DEFINE();
 
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -40,7 +40,6 @@ void TizenRendererEvasGL::ClearColor(float r, float g, float b, float a) {
 
 bool TizenRendererEvasGL::OnMakeCurrent() {
   if (!IsValid()) {
-    FT_LOGE("Invalid TizenRenderer");
     return false;
   }
   if (evas_gl_make_current(evas_gl_, gl_surface_, gl_context_) != EINA_TRUE) {
@@ -52,7 +51,6 @@ bool TizenRendererEvasGL::OnMakeCurrent() {
 
 bool TizenRendererEvasGL::OnClearCurrent() {
   if (!IsValid()) {
-    FT_LOGE("Invalid TizenRenderer");
     return false;
   }
   if (evas_gl_make_current(evas_gl_, NULL, NULL) != EINA_TRUE) {
@@ -63,7 +61,6 @@ bool TizenRendererEvasGL::OnClearCurrent() {
 
 bool TizenRendererEvasGL::OnMakeResourceCurrent() {
   if (!IsValid()) {
-    FT_LOGE("Invalid TizenRenderer");
     return false;
   }
   if (evas_gl_make_current(evas_gl_, gl_resource_surface_,
@@ -75,7 +72,6 @@ bool TizenRendererEvasGL::OnMakeResourceCurrent() {
 
 bool TizenRendererEvasGL::OnPresent() {
   if (!IsValid()) {
-    FT_LOGE("Invalid TizenRenderer");
     return false;
   }
 
@@ -89,7 +85,6 @@ bool TizenRendererEvasGL::OnPresent() {
 
 uint32_t TizenRendererEvasGL::OnGetFBO() {
   if (!is_valid_) {
-    FT_LOGE("Invalid TizenRenderer");
     return 999;
   }
   return 0;
@@ -546,7 +541,7 @@ void* TizenRendererEvasGL::OnProcResolver(const char* name) {
   GL_FUNC(glTexStorage3DMultisample)
 #undef GL_FUNC
 
-  FT_LOGW("Could not resolve: %s", name);
+  FT_LOG(Warn) << "Could not resolve: " << name;
   return nullptr;
 }
 
@@ -580,7 +575,7 @@ Evas_Object* TizenRendererEvasGL::GetImageHandle() {
 
 bool TizenRendererEvasGL::InitializeRenderer() {
   if (!SetupEvasGL()) {
-    FT_LOGE("SetupEvasGL fail");
+    FT_LOG(Error) << "SetupEvasGL() failed.";
     return false;
   }
   Show();
@@ -603,7 +598,7 @@ bool TizenRendererEvasGL::SetupEvasGL() {
   evas_gl_ =
       evas_gl_new(evas_object_evas_get(SetupEvasWindow(&width, &height)));
   if (!evas_gl_) {
-    FT_LOGE("Could not set up an Evas window object.");
+    FT_LOG(Error) << "Could not set up an Evas window object.";
     return false;
   }
 
@@ -620,17 +615,15 @@ bool TizenRendererEvasGL::SetupEvasGL() {
       evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
 #endif
   if (gl_context_ == nullptr) {
-    FT_LOGW(
-        "Failed to create evas gl context with EVAS_GL_GLES_3_X, try to use "
-        "EVAS_GL_GLES_2_X,");
+    FT_LOG(Error) << "Failed to create an Evas GL context with "
+                     "EVAS_GL_GLES_3_X; trying with EVAS_GL_GLES_2_X.";
     gl_context_ =
         evas_gl_context_version_create(evas_gl_, NULL, EVAS_GL_GLES_2_X);
     gl_resource_context_ =
         evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_2_X);
   }
   if (gl_context_ == nullptr) {
-    FT_LOGE("Failed to create evas gl context!");
-    FT_RELEASE_ASSERT_NOT_REACHED();
+    FT_LOG(Fatal) << "Failed to create an Evas GL context.";
   }
 
   EVAS_GL_GLOBAL_GLES3_USE(g_evas_gl, gl_context_);
@@ -659,7 +652,7 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
 
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, width, height);
   if (*width == 0 || *height == 0) {
-    FT_LOGE("Invalid screen size: %d x %d", *width, *height);
+    FT_LOG(Error) << "Invalid screen size: " << *width << " x " << *height;
     return nullptr;
   }
   if (initial_geometry_.w > 0) {

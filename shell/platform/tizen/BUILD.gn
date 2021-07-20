@@ -37,6 +37,7 @@ _flutter_tizen_source = [
   "flutter_tizen_engine.cc",
   "flutter_tizen_texture_registrar.cc",
   "key_event_handler.cc",
+  "logger.cc",
   "tizen_event_loop.cc",
   "tizen_input_method_context.cc",
   "tizen_renderer.cc",
@@ -133,7 +134,6 @@ template("embedder_for_profile") {
       "external_texture_pixel_gl.cc",
       "external_texture_surface_gl.cc",
       "system_utils_tizen.cc",
-      "tizen_log.cc",
     ]
 
     libs = _libs_minimum
@@ -250,7 +250,6 @@ template("embedder_executable") {
       "external_texture_pixel_gl_stub.cc",
       "external_texture_surface_gl_stub.cc",
       "system_utils_linux.cc",
-      "tizen_log_stub.cc",
       "tizen_renderer_evas_gl.cc",
     ]
 

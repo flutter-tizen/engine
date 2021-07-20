@@ -10,7 +10,7 @@
 #include <map>
 
 #include "flutter/shell/platform/common/json_method_codec.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -99,12 +99,7 @@ class FeedbackManager {
   FeedbackManager& operator=(const FeedbackManager&) = delete;
 
   ResultCode Play(FeedbackType type, FeedbackPattern pattern) {
-    FT_LOGI("Enter FeedbackManager::Play(): type: [%d], pattern: [%d]",
-            static_cast<int>(type), static_cast<int>(pattern));
-
     if (ResultCode::kOk != initialization_status_) {
-      FT_LOGE("Cannot run Play(): initialization_status_: [%d]",
-              static_cast<int>(initialization_status_));
       return initialization_status_;
     }
 
@@ -113,8 +108,8 @@ class FeedbackManager {
     if (FEEDBACK_ERROR_NONE == ret) {
       return ResultCode::kOk;
     }
-    FT_LOGE("feedback_play_type() failed with error: [%d] (%s)", ret,
-            get_error_message(ret));
+    FT_LOG(Error) << "feedback_play_type() failed with error: "
+                  << get_error_message(ret);
 
     return NativeErrorToResultCode(ret);
   }
@@ -139,8 +134,8 @@ class FeedbackManager {
   FeedbackManager() {
     auto ret = feedback_initialize();
     if (FEEDBACK_ERROR_NONE != ret) {
-      FT_LOGE("feedback_initialize() failed with error: [%d] (%s)", ret,
-              get_error_message(ret));
+      FT_LOG(Error) << "feedback_initialize() failed with error: "
+                    << get_error_message(ret);
       initialization_status_ = NativeErrorToResultCode(ret);
       return;
     }
@@ -151,8 +146,8 @@ class FeedbackManager {
   ~FeedbackManager() {
     auto ret = feedback_deinitialize();
     if (FEEDBACK_ERROR_NONE != ret) {
-      FT_LOGE("feedback_deinitialize() failed with error: [%d] (%s)", ret,
-              get_error_message(ret));
+      FT_LOG(Error) << "feedback_deinitialize() failed with error: "
+                    << get_error_message(ret);
       return;
     }
   }
@@ -252,7 +247,7 @@ void PlatformChannel::HandleMethodCall(
     const auto error_cause =
         FeedbackManager::GetErrorMessage(ret, kPlaySoundMethod, pattern_str);
     const std::string error_message = "Could not play sound";
-    FT_LOGE("%s: %s", error_cause.c_str(), error_message.c_str());
+    FT_LOG(Error) << error_cause << ": " << error_message;
 
     result->Error(error_cause, error_message);
 
@@ -280,7 +275,7 @@ void PlatformChannel::HandleMethodCall(
         FeedbackManager::GetErrorMessage(ret, vibrate_variant_name);
     const std::string error_message = "Could not vibrate";
 
-    FT_LOGE("%s: %s", error_cause.c_str(), error_message.c_str());
+    FT_LOG(Error) << error_cause << ": " << error_message;
 
     result->Error(error_cause, error_message);
   } else if (method == kGetClipboardDataMethod) {
@@ -330,7 +325,7 @@ void PlatformChannel::HandleMethodCall(
   } else if (method == kSetSystemUIOverlayStyleMethod) {
     result->NotImplemented();
   } else {
-    FT_LOGI("Unimplemented method: %s", method.c_str());
+    FT_LOG(Info) << "Unimplemented method: " << method;
     result->NotImplemented();
   }
 }

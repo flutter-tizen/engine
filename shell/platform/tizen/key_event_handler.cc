@@ -9,7 +9,7 @@
 #endif
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/tizen_log.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -40,8 +40,9 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
   auto* engine = self->engine_;
   auto is_down = type == ECORE_EVENT_KEY_DOWN;
 
-  FT_LOGI("Keycode: %d, name: %s, mods: %d, is_down: %d", key->keycode,
-          key->keyname, key->modifiers, is_down);
+  if (is_down) {
+    FT_LOG(Info) << "Key pressed: " << key->key << "(" << key->keycode << ")";
+  }
 
   if (engine->text_input_channel) {
     if (engine->text_input_channel->SendKeyEvent(key, is_down)) {
