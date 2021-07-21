@@ -55,6 +55,14 @@ typedef struct {
   const char** switches;
   // The number of elements in |switches|.
   size_t switches_count;
+  // The optional entry point in the Dart project, if the entry point is null,
+  // defaults to main().
+  const char* entry_point;
+  // Number of elements in the array passed in as dart_entrypoint_argv.
+  int dart_entrypoint_argc;
+  // Array of Dart entrypoint arguments. This is deep copied during the call
+  // to FlutterDesktopEngineCreate.
+  const char** dart_entrypoint_argv;
 } FlutterDesktopEngineProperties;
 
 // Runs an instance of a Flutter engine with the given properties.

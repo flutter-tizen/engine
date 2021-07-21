@@ -50,37 +50,37 @@ class FlutterTizenEngineTestHeaded : public FlutterTizenEngineTest {
 
 TEST_F(FlutterTizenEngineTest, Run) {
   EXPECT_TRUE(engine_ != nullptr);
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
 }
 
 TEST_F(FlutterTizenEngineTest, Run_Twice) {
-  EXPECT_TRUE(engine_->RunEngine());
-  EXPECT_FALSE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
+  EXPECT_FALSE(engine_->RunEngine(nullptr));
 }
 
 TEST_F(FlutterTizenEngineTest, Stop) {
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->StopEngine());
 }
 
 TEST_F(FlutterTizenEngineTest, Stop_Twice) {
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->StopEngine());
   EXPECT_FALSE(engine_->StopEngine());
 }
 
 TEST_F(FlutterTizenEngineTest, GetPluginRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->GetPluginRegistrar() != nullptr);
 }
 
 TEST_F(FlutterTizenEngineTest, GetTextureRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->GetTextureRegistrar() == nullptr);
 }
 
 TEST_F(FlutterTizenEngineTestHeaded, GetTextureRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine());
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->GetTextureRegistrar() != nullptr);
 }
 
@@ -134,7 +134,7 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
         return kSuccess;
       }));
 
-  engine_->RunEngine();
+  engine_->RunEngine(nullptr);
 
   EXPECT_TRUE(run_called);
   EXPECT_TRUE(update_locales_called);

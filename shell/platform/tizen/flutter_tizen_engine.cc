@@ -111,7 +111,7 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
 #endif
 }
 
-bool FlutterTizenEngine::RunEngine() {
+bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   if (engine_ != nullptr) {
     FT_LOG(Error) << "The engine has already started.";
     return false;
@@ -148,6 +148,14 @@ bool FlutterTizenEngine::RunEngine() {
       switches.end()) {
     Logger::SetLoggingLevel(kLogLevelDebug);
   }
+
+  const std::vector<std::string>& entrypoint_args =
+      project_->dart_entrypoint_arguments();
+  std::vector<const char*> entrypoint_argv;
+  std::transform(
+      entrypoint_args.begin(), entrypoint_args.end(),
+      std::back_inserter(entrypoint_argv),
+      [](const std::string& arg) -> const char* { return arg.c_str(); });
 
   // Configure task runners.
   FlutterTaskRunnerDescription platform_task_runner = {};
@@ -190,6 +198,9 @@ bool FlutterTizenEngine::RunEngine() {
   args.icu_data_path = icu_path_string.c_str();
   args.command_line_argc = static_cast<int>(argv.size());
   args.command_line_argv = argv.size() > 0 ? argv.data() : nullptr;
+  args.dart_entrypoint_argc = static_cast<int>(entrypoint_argv.size());
+  args.dart_entrypoint_argv =
+      entrypoint_argv.size() > 0 ? entrypoint_argv.data() : nullptr;
   args.platform_message_callback =
       [](const FlutterPlatformMessage* engine_message, void* user_data) {
         if (engine_message->struct_size != sizeof(FlutterPlatformMessage)) {
@@ -213,6 +224,10 @@ bool FlutterTizenEngine::RunEngine() {
 #endif
   if (aot_data_) {
     args.aot_data = aot_data_.get();
+  }
+
+  if (entrypoint) {
+    args.custom_dart_entrypoint = entrypoint;
   }
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
