@@ -40,6 +40,14 @@ class FlutterTizenEngineTest : public ::testing::Test {
   FlutterTizenEngine* engine_;
 };
 
+class FlutterTizenEngineTestHeaded : public FlutterTizenEngineTest {
+ protected:
+  void SetUp() {
+    FlutterTizenEngineTest::SetUp();
+    engine_->InitializeRenderer(0, 0, 800, 600, false, true);
+  }
+};
+
 TEST_F(FlutterTizenEngineTest, Run) {
   EXPECT_TRUE(engine_ != nullptr);
   EXPECT_TRUE(engine_->RunEngine(nullptr));
@@ -69,6 +77,11 @@ TEST_F(FlutterTizenEngineTest, GetPluginRegistrar) {
 TEST_F(FlutterTizenEngineTest, GetTextureRegistrar) {
   EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->GetTextureRegistrar() == nullptr);
+}
+
+TEST_F(FlutterTizenEngineTestHeaded, GetTextureRegistrar) {
+  EXPECT_TRUE(engine_->RunEngine(nullptr));
+  EXPECT_TRUE(engine_->GetTextureRegistrar() != nullptr);
 }
 
 TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
