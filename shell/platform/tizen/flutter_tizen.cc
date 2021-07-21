@@ -40,7 +40,7 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
         window_properties.height, window_properties.transparent,
         window_properties.focusable);
   }
-  if (!engine->RunEngine(engine_properties.entry_point)) {
+  if (!engine->RunEngine(engine_properties.entrypoint)) {
     FT_LOG(Error) << "Failed to start the Flutter engine.";
     return nullptr;
   }
