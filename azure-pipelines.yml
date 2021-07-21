@@ -111,7 +111,7 @@ jobs:
   - checkout: self
     path: src/flutter
   - bash: |
-      gclient sync -f -D
+      git checkout -- build/config/compiler/BUILD.gn
       flutter/tools/gn \
       --no-goma \
       --runtime-mode debug \
