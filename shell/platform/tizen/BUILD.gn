@@ -26,32 +26,6 @@ source_set("flutter_engine") {
   deps = [ "//flutter/shell/platform/embedder:flutter_engine" ]
 }
 
-_flutter_tizen_source = [
-  "channels/key_event_channel.cc",
-  "channels/lifecycle_channel.cc",
-  "channels/navigation_channel.cc",
-  "channels/platform_view_channel.cc",
-  "channels/text_input_channel.cc",
-  "flutter_project_bundle.cc",
-  "flutter_tizen.cc",
-  "flutter_tizen_engine.cc",
-  "flutter_tizen_texture_registrar.cc",
-  "key_event_handler.cc",
-  "logger.cc",
-  "tizen_event_loop.cc",
-  "tizen_input_method_context.cc",
-  "tizen_renderer.cc",
-  "touch_event_handler.cc",
-]
-
-_libs_minimum = [
-  "ecore",
-  "ecore_imf",
-  "ecore_input",
-  "eina",
-  "wayland-client",
-]
-
 _public_headers = [
   "public/flutter_platform_view.h",
   "public/flutter_tizen.h",
@@ -104,7 +78,7 @@ config("tizen_rootstrap_include_dirs") {
     "$local_prefix/include/evas-1",
   ]
 
-  if (target_cpu == "x64" && !embedder_for_target) {
+  if (!embedder_for_target && target_cpu == "x64") {
     include_dirs += [ "$local_prefix/include/eldbus-1" ]
 
     lib_dirs = [ "$local_prefix/lib/x86_64-linux-gnu" ]
@@ -123,14 +97,16 @@ config("tizen_rootstrap_include_dirs") {
 #
 # If use_evas_gl_renderer is provided as true, the Evas_GL renderer is used,
 # otherwise the Ecore_Wl2 renderer is used.
-template("embedder_for_profile") {
+template("flutter_tizen_source") {
   forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
 
   if (!defined(use_evas_gl_renderer)) {
     use_evas_gl_renderer = false
   }
 
-  source_set("flutter_tizen_${target_name}_source") {
+  source_set(target_name) {
+    visibility = [ ":*" ]
+
     public = _public_headers
 
     sources = [
@@ -144,6 +120,7 @@ template("embedder_for_profile") {
       "flutter_tizen_engine.cc",
       "flutter_tizen_texture_registrar.cc",
       "key_event_handler.cc",
+      "logger.cc",
       "tizen_event_loop.cc",
       "tizen_input_method_context.cc",
       "tizen_renderer.cc",
@@ -234,52 +211,44 @@ template("embedder_for_profile") {
   }
 }
 
-embedder_for_profile("mobile") {
+flutter_tizen_source("flutter_tizen_source_mobile") {
   defines = [ "MOBILE_PROFILE" ]
 }
 
-embedder_for_profile("wearable") {
+flutter_tizen_source("flutter_tizen_source_wearable") {
   defines = [ "WEARABLE_PROFILE" ]
 
   use_evas_gl_renderer = true
 }
 
-embedder_for_profile("tv") {
+flutter_tizen_source("flutter_tizen_source_tv") {
   defines = [ "TV_PROFILE" ]
 }
 
-embedder_for_profile("common") {
+flutter_tizen_source("flutter_tizen_source_common") {
   defines = [ "COMMON_PROFILE" ]
 }
 
-embedder_for_profile("shell") {
-  defines = [ "__X64_SHELL__" ]
+flutter_tizen_source("flutter_tizen_source_shell") {
+  defines = []
 
   use_evas_gl_renderer = true
 }
 
 shared_library("flutter_tizen_mobile") {
-  deps = [
-    ":flutter_tizen_mobile_source"
-  ]
+  deps = [ ":flutter_tizen_source_mobile" ]
 }
 
 shared_library("flutter_tizen_wearable") {
-  deps = [
-    ":flutter_tizen_wearable_source"
-  ]
+  deps = [ ":flutter_tizen_source_wearable" ]
 }
 
 shared_library("flutter_tizen_tv") {
-  deps = [
-    ":flutter_tizen_tv_source"
-  ]
+  deps = [ ":flutter_tizen_source_tv" ]
 }
 
 shared_library("flutter_tizen_common") {
-  deps = [
-    ":flutter_tizen_common_source"
-  ]
+  deps = [ ":flutter_tizen_source_common" ]
 }
 
 executable("flutter_tizen_shell") {
@@ -288,9 +257,9 @@ executable("flutter_tizen_shell") {
   defines = [ "TIZEN_RENDERER_EVAS_GL" ]
 
   configs += [ ":tizen_rootstrap_include_dirs" ]
-  
+
   deps = [
-    ":flutter_tizen_shell_source",
+    ":flutter_tizen_source_shell",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
     "//flutter/shell/platform/embedder:embedder_as_internal_library",
     "//third_party/rapidjson",
@@ -318,7 +287,7 @@ executable("flutter_tizen_unittests") {
 
   deps = [
     ":flutter_tizen_fixtures",
-    ":flutter_tizen_shell_source",
+    ":flutter_tizen_source_shell",
     "//flutter/runtime:libdart",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
     "//flutter/shell/platform/embedder:embedder_headers",
@@ -356,7 +325,6 @@ copy("copy_icu") {
 group("tizen") {
   deps = [
     ":copy_icu",
-    ":flutter_tizen_shell",
     ":publish_cpp_client_wrapper",
     ":publish_headers_tizen",
   ]
@@ -367,5 +335,7 @@ group("tizen") {
       ":flutter_tizen_tv",
       ":flutter_tizen_wearable",
     ]
+  } else {
+    deps += [ ":flutter_tizen_shell" ]
   }
 }

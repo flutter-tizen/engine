@@ -75,7 +75,6 @@ jobs:
         --runtime-mode $(mode) \
         --enable-fontconfig \
         --embedder-for-target \
-        --disable-desktop-embeddings \
         --build-tizen-shell
       ninja -C out/linux_$(mode)_$(arch)
     displayName: Build
