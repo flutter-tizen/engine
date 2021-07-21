@@ -79,7 +79,8 @@ TEST_F(FlutterTizenEngineTest, GetTextureRegistrar) {
   EXPECT_TRUE(engine_->GetTextureRegistrar() == nullptr);
 }
 
-TEST_F(FlutterTizenEngineTestHeaded, GetTextureRegistrar) {
+// Disabled for headless testing.
+TEST_F(FlutterTizenEngineTestHeaded, DISABLED_GetTextureRegistrar) {
   EXPECT_TRUE(engine_->RunEngine(nullptr));
   EXPECT_TRUE(engine_->GetTextureRegistrar() != nullptr);
 }
