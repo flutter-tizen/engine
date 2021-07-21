@@ -118,10 +118,12 @@ jobs:
       --enable-fontconfig \
       --build-tizen-shell
       ninja -C out/host_debug
-      out/host_debug/flutter_tizen_unittests
-    displayName: Build and run unittests
+    displayName: Build unittests
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
+  - bash: out/host_debug/flutter_tizen_unittests
+    displayName: Run
+    workingDirectory: $(Pipeline.Workspace)/src
 - job: release
   dependsOn: test
   pool:
