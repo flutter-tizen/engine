@@ -8,9 +8,8 @@ import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 
 # Sets the rpath of dependent targets (shared libs) to $ORIGIN.
-# We assume that the flutter_engine library exists next to the embedder library
-# when they are deployed on Tizen devices.
-config("tizen_embedder_rpath") {
+# libflutter_engine.so should always exist next to the embedder binary.
+config("embedder_rpath") {
   ldflags = [ "-Wl,-rpath,\$ORIGIN" ]
 }
 
@@ -21,7 +20,7 @@ source_set("flutter_engine") {
 
   lib_dirs = [ root_out_dir ]
 
-  public_configs = [ ":tizen_embedder_rpath" ]
+  public_configs = [ ":embedder_rpath" ]
 
   deps = [ "//flutter/shell/platform/embedder:flutter_engine" ]
 }
@@ -34,7 +33,7 @@ _public_headers = [
 # Tizen native headers assume that the following include dirs are already
 # added to the compiler's search paths. Since we are not using the Tizen CLI
 # builder, we have to add them manually.
-config("tizen_rootstrap_include_dirs") {
+config("rootstrap_include_dirs") {
   local_prefix = "$custom_sysroot/usr"
 
   if (!embedder_for_target && target_cpu == "x64") {
@@ -92,21 +91,24 @@ config("tizen_rootstrap_include_dirs") {
   ]
 }
 
+config("evas_gl_renderer") {
+  defines = [ "TIZEN_RENDERER_EVAS_GL" ]
+}
+
 # Template for the embedder build. Used to generate embedders for different
-# device profiles. The output library name is "flutter_tizen_[profile]".
+# device profiles.
 #
 # If use_evas_gl_renderer is provided as true, the Evas_GL renderer is used,
 # otherwise the Ecore_Wl2 renderer is used.
-template("flutter_tizen_source") {
-  forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
+template("embedder") {
+  forward_variables_from(invoker,
+                         [
+                           "target_type",
+                           "use_evas_gl_renderer",
+                           "defines",
+                         ])
 
-  if (!defined(use_evas_gl_renderer)) {
-    use_evas_gl_renderer = false
-  }
-
-  source_set(target_name) {
-    visibility = [ ":*" ]
-
+  target(target_type, target_name) {
     public = _public_headers
 
     sources = [
@@ -135,8 +137,16 @@ template("flutter_tizen_source") {
       "wayland-client",
     ]
 
-    defines = invoker.defines
+    defines += invoker.defines
     defines += [ "FLUTTER_ENGINE_NO_PROTOTYPES" ]
+
+    configs +=
+        [ "//flutter/shell/platform/common:desktop_library_implementation" ]
+
+    public_configs = [
+      ":rootstrap_include_dirs",
+      "//flutter:config",
+    ]
 
     if (embedder_for_target) {
       sources += [
@@ -182,7 +192,7 @@ template("flutter_tizen_source") {
         "evas",
       ]
 
-      defines += [ "TIZEN_RENDERER_EVAS_GL" ]
+      public_configs += [ ":evas_gl_renderer" ]
     } else {
       sources += [
         "tizen_renderer_ecore_wl2.cc",
@@ -191,13 +201,6 @@ template("flutter_tizen_source") {
 
       libs += [ "ecore_wl2" ]
     }
-
-    configs += [
-      ":tizen_rootstrap_include_dirs",
-      "//flutter/shell/platform/common:desktop_library_implementation",
-    ]
-
-    public_configs = [ "//flutter:config" ]
 
     public_deps = [ ":flutter_engine" ]
 
@@ -211,55 +214,46 @@ template("flutter_tizen_source") {
   }
 }
 
-flutter_tizen_source("flutter_tizen_source_mobile") {
+embedder("flutter_tizen_mobile") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "MOBILE_PROFILE" ]
 }
 
-flutter_tizen_source("flutter_tizen_source_wearable") {
-  defines = [ "WEARABLE_PROFILE" ]
-
+embedder("flutter_tizen_wearable") {
+  target_type = "shared_library"
   use_evas_gl_renderer = true
+
+  defines = [ "WEARABLE_PROFILE" ]
 }
 
-flutter_tizen_source("flutter_tizen_source_tv") {
+embedder("flutter_tizen_tv") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "TV_PROFILE" ]
 }
 
-flutter_tizen_source("flutter_tizen_source_common") {
+embedder("flutter_tizen_common") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "COMMON_PROFILE" ]
 }
 
-flutter_tizen_source("flutter_tizen_source_shell") {
-  defines = []
-
+embedder("flutter_desktop_source") {
+  target_type = "source_set"
   use_evas_gl_renderer = true
-}
 
-shared_library("flutter_tizen_mobile") {
-  deps = [ ":flutter_tizen_source_mobile" ]
-}
-
-shared_library("flutter_tizen_wearable") {
-  deps = [ ":flutter_tizen_source_wearable" ]
-}
-
-shared_library("flutter_tizen_tv") {
-  deps = [ ":flutter_tizen_source_tv" ]
-}
-
-shared_library("flutter_tizen_common") {
-  deps = [ ":flutter_tizen_source_common" ]
+  defines = []
 }
 
 executable("flutter_tizen_shell") {
   sources = [ "flutter_tizen_shell.cc" ]
 
-  defines = [ "TIZEN_RENDERER_EVAS_GL" ]
-
-  configs += [ ":tizen_rootstrap_include_dirs" ]
-
   deps = [
-    ":flutter_tizen_source_shell",
+    ":flutter_desktop_source",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
     "//flutter/shell/platform/embedder:embedder_as_internal_library",
     "//third_party/rapidjson",
@@ -279,15 +273,9 @@ executable("flutter_tizen_unittests") {
     "testing/mock_engine.cc",
   ]
 
-  defines = [ "TIZEN_RENDERER_EVAS_GL" ]
-
-  configs += [ ":tizen_rootstrap_include_dirs" ]
-
-  public_deps = [ "//third_party/googletest:gtest" ]
-
   deps = [
+    ":flutter_desktop_source",
     ":flutter_tizen_fixtures",
-    ":flutter_tizen_source_shell",
     "//flutter/runtime:libdart",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
     "//flutter/shell/platform/embedder:embedder_headers",
