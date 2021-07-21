@@ -68,6 +68,7 @@ jobs:
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
+        --no-goma \
         --target-toolchain $HOME/tizen_tools/toolchains \
         --target-sysroot $HOME/tizen_tools/sysroot/$(arch) \
         --target-triple $(targetTriple) \
