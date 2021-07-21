@@ -4,13 +4,9 @@
 
 #include "settings_channel.h"
 
-#include <locale>
-
 namespace flutter {
 
-void SettingsChannel::Init() {
-  std::locale::global(std::locale(""));
-}
+void SettingsChannel::Init() {}
 
 void SettingsChannel::Dispose() {}
 
