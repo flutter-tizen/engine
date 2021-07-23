@@ -68,13 +68,13 @@ jobs:
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
+        --no-goma \
         --target-toolchain $HOME/tizen_tools/toolchains \
         --target-sysroot $HOME/tizen_tools/sysroot/$(arch) \
         --target-triple $(targetTriple) \
         --runtime-mode $(mode) \
         --enable-fontconfig \
         --embedder-for-target \
-        --disable-desktop-embeddings \
         --build-tizen-shell
       ninja -C out/linux_$(mode)_$(arch)
     displayName: Build

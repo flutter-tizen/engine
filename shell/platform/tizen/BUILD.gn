@@ -3,14 +3,13 @@
 # found in the LICENSE file.
 
 import("//flutter/shell/platform/common/client_wrapper/publish.gni")
-import("//flutter/shell/platform/config.gni")
+import("//flutter/shell/platform/embedder/embedder.gni")
 import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 
 # Sets the rpath of dependent targets (shared libs) to $ORIGIN.
-# We assume that the flutter_engine library exists next to the embedder library
-# when they are deployed on Tizen devices.
-config("tizen_embedder_rpath") {
+# libflutter_engine.so should always exist next to the embedder binary.
+config("embedder_rpath") {
   ldflags = [ "-Wl,-rpath,\$ORIGIN" ]
 }
 
@@ -21,36 +20,10 @@ source_set("flutter_engine") {
 
   lib_dirs = [ root_out_dir ]
 
-  public_configs = [ ":tizen_embedder_rpath" ]
+  public_configs = [ ":embedder_rpath" ]
 
   deps = [ "//flutter/shell/platform/embedder:flutter_engine" ]
 }
-
-_flutter_tizen_source = [
-  "channels/key_event_channel.cc",
-  "channels/lifecycle_channel.cc",
-  "channels/navigation_channel.cc",
-  "channels/platform_view_channel.cc",
-  "channels/text_input_channel.cc",
-  "flutter_project_bundle.cc",
-  "flutter_tizen.cc",
-  "flutter_tizen_engine.cc",
-  "flutter_tizen_texture_registrar.cc",
-  "key_event_handler.cc",
-  "logger.cc",
-  "tizen_event_loop.cc",
-  "tizen_input_method_context.cc",
-  "tizen_renderer.cc",
-  "touch_event_handler.cc",
-]
-
-_libs_minimum = [
-  "ecore",
-  "ecore_imf",
-  "ecore_input",
-  "eina",
-  "wayland-client",
-]
 
 _public_headers = [
   "public/flutter_platform_view.h",
@@ -60,85 +33,131 @@ _public_headers = [
 # Tizen native headers assume that the following include dirs are already
 # added to the compiler's search paths. Since we are not using the Tizen CLI
 # builder, we have to add them manually.
-config("tizen_rootstrap_include_dirs") {
+config("rootstrap_include_dirs") {
   local_prefix = "$custom_sysroot/usr"
 
-  if (enable_desktop_embeddings && target_cpu == "x64") {
+  if (!embedder_for_target && target_cpu == "x64") {
     defines = [ "__X64_SHELL__" ]
+
     local_prefix += "/local"
   }
 
   include_dirs = [
-    local_prefix + "/include",
-    local_prefix + "/include/appfw",
-    local_prefix + "/include/base",
-    local_prefix + "/include/dlog",
-    local_prefix + "/include/ecore-1",
-    local_prefix + "/include/ecore-imf-1",
-    local_prefix + "/include/ecore-input-1",
-    local_prefix + "/include/ecore-wayland-1",
-    local_prefix + "/include/ecore-wl2-1",
-    local_prefix + "/include/efl-1",
-    local_prefix + "/include/eina-1",
-    local_prefix + "/include/eina-1/eina",
-    local_prefix + "/include/emile-1",
-    local_prefix + "/include/eo-1",
-    local_prefix + "/include/feedback",
-    local_prefix + "/include/system",
-    local_prefix + "/include/wayland-extension",
+    "$local_prefix/include",
+    "$local_prefix/include/appfw",
+    "$local_prefix/include/base",
+    "$local_prefix/include/dlog",
+    "$local_prefix/include/ecore-1",
+    "$local_prefix/include/ecore-imf-1",
+    "$local_prefix/include/ecore-input-1",
+    "$local_prefix/include/ecore-wayland-1",
+    "$local_prefix/include/ecore-wl2-1",
+    "$local_prefix/include/efl-1",
+    "$local_prefix/include/eina-1",
+    "$local_prefix/include/eina-1/eina",
+    "$local_prefix/include/emile-1",
+    "$local_prefix/include/eo-1",
+    "$local_prefix/include/feedback",
+    "$local_prefix/include/system",
+    "$local_prefix/include/wayland-extension",
   ]
 
   # Contain headers that the Evas_GL renderer depends on.
   include_dirs += [
-    local_prefix + "/include/ecore-con-1",
-    local_prefix + "/include/ecore-evas-1",
-    local_prefix + "/include/ecore-file-1",
-    local_prefix + "/include/edje-1",
-    local_prefix + "/include/eet-1",
-    local_prefix + "/include/efl-1/interfaces",
-    local_prefix + "/include/efreet-1",
-    local_prefix + "/include/elementary-1",
-    local_prefix + "/include/ethumb-1",
-    local_prefix + "/include/ethumb-client-1",
-    local_prefix + "/include/evas-1",
+    "$local_prefix/include/ecore-con-1",
+    "$local_prefix/include/ecore-evas-1",
+    "$local_prefix/include/ecore-file-1",
+    "$local_prefix/include/edje-1",
+    "$local_prefix/include/eet-1",
+    "$local_prefix/include/efl-1/interfaces",
+    "$local_prefix/include/efreet-1",
+    "$local_prefix/include/elementary-1",
+    "$local_prefix/include/ethumb-1",
+    "$local_prefix/include/ethumb-client-1",
+    "$local_prefix/include/evas-1",
   ]
 
-  if (enable_desktop_embeddings && target_cpu == "x64") {
-    include_dirs += [ local_prefix + "/include/eldbus-1" ]
-    lib_dirs = [ local_prefix + "/lib/x86_64-linux-gnu" ]
+  if (!embedder_for_target && target_cpu == "x64") {
+    include_dirs += [ "$local_prefix/include/eldbus-1" ]
+
+    lib_dirs = [ "$local_prefix/lib/x86_64-linux-gnu" ]
   } else {
-    lib_dirs = [ local_prefix + "/lib" ]
+    lib_dirs = [ "$local_prefix/lib" ]
   }
+
+  cflags_cc = [
+    "-Wno-newline-eof",
+    "-Wno-macro-redefined",
+  ]
+}
+
+config("evas_gl_renderer") {
+  defines = [ "TIZEN_RENDERER_EVAS_GL" ]
 }
 
 # Template for the embedder build. Used to generate embedders for different
-# device profiles. The output library name is "flutter_tizen_[profile]".
+# device profiles.
 #
 # If use_evas_gl_renderer is provided as true, the Evas_GL renderer is used,
 # otherwise the Ecore_Wl2 renderer is used.
-template("embedder_for_profile") {
-  forward_variables_from(invoker, [ "use_evas_gl_renderer" ])
+template("embedder") {
+  forward_variables_from(invoker,
+                         [
+                           "target_type",
+                           "use_evas_gl_renderer",
+                           "defines",
+                         ])
 
-  if (!defined(use_evas_gl_renderer)) {
-    use_evas_gl_renderer = false
-  }
-
-  shared_library("flutter_tizen_${target_name}") {
+  target(target_type, target_name) {
     public = _public_headers
 
-    sources = _flutter_tizen_source
-    sources += [
-      "channels/platform_channel.cc",
-      "channels/settings_channel.cc",
-      "channels/settings_channel_tizen.cc",
-      "external_texture_pixel_gl.cc",
-      "external_texture_surface_gl.cc",
-      "system_utils_tizen.cc",
+    sources = [
+      "channels/key_event_channel.cc",
+      "channels/lifecycle_channel.cc",
+      "channels/navigation_channel.cc",
+      "channels/platform_view_channel.cc",
+      "channels/text_input_channel.cc",
+      "flutter_project_bundle.cc",
+      "flutter_tizen.cc",
+      "flutter_tizen_engine.cc",
+      "flutter_tizen_texture_registrar.cc",
+      "key_event_handler.cc",
+      "logger.cc",
+      "tizen_event_loop.cc",
+      "tizen_input_method_context.cc",
+      "tizen_renderer.cc",
+      "touch_event_handler.cc",
     ]
 
-    libs = _libs_minimum
+    libs = [
+      "ecore",
+      "ecore_imf",
+      "ecore_input",
+      "eina",
+      "wayland-client",
+    ]
 
-    if (!enable_desktop_embeddings) {
+    defines += invoker.defines
+    defines += [ "FLUTTER_ENGINE_NO_PROTOTYPES" ]
+
+    configs +=
+        [ "//flutter/shell/platform/common:desktop_library_implementation" ]
+
+    public_configs = [
+      ":rootstrap_include_dirs",
+      "//flutter:config",
+    ]
+
+    if (embedder_for_target) {
+      sources += [
+        "channels/platform_channel.cc",
+        "channels/settings_channel.cc",
+        "channels/settings_channel_tizen.cc",
+        "external_texture_pixel_gl.cc",
+        "external_texture_surface_gl.cc",
+        "system_utils_tizen.cc",
+      ]
+
       libs += [
         "base-utils-i18n",
         "capi-appfw-application",
@@ -153,12 +172,18 @@ template("embedder_for_profile") {
         "EGL",
         "GLESv2",
       ]
+    } else {
+      sources += [
+        "channels/platform_channel_stub.cc",
+        "channels/settings_channel.cc",
+        "channels/settings_channel_linux.cc",
+        "external_texture_pixel_gl_stub.cc",
+        "external_texture_surface_gl_stub.cc",
+        "system_utils_linux.cc",
+      ]
     }
 
-    defines = invoker.defines
-    defines += [ "FLUTTER_ENGINE_NO_PROTOTYPES" ]
-
-    if (use_evas_gl_renderer || enable_desktop_embeddings) {
+    if (use_evas_gl_renderer) {
       sources += [ "tizen_renderer_evas_gl.cc" ]
 
       libs += [
@@ -167,7 +192,7 @@ template("embedder_for_profile") {
         "evas",
       ]
 
-      defines += [ "TIZEN_RENDERER_EVAS_GL" ]
+      public_configs += [ ":evas_gl_renderer" ]
     } else {
       sources += [
         "tizen_renderer_ecore_wl2.cc",
@@ -176,18 +201,6 @@ template("embedder_for_profile") {
 
       libs += [ "ecore_wl2" ]
     }
-
-    cflags_cc = [
-      "-Wno-newline-eof",
-      "-Wno-macro-redefined",
-    ]
-
-    configs += [
-      ":tizen_rootstrap_include_dirs",
-      "//flutter/shell/platform/common:desktop_library_implementation",
-    ]
-
-    public_configs = [ "//flutter:config" ]
 
     public_deps = [ ":flutter_engine" ]
 
@@ -198,112 +211,61 @@ template("embedder_for_profile") {
       "//flutter/shell/platform/common/client_wrapper:client_wrapper",
       "//third_party/rapidjson",
     ]
-
-    if (enable_desktop_embeddings) {
-      deps +=
-          [ "//flutter/shell/platform/embedder:embedder_as_internal_library" ]
-    }
   }
 }
 
-embedder_for_profile("mobile") {
+embedder("flutter_tizen_mobile") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "MOBILE_PROFILE" ]
 }
 
-embedder_for_profile("wearable") {
-  defines = [ "WEARABLE_PROFILE" ]
-
+embedder("flutter_tizen_wearable") {
+  target_type = "shared_library"
   use_evas_gl_renderer = true
+
+  defines = [ "WEARABLE_PROFILE" ]
 }
 
-embedder_for_profile("tv") {
+embedder("flutter_tizen_tv") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "TV_PROFILE" ]
 }
 
-embedder_for_profile("common") {
+embedder("flutter_tizen_common") {
+  target_type = "shared_library"
+  use_evas_gl_renderer = false
+
   defines = [ "COMMON_PROFILE" ]
+}
+
+embedder("flutter_desktop_source") {
+  target_type = "source_set"
+  use_evas_gl_renderer = true
+
+  defines = []
+}
+
+executable("flutter_tizen_shell") {
+  sources = [ "flutter_tizen_shell.cc" ]
+
+  deps = [
+    ":flutter_desktop_source",
+    "//flutter/shell/platform/common/client_wrapper:client_wrapper",
+    "//flutter/shell/platform/embedder:embedder_as_internal_library",
+    "//third_party/rapidjson",
+  ]
 }
 
 test_fixtures("flutter_tizen_fixtures") {
   fixtures = []
 }
 
-template("embedder_executable") {
-  forward_variables_from(invoker, [ "unit_test" ])
-
-  if (!defined(unit_test)) {
-    unit_test = false
-  }
-
-  executable("${target_name}") {
-    if (unit_test) {
-      testonly = true
-    }
-
-    public = _public_headers
-
-    sources = _flutter_tizen_source
-    sources += [
-      "channels/platform_channel_stub.cc",
-      "channels/settings_channel.cc",
-      "channels/settings_channel_linux.cc",
-      "external_texture_pixel_gl_stub.cc",
-      "external_texture_surface_gl_stub.cc",
-      "system_utils_linux.cc",
-      "tizen_renderer_evas_gl.cc",
-    ]
-
-    if (defined(invoker.sources)) {
-      sources += invoker.sources
-    }
-
-    libs = _libs_minimum
-
-    libs += [
-      "ecore_evas",
-      "elementary",
-      "evas",
-    ]
-
-    defines = [
-      "FLUTTER_ENGINE_NO_PROTOTYPES",
-      "TIZEN_RENDERER_EVAS_GL",
-    ]
-
-    cflags_cc = [
-      "-Wno-newline-eof",
-      "-Wno-macro-redefined",
-    ]
-
-    public_configs = [ "//flutter:config" ]
-
-    configs += [
-      ":tizen_rootstrap_include_dirs",
-      "//flutter/shell/platform/common:desktop_library_implementation",
-    ]
-
-    deps = [
-      "//flutter/runtime:libdart",
-      "//flutter/shell/platform/common:common_cpp",
-      "//flutter/shell/platform/common:common_cpp_input",
-      "//flutter/shell/platform/common:common_cpp_library_headers",
-      "//flutter/shell/platform/common/client_wrapper:client_wrapper",
-      "//flutter/shell/platform/embedder:embedder_headers",
-      "//third_party/rapidjson",
-    ]
-
-    if (defined(invoker.deps)) {
-      deps += invoker.deps
-    }
-
-    if (defined(invoker.public_deps)) {
-      public_deps = invoker.public_deps
-    }
-  }
-}
-
-embedder_executable("flutter_tizen_unittests") {
-  unit_test = true
+executable("flutter_tizen_unittests") {
+  testonly = true
 
   sources = [
     "flutter_tizen_engine_unittest.cc",
@@ -311,19 +273,16 @@ embedder_executable("flutter_tizen_unittests") {
     "testing/mock_engine.cc",
   ]
 
-  public_deps = [ "//third_party/googletest:gtest" ]
-
   deps = [
+    ":flutter_desktop_source",
     ":flutter_tizen_fixtures",
+    "//flutter/runtime:libdart",
+    "//flutter/shell/platform/common/client_wrapper:client_wrapper",
+    "//flutter/shell/platform/embedder:embedder_headers",
     "//flutter/shell/platform/embedder:embedder_test_utils",
     "//flutter/testing",
+    "//third_party/rapidjson",
   ]
-}
-
-embedder_executable("flutter_tizen_shell") {
-  sources = [ "flutter_tizen_shell.cc" ]
-
-  public_deps = [ ":flutter_engine" ]
 }
 
 publish_client_wrapper_core("publish_cpp_client_wrapper") {
@@ -357,14 +316,14 @@ group("tizen") {
     ":publish_cpp_client_wrapper",
     ":publish_headers_tizen",
   ]
-  if (enable_desktop_embeddings) {
-    deps += [ ":flutter_tizen_shell" ]
-  } else {
+  if (embedder_for_target) {
     deps += [
       ":flutter_tizen_common",
       ":flutter_tizen_mobile",
       ":flutter_tizen_tv",
       ":flutter_tizen_wearable",
     ]
+  } else {
+    deps += [ ":flutter_tizen_shell" ]
   }
 }
