@@ -55,8 +55,8 @@ typedef struct {
   const char** switches;
   // The number of elements in |switches|.
   size_t switches_count;
-  // The optional entrypoint in the Dart project. If the entrypoint is null,
-  // defaults to main().
+  // The optional entrypoint in the Dart project. If the value is null or
+  // empty, defaults to main().
   const char* entrypoint;
   // Number of elements in the array passed in as dart_entrypoint_argv.
   int dart_entrypoint_argc;
