@@ -100,8 +100,32 @@ jobs:
     failOnStderr: true
   - publish: $(Build.StagingDirectory)
     artifact: $(System.JobName)
-- job: release
+- job: test
   dependsOn: build
+  pool:
+    name: Default
+    demands: agent.os -equals Linux
+  timeoutInMinutes: 20
+  cancelTimeoutInMinutes: 1
+  steps:
+  - checkout: self
+    path: src/flutter
+  - bash: |
+      git checkout -- build/config/compiler/BUILD.gn
+      flutter/tools/gn \
+      --no-goma \
+      --runtime-mode debug \
+      --enable-fontconfig \
+      --build-tizen-shell
+      ninja -C out/host_debug
+    displayName: Build unittests
+    workingDirectory: $(Pipeline.Workspace)/src
+    failOnStderr: true
+  - bash: out/host_debug/flutter_tizen_unittests
+    displayName: Run
+    workingDirectory: $(Pipeline.Workspace)/src
+- job: release
+  dependsOn: test
   pool:
     name: Default
     demands: agent.os -equals Linux
