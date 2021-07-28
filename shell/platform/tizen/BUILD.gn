@@ -150,11 +150,11 @@ template("embedder") {
 
     if (embedder_for_target) {
       sources += [
-        "channels/platform_channel.cc",
+        "channels/platform_channel_tizen.cc",
         "channels/settings_channel.cc",
         "channels/settings_channel_tizen.cc",
-        "external_texture_pixel_gl.cc",
-        "external_texture_surface_gl.cc",
+        "external_texture_pixel_gl_tizen.cc",
+        "external_texture_surface_gl_tizen.cc",
         "system_utils_tizen.cc",
       ]
 
@@ -174,11 +174,11 @@ template("embedder") {
       ]
     } else {
       sources += [
-        "channels/platform_channel_stub.cc",
+        "channels/platform_channel_linux.cc",
         "channels/settings_channel.cc",
         "channels/settings_channel_linux.cc",
-        "external_texture_pixel_gl_stub.cc",
-        "external_texture_surface_gl_stub.cc",
+        "external_texture_pixel_gl_linux.cc",
+        "external_texture_surface_gl_linux.cc",
         "system_utils_linux.cc",
       ]
     }
