@@ -11,6 +11,7 @@
 
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
+#include "flutter/shell/platform/tizen/tizen_input_method_context.h"
 
 namespace flutter {
 
@@ -257,7 +258,8 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     navigation_channel = std::make_unique<NavigationChannel>(
         internal_plugin_registrar_->messenger());
     text_input_channel = std::make_unique<TextInputChannel>(
-        internal_plugin_registrar_->messenger(), this);
+        internal_plugin_registrar_->messenger(),
+        std::make_unique<TizenInputMethodContext>(this));
     platform_view_channel = std::make_unique<PlatformViewChannel>(
         internal_plugin_registrar_->messenger());
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);

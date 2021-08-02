@@ -49,13 +49,14 @@ bool IsASCIIPrintableKey(char c) {
 
 }  // namespace
 
-TextInputChannel::TextInputChannel(BinaryMessenger* messenger,
-                                   FlutterTizenEngine* engine)
+TextInputChannel::TextInputChannel(
+    BinaryMessenger* messenger,
+    std::unique_ptr<TizenInputMethodContext> input_method_context)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
           &JsonMethodCodec::GetInstance())),
-      input_method_context_(std::make_unique<TizenInputMethodContext>(engine)) {
+      input_method_context_(std::move(input_method_context)) {
   channel_->SetMethodCallHandler(
       [this](const MethodCall<rapidjson::Document>& call,
              std::unique_ptr<MethodResult<rapidjson::Document>> result) {
