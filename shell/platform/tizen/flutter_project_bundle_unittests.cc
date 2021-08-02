@@ -34,5 +34,38 @@ TEST(FlutterProjectBundle, BasicPropertiesRelativePaths) {
   EXPECT_EQ(project.icu_path().filename().string(), "icudtl.dat");
 }
 
+TEST(FlutterProjectBundle, SwitchesEmpty) {
+  FlutterDesktopEngineProperties properties = {};
+  properties.assets_path = "foo/flutter_assets";
+  properties.icu_data_path = "foo/icudtl.dat";
+
+  std::vector<const char*> switches;
+  properties.switches = switches.data();
+  properties.switches_count = switches.size();
+
+  FlutterProjectBundle project(properties);
+
+  EXPECT_EQ(project.switches().size(), 0u);
+}
+
+TEST(FlutterProjectBundle, Switches) {
+  FlutterDesktopEngineProperties properties = {};
+  properties.assets_path = "foo/flutter_assets";
+  properties.icu_data_path = "foo/icudtl.dat";
+
+  std::vector<const char*> switches;
+  switches.push_back("--abc");
+  switches.push_back("--foo=\"bar, baz\"");
+
+  properties.switches = switches.data();
+  properties.switches_count = switches.size();
+
+  FlutterProjectBundle project(properties);
+
+  EXPECT_EQ(project.switches().size(), 2u);
+  EXPECT_EQ(project.switches()[0], "--abc");
+  EXPECT_EQ(project.switches()[1], "--foo=\"bar, baz\"");
+}
+
 }  // namespace testing
 }  // namespace flutter
