@@ -38,7 +38,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 size_t timestamp,
                                                 int device_id = 0) {
   // Correct errors caused by window rotation.
-  auto geometry = engine_->renderer->GetCurrentGeometry();
+  auto geometry = engine_->renderer()->GetCurrentGeometry();
   double width = geometry.w;
   double height = geometry.h;
   double new_x = x, new_y = y;
