@@ -8,7 +8,9 @@
 #include <mutex>
 
 #include "flutter/shell/platform/tizen/external_texture_pixel_gl.h"
+#ifndef __X64_SHELL__
 #include "flutter/shell/platform/tizen/external_texture_surface_gl.h"
+#endif
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
@@ -94,12 +96,14 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
           texture_info->pixel_buffer_config.callback,
           texture_info->pixel_buffer_config.user_data);
       break;
+#ifndef __X64_SHELL__
     case kFlutterDesktopGpuBufferTexture:
       return std::make_unique<ExternalTextureSurfaceGL>(
           texture_info->gpu_buffer_config.callback,
           texture_info->gpu_buffer_config.destruction_callback,
           texture_info->gpu_buffer_config.user_data);
       break;
+#endif
     default:
       FT_LOG(Error) << "Invalid texture type.";
       return nullptr;

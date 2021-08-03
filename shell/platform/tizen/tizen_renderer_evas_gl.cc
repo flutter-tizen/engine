@@ -4,11 +4,7 @@
 
 #include "tizen_renderer_evas_gl.h"
 
-#ifdef __X64_SHELL__
 #include "tizen_evas_gl_helper.h"
-#else
-#include <Evas_GL_GLES3_Helpers.h>
-#endif
 Evas_GL* g_evas_gl = nullptr;
 EVAS_GL_GLOBAL_GLES3_DEFINE();
 
