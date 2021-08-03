@@ -21,8 +21,6 @@
 
 namespace flutter {
 
-class FlutterTizenEngine;
-
 enum class EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
 
 struct TextEditingContext {
@@ -36,8 +34,9 @@ struct TextEditingContext {
 
 class TextInputChannel {
  public:
-  explicit TextInputChannel(BinaryMessenger* messenger,
-                            FlutterTizenEngine* engine);
+  explicit TextInputChannel(
+      BinaryMessenger* messenger,
+      std::unique_ptr<TizenInputMethodContext> input_method_context);
   virtual ~TextInputChannel();
 
   bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
