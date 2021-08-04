@@ -50,6 +50,7 @@ std::vector<LanguageInfo> GetPreferredLanguageInfo() {
   if (size > 0) {
     info.variant = std::string(buffer, size);
   }
+  FT_LOG(Info) << "Device language: " << info.language << "_" << info.country;
 
   languages.push_back(info);
   return languages;
