@@ -6,6 +6,8 @@
 #define EMBEDDER_PLATFORM_CHANNEL_H_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
@@ -20,17 +22,20 @@ class PlatformChannel {
   virtual ~PlatformChannel();
 
  private:
-#ifndef __X64_SHELL__
   void HandleMethodCall(
       const MethodCall<rapidjson::Document>& call,
       std::unique_ptr<MethodResult<rapidjson::Document>> result);
+
+  void SystemNavigatorPop();
+  void PlaySystemSound(const std::string& sound_type);
+  void HapticFeedbackVibrate(const std::string& feedback_type);
+  void SetPreferredOrientations(const std::vector<std::string>& orientations);
 
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
 
   // A reference to the renderer object managed by FlutterTizenEngine.
   // This can be nullptr if the engine is running in headless mode.
   TizenRenderer* renderer_;
-#endif
 };
 
 }  // namespace flutter
