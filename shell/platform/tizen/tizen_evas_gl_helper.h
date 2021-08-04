@@ -1,12 +1,5 @@
-// Copyright 2021 Samsung Electronics Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// This file has same content as tizen's file(Evas_GL_GLES3_Helpers.h).
-// https://docs.tizen.org/application/native/api/mobile/6.0/group__Evas__GL__GLES3__Helpers.html
-
-#ifndef EMBEDDER_TIZEN_EVAS_GL_HELPER_H_
-#define EMBEDDER_TIZEN_EVAS_GL_HELPER_H_
+// This file is a copy of Tizen's Evas_GL_GLES3_Helpers.h file.
+// https://docs.tizen.org/application/native/api/wearable/5.5/group__Evas__GL__GLES3__Helpers.html
 
 /**
  * @file Evas_GL_GLES3_Helpers.h
@@ -683,5 +676,3 @@ evgl_init(...)
  */
 
 #endif
-
-#endif  // EMBEDDER_TIZEN_EVAS_GL_HELPER_H_

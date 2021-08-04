@@ -119,6 +119,7 @@ template("embedder") {
       "channels/platform_view_channel.cc",
       "channels/settings_channel.cc",
       "channels/text_input_channel.cc",
+      "external_texture_pixel_gl.cc",
       "flutter_project_bundle.cc",
       "flutter_tizen.cc",
       "flutter_tizen_engine.cc",
@@ -156,8 +157,7 @@ template("embedder") {
         "channels/app_control_channel.cc",
         "channels/platform_channel_tizen.cc",
         "channels/settings_channel_tizen.cc",
-        "external_texture_pixel_gl.cc",
-        "external_texture_surface_gl.cc",
+        "external_texture_surface_gl_tizen.cc",
         "system_utils_tizen.cc",
       ]
 
@@ -180,8 +180,7 @@ template("embedder") {
       sources += [
         "channels/platform_channel_linux.cc",
         "channels/settings_channel_linux.cc",
-        "external_texture_pixel_gl_stub.cc",
-        "external_texture_surface_gl_stub.cc",
+        "external_texture_surface_gl_linux.cc",
         "system_utils_linux.cc",
       ]
     }

@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
 #include "external_texture_surface_gl.h"
+#pragma clang diagnostic pop
+
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -16,23 +21,19 @@ ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
       user_data_(user_data) {}
 
 ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
-  state_.release();
+  FT_UNIMPLEMENTED();
 }
 
 bool ExternalTextureSurfaceGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
-  if (texture_callback_ && destruction_callback_ && user_data_) {
-    return true;
-  }
+  FT_UNIMPLEMENTED();
   return false;
 }
 
 void ExternalTextureSurfaceGL::OnDestruction() {
-  if (destruction_callback_) {
-    destruction_callback_(user_data_);
-  }
+  FT_UNIMPLEMENTED();
 }
 
 }  // namespace flutter

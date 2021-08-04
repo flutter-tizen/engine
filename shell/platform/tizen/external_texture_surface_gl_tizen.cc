@@ -6,7 +6,7 @@
 
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
-#include <Evas_GL_GLES3_Helpers.h>
+#include "tizen_evas_gl_helper.h"
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES3_DECLARE();
 #else
@@ -18,7 +18,6 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 
 #include <tbm_surface.h>
 
-#include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
