@@ -6,14 +6,9 @@
 #define EMBEDDER_APP_CONTROL_H_
 
 #include <app.h>
-#include <queue>
-#include <unordered_map>
 
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {

@@ -2,18 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <app.h>
-
-#include "app_control.h"
 #include "app_control_channel.h"
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_stream_handler_functions.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 
 namespace flutter {
 
-static constexpr char kChannelName[] = "tizen/internal/app_control_method";
-static constexpr char kEventChannelName[] = "tizen/internal/app_control_event";
-static constexpr char kReplyChannelName[] = "tizen/internal/app_control_reply";
+namespace {
+
+constexpr char kChannelName[] = "tizen/internal/app_control_method";
+constexpr char kEventChannelName[] = "tizen/internal/app_control_event";
+constexpr char kReplyChannelName[] = "tizen/internal/app_control_reply";
+
+}  // namespace
 
 AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
   method_channel_ = std::make_unique<MethodChannel<EncodableValue>>(

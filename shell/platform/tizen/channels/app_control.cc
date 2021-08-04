@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "app_control.h"
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/event_stream_handler_functions.h"
+
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
 
 namespace flutter {
@@ -109,8 +109,8 @@ AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
   return AppControlResult();
 }
 
-void AppControl::SetManager(AppControlChannel* m) {
-  manager_ = m;
+void AppControl::SetManager(AppControlChannel* manager) {
+  manager_ = manager;
 }
 
 AppControlChannel* AppControl::GetManager() {

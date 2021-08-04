@@ -94,9 +94,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   TizenRenderer* renderer() { return renderer_.get(); }
 
+#ifndef __X64_SHELL__
   AppControlChannel* app_control_channel() {
     return app_control_channel_.get();
   }
+#endif
 
   KeyEventChannel* key_event_channel() { return key_event_channel_.get(); }
 
