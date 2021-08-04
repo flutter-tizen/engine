@@ -244,6 +244,10 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   internal_plugin_registrar_ =
       std::make_unique<PluginRegistrar>(plugin_registrar_.get());
 
+#ifndef __X64_SHELL__
+  app_control_channel = std::make_unique<AppControlChannel>(
+      internal_plugin_registrar_->messenger());
+#endif
   platform_channel = std::make_unique<PlatformChannel>(
       internal_plugin_registrar_->messenger(), renderer.get());
   settings_channel = std::make_unique<SettingsChannel>(

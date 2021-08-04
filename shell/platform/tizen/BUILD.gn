@@ -150,6 +150,8 @@ template("embedder") {
 
     if (embedder_for_target) {
       sources += [
+        "channels/app_control.cc",
+        "channels/app_control_channel.cc",
         "channels/platform_channel.cc",
         "channels/settings_channel.cc",
         "channels/settings_channel_tizen.cc",
@@ -162,6 +164,7 @@ template("embedder") {
         "base-utils-i18n",
         "capi-appfw-application",
         "capi-appfw-app-common",
+        "capi-appfw-app-control",
         "capi-base-common",
         "capi-system-info",
         "capi-system-system-settings",
