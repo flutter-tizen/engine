@@ -20,48 +20,39 @@ std::vector<LanguageInfo> GetPreferredLanguageInfo() {
     FT_LOG(Error) << "i18n_ulocale_get_default() failed.";
     return languages;
   }
-  std::string preferred_locale(locale);
-  size_t codeset_pos = preferred_locale.find(".");
-  preferred_locale = preferred_locale.substr(0, codeset_pos);
+  std::string locale_string(locale);
+  size_t codeset_pos = locale_string.find(".");
+  locale_string = locale_string.substr(0, codeset_pos);
+  locale = locale_string.c_str();
 
-  int32_t count = i18n_ulocale_count_available();
-  languages.reserve(count);
-  for (int i = 0; i < count; i++) {
-    LanguageInfo info;
-    int ret;
-    char buffer[128] = {0};
-    int32_t size;
+  LanguageInfo info;
+  char buffer[128] = {0};
+  int32_t size;
 
-    // The "language" field is required.
-    locale = i18n_ulocale_get_available(i);
-    ret = i18n_ulocale_get_language(locale, buffer, sizeof(buffer), &size);
-    if (ret != I18N_ERROR_NONE || size == 0) {
-      continue;
-    }
-    info.language = std::string(buffer, size);
-
-    // "country", "script", and "variant" are optional.
-    size = i18n_ulocale_get_country(locale, buffer, sizeof(buffer), &ret);
-    if (ret == I18N_ERROR_NONE && size > 0) {
-      info.country = std::string(buffer, size);
-    }
-    size = i18n_ulocale_get_script(locale, buffer, sizeof(buffer));
-    if (size > 0) {
-      info.script = std::string(buffer, size);
-    }
-    size = i18n_ulocale_get_variant(locale, buffer, sizeof(buffer));
-    if (size > 0) {
-      info.variant = std::string(buffer, size);
-    }
-
-    if (preferred_locale.compare(locale) == 0) {
-      languages.insert(languages.begin(), info);
-    } else {
-      languages.push_back(info);
-    }
+  // The "language" field is required.
+  ret = i18n_ulocale_get_language(locale, buffer, sizeof(buffer), &size);
+  if (ret != I18N_ERROR_NONE || size == 0) {
+    FT_LOG(Error) << "i18n_ulocale_get_language() failed.";
+    return languages;
   }
-  FT_LOG(Info) << "Found " << languages.size() << " locales.";
+  info.language = std::string(buffer, size);
 
+  // "country", "script", and "variant" are optional.
+  size = i18n_ulocale_get_country(locale, buffer, sizeof(buffer), &ret);
+  if (ret == I18N_ERROR_NONE && size > 0) {
+    info.country = std::string(buffer, size);
+  }
+  size = i18n_ulocale_get_script(locale, buffer, sizeof(buffer));
+  if (size > 0) {
+    info.script = std::string(buffer, size);
+  }
+  size = i18n_ulocale_get_variant(locale, buffer, sizeof(buffer));
+  if (size > 0) {
+    info.variant = std::string(buffer, size);
+  }
+  FT_LOG(Info) << "Device language: " << info.language << "_" << info.country;
+
+  languages.push_back(info);
   return languages;
 }
 
