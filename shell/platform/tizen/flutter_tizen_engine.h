@@ -78,10 +78,39 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // Stops the engine.
   bool StopEngine();
 
-  // Returns the currently configured Plugin Registrar.
-  FlutterDesktopPluginRegistrarRef GetPluginRegistrar();
+  FlutterDesktopMessengerRef messenger() { return messenger_.get(); }
 
-  FlutterTizenTextureRegistrar* GetTextureRegistrar();
+  IncomingMessageDispatcher* message_dispatcher() {
+    return message_dispatcher_.get();
+  }
+
+  FlutterDesktopPluginRegistrarRef plugin_registrar() {
+    return plugin_registrar_.get();
+  }
+
+  FlutterTizenTextureRegistrar* texture_registrar() {
+    return texture_registrar_.get();
+  }
+
+  TizenRenderer* renderer() { return renderer_.get(); }
+
+#ifndef __X64_SHELL__
+  AppControlChannel* app_control_channel() {
+    return app_control_channel_.get();
+  }
+#endif
+
+  KeyEventChannel* key_event_channel() { return key_event_channel_.get(); }
+
+  LifecycleChannel* lifecycle_channel() { return lifecycle_channel_.get(); }
+
+  NavigationChannel* navigation_channel() { return navigation_channel_.get(); }
+
+  PlatformViewChannel* platform_view_channel() {
+    return platform_view_channel_.get();
+  }
+
+  TextInputChannel* text_input_channel() { return text_input_channel_.get(); }
 
   // Sets |callback| to be called when the plugin registrar is destroyed.
   void SetPluginRegistrarDestructionCallback(
@@ -130,32 +159,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // given |texture_id|.
   bool MarkExternalTextureFrameAvailable(int64_t texture_id);
 
-  // The plugin messenger handle given to API clients.
-  std::unique_ptr<FlutterDesktopMessenger> messenger;
-
-  // Message dispatch manager for messages from the Flutter engine.
-  std::unique_ptr<IncomingMessageDispatcher> message_dispatcher;
-
-  // The interface between the Flutter rasterizer and the platform.
-  std::unique_ptr<TizenRenderer> renderer;
-
-  // The system channels for communicating between Flutter and the platform.
-#ifndef __X64_SHELL__
-  std::unique_ptr<AppControlChannel> app_control_channel;
-#endif
-  std::unique_ptr<KeyEventChannel> key_event_channel;
-  std::unique_ptr<LifecycleChannel> lifecycle_channel;
-  std::unique_ptr<NavigationChannel> navigation_channel;
-  std::unique_ptr<PlatformChannel> platform_channel;
-  std::unique_ptr<SettingsChannel> settings_channel;
-  std::unique_ptr<TextInputChannel> text_input_channel;
-  std::unique_ptr<PlatformViewChannel> platform_view_channel;
-
  private:
   friend class EngineModifier;
 
   // Whether the engine is running in headed or headless mode.
-  bool IsHeaded() { return renderer != nullptr; }
+  bool IsHeaded() { return renderer_ != nullptr; }
 
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
@@ -178,9 +186,17 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // AOT data for this engine instance, if applicable.
   UniqueAotDataPtr aot_data_;
 
-  // The handlers listening to platform events.
+  // An event dispatcher for Ecore key events.
   std::unique_ptr<KeyEventHandler> key_event_handler_;
+
+  // An event dispatcher for Ecore mouse events.
   std::unique_ptr<TouchEventHandler> touch_event_handler_;
+
+  // The plugin messenger handle given to API clients.
+  std::unique_ptr<FlutterDesktopMessenger> messenger_;
+
+  // Message dispatch manager for messages from the Flutter engine.
+  std::unique_ptr<IncomingMessageDispatcher> message_dispatcher_;
 
   // The plugin registrar handle given to API clients.
   std::unique_ptr<FlutterDesktopPluginRegistrar> plugin_registrar_;
@@ -196,12 +212,41 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
 
+#ifndef __X64_SHELL__
+  // A plugin that implements Tizen app_control channels.
+  std::unique_ptr<AppControlChannel> app_control_channel_;
+#endif
+
+  // A plugin that implements the Flutter keyevent channel.
+  std::unique_ptr<KeyEventChannel> key_event_channel_;
+
+  // A plugin that implements the Flutter lifecycle channel.
+  std::unique_ptr<LifecycleChannel> lifecycle_channel_;
+
+  // A plugin that implements the Flutter navigation channel.
+  std::unique_ptr<NavigationChannel> navigation_channel_;
+
+  // A plugin that implements the Flutter platform channel.
+  std::unique_ptr<PlatformChannel> platform_channel_;
+
+  // A plugin that implements the Flutter platform_views channel.
+  std::unique_ptr<PlatformViewChannel> platform_view_channel_;
+
+  // A plugin that implements the Flutter settings channel.
+  std::unique_ptr<SettingsChannel> settings_channel_;
+
+  // A plugin that implements the Flutter textinput channel.
+  std::unique_ptr<TextInputChannel> text_input_channel_;
+
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;
 
 #ifdef TIZEN_RENDERER_EVAS_GL
   std::unique_ptr<TizenRenderEventLoop> render_loop_;
 #endif
+
+  // An interface between the Flutter rasterizer and the platform.
+  std::unique_ptr<TizenRenderer> renderer_;
 
 #ifndef TIZEN_RENDERER_EVAS_GL
   // The vsync waiter for the embedder.

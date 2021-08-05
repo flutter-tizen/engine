@@ -56,7 +56,8 @@ void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
 void FlutterDesktopPluginRegistrarEnableInputBlocking(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* channel) {
-  registrar->engine->message_dispatcher->EnableInputBlockingForChannel(channel);
+  registrar->engine->message_dispatcher()->EnableInputBlockingForChannel(
+      channel);
 }
 
 FlutterDesktopPluginRegistrarRef FlutterDesktopGetPluginRegistrar(
@@ -65,17 +66,17 @@ FlutterDesktopPluginRegistrarRef FlutterDesktopGetPluginRegistrar(
   // Currently, one registrar acts as the registrar for all plugins, so the
   // name is ignored. It is part of the API to reduce churn in the future when
   // aligning more closely with the Flutter registrar system.
-  return EngineFromHandle(engine)->GetPluginRegistrar();
+  return EngineFromHandle(engine)->plugin_registrar();
 }
 
 FlutterDesktopMessengerRef FlutterDesktopEngineGetMessenger(
     FlutterDesktopEngineRef engine) {
-  return EngineFromHandle(engine)->messenger.get();
+  return EngineFromHandle(engine)->messenger();
 }
 
 FlutterDesktopMessengerRef FlutterDesktopPluginRegistrarGetMessenger(
     FlutterDesktopPluginRegistrarRef registrar) {
-  return registrar->engine->messenger.get();
+  return registrar->engine->messenger();
 }
 
 void FlutterDesktopPluginRegistrarSetDestructionHandler(
@@ -114,14 +115,15 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
                                         const char* channel,
                                         FlutterDesktopMessageCallback callback,
                                         void* user_data) {
-  messenger->engine->message_dispatcher->SetMessageCallback(channel, callback,
-                                                            user_data);
+  messenger->engine->message_dispatcher()->SetMessageCallback(channel, callback,
+                                                              user_data);
 }
 
 void FlutterDesktopNotifyAppControl(FlutterDesktopEngineRef engine,
                                     void* app_control) {
 #ifndef __X64_SHELL__
-  EngineFromHandle(engine)->app_control_channel->NotifyAppControl(app_control);
+  EngineFromHandle(engine)->app_control_channel()->NotifyAppControl(
+      app_control);
 #endif
 }
 
@@ -134,27 +136,27 @@ void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
 }
 
 void FlutterDesktopNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->lifecycle_channel->AppIsInactive();
+  EngineFromHandle(engine)->lifecycle_channel()->AppIsInactive();
 }
 
 void FlutterDesktopNotifyAppIsResumed(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->lifecycle_channel->AppIsResumed();
+  EngineFromHandle(engine)->lifecycle_channel()->AppIsResumed();
 }
 
 void FlutterDesktopNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->lifecycle_channel->AppIsPaused();
+  EngineFromHandle(engine)->lifecycle_channel()->AppIsPaused();
 }
 
 void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
-  EngineFromHandle(engine)->lifecycle_channel->AppIsDetached();
+  EngineFromHandle(engine)->lifecycle_channel()->AppIsDetached();
 }
 
 void FlutterRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
-  view_factory->SetWindow(registrar->engine->renderer->GetWindowHandle());
-  registrar->engine->platform_view_channel->ViewFactories().insert(
+  view_factory->SetWindow(registrar->engine->renderer()->GetWindowHandle());
+  registrar->engine->platform_view_channel()->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));
 }
@@ -173,7 +175,7 @@ static FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
 
 FlutterDesktopTextureRegistrarRef FlutterDesktopRegistrarGetTextureRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  return HandleForTextureRegistrar(registrar->engine->GetTextureRegistrar());
+  return HandleForTextureRegistrar(registrar->engine->texture_registrar());
 }
 
 int64_t FlutterDesktopTextureRegistrarRegisterExternalTexture(

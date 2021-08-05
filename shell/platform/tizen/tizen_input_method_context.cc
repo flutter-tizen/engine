@@ -172,7 +172,8 @@ void TizenInputMethodContext::Init() {
   }
 
   ecore_imf_context_client_window_set(
-      imf_context_, reinterpret_cast<void*>(engine_->renderer->GetWindowId()));
+      imf_context_,
+      reinterpret_cast<void*>(engine_->renderer()->GetWindowId()));
   SetContextOptions();
   SetInputPannelOptions();
   RegisterEventCallbacks();

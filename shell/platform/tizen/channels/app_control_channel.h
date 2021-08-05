@@ -5,6 +5,7 @@
 #ifndef EMBEDDER_APP_CONTROL_CHANNEL_H_
 #define EMBEDDER_APP_CONTROL_CHANNEL_H_
 
+#include <memory>
 #include <queue>
 #include <unordered_map>
 
@@ -12,10 +13,8 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
+#include "flutter/shell/platform/tizen/channels/app_control.h"
 #include "flutter/shell/platform/tizen/logger.h"
-
-#include "app_control.h"
 
 namespace flutter {
 
@@ -33,13 +32,11 @@ class AppControlChannel {
  private:
   void HandleMethodCall(const MethodCall<EncodableValue>& method_call,
                         std::unique_ptr<MethodResult<EncodableValue>> result);
-  void RegisterEventHandler(
-      std::unique_ptr<flutter::EventSink<EncodableValue>> events);
+  void RegisterEventHandler(std::unique_ptr<EventSink<EncodableValue>> events);
   void UnregisterEventHandler();
   void SendAlreadyQueuedEvents();
 
-  void RegisterReplyHandler(
-      std::unique_ptr<flutter::EventSink<EncodableValue>> events);
+  void RegisterReplyHandler(std::unique_ptr<EventSink<EncodableValue>> events);
   void UnregisterReplyHandler();
 
   template <typename T>

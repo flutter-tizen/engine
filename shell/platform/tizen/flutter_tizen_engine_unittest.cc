@@ -71,18 +71,18 @@ TEST_F(FlutterTizenEngineTest, Stop_Twice) {
 
 TEST_F(FlutterTizenEngineTest, GetPluginRegistrar) {
   EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->GetPluginRegistrar() != nullptr);
+  EXPECT_TRUE(engine_->plugin_registrar() != nullptr);
 }
 
 TEST_F(FlutterTizenEngineTest, GetTextureRegistrar) {
   EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->GetTextureRegistrar() == nullptr);
+  EXPECT_TRUE(engine_->texture_registrar() == nullptr);
 }
 
 // Disabled for headless testing.
 TEST_F(FlutterTizenEngineTestHeaded, DISABLED_GetTextureRegistrar) {
   EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->GetTextureRegistrar() != nullptr);
+  EXPECT_TRUE(engine_->texture_registrar() != nullptr);
 }
 
 TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {

@@ -44,26 +44,26 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
     FT_LOG(Info) << "Key pressed: " << key->key << "(" << key->keycode << ")";
   }
 
-  if (engine->text_input_channel) {
-    if (engine->text_input_channel->SendKeyEvent(key, is_down)) {
+  if (engine->text_input_channel()) {
+    if (engine->text_input_channel()->SendKeyEvent(key, is_down)) {
       return ECORE_CALLBACK_PASS_ON;
     }
   }
 
-  if (engine->platform_view_channel) {
-    engine->platform_view_channel->SendKeyEvent(key, is_down);
+  if (engine->platform_view_channel()) {
+    engine->platform_view_channel()->SendKeyEvent(key, is_down);
   }
 
-  if (engine->key_event_channel) {
-    engine->key_event_channel->SendKeyEvent(
+  if (engine->key_event_channel()) {
+    engine->key_event_channel()->SendKeyEvent(
         key, is_down,
         [engine, keyname = std::string(key->keyname), is_down](bool handled) {
           if (handled) {
             return;
           }
           if (keyname == kBackKey && !is_down) {
-            if (engine->navigation_channel) {
-              engine->navigation_channel->PopRoute();
+            if (engine->navigation_channel()) {
+              engine->navigation_channel()->PopRoute();
             }
           } else if (keyname == kExitKey && !is_down) {
 #ifndef __X64_SHELL__
