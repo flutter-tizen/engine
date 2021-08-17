@@ -80,6 +80,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
       self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0,
                                     0, button_event->timestamp,
                                     button_event->multi.device);
+      return ECORE_CALLBACK_DONE;
     }
 
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
@@ -89,6 +90,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
       self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
                                     button_event->timestamp,
                                     button_event->multi.device);
+      return ECORE_CALLBACK_DONE;
     }
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
     if (self->pointer_state_) {
@@ -97,6 +99,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
         self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
                                       move_event->timestamp,
                                       move_event->multi.device);
+        return ECORE_CALLBACK_DONE;
       }
     }
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
@@ -114,6 +117,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
       self->SendFlutterPointerEvent(
           self->pointer_state_ ? kMove : kHover, wheel_event->x, wheel_event->y,
           scroll_delta_x, scroll_delta_y, wheel_event->timestamp);
+      return ECORE_CALLBACK_DONE;
     }
   }
   return ECORE_CALLBACK_PASS_ON;
