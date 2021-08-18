@@ -20,8 +20,16 @@
 
 namespace flutter {
 
+// TODO
+typedef enum {
+  ExternalTextureGLExtention_None,
+  ExternalTextureGLExtention_EGL_TIZEN_image_native_surface,
+  ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import
+} ExternalTextureGLExtention;
+
 struct ExternalTextureGLState {
   GLuint gl_texture;
+  ExternalTextureGLExtention gl_extention;
 };
 
 static std::atomic_long next_texture_id = {1};
@@ -29,9 +37,12 @@ static std::atomic_long next_texture_id = {1};
 // An adaptation class of flutter engine and external texture interface.
 class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
  public:
-  ExternalTexture()
+  ExternalTexture(
+      ExternalTextureGLExtention gl_extention = ExternalTextureGLExtention_None)
       : state_(std::make_unique<ExternalTextureGLState>()),
-        texture_id_(next_texture_id++) {}
+        texture_id_(next_texture_id++) {
+    state_->gl_extention = gl_extention;
+  }
   virtual ~ExternalTexture() = default;
 
   /**
