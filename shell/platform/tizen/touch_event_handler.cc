@@ -93,9 +93,9 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
       return ECORE_CALLBACK_DONE;
     }
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
-    if (self->pointer_state_) {
-      auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
-      if (self->engine_->renderer()->GetWindowId() == move_event->window) {
+    auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
+    if (self->engine_->renderer()->GetWindowId() == move_event->window) {
+      if (self->pointer_state_) {
         self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
                                       move_event->timestamp,
                                       move_event->multi.device);
