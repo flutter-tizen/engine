@@ -74,9 +74,9 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   auto* self = reinterpret_cast<TouchEventHandler*>(data);
 
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
-    self->pointer_state_ = true;
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
     if (self->engine_->renderer()->GetWindowId() == button_event->window) {
+      self->pointer_state_ = true;
       self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0,
                                     0, button_event->timestamp,
                                     button_event->multi.device);
@@ -84,9 +84,9 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
     }
 
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
-    self->pointer_state_ = false;
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
     if (self->engine_->renderer()->GetWindowId() == button_event->window) {
+      self->pointer_state_ = false;
       self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
                                     button_event->timestamp,
                                     button_event->multi.device);
