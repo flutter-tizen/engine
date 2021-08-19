@@ -100,43 +100,6 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifierToEcoreIMFLock(
   return static_cast<Ecore_IMF_Keyboard_Locks>(lock);
 }
 
-void CommitCallback(void* data, Ecore_IMF_Context* ctx, void* event_info) {
-  FT_ASSERT(data);
-
-  flutter::TizenInputMethodContext* self =
-      static_cast<flutter::TizenInputMethodContext*>(data);
-
-  char* str = static_cast<char*>(event_info);
-
-  self->OnCommit(str);
-}
-
-void PreeditCallback(void* data, Ecore_IMF_Context* ctx, void* event_info) {
-  FT_ASSERT(data);
-  flutter::TizenInputMethodContext* self =
-      static_cast<flutter::TizenInputMethodContext*>(data);
-
-  char* str = nullptr;
-  int cursor_pos = 0;
-
-  ecore_imf_context_preedit_string_get(ctx, &str, &cursor_pos);
-
-  if (str) {
-    self->OnPreedit(str, cursor_pos);
-    free(str);
-  }
-}
-
-void InputPanelStateChangedCallback(void* data,
-                                    Ecore_IMF_Context* context,
-                                    int value) {
-  FT_ASSERT(data);
-  flutter::TizenInputMethodContext* self =
-      static_cast<flutter::TizenInputMethodContext*>(data);
-
-  self->OnInputPannelStateChanged(value);
-}
-
 }  // namespace
 
 namespace flutter {
@@ -238,31 +201,6 @@ void TizenInputMethodContext::HideInputPannel() {
   ecore_imf_context_input_panel_hide(imf_context_);
 }
 
-void TizenInputMethodContext::OnCommit(std::string str) {
-  if (!on_commit_callback_) {
-    FT_LOG(Warn) << "SetOnCommitCallback() has not been called.";
-    return;
-  }
-  on_commit_callback_(str);
-}
-
-void TizenInputMethodContext::OnPreedit(std::string str, int cursor_pos) {
-  if (!on_preedit_callback_) {
-    FT_LOG(Warn) << "SetOnPreeditCallback() has not been called.";
-    return;
-  }
-  on_preedit_callback_(str, cursor_pos);
-}
-
-void TizenInputMethodContext::OnInputPannelStateChanged(int state) {
-  if (!on_input_pannel_state_changed_callback_) {
-    FT_LOG(Warn)
-        << "SetOnInputPannelStateChangedCallback() has not been called.";
-    return;
-  }
-  on_input_pannel_state_changed_callback_(state);
-}
-
 void TizenInputMethodContext::SetInputPannelLayout(std::string input_type) {
   FT_ASSERT(imf_context_);
   Ecore_IMF_Input_Panel_Layout panel_layout;
@@ -273,24 +211,94 @@ void TizenInputMethodContext::SetInputPannelLayout(std::string input_type) {
 
 void TizenInputMethodContext::RegisterEventCallbacks() {
   FT_ASSERT(imf_context_);
-  ecore_imf_context_event_callback_add(imf_context_, ECORE_IMF_CALLBACK_COMMIT,
-                                       CommitCallback, this);
+
+  // commit callback
+  event_callbacks_[ECORE_IMF_CALLBACK_COMMIT] =
+      [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+        flutter::TizenInputMethodContext* self =
+            static_cast<flutter::TizenInputMethodContext*>(data);
+        char* str = static_cast<char*>(event_info);
+        if (self->on_commit_) {
+          self->on_commit_(str);
+        }
+      };
   ecore_imf_context_event_callback_add(
-      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_CHANGED, PreeditCallback, this);
+      imf_context_, ECORE_IMF_CALLBACK_COMMIT,
+      event_callbacks_[ECORE_IMF_CALLBACK_COMMIT], this);
+
+  // pre-edit start callback
+  event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_START] =
+      [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+        flutter::TizenInputMethodContext* self =
+            static_cast<flutter::TizenInputMethodContext*>(data);
+        if (self->on_preedit_start_) {
+          self->on_preedit_start_();
+        }
+      };
+  ecore_imf_context_event_callback_add(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_START,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_START], this);
+
+  // pre-edit end callback
+  event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_END] =
+      [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+        flutter::TizenInputMethodContext* self =
+            static_cast<flutter::TizenInputMethodContext*>(data);
+        if (self->on_preedit_end_) {
+          self->on_preedit_end_();
+        }
+      };
+  ecore_imf_context_event_callback_add(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_END,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_END], this);
+
+  // pre-edit changed callback
+  event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_CHANGED] =
+      [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+        flutter::TizenInputMethodContext* self =
+            static_cast<flutter::TizenInputMethodContext*>(data);
+        if (self->on_preedit_changed_) {
+          char* str = nullptr;
+          int cursor_pos = 0;
+          ecore_imf_context_preedit_string_get(ctx, &str, &cursor_pos);
+          if (str) {
+            self->on_preedit_changed_(str, cursor_pos);
+            free(str);
+          }
+        }
+      };
+  ecore_imf_context_event_callback_add(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_CHANGED], this);
+
+  // input panel state callback
   ecore_imf_context_input_panel_event_callback_add(
       imf_context_, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
-      InputPanelStateChangedCallback, this);
+      [](void* data, Ecore_IMF_Context* context, int value) {
+        flutter::TizenInputMethodContext* self =
+            static_cast<flutter::TizenInputMethodContext*>(data);
+        if (self->on_input_pannel_state_changed_) {
+          self->on_input_pannel_state_changed_(value);
+        }
+      },
+      this);
 }
 
 void TizenInputMethodContext::UnregisterEventCallbacks() {
   FT_ASSERT(imf_context_);
-  ecore_imf_context_event_callback_del(imf_context_, ECORE_IMF_CALLBACK_COMMIT,
-                                       CommitCallback);
   ecore_imf_context_event_callback_del(
-      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_CHANGED, PreeditCallback);
-  ecore_imf_context_input_panel_event_callback_del(
-      imf_context_, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
-      InputPanelStateChangedCallback);
+      imf_context_, ECORE_IMF_CALLBACK_COMMIT,
+      event_callbacks_[ECORE_IMF_CALLBACK_COMMIT]);
+  ecore_imf_context_event_callback_del(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_CHANGED]);
+  ecore_imf_context_event_callback_del(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_START,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_START]);
+  ecore_imf_context_event_callback_del(
+      imf_context_, ECORE_IMF_CALLBACK_PREEDIT_END,
+      event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_END]);
+  ecore_imf_context_input_panel_event_callback_clear(imf_context_);
 }
 
 void TizenInputMethodContext::SetContextOptions() {

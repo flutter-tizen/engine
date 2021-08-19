@@ -25,11 +25,7 @@ enum class EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
 
 struct TextEditingContext {
   EditStatus edit_status_ = EditStatus::kNone;
-  bool has_preedit_ = false;
   bool is_in_select_mode_ = false;
-  std::string last_handled_ecore_event_keyname_ = "";
-  int preedit_end_pos_ = 0;
-  int preedit_start_pos_ = 0;
 };
 
 class TextInputChannel {
@@ -51,7 +47,6 @@ class TextInputChannel {
   bool FilterEvent(Ecore_Event_Key* event);
   void HandleUnfilteredEvent(Ecore_Event_Key* event);
   void EnterPressed(TextInputModel* model, bool select);
-  void ConsumeLastPreedit();
   void ResetTextEditingContext() {
     text_editing_context_ = TextEditingContext();
   }

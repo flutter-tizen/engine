@@ -10,12 +10,15 @@
 #include <Ecore_Input.h>
 
 #include <functional>
+#include <unordered_map>
 
 namespace flutter {
 
-using OnCommitCallback = std::function<void(std::string str)>;
-using OnPreeditCallback = std::function<void(std::string str, int cursor_pos)>;
-using OnInputPannelStateChangedCallback = std::function<void(int value)>;
+using OnCommit = std::function<void(std::string str)>;
+using OnPreeditChanged = std::function<void(std::string str, int cursor_pos)>;
+using OnPreeditStart = std::function<void()>;
+using OnPreeditEnd = std::function<void()>;
+using OnInputPannelStateChanged = std::function<void(int value)>;
 
 class FlutterTizenEngine;
 
@@ -38,25 +41,22 @@ class TizenInputMethodContext {
 
   void HideInputPannel();
 
-  void OnCommit(std::string str);
-
-  void OnPreedit(std::string str, int cursor_pos);
-
-  void OnInputPannelStateChanged(int state);
-
   void SetInputPannelLayout(std::string layout);
 
-  void SetOnCommitCallback(OnCommitCallback callback) {
-    on_commit_callback_ = callback;
+  void SetOnCommit(OnCommit callback) { on_commit_ = callback; }
+
+  void SetOnPreeditChanged(OnPreeditChanged callback) {
+    on_preedit_changed_ = callback;
   }
 
-  void SetOnPreeditCallback(OnPreeditCallback callback) {
-    on_preedit_callback_ = callback;
+  void SetOnPreeditStart(OnPreeditStart callback) {
+    on_preedit_start_ = callback;
   }
 
-  void SetOnInputPannelStateChangedCallback(
-      OnInputPannelStateChangedCallback callback) {
-    on_input_pannel_state_changed_callback_ = callback;
+  void SetOnPreeditEnd(OnPreeditEnd callback) { on_preedit_end_ = callback; }
+
+  void SetOnInputPannelStateChanged(OnInputPannelStateChanged callback) {
+    on_input_pannel_state_changed_ = callback;
   }
 
  private:
@@ -74,9 +74,13 @@ class TizenInputMethodContext {
 
   FlutterTizenEngine* engine_{nullptr};
   Ecore_IMF_Context* imf_context_{nullptr};
-  OnCommitCallback on_commit_callback_;
-  OnPreeditCallback on_preedit_callback_;
-  OnInputPannelStateChangedCallback on_input_pannel_state_changed_callback_;
+  OnCommit on_commit_;
+  OnPreeditChanged on_preedit_changed_;
+  OnPreeditStart on_preedit_start_;
+  OnPreeditEnd on_preedit_end_;
+  OnInputPannelStateChanged on_input_pannel_state_changed_;
+  std::unordered_map<Ecore_IMF_Callback_Type, Ecore_IMF_Event_Cb>
+      event_callbacks_;
 };
 
 }  // namespace flutter
