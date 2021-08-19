@@ -40,6 +40,10 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
   auto* engine = self->engine_;
   auto is_down = type == ECORE_EVENT_KEY_DOWN;
 
+  if (self->engine_->renderer()->GetWindowId() != key->window) {
+    return ECORE_CALLBACK_PASS_ON;
+  }
+
   if (is_down) {
     FT_LOG(Info) << "Key pressed: " << key->key << "(" << key->keycode << ")";
   }

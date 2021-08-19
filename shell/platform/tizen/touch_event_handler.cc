@@ -21,6 +21,7 @@ TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
       ecore_event_handler_add(ECORE_EVENT_MOUSE_WHEEL, OnTouch, this));
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, OnTouch, this));
+  window_id_ = engine_->renderer()->GetWindowId();
 }
 
 TouchEventHandler::~TouchEventHandler() {
@@ -74,38 +75,51 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   auto* self = reinterpret_cast<TouchEventHandler*>(data);
 
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
-    self->pointer_state_ = true;
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0, 0,
-                                  button_event->timestamp,
-                                  button_event->multi.device);
+    if (self->window_id_ == button_event->window) {
+      self->pointer_state_ = true;
+      self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0,
+                                    0, button_event->timestamp,
+                                    button_event->multi.device);
+      return ECORE_CALLBACK_DONE;
+    }
+
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
-    self->pointer_state_ = false;
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
-                                  button_event->timestamp,
-                                  button_event->multi.device);
+    if (self->window_id_ == button_event->window) {
+      self->pointer_state_ = false;
+      self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
+                                    button_event->timestamp,
+                                    button_event->multi.device);
+      return ECORE_CALLBACK_DONE;
+    }
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
-    if (self->pointer_state_) {
-      auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
-      self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
-                                    move_event->timestamp,
-                                    move_event->multi.device);
+    auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
+    if (self->window_id_ == move_event->window) {
+      if (self->pointer_state_) {
+        self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
+                                      move_event->timestamp,
+                                      move_event->multi.device);
+        return ECORE_CALLBACK_DONE;
+      }
     }
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
     auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
-    double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
-    if (wheel_event->direction == kScrollDirectionVertical) {
-      scroll_delta_y += wheel_event->z;
-    } else if (wheel_event->direction == kScrollDirectionHorizontal) {
-      scroll_delta_x += wheel_event->z;
+    if (self->window_id_ == wheel_event->window) {
+      double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
+      if (wheel_event->direction == kScrollDirectionVertical) {
+        scroll_delta_y += wheel_event->z;
+      } else if (wheel_event->direction == kScrollDirectionHorizontal) {
+        scroll_delta_x += wheel_event->z;
+      }
+      const int kScrollOffsetMultiplier = 20;
+      scroll_delta_x *= kScrollOffsetMultiplier;
+      scroll_delta_y *= kScrollOffsetMultiplier;
+      self->SendFlutterPointerEvent(
+          self->pointer_state_ ? kMove : kHover, wheel_event->x, wheel_event->y,
+          scroll_delta_x, scroll_delta_y, wheel_event->timestamp);
+      return ECORE_CALLBACK_DONE;
     }
-    const int kScrollOffsetMultiplier = 20;
-    scroll_delta_x *= kScrollOffsetMultiplier;
-    scroll_delta_y *= kScrollOffsetMultiplier;
-    self->SendFlutterPointerEvent(
-        self->pointer_state_ ? kMove : kHover, wheel_event->x, wheel_event->y,
-        scroll_delta_x, scroll_delta_y, wheel_event->timestamp);
   }
   return ECORE_CALLBACK_PASS_ON;
 }
