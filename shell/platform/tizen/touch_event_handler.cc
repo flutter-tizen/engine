@@ -21,6 +21,7 @@ TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
       ecore_event_handler_add(ECORE_EVENT_MOUSE_WHEEL, OnTouch, this));
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, OnTouch, this));
+  window_id_ = engine_->renderer()->GetWindowId();
 }
 
 TouchEventHandler::~TouchEventHandler() {
@@ -75,7 +76,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
 
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    if (self->engine_->renderer()->GetWindowId() == button_event->window) {
+    if (self->window_id_ == button_event->window) {
       self->pointer_state_ = true;
       self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0,
                                     0, button_event->timestamp,
@@ -85,7 +86,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
 
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    if (self->engine_->renderer()->GetWindowId() == button_event->window) {
+    if (self->window_id_ == button_event->window) {
       self->pointer_state_ = false;
       self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
                                     button_event->timestamp,
@@ -94,7 +95,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
     }
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
     auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
-    if (self->engine_->renderer()->GetWindowId() == move_event->window) {
+    if (self->window_id_ == move_event->window) {
       if (self->pointer_state_) {
         self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
                                       move_event->timestamp,
@@ -104,7 +105,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
     }
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
     auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
-    if (self->engine_->renderer()->GetWindowId() == wheel_event->window) {
+    if (self->window_id_ == wheel_event->window) {
       double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
       if (wheel_event->direction == kScrollDirectionVertical) {
         scroll_delta_y += wheel_event->z;
