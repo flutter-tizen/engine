@@ -737,7 +737,6 @@ void TizenRendererEvasGL::SetPreferredOrientations(
 }
 
 bool TizenRendererEvasGL::IsSupportedExtention(const char* name) {
-  // TODO
   if (strcmp(name, "EGL_TIZEN_image_native_surface") == 0) {
     return true;
   }

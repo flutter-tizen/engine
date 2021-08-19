@@ -20,7 +20,6 @@
 
 namespace flutter {
 
-// TODO
 typedef enum {
   ExternalTextureGLExtention_None,
   ExternalTextureGLExtention_EGL_TIZEN_image_native_surface,

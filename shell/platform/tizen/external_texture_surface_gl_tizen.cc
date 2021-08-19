@@ -4,6 +4,8 @@
 
 #include "external_texture_surface_gl.h"
 
+#include <tbm_surface.h>
+
 #ifdef TIZEN_RENDERER_EVAS_GL
 #undef EFL_BETA_API_SUPPORT
 #include "tizen_evas_gl_helper.h"
@@ -14,11 +16,7 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #include <EGL/eglext.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl32.h>
-#endif
 
-#include <tbm_surface.h>
-
-// TODO
 #include <tbm_bufmgr.h>
 #include <tbm_surface_internal.h>
 #ifndef EGL_DMA_BUF_PLANE3_FD_EXT
@@ -29,6 +27,7 @@ EVAS_GL_GLOBAL_GLES3_DECLARE();
 #endif
 #ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
 #define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
+#endif
 #endif
 
 #include "flutter/shell/platform/tizen/logger.h"
@@ -99,7 +98,6 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
         EVAS_GL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
   } else if (state_->gl_extention ==
              ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import) {
-    // TODO
     FT_LOG(Error)
         << "EGL_EXT_image_dma_buf_import is not supported this renderer.";
     return false;
@@ -140,7 +138,6 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
                             EGL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
   } else if (state_->gl_extention ==
              ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import) {
-    // TODO
     {
       EGLint attribs[50];
       int atti = 0;
