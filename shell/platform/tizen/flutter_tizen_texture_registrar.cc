@@ -95,7 +95,14 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
           texture_info->pixel_buffer_config.user_data);
       break;
     case kFlutterDesktopGpuBufferTexture:
-      // TODO: need to check EGL extention
+      if (engine_->renderer()->IsSupportedExtention(
+              "EGL_TIZEN_image_native_surface")) {
+        return std::make_unique<ExternalTextureSurfaceGL>(
+            ExternalTextureGLExtention_EGL_TIZEN_image_native_surface,
+            texture_info->gpu_buffer_config.callback,
+            texture_info->gpu_buffer_config.destruction_callback,
+            texture_info->gpu_buffer_config.user_data);
+      }
       return std::make_unique<ExternalTextureSurfaceGL>(
           ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import,
           texture_info->gpu_buffer_config.callback,
