@@ -45,7 +45,7 @@ static void OnCollectTexture(void* textureGL) {
 }
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
-    ExternalTextureGLExtention gl_extention,
+    ExternalTextureExtensionType gl_extention,
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopGpuBufferDestructionCallback destruction_callback,
     void* user_data)
@@ -90,14 +90,12 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
 
 #ifdef TIZEN_RENDERER_EVAS_GL
   EvasGLImage egl_src_image = nullptr;
-  if (state_->gl_extention ==
-      ExternalTextureGLExtention_EGL_TIZEN_image_native_surface) {
+  if (state_->gl_extention == kExternalTextureExtensionTypeNativeSurface) {
     int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
     egl_src_image = evasglCreateImageForContext(
         g_evas_gl, evas_gl_current_context_get(g_evas_gl),
         EVAS_GL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
-  } else if (state_->gl_extention ==
-             ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import) {
+  } else if (state_->gl_extention == kExternalTextureExtensionTypeDmaBuffer) {
     FT_LOG(Error)
         << "EGL_EXT_image_dma_buf_import is not supported this renderer.";
     return false;
@@ -129,59 +127,57 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
           eglGetProcAddress("eglCreateImageKHR"));
   EGLImageKHR egl_src_image = nullptr;
 
-  if (state_->gl_extention ==
-      ExternalTextureGLExtention_EGL_TIZEN_image_native_surface) {
+  if (state_->gl_extention == kExternalTextureExtensionTypeNativeSurface) {
     const EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
                               EGL_NONE};
     egl_src_image =
         n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
                             EGL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
-  } else if (state_->gl_extention ==
-             ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import) {
-    {
-      EGLint attribs[50];
-      int atti = 0;
-      tbm_bo tbo = NULL;
-      int bo_idx, num_planes, i;
-      int plane_fd_ext[4] = {
-          EGL_DMA_BUF_PLANE0_FD_EXT, EGL_DMA_BUF_PLANE1_FD_EXT,
-          EGL_DMA_BUF_PLANE2_FD_EXT, EGL_DMA_BUF_PLANE3_FD_EXT};
-      int plane_offset_ext[4] = {
-          EGL_DMA_BUF_PLANE0_OFFSET_EXT, EGL_DMA_BUF_PLANE1_OFFSET_EXT,
-          EGL_DMA_BUF_PLANE2_OFFSET_EXT, EGL_DMA_BUF_PLANE3_OFFSET_EXT};
-      int plane_pitch_ext[4] = {
-          EGL_DMA_BUF_PLANE0_PITCH_EXT, EGL_DMA_BUF_PLANE1_PITCH_EXT,
-          EGL_DMA_BUF_PLANE2_PITCH_EXT, EGL_DMA_BUF_PLANE3_PITCH_EXT};
+  } else if (state_->gl_extention == kExternalTextureExtensionTypeDmaBuffer) {
+    EGLint attribs[50];
+    int atti = 0;
+    int plane_fd_ext[4] = {EGL_DMA_BUF_PLANE0_FD_EXT, EGL_DMA_BUF_PLANE1_FD_EXT,
+                           EGL_DMA_BUF_PLANE2_FD_EXT,
+                           EGL_DMA_BUF_PLANE3_FD_EXT};
+    int plane_offset_ext[4] = {
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+        EGL_DMA_BUF_PLANE2_OFFSET_EXT, EGL_DMA_BUF_PLANE3_OFFSET_EXT};
+    int plane_pitch_ext[4] = {
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, EGL_DMA_BUF_PLANE1_PITCH_EXT,
+        EGL_DMA_BUF_PLANE2_PITCH_EXT, EGL_DMA_BUF_PLANE3_PITCH_EXT};
 
-      attribs[atti++] = EGL_WIDTH;
-      attribs[atti++] = info.width;
-      attribs[atti++] = EGL_HEIGHT;
-      attribs[atti++] = info.height;
-      attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
-      attribs[atti++] = info.format;
+    attribs[atti++] = EGL_WIDTH;
+    attribs[atti++] = info.width;
+    attribs[atti++] = EGL_HEIGHT;
+    attribs[atti++] = info.height;
+    attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+    attribs[atti++] = info.format;
 
-      num_planes = tbm_surface_internal_get_num_planes(info.format);
-      for (i = 0; i < num_planes; i++) {
-        bo_idx = tbm_surface_internal_get_plane_bo_idx(tbm_surface, i);
-        tbo = tbm_surface_internal_get_bo(tbm_surface, bo_idx);
-        attribs[atti++] = plane_fd_ext[i];
-        attribs[atti++] =
-            (int)(size_t)tbm_bo_get_handle(tbo, TBM_DEVICE_3D).ptr;
-        attribs[atti++] = plane_offset_ext[i];
-        attribs[atti++] = info.planes[i].offset;
-        attribs[atti++] = plane_pitch_ext[i];
-        attribs[atti++] = info.planes[i].stride;
-      }
-      attribs[atti++] = EGL_NONE;
-      egl_src_image =
-          n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
-                              EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+    int num_planes = tbm_surface_internal_get_num_planes(info.format);
+    for (int i = 0; i < num_planes; i++) {
+      int bo_idx = tbm_surface_internal_get_plane_bo_idx(tbm_surface, i);
+      tbm_bo tbo = tbm_surface_internal_get_bo(tbm_surface, bo_idx);
+      attribs[atti++] = plane_fd_ext[i];
+      attribs[atti++] = static_cast<int>(
+          reinterpret_cast<size_t>(tbm_bo_get_handle(tbo, TBM_DEVICE_3D).ptr));
+      attribs[atti++] = plane_offset_ext[i];
+      attribs[atti++] = info.planes[i].offset;
+      attribs[atti++] = plane_pitch_ext[i];
+      attribs[atti++] = info.planes[i].stride;
     }
+    attribs[atti++] = EGL_NONE;
+    egl_src_image = n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
+                                        EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
   }
 
   if (!egl_src_image) {
-    FT_LOG(Error) << "eglCreateImageKHR failed with an error " << eglGetError()
-                  << " for texture ID: " << texture_id_;
+    if (state_->gl_extention != kExternalTextureExtensionTypeNone) {
+      FT_LOG(Error) << "eglCreateImageKHR failed with an error "
+                    << eglGetError() << " for texture ID: " << texture_id_;
+    } else {
+      FT_LOG(Error) << "Either EGL_TIZEN_image_native_surface or "
+                       "EGL_EXT_image_dma_buf_import shoule be supported "
+    }
     return false;
   }
   if (state_->gl_texture == 0) {

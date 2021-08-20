@@ -95,23 +95,20 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
           texture_info->pixel_buffer_config.user_data);
       break;
     case kFlutterDesktopGpuBufferTexture:
+      ExternalTextureExtensionType gl_extension =
+          kExternalTextureExtensionTypeNone;
       if (engine_->renderer()->IsSupportedExtention(
               "EGL_TIZEN_image_native_surface")) {
-        return std::make_unique<ExternalTextureSurfaceGL>(
-            ExternalTextureGLExtention_EGL_TIZEN_image_native_surface,
-            texture_info->gpu_buffer_config.callback,
-            texture_info->gpu_buffer_config.destruction_callback,
-            texture_info->gpu_buffer_config.user_data);
+        gl_extension = kExternalTextureExtensionTypeNativeSurface;
+      } else if (engine_->renderer()->IsSupportedExtention(
+                     "EGL_EXT_image_dma_buf_import")) {
+        gl_extension = kExternalTextureExtensionTypeDmaBuffer;
       }
       return std::make_unique<ExternalTextureSurfaceGL>(
-          ExternalTextureGLExtention_EGL_EXT_image_dma_buf_import,
-          texture_info->gpu_buffer_config.callback,
+          gl_extension, texture_info->gpu_buffer_config.callback,
           texture_info->gpu_buffer_config.destruction_callback,
           texture_info->gpu_buffer_config.user_data);
       break;
-    default:
-      FT_LOG(Error) << "Invalid texture type.";
-      return nullptr;
   }
 }
 
