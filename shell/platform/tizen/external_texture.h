@@ -20,11 +20,11 @@
 
 namespace flutter {
 
-typedef enum {
+enum ExternalTextureExtensionType {
   kExternalTextureExtensionTypeNone,
   kExternalTextureExtensionTypeNativeSurface,
   kExternalTextureExtensionTypeDmaBuffer
-} ExternalTextureExtensionType;
+};
 
 struct ExternalTextureGLState {
   GLuint gl_texture;

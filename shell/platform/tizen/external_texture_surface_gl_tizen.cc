@@ -166,8 +166,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
       attribs[atti++] = info.planes[i].stride;
     }
     attribs[atti++] = EGL_NONE;
-    egl_src_image = n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
-                                        EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+    egl_src_image =
+        n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
+                            EGL_LINUX_DMA_BUF_EXT, nullptr, attribs);
   }
 
   if (!egl_src_image) {
@@ -176,7 +177,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
                     << eglGetError() << " for texture ID: " << texture_id_;
     } else {
       FT_LOG(Error) << "Either EGL_TIZEN_image_native_surface or "
-                       "EGL_EXT_image_dma_buf_import shoule be supported "
+                       "EGL_EXT_image_dma_buf_import shoule be supported ";
     }
     return false;
   }
