@@ -165,10 +165,8 @@ void PlatformViewChannel::HandleMethodCall(
     }
   } else if (method == "dispose") {
     int view_id = -1;
-    if (std::holds_alternative<int>(arguments)) {
-      view_id = std::get<int>(arguments);
-    };
-    if (view_id < 0 || view_instances_.find(view_id) == view_instances_.end()) {
+    if (!GetValueFromEncodableMap(arguments, "id", &view_id) ||
+        view_instances_.find(view_id) == view_instances_.end()) {
       result->Error("Can't find view id");
     } else {
       RemoveViewInstanceIfNeeded(view_id);
