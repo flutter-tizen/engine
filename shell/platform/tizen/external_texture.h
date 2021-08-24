@@ -20,11 +20,7 @@
 
 namespace flutter {
 
-enum ExternalTextureExtensionType {
-  kExternalTextureExtensionTypeNone,
-  kExternalTextureExtensionTypeNativeSurface,
-  kExternalTextureExtensionTypeDmaBuffer
-};
+enum class ExternalTextureExtensionType { kNone, kNativeSurface, kDmaBuffer };
 
 struct ExternalTextureGLState {
   GLuint gl_texture;
@@ -37,7 +33,7 @@ static std::atomic_long next_texture_id = {1};
 class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
  public:
   ExternalTexture(ExternalTextureExtensionType gl_extention =
-                      kExternalTextureExtensionTypeNone)
+                      ExternalTextureExtensionType::kNone)
       : state_(std::make_unique<ExternalTextureGLState>()),
         texture_id_(next_texture_id++) {
     state_->gl_extention = gl_extention;

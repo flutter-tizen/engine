@@ -96,13 +96,13 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
       break;
     case kFlutterDesktopGpuBufferTexture:
       ExternalTextureExtensionType gl_extension =
-          kExternalTextureExtensionTypeNone;
+          ExternalTextureExtensionType::kNone;
       if (engine_->renderer()->IsSupportedExtention(
               "EGL_TIZEN_image_native_surface")) {
-        gl_extension = kExternalTextureExtensionTypeNativeSurface;
+        gl_extension = ExternalTextureExtensionType::kNativeSurface;
       } else if (engine_->renderer()->IsSupportedExtention(
                      "EGL_EXT_image_dma_buf_import")) {
-        gl_extension = kExternalTextureExtensionTypeDmaBuffer;
+        gl_extension = ExternalTextureExtensionType::kDmaBuffer;
       }
       return std::make_unique<ExternalTextureSurfaceGL>(
           gl_extension, texture_info->gpu_buffer_config.callback,
