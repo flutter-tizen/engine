@@ -302,6 +302,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
 }
 
 void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
+  text_editing_context_.edit_status_ = EditStatus::kNone;
 #ifdef MOBILE_PROFILE
   // FIXME: Only for mobile.
   if (text_editing_context_.edit_status_ == EditStatus::kPreeditEnd) {
@@ -310,48 +311,58 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
     return;
   }
 #endif
-
   bool select = !strcmp(event->key, "Select");
-  bool is_filtered = true;
-  if (!strcmp(event->key, "Left")) {
-    if (active_model_->MoveCursorBack()) {
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "Right")) {
-    if (active_model_->MoveCursorForward()) {
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "End")) {
-    if (active_model_) {
-      active_model_->MoveCursorToEnd();
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "Home")) {
-    if (active_model_) {
-      active_model_->MoveCursorToBeginning();
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "BackSpace")) {
-    if (active_model_->Backspace()) {
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "Delete")) {
-    if (active_model_->Delete()) {
-      SendStateUpdate(*active_model_);
-    }
-  } else if (!strcmp(event->key, "Return") ||
-             (select && !text_editing_context_.is_in_select_mode_)) {
-    EnterPressed(active_model_.get(), select);
+  bool shift = event->modifiers & ECORE_SHIFT;
+  bool needs_update = false;
+  std::string key = event->key;
 
+  if (key == "Left") {
+    if (shift) {
+      TextRange selection = active_model_->selection();
+      needs_update = active_model_->SetSelection(
+          TextRange(selection.base(), selection.extent() - 1));
+    } else {
+      needs_update = active_model_->MoveCursorBack();
+    }
+  } else if (key == "Right") {
+    if (shift) {
+      TextRange selection = active_model_->selection();
+      needs_update = active_model_->SetSelection(
+          TextRange(selection.base(), selection.extent() + 1));
+    } else {
+      needs_update = active_model_->MoveCursorForward();
+    }
+  } else if (key == "End") {
+    if (shift) {
+      needs_update = active_model_->SelectToEnd();
+    } else {
+      needs_update = active_model_->MoveCursorToEnd();
+    }
+  } else if (key == "Home") {
+    if (shift) {
+      needs_update = active_model_->SelectToBeginning();
+    } else {
+      needs_update = active_model_->MoveCursorToBeginning();
+    }
+  } else if (key == "BackSpace") {
+    needs_update = active_model_->Backspace();
+  } else if (key == "Delete") {
+    needs_update = active_model_->Delete();
   } else if (event->string && strlen(event->string) == 1 &&
              IsASCIIPrintableKey(event->string[0])) {
     active_model_->AddCodePoint(event->string[0]);
-    SendStateUpdate(*active_model_);
+    needs_update = true;
+  } else if (key == "Return" ||
+             (select && !text_editing_context_.is_in_select_mode_)) {
+    EnterPressed(active_model_.get(), select);
+    return;
   } else {
-    is_filtered = false;
+    FT_LOG(Warn) << "Key[" << key << "] is unhandled.";
   }
 
-  text_editing_context_.edit_status_ = EditStatus::kNone;
+  if (needs_update) {
+    SendStateUpdate(*active_model_);
+  }
 }
 
 void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
