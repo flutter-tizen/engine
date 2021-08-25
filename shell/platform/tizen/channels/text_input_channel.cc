@@ -313,54 +313,54 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
 #endif
   bool select = !strcmp(event->key, "Select");
   bool shift = event->modifiers & ECORE_SHIFT;
-  bool need_update = false;
+  bool needs_update = false;
   std::string key = event->key;
 
   if (key == "Left") {
     if (shift) {
       TextRange selection = active_model_->selection();
-      need_update = active_model_->SetSelection(
+      needs_update = active_model_->SetSelection(
           TextRange(selection.base(), selection.extent() - 1));
     } else {
-      need_update = active_model_->MoveCursorBack();
+      needs_update = active_model_->MoveCursorBack();
     }
   } else if (key == "Right") {
     if (shift) {
       TextRange selection = active_model_->selection();
-      need_update = active_model_->SetSelection(
+      needs_update = active_model_->SetSelection(
           TextRange(selection.base(), selection.extent() + 1));
     } else {
-      need_update = active_model_->MoveCursorForward();
+      needs_update = active_model_->MoveCursorForward();
     }
   } else if (key == "End") {
     if (shift) {
-      need_update = active_model_->SelectToEnd();
+      needs_update = active_model_->SelectToEnd();
     } else {
-      need_update = active_model_->MoveCursorToEnd();
+      needs_update = active_model_->MoveCursorToEnd();
     }
   } else if (key == "Home") {
     if (shift) {
-      need_update = active_model_->SelectToBeginning();
+      needs_update = active_model_->SelectToBeginning();
     } else {
-      need_update = active_model_->MoveCursorToBeginning();
+      needs_update = active_model_->MoveCursorToBeginning();
     }
   } else if (key == "BackSpace") {
-    need_update = active_model_->Backspace();
+    needs_update = active_model_->Backspace();
   } else if (key == "Delete") {
-    need_update = active_model_->Delete();
+    needs_update = active_model_->Delete();
   } else if (event->string && strlen(event->string) == 1 &&
              IsASCIIPrintableKey(event->string[0])) {
     active_model_->AddCodePoint(event->string[0]);
-    need_update = true;
-  } else if (!strcmp(event->key, "Return") ||
+    needs_update = true;
+  } else if (key == "Return" ||
              (select && !text_editing_context_.is_in_select_mode_)) {
     EnterPressed(active_model_.get(), select);
     return;
   } else {
-    FT_LOG(Warn) << "Key[" << key << "] is unhandled!";
+    FT_LOG(Warn) << "Key[" << key << "] is unhandled.";
   }
 
-  if (need_update) {
+  if (needs_update) {
     SendStateUpdate(*active_model_);
   }
 }
