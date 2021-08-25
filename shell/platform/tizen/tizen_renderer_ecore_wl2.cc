@@ -359,6 +359,7 @@ bool TizenRendererEcoreWl2::SetupEglSurface() {
     FT_LOG(Error) << "ChooseEGLConfiguration() failed.";
     return false;
   }
+  egl_extention_str_ = eglQueryString(egl_display_, EGL_EXTENSIONS);
 
   const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
   egl_context_ = eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT,
@@ -554,6 +555,13 @@ void TizenRendererEcoreWl2::SetPreferredOrientations(
     const std::vector<int>& rotations) {
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations.data(),
                                            rotations.size());
+}
+
+bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
+  if (strstr(egl_extention_str_.c_str(), name)) {
+    return true;
+  }
+  return false;
 }
 
 }  // namespace flutter

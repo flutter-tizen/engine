@@ -8,6 +8,7 @@
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
 #include <Ecore_Wl2.h>
+#include <string>
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 
@@ -40,6 +41,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
                           int32_t angle) override;
   void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
+  bool IsSupportedExtention(const char* name) override;
 
  private:
   bool InitializeRenderer();
@@ -73,6 +75,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLSurface egl_surface_ = EGL_NO_SURFACE;
   EGLContext egl_resource_context_ = EGL_NO_CONTEXT;
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
+
+  std::string egl_extention_str_;
 };
 
 }  // namespace flutter

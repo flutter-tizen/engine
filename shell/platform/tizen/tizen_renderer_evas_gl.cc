@@ -736,4 +736,8 @@ void TizenRendererEvasGL::SetPreferredOrientations(
       rotations.size());
 }
 
+bool TizenRendererEvasGL::IsSupportedExtention(const char* name) {
+  return strcmp(name, "EGL_TIZEN_image_native_surface") == 0;
+}
+
 }  // namespace flutter

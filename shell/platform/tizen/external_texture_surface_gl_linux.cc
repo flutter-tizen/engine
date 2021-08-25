@@ -12,10 +12,11 @@
 namespace flutter {
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
+    ExternalTextureExtensionType gl_extention,
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopGpuBufferDestructionCallback destruction_callback,
     void* user_data)
-    : ExternalTexture(),
+    : ExternalTexture(gl_extention),
       texture_callback_(texture_callback),
       destruction_callback_(destruction_callback),
       user_data_(user_data) {}
