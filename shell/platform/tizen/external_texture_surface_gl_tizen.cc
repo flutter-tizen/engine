@@ -177,7 +177,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
                     << eglGetError() << " for texture ID: " << texture_id_;
     } else {
       FT_LOG(Error) << "Either EGL_TIZEN_image_native_surface or "
-                       "EGL_EXT_image_dma_buf_import shoule be supported ";
+                       "EGL_EXT_image_dma_buf_import shoule be supported.";
     }
     return false;
   }
