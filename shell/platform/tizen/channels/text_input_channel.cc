@@ -63,59 +63,63 @@ TextInputChannel::TextInputChannel(
         HandleMethodCall(call, std::move(result));
       });
 
-  // Set input method callbacks
-  input_method_context_->SetOnCommitCallback([this](std::string str) -> void {
-    FT_LOG(Debug) << "OnCommit: " << str;
-    text_editing_context_.edit_status_ = EditStatus::kCommit;
-    ConsumeLastPreedit();
-    active_model_->AddText(str);
+  // Set input method callbacks.
+  input_method_context_->SetOnPreeditStart([this]() {
+    FT_LOG(Debug) << "onPreeditStart";
+    text_editing_context_.edit_status_ = EditStatus::kPreeditStart;
+    active_model_->BeginComposing();
+  });
+
+  input_method_context_->SetOnPreeditChanged(
+      [this](std::string str, int cursor_pos) -> void {
+        FT_LOG(Debug) << "onPreedit: str[" << str << "] cursor_pos["
+                      << cursor_pos << "]";
+        if (str == "") {
+          // Enter pre-edit end stage.
+          return;
+        }
+        active_model_->UpdateComposingText(str);
+        SendStateUpdate(*active_model_);
+      });
+
+  input_method_context_->SetOnPreeditEnd([this]() {
+    text_editing_context_.edit_status_ = EditStatus::kPreeditEnd;
+    FT_LOG(Debug) << "onPreeditEnd";
+
+    // Delete preedit-string, it will be committed.
+    int count = active_model_->composing_range().extent() -
+                active_model_->composing_range().base();
+
+    active_model_->CommitComposing();
+    active_model_->EndComposing();
+
+    active_model_->DeleteSurrounding(-count, count);
+
     SendStateUpdate(*active_model_);
   });
 
-  input_method_context_->SetOnPreeditCallback(
-      [this](std::string str, int cursor_pos) -> void {
-        text_editing_context_.edit_status_ = EditStatus::kPreeditStart;
-        if (str.compare("") == 0) {
-          text_editing_context_.edit_status_ = EditStatus::kPreeditEnd;
-        }
+  input_method_context_->SetOnCommit([this](std::string str) -> void {
+    FT_LOG(Debug) << "OnCommit: str[" << str << "]";
+    text_editing_context_.edit_status_ = EditStatus::kCommit;
+    active_model_->AddText(str);
+    if (active_model_->composing()) {
+      active_model_->CommitComposing();
+      active_model_->EndComposing();
+    }
+    SendStateUpdate(*active_model_);
+  });
 
-        if (text_editing_context_.edit_status_ == EditStatus::kPreeditStart ||
-            (text_editing_context_.edit_status_ == EditStatus::kPreeditEnd &&
-             // For tv, fix me
-             text_editing_context_.last_handled_ecore_event_keyname_.compare(
-                 "Return") != 0)) {
-          text_editing_context_.last_handled_ecore_event_keyname_ = "";
-          ConsumeLastPreedit();
-        }
-
-        text_editing_context_.has_preedit_ = false;
-        if (text_editing_context_.edit_status_ == EditStatus::kPreeditStart) {
-          text_editing_context_.preedit_start_pos_ =
-              active_model_->selection().base();
-          active_model_->AddText(str);
-          text_editing_context_.preedit_end_pos_ =
-              active_model_->selection().base();
-          text_editing_context_.has_preedit_ = true;
-          SendStateUpdate(*active_model_);
-          FT_LOG(Debug) << "Preedit start position: "
-                        << text_editing_context_.preedit_start_pos_
-                        << ", end position: "
-                        << text_editing_context_.preedit_end_pos_;
-        }
-      });
-
-  input_method_context_->SetOnInputPannelStateChangedCallback(
-      [this](int state) {
-        if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
-          // Fallback for HW back-key
-          input_method_context_->HideInputPannel();
-          input_method_context_->ResetInputMethodContext();
-          ResetTextEditingContext();
-          is_software_keyboard_showing_ = false;
-        } else {
-          is_software_keyboard_showing_ = true;
-        }
-      });
+  input_method_context_->SetOnInputPannelStateChanged([this](int state) {
+    if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
+      // Fallback for HW back-key.
+      input_method_context_->HideInputPannel();
+      input_method_context_->ResetInputMethodContext();
+      ResetTextEditingContext();
+      is_software_keyboard_showing_ = false;
+    } else {
+      is_software_keyboard_showing_ = true;
+    }
+  });
 }
 
 TextInputChannel::~TextInputChannel() {}
@@ -125,7 +129,7 @@ bool TextInputChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
     return false;
   }
 
-  if (!FilterEvent(key) && !text_editing_context_.has_preedit_) {
+  if (!FilterEvent(key)) {
     HandleUnfilteredEvent(key);
   }
 
@@ -136,7 +140,7 @@ void TextInputChannel::HandleMethodCall(
     const MethodCall<rapidjson::Document>& method_call,
     std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const std::string& method = method_call.method_name();
-  FT_LOG(Debug) << "Handle a method: " << method;
+  FT_LOG(Debug) << "method: " << method;
 
   if (method.compare(kShowMethod) == 0) {
     input_method_context_->ShowInputPannel();
@@ -194,6 +198,9 @@ void TextInputChannel::HandleMethodCall(
 
     active_model_ = std::make_unique<TextInputModel>();
   } else if (method.compare(kSetEditingStateMethod) == 0) {
+    input_method_context_->ResetInputMethodContext();
+    ResetTextEditingContext();
+
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
       result->Error(kBadArgumentError, "Method invoked without args");
       return;
@@ -224,10 +231,34 @@ void TextInputChannel::HandleMethodCall(
                     "Selection base/extent values invalid.");
       return;
     }
+    auto selection_base_value = selection_base->value.GetInt();
+    auto selection_extent_value = selection_extent->value.GetInt();
 
     active_model_->SetText(text->value.GetString());
-    active_model_->SetSelection(TextRange(selection_base->value.GetInt(),
-                                          selection_extent->value.GetInt()));
+    active_model_->SetSelection(
+        TextRange(selection_base_value, selection_extent_value));
+
+    auto composing_base = args.FindMember(kComposingBaseKey);
+    auto composing_extent = args.FindMember(kComposingBaseKey);
+    auto composing_base_value = composing_base != args.MemberEnd()
+                                    ? composing_base->value.GetInt()
+                                    : -1;
+    auto composing_extent_value = composing_extent != args.MemberEnd()
+                                      ? composing_extent->value.GetInt()
+                                      : -1;
+
+    if (composing_base_value == -1 && composing_extent_value == -1) {
+      active_model_->EndComposing();
+    } else {
+      size_t composing_start =
+          std::min(composing_base_value, composing_extent_value);
+      size_t cursor_offset = selection_base_value - composing_start;
+
+      active_model_->SetComposingRange(
+          flutter::TextRange(composing_base_value, composing_extent_value),
+          cursor_offset);
+    }
+    SendStateUpdate(*active_model_);
   } else {
     result->NotImplemented();
     return;
@@ -244,8 +275,14 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
 
   TextRange selection = model.selection();
   rapidjson::Value editing_state(rapidjson::kObjectType);
-  editing_state.AddMember(kComposingBaseKey, -1, allocator);
-  editing_state.AddMember(kComposingExtentKey, -1, allocator);
+  int composing_base =
+      active_model_->composing() ? active_model_->composing_range().base() : -1;
+  int composing_extent = active_model_->composing()
+                             ? active_model_->composing_range().extent()
+                             : -1;
+
+  editing_state.AddMember(kComposingBaseKey, composing_base, allocator);
+  editing_state.AddMember(kComposingExtentKey, composing_extent, allocator);
   editing_state.AddMember(kSelectionAffinityKey, kAffinityDownstream,
                           allocator);
   editing_state.AddMember(kSelectionBaseKey, selection.base(), allocator);
@@ -255,7 +292,7 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
   args->PushBack(editing_state, allocator);
 
-  FT_LOG(Info) << "Send text: " << model.GetText();
+  FT_LOG(Debug) << "Send text:[" << model.GetText() << "]";
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
@@ -285,10 +322,6 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
 
   handled = input_method_context_->FilterEvent(event, is_ime ? "ime" : "");
 
-  if (handled) {
-    text_editing_context_.last_handled_ecore_event_keyname_ = event->keyname;
-  }
-
 #ifdef WEARABLE_PROFILE
   if (!handled && !strcmp(event->key, "Return") &&
       text_editing_context_.is_in_select_mode_) {
@@ -306,7 +339,7 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
 #ifdef MOBILE_PROFILE
   // FIXME: Only for mobile.
   if (text_editing_context_.edit_status_ == EditStatus::kPreeditEnd) {
-    FT_LOG(Warn) << "Ignore a key event: " << event->keyname;
+    FT_LOG(Debug) << "Ignore a key event: " << event->keyname;
     ResetTextEditingContext();
     return;
   }
@@ -376,22 +409,6 @@ void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
   args->PushBack(rapidjson::Value(input_action_, allocator).Move(), allocator);
 
   channel_->InvokeMethod(kPerformActionMethod, std::move(args));
-}
-
-void TextInputChannel::ConsumeLastPreedit() {
-  if (text_editing_context_.has_preedit_) {
-    std::string before = active_model_->GetText();
-    int count = text_editing_context_.preedit_end_pos_ -
-                text_editing_context_.preedit_start_pos_;
-    active_model_->DeleteSurrounding(-count, count);
-    std::string after = active_model_->GetText();
-    FT_LOG(Debug) << "Last preedit count: " << count << ", text: " << before
-                  << " -> " << after;
-    SendStateUpdate(*active_model_);
-  }
-  text_editing_context_.has_preedit_ = false;
-  text_editing_context_.preedit_end_pos_ = 0;
-  text_editing_context_.preedit_start_pos_ = 0;
 }
 
 bool TextInputChannel::ShouldNotFilterEvent(std::string key, bool is_ime) {
