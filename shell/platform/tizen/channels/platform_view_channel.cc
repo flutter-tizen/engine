@@ -124,7 +124,7 @@ void PlatformViewChannel::OnCreate(
   EncodableMapValueGetter<double> width(map_ptr, "width");
   EncodableMapValueGetter<double> height(map_ptr, "height");
 
-  if (!view_type.value || !view_id.value || !width.value || !height.value) {
+  if (!view_type || !view_id || !width || !height) {
     result->Error("Invalid arguments");
     return;
   }

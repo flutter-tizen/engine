@@ -3,8 +3,6 @@
 // found in the LICENSE file.
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
-#include "flutter/shell/platform/tizen/logger.h"
-
 namespace flutter {
 
 template <typename T>
