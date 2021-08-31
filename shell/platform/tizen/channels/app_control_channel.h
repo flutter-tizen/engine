@@ -53,7 +53,6 @@ class AppControlChannel {
                          std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendTerminateRequest(
       std::shared_ptr<AppControl> app_control,
-      const EncodableValue* arguments,
       std::unique_ptr<MethodResult<EncodableValue>> result);
 
   void SetAppControlData(std::shared_ptr<AppControl> app_control,

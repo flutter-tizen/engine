@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include "platform_view_channel.h"
-#include "encodable_value_getter.h"
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/common/json_method_codec.h"
+#include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
@@ -119,10 +119,10 @@ void PlatformViewChannel::OnCreate(
     return;
   }
 
-  EncodableMapValueGetter<std::string> view_type(map_ptr, "viewType");
-  EncodableMapValueGetter<int> view_id(map_ptr, "id");
-  EncodableMapValueGetter<double> width(map_ptr, "width");
-  EncodableMapValueGetter<double> height(map_ptr, "height");
+  EncodableValueHolder<std::string> view_type(map_ptr, "viewType");
+  EncodableValueHolder<int> view_id(map_ptr, "id");
+  EncodableValueHolder<double> width(map_ptr, "width");
+  EncodableValueHolder<double> height(map_ptr, "height");
 
   if (!view_type || !view_id || !width || !height) {
     result->Error("Invalid arguments");
@@ -132,7 +132,7 @@ void PlatformViewChannel::OnCreate(
   FT_LOG(Info) << "Creating a platform view: " << *view_type.value;
   RemoveViewInstanceIfNeeded(*view_id);
 
-  EncodableMapValueGetter<ByteMessage> params(map_ptr, "params");
+  EncodableValueHolder<ByteMessage> params(map_ptr, "params");
   ByteMessage byte_message;
   if (params) {
     byte_message = *params;
@@ -187,7 +187,7 @@ void PlatformViewChannel::OnDispose(
     return;
   }
 
-  EncodableMapValueGetter<int> view_id(map_ptr, "id");
+  EncodableValueHolder<int> view_id(map_ptr, "id");
 
   if (!view_id) {
     result->Error("Invalid arguments");
@@ -212,9 +212,9 @@ void PlatformViewChannel::OnResize(
     return;
   }
 
-  EncodableMapValueGetter<int> view_id(map_ptr, "id");
-  EncodableMapValueGetter<double> width(map_ptr, "width");
-  EncodableMapValueGetter<double> height(map_ptr, "height");
+  EncodableValueHolder<int> view_id(map_ptr, "id");
+  EncodableValueHolder<double> width(map_ptr, "width");
+  EncodableValueHolder<double> height(map_ptr, "height");
 
   if (!view_id || !width || !height) {
     result->Error("Invalid arguments");
@@ -243,8 +243,8 @@ void PlatformViewChannel::OnTouch(
   int type = 0, button = 0;
   double x = 0.0, y = 0.0, dx = 0.0, dy = 0.0;
 
-  EncodableMapValueGetter<EncodableList> event(map_ptr, "event");
-  EncodableMapValueGetter<int> view_id(map_ptr, "id");
+  EncodableValueHolder<EncodableList> event(map_ptr, "event");
+  EncodableValueHolder<int> view_id(map_ptr, "id");
 
   if (!view_id || !event || event->size() != 6) {
     result->Error("Invalid Arguments");
