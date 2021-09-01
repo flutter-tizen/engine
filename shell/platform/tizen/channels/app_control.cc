@@ -96,13 +96,13 @@ AppControlResult AppControl::GetExtraData(EncodableMap& value) {
 AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
   for (const auto& v : map) {
     if (!std::holds_alternative<std::string>(v.first)) {
-      FT_LOG(Error) << "Key for extra data has to be string, omitting";
+      FT_LOG(Error) << "Key for extra data has to be string, omitting.";
       continue;
     }
     std::string key = std::get<std::string>(v.first);
     AppControlResult ret = AddExtraData(key, v.second);
     if (!ret) {
-      FT_LOG(Error) << "Invalid data at " << key << ", omitting";
+      FT_LOG(Error) << "Invalid data at " << key << ", omitting.";
       continue;
     }
   }

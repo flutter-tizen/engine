@@ -42,6 +42,17 @@ class PlatformViewChannel {
   void HandleMethodCall(const MethodCall<EncodableValue>& call,
                         std::unique_ptr<MethodResult<EncodableValue>> result);
 
+  void OnCreate(const EncodableValue* arguments,
+                std::unique_ptr<MethodResult<EncodableValue>>&& result);
+  void OnClearFocus(const EncodableValue* arguments,
+                    std::unique_ptr<MethodResult<EncodableValue>>&& result);
+  void OnDispose(const EncodableValue* arguments,
+                 std::unique_ptr<MethodResult<EncodableValue>>&& result);
+  void OnResize(const EncodableValue* arguments,
+                std::unique_ptr<MethodResult<EncodableValue>>&& result);
+  void OnTouch(const EncodableValue* arguments,
+               std::unique_ptr<MethodResult<EncodableValue>>&& result);
+
   std::unique_ptr<MethodChannel<EncodableValue>> channel_;
   std::map<std::string, std::unique_ptr<PlatformViewFactory>> view_factories_;
   std::map<int, PlatformView*> view_instances_;

@@ -39,13 +39,9 @@ class AppControlChannel {
   void RegisterReplyHandler(std::unique_ptr<EventSink<EncodableValue>> events);
   void UnregisterReplyHandler();
 
-  template <typename T>
-  bool GetValueFromArgs(const EncodableValue* args, const char* key, T& out);
+  std::shared_ptr<AppControl> GetAppControl(const EncodableValue* arguments);
 
-  std::shared_ptr<AppControl> GetAppControl(const EncodableValue* args);
-
-  void CreateAppControl(const EncodableValue* args,
-                        std::unique_ptr<MethodResult<EncodableValue>> result);
+  void CreateAppControl(std::unique_ptr<MethodResult<EncodableValue>> result);
 
   void Dispose(std::shared_ptr<AppControl> app_control,
                std::unique_ptr<MethodResult<EncodableValue>> result);
@@ -57,7 +53,6 @@ class AppControlChannel {
                          std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendTerminateRequest(
       std::shared_ptr<AppControl> app_control,
-      const EncodableValue* arguments,
       std::unique_ptr<MethodResult<EncodableValue>> result);
 
   void SetAppControlData(std::shared_ptr<AppControl> app_control,
