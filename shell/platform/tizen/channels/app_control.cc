@@ -248,7 +248,7 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     } else if (result == APP_CONTROL_RESULT_FAILED) {
       map[EncodableValue("result")] = EncodableValue("failed");
     } else if (result == APP_CONTROL_RESULT_CANCELED) {
-      map[EncodableValue("result")] = EncodableValue("cancelled");
+      map[EncodableValue("result")] = EncodableValue("canceled");
     }
 
     app_control->reply_sink_->Success(EncodableValue(map));
@@ -275,7 +275,7 @@ AppControlResult AppControl::Reply(std::shared_ptr<AppControl> reply,
     result_e = APP_CONTROL_RESULT_SUCCEEDED;
   } else if (result == "failed") {
     result_e = APP_CONTROL_RESULT_FAILED;
-  } else if (result == "cancelled") {
+  } else if (result == "canceled") {
     result_e = APP_CONTROL_RESULT_CANCELED;
   } else {
     return AppControlResult(APP_CONTROL_ERROR_INVALID_PARAMETER);

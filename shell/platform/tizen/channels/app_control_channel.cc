@@ -206,7 +206,7 @@ void AppControlChannel::Reply(
     result->Error("Could not reply", "Invalid result parameter");
     return;
   }
-  AppControlResult ret = app_control->Reply(request_app_control, *result_str);
+  AppControlResult ret = request_app_control->Reply(app_control, *result_str);
   if (ret) {
     result->Success();
   } else {
