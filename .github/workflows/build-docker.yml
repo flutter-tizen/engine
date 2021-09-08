@@ -9,7 +9,6 @@ on:
       - 'DEPS'
   workflow_dispatch:
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
