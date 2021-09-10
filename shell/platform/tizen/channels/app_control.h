@@ -7,9 +7,10 @@
 
 #include <app.h>
 
+#include <unordered_map>
+
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
-#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -29,11 +30,14 @@ class AppControlChannel;
 
 class AppControl {
  public:
-  AppControl(app_control_h app_control);
-  ~AppControl();
+  using ReplyCallback = std::function<void(const EncodableValue& response)>;
 
-  int GetId() { return id_; }
-  app_control_h Handle() { return handle_; }
+  explicit AppControl();
+  explicit AppControl(app_control_h handle);
+  virtual ~AppControl();
+
+  int32_t id() { return id_; }
+  app_control_h handle() { return handle_; }
 
   AppControlResult GetOperation(std::string& operation);
   AppControlResult SetOperation(const std::string& operation);
@@ -48,13 +52,12 @@ class AppControl {
   AppControlResult GetCaller(std::string& caller);
   AppControlResult GetLaunchMode(std::string& launch_mode);
   AppControlResult SetLaunchMode(const std::string& launch_mode);
+  bool IsReplyRequested();
 
   EncodableValue SerializeAppControlToMap();
 
   AppControlResult SendLaunchRequest();
-  AppControlResult SendLaunchRequestWithReply(
-      std::shared_ptr<EventSink<EncodableValue>> reply_sink,
-      AppControlChannel* manager);
+  AppControlResult SendLaunchRequestWithReply(ReplyCallback on_reply);
   AppControlResult SendTerminateRequest();
 
   AppControlResult Reply(std::shared_ptr<AppControl> reply,
@@ -62,9 +65,6 @@ class AppControl {
 
   AppControlResult GetExtraData(EncodableMap& value);
   AppControlResult SetExtraData(const EncodableMap& value);
-
-  void SetManager(AppControlChannel* manager);
-  AppControlChannel* GetManager();
 
  private:
   AppControlResult GetString(std::string& str, int func(app_control_h, char**));
@@ -74,12 +74,38 @@ class AppControl {
   AppControlResult AddExtraData(std::string key, EncodableValue value);
   AppControlResult AddExtraDataList(std::string& key, EncodableList& list);
 
-  app_control_h handle_;
-  int id_;
-  static int next_id_;
-  std::shared_ptr<EventSink<EncodableValue>> reply_sink_;
+  app_control_h handle_ = nullptr;
+  int32_t id_;
+  static int32_t next_id_;
+  ReplyCallback on_reply_ = nullptr;
+};
 
-  AppControlChannel* manager_;
+class AppControlManager {
+ public:
+  // Returns an instance of this class.
+  static AppControlManager& GetInstance() {
+    static AppControlManager instance;
+    return instance;
+  }
+
+  void Insert(std::shared_ptr<AppControl> app_control) {
+    map_.insert({app_control->id(), std::move(app_control)});
+  }
+
+  void Remove(int32_t id) { map_.erase(id); }
+
+  std::shared_ptr<AppControl> FindById(const int32_t id) {
+    if (map_.find(id) == map_.end()) {
+      return nullptr;
+    }
+    return map_[id];
+  }
+
+ private:
+  explicit AppControlManager() {}
+  ~AppControlManager() {}
+
+  std::unordered_map<int32_t, std::shared_ptr<AppControl>> map_;
 };
 
 }  // namespace flutter
