@@ -4,16 +4,14 @@
 
 #include "app_control.h"
 
-#include "flutter/shell/platform/common/public/flutter_export.h"
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
 #include "flutter/shell/platform/tizen/logger.h"
-#include "third_party/dart/runtime/include/dart_api_dl.h"
 
-DART_EXPORT FLUTTER_EXPORT intptr_t NativeInitializeDartApi(void* data) {
+intptr_t NativeInitializeDartApi(void* data) {
   return Dart_InitializeApiDL(data);
 }
 
-DART_EXPORT FLUTTER_EXPORT uint32_t NativeCreateAppControl(Dart_Handle handle) {
+int32_t NativeCreateAppControl(Dart_Handle handle) {
   auto app_control = std::make_unique<flutter::AppControl>();
   if (!app_control->handle()) {
     return -1;
@@ -27,6 +25,19 @@ DART_EXPORT FLUTTER_EXPORT uint32_t NativeCreateAppControl(Dart_Handle handle) {
       });
   flutter::AppControlManager::GetInstance().Insert(std::move(app_control));
   return id;
+}
+
+bool NativeAttachAppControl(int32_t id, Dart_Handle handle) {
+  auto app_control = flutter::AppControlManager::GetInstance().FindById(id);
+  if (!app_control || !app_control->handle()) {
+    return false;
+  }
+  Dart_NewFinalizableHandle_DL(
+      handle, app_control, 64, [](void* isolate_callback_data, void* peer) {
+        auto app_control = reinterpret_cast<flutter::AppControl*>(peer);
+        flutter::AppControlManager::GetInstance().Remove(app_control->id());
+      });
+  return true;
 }
 
 namespace flutter {

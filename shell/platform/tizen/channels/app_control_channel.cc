@@ -51,7 +51,7 @@ void AppControlChannel::NotifyAppControl(void* handle) {
   auto app_control =
       std::make_unique<AppControl>(static_cast<app_control_h>(handle));
   if (!app_control->handle()) {
-    FT_LOG(Error) << "Could not clone AppControl.";
+    FT_LOG(Error) << "Could not create an instance of AppControl.";
     return;
   }
   if (!event_sink_) {

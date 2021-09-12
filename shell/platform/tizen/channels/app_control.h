@@ -11,6 +11,30 @@
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
+#include "flutter/shell/platform/common/public/flutter_export.h"
+#include "third_party/dart/runtime/include/dart_api_dl.h"
+
+// Called by Dart code through FFI to initialize dart_api_dl.h.
+DART_EXPORT FLUTTER_EXPORT intptr_t NativeInitializeDartApi(void* data);
+
+// Creates an internally managed instance of AppControl and associates with
+// |handle|.
+//
+// A finalizer is attached to the created instance and invoked when the
+// associated |handle| is disposed by GC.
+//
+// Returns a unique AppControl ID on success, otherwise -1.
+DART_EXPORT FLUTTER_EXPORT int32_t NativeCreateAppControl(Dart_Handle handle);
+
+// Finds an instance of AppControl with |id| and associates with |handle|.
+//
+// A finalizer is attached to the instance and invoked when the associated
+// |handle| is disposed by GC.
+//
+// Returns false if an instance of AppControl with the given |id| could not
+// be found, otherwise true.
+DART_EXPORT FLUTTER_EXPORT bool NativeAttachAppControl(int32_t id,
+                                                       Dart_Handle handle);
 
 namespace flutter {
 
