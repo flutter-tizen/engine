@@ -30,26 +30,26 @@ class AppControlChannel {
   void UnregisterEventHandler();
   void SendAlreadyQueuedEvents();
 
-  std::shared_ptr<AppControl> GetAppControl(const EncodableValue* arguments);
+  AppControl* GetAppControl(const EncodableValue* arguments);
 
   void CreateAppControl(std::unique_ptr<MethodResult<EncodableValue>> result);
 
-  void Dispose(std::shared_ptr<AppControl> app_control,
+  void Dispose(AppControl* app_control,
                std::unique_ptr<MethodResult<EncodableValue>> result);
-  void Reply(std::shared_ptr<AppControl> app_control,
+  void Reply(AppControl* app_control,
              const EncodableValue* arguments,
              std::unique_ptr<MethodResult<EncodableValue>> result);
-  void SendLaunchRequest(std::shared_ptr<AppControl> app_control,
+  void SendLaunchRequest(AppControl* app_control,
                          const EncodableValue* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendTerminateRequest(
-      std::shared_ptr<AppControl> app_control,
+      AppControl* app_control,
       std::unique_ptr<MethodResult<EncodableValue>> result);
 
-  void SetAppControlData(std::shared_ptr<AppControl> app_control,
+  void SetAppControlData(AppControl* app_control,
                          const EncodableValue* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
-  void SendAppControlDataEvent(std::shared_ptr<AppControl> app_control);
+  void SendAppControlDataEvent(AppControl* app_control);
 
   std::unique_ptr<MethodChannel<EncodableValue>> method_channel_;
   std::unique_ptr<EventChannel<EncodableValue>> event_channel_;
@@ -58,7 +58,7 @@ class AppControlChannel {
   // We need this queue, because there is no quarantee
   // that EventChannel on Dart side will be registered
   // before native OnAppControl event
-  std::queue<std::shared_ptr<AppControl>> queue_;
+  std::queue<AppControl*> queue_;
 };
 
 }  // namespace flutter

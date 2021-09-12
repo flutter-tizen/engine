@@ -14,7 +14,7 @@ DART_EXPORT FLUTTER_EXPORT intptr_t NativeInitializeDartApi(void* data) {
 }
 
 DART_EXPORT FLUTTER_EXPORT uint32_t NativeCreateAppControl(Dart_Handle handle) {
-  auto app_control = std::make_shared<flutter::AppControl>();
+  auto app_control = std::make_unique<flutter::AppControl>();
   if (!app_control->handle()) {
     return -1;
   }
@@ -264,17 +264,8 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
   auto reply_callback = [](app_control_h request, app_control_h reply,
                            app_control_result_e result, void* user_data) {
     AppControl* app_control = static_cast<AppControl*>(user_data);
-    app_control_h clone = nullptr;
-    AppControlResult ret = app_control_clone(&clone, reply);
-    if (!ret) {
-      FT_LOG(Error) << "Could not clone app_control: " << ret.message();
-      return;
-    }
-
-    std::shared_ptr<AppControl> app_control_reply =
-        std::make_shared<AppControl>(clone);
+    auto app_control_reply = std::make_unique<AppControl>(reply);
     EncodableMap map;
-    map[EncodableValue("id")] = EncodableValue(app_control->id());
     map[EncodableValue("reply")] =
         app_control_reply->SerializeAppControlToMap();
     if (result == APP_CONTROL_RESULT_APP_STARTED) {
@@ -286,7 +277,6 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     } else if (result == APP_CONTROL_RESULT_CANCELED) {
       map[EncodableValue("result")] = EncodableValue("canceled");
     }
-
     app_control->on_reply_(EncodableValue(map));
     app_control->on_reply_ = nullptr;
     AppControlManager::GetInstance().Insert(std::move(app_control_reply));
@@ -300,7 +290,7 @@ AppControlResult AppControl::SendTerminateRequest() {
   return ret;
 }
 
-AppControlResult AppControl::Reply(std::shared_ptr<AppControl> reply,
+AppControlResult AppControl::Reply(AppControl* reply,
                                    const std::string& result) {
   app_control_result_e result_e;
   if (result == "appStarted") {

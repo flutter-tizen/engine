@@ -26,8 +26,6 @@ struct AppControlResult {
   int error_code;
 };
 
-class AppControlChannel;
-
 class AppControl {
  public:
   using ReplyCallback = std::function<void(const EncodableValue& response)>;
@@ -60,8 +58,7 @@ class AppControl {
   AppControlResult SendLaunchRequestWithReply(ReplyCallback on_reply);
   AppControlResult SendTerminateRequest();
 
-  AppControlResult Reply(std::shared_ptr<AppControl> reply,
-                         const std::string& result);
+  AppControlResult Reply(AppControl* reply, const std::string& result);
 
   AppControlResult GetExtraData(EncodableMap& value);
   AppControlResult SetExtraData(const EncodableMap& value);
@@ -88,24 +85,24 @@ class AppControlManager {
     return instance;
   }
 
-  void Insert(std::shared_ptr<AppControl> app_control) {
+  void Insert(std::unique_ptr<AppControl> app_control) {
     map_.insert({app_control->id(), std::move(app_control)});
   }
 
   void Remove(int32_t id) { map_.erase(id); }
 
-  std::shared_ptr<AppControl> FindById(const int32_t id) {
+  AppControl* FindById(const int32_t id) {
     if (map_.find(id) == map_.end()) {
       return nullptr;
     }
-    return map_[id];
+    return map_[id].get();
   }
 
  private:
   explicit AppControlManager() {}
   ~AppControlManager() {}
 
-  std::unordered_map<int32_t, std::shared_ptr<AppControl>> map_;
+  std::unordered_map<int32_t, std::unique_ptr<AppControl>> map_;
 };
 
 }  // namespace flutter

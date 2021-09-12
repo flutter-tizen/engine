@@ -47,18 +47,18 @@ AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
 
 AppControlChannel::~AppControlChannel() {}
 
-void AppControlChannel::NotifyAppControl(void* h) {
-  auto handle = static_cast<app_control_h>(h);
-  auto app_control = std::make_shared<AppControl>(handle);
+void AppControlChannel::NotifyAppControl(void* handle) {
+  auto app_control =
+      std::make_unique<AppControl>(static_cast<app_control_h>(handle));
   if (!app_control->handle()) {
     FT_LOG(Error) << "Could not clone AppControl.";
     return;
   }
   if (!event_sink_) {
     FT_LOG(Info) << "EventChannel not set yet.";
-    queue_.push(app_control);
+    queue_.push(app_control.get());
   } else {
-    SendAppControlDataEvent(app_control);
+    SendAppControlDataEvent(app_control.get());
   }
   AppControlManager::GetInstance().Insert(std::move(app_control));
 }
@@ -114,8 +114,7 @@ void AppControlChannel::SendAlreadyQueuedEvents() {
   }
 }
 
-std::shared_ptr<AppControl> AppControlChannel::GetAppControl(
-    const EncodableValue* arguments) {
+AppControl* AppControlChannel::GetAppControl(const EncodableValue* arguments) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     FT_LOG(Error) << "Invalid arguments.";
@@ -148,14 +147,14 @@ void AppControlChannel::CreateAppControl(
 }
 
 void AppControlChannel::Dispose(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   AppControlManager::GetInstance().Remove(app_control->id());
   result->Success();
 }
 
 void AppControlChannel::Reply(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -191,7 +190,7 @@ void AppControlChannel::Reply(
 }
 
 void AppControlChannel::SendLaunchRequest(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -223,7 +222,7 @@ void AppControlChannel::SendLaunchRequest(
 }
 
 void AppControlChannel::SendTerminateRequest(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   AppControlResult ret = app_control->SendTerminateRequest();
   if (ret) {
@@ -234,7 +233,7 @@ void AppControlChannel::SendTerminateRequest(
 }
 
 void AppControlChannel::SetAppControlData(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -283,8 +282,7 @@ void AppControlChannel::SetAppControlData(
   result->Success();
 }
 
-void AppControlChannel::SendAppControlDataEvent(
-    std::shared_ptr<AppControl> app_control) {
+void AppControlChannel::SendAppControlDataEvent(AppControl* app_control) {
   EncodableValue map = app_control->SerializeAppControlToMap();
   if (!map.IsNull()) {
     event_sink_->Success(map);
