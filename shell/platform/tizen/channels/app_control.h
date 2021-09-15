@@ -7,6 +7,7 @@
 
 #include <app.h>
 
+#include <string>
 #include <unordered_map>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
@@ -44,6 +45,8 @@ struct AppControlResult {
 
   // Returns false on error.
   operator bool() const { return (APP_CONTROL_ERROR_NONE == error_code); }
+
+  std::string code() { return std::to_string(error_code); }
 
   std::string message() { return get_error_message(error_code); }
 
