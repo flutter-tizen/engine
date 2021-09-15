@@ -54,7 +54,7 @@ void AppControlChannel::NotifyAppControl(void* handle) {
   if (event_sink_) {
     SendAppControlEvent(app_control.get());
   } else {
-    FT_LOG(Info) << "No event channel has been initialized.";
+    FT_LOG(Info) << "No event channel has been set up.";
     queue_.push(app_control.get());
   }
   AppControlManager::GetInstance().Insert(std::move(app_control));
@@ -239,27 +239,27 @@ void AppControlChannel::SetAppControlData(
 
   std::vector<AppControlResult> results;
   if (app_id) {
-    results.emplace_back(app_control->SetAppId(*app_id));
+    results.push_back(app_control->SetAppId(*app_id));
   }
   if (operation) {
-    results.emplace_back(app_control->SetOperation(*operation));
+    results.push_back(app_control->SetOperation(*operation));
   }
   if (uri) {
-    results.emplace_back(app_control->SetUri(*uri));
+    results.push_back(app_control->SetUri(*uri));
   }
   if (mime) {
-    results.emplace_back(app_control->SetMime(*mime));
+    results.push_back(app_control->SetMime(*mime));
   }
   if (category) {
-    results.emplace_back(app_control->SetCategory(*category));
+    results.push_back(app_control->SetCategory(*category));
   }
   if (launch_mode) {
-    results.emplace_back(app_control->SetLaunchMode(*launch_mode));
+    results.push_back(app_control->SetLaunchMode(*launch_mode));
   }
   if (extra_data) {
-    results.emplace_back(app_control->SetExtraData(*extra_data));
+    results.push_back(app_control->SetExtraData(*extra_data));
   }
-  for (auto ret : results) {
+  for (AppControlResult ret : results) {
     if (!ret) {
       result->Error(ret.code(), ret.message());
       return;
@@ -269,7 +269,7 @@ void AppControlChannel::SetAppControlData(
 }
 
 void AppControlChannel::SendAppControlEvent(AppControl* app_control) {
-  EncodableValue map = app_control->SerializeAppControlToMap();
+  EncodableValue map = app_control->SerializeToMap();
   if (!map.IsNull()) {
     event_sink_->Success(map);
   }
