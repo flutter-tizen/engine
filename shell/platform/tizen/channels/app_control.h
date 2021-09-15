@@ -7,9 +7,34 @@
 
 #include <app.h>
 
+#include <unordered_map>
+
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
-#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/common/public/flutter_export.h"
+#include "third_party/dart/runtime/include/dart_api_dl.h"
+
+// Called by Dart code through FFI to initialize dart_api_dl.h.
+DART_EXPORT FLUTTER_EXPORT intptr_t NativeInitializeDartApi(void* data);
+
+// Creates an internally managed instance of AppControl and associates with
+// |handle|.
+//
+// A finalizer is attached to the created instance and invoked when the
+// associated |handle| is disposed by GC.
+//
+// Returns a unique AppControl ID on success, otherwise -1.
+DART_EXPORT FLUTTER_EXPORT int32_t NativeCreateAppControl(Dart_Handle handle);
+
+// Finds an instance of AppControl with |id| and associates with |handle|.
+//
+// A finalizer is attached to the instance and invoked when the associated
+// |handle| is disposed by GC.
+//
+// Returns false if an instance of AppControl with the given |id| could not
+// be found, otherwise true.
+DART_EXPORT FLUTTER_EXPORT bool NativeAttachAppControl(int32_t id,
+                                                       Dart_Handle handle);
 
 namespace flutter {
 
@@ -25,15 +50,16 @@ struct AppControlResult {
   int error_code;
 };
 
-class AppControlChannel;
-
 class AppControl {
  public:
-  AppControl(app_control_h app_control);
-  ~AppControl();
+  using ReplyCallback = std::function<void(const EncodableValue& response)>;
 
-  int GetId() { return id_; }
-  app_control_h Handle() { return handle_; }
+  explicit AppControl();
+  explicit AppControl(app_control_h handle);
+  virtual ~AppControl();
+
+  int32_t id() { return id_; }
+  app_control_h handle() { return handle_; }
 
   AppControlResult GetOperation(std::string& operation);
   AppControlResult SetOperation(const std::string& operation);
@@ -48,23 +74,18 @@ class AppControl {
   AppControlResult GetCaller(std::string& caller);
   AppControlResult GetLaunchMode(std::string& launch_mode);
   AppControlResult SetLaunchMode(const std::string& launch_mode);
+  bool IsReplyRequested();
 
   EncodableValue SerializeAppControlToMap();
 
   AppControlResult SendLaunchRequest();
-  AppControlResult SendLaunchRequestWithReply(
-      std::shared_ptr<EventSink<EncodableValue>> reply_sink,
-      AppControlChannel* manager);
+  AppControlResult SendLaunchRequestWithReply(ReplyCallback on_reply);
   AppControlResult SendTerminateRequest();
 
-  AppControlResult Reply(std::shared_ptr<AppControl> reply,
-                         const std::string& result);
+  AppControlResult Reply(AppControl* reply, const std::string& result);
 
   AppControlResult GetExtraData(EncodableMap& value);
   AppControlResult SetExtraData(const EncodableMap& value);
-
-  void SetManager(AppControlChannel* manager);
-  AppControlChannel* GetManager();
 
  private:
   AppControlResult GetString(std::string& str, int func(app_control_h, char**));
@@ -74,12 +95,38 @@ class AppControl {
   AppControlResult AddExtraData(std::string key, EncodableValue value);
   AppControlResult AddExtraDataList(std::string& key, EncodableList& list);
 
-  app_control_h handle_;
-  int id_;
-  static int next_id_;
-  std::shared_ptr<EventSink<EncodableValue>> reply_sink_;
+  app_control_h handle_ = nullptr;
+  int32_t id_;
+  static int32_t next_id_;
+  ReplyCallback on_reply_ = nullptr;
+};
 
-  AppControlChannel* manager_;
+class AppControlManager {
+ public:
+  // Returns an instance of this class.
+  static AppControlManager& GetInstance() {
+    static AppControlManager instance;
+    return instance;
+  }
+
+  void Insert(std::unique_ptr<AppControl> app_control) {
+    map_.insert({app_control->id(), std::move(app_control)});
+  }
+
+  void Remove(int32_t id) { map_.erase(id); }
+
+  AppControl* FindById(const int32_t id) {
+    if (map_.find(id) == map_.end()) {
+      return nullptr;
+    }
+    return map_[id].get();
+  }
+
+ private:
+  explicit AppControlManager() {}
+  ~AppControlManager() {}
+
+  std::unordered_map<int32_t, std::unique_ptr<AppControl>> map_;
 };
 
 }  // namespace flutter

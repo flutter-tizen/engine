@@ -7,6 +7,7 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_stream_handler_functions.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -14,7 +15,6 @@ namespace {
 
 constexpr char kChannelName[] = "tizen/internal/app_control_method";
 constexpr char kEventChannelName[] = "tizen/internal/app_control_event";
-constexpr char kReplyChannelName[] = "tizen/internal/app_control_reply";
 
 }  // namespace
 
@@ -43,44 +43,24 @@ AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
       });
 
   event_channel_->SetStreamHandler(std::move(event_channel_handler));
-
-  reply_channel_ = std::make_unique<EventChannel<EncodableValue>>(
-      messenger, kReplyChannelName, &StandardMethodCodec::GetInstance());
-
-  auto reply_channel_handler = std::make_unique<StreamHandlerFunctions<>>(
-      [this](const EncodableValue* arguments,
-             std::unique_ptr<EventSink<>>&& events)
-          -> std::unique_ptr<StreamHandlerError<>> {
-        RegisterReplyHandler(std::move(events));
-        return nullptr;
-      },
-      [this](const EncodableValue* arguments)
-          -> std::unique_ptr<StreamHandlerError<>> {
-        UnregisterReplyHandler();
-        return nullptr;
-      });
-
-  reply_channel_->SetStreamHandler(std::move(reply_channel_handler));
 }
 
 AppControlChannel::~AppControlChannel() {}
 
-void AppControlChannel::NotifyAppControl(void* app_control) {
-  app_control_h clone = nullptr;
-  app_control_h handle = static_cast<app_control_h>(app_control);
-  AppControlResult ret = app_control_clone(&clone, handle);
-  if (!ret) {
-    FT_LOG(Error) << "Could not clone app control: " << ret.message();
+void AppControlChannel::NotifyAppControl(void* handle) {
+  auto app_control =
+      std::make_unique<AppControl>(static_cast<app_control_h>(handle));
+  if (!app_control->handle()) {
+    FT_LOG(Error) << "Could not create an instance of AppControl.";
     return;
   }
-  auto app = std::make_shared<AppControl>(clone);
   if (!event_sink_) {
-    queue_.push(app);
     FT_LOG(Info) << "EventChannel not set yet.";
+    queue_.push(app_control.get());
   } else {
-    SendAppControlDataEvent(app);
+    SendAppControlDataEvent(app_control.get());
   }
-  map_.insert({app->GetId(), app});
+  AppControlManager::GetInstance().Insert(std::move(app_control));
 }
 
 void AppControlChannel::HandleMethodCall(
@@ -134,58 +114,47 @@ void AppControlChannel::SendAlreadyQueuedEvents() {
   }
 }
 
-void AppControlChannel::RegisterReplyHandler(
-    std::unique_ptr<EventSink<EncodableValue>> events) {
-  reply_sink_ = std::move(events);
-}
-
-void AppControlChannel::UnregisterReplyHandler() {
-  reply_sink_.reset();
-}
-
-std::shared_ptr<AppControl> AppControlChannel::GetAppControl(
-    const EncodableValue* arguments) {
+AppControl* AppControlChannel::GetAppControl(const EncodableValue* arguments) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     FT_LOG(Error) << "Invalid arguments.";
     return nullptr;
   }
 
-  EncodableValueHolder<int> id(map_ptr, "id");
+  EncodableValueHolder<int32_t> id(map_ptr, "id");
   if (!id) {
     FT_LOG(Error) << "Could not get proper id from arguments.";
     return nullptr;
   }
 
-  if (map_.find(*id) == map_.end()) {
+  auto app_control = AppControlManager::GetInstance().FindById(*id);
+  if (!app_control) {
     FT_LOG(Error) << "Could not find AppControl with id " << *id;
     return nullptr;
   }
-  return map_[*id];
+  return app_control;
 }
 
 void AppControlChannel::CreateAppControl(
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  app_control_h app_control = nullptr;
-  AppControlResult ret = app_control_create(&app_control);
-  if (!ret) {
-    result->Error("Could not create AppControl", ret.message());
+  auto app_control = std::make_unique<AppControl>();
+  if (app_control->handle()) {
+    result->Success(EncodableValue(app_control->id()));
+    AppControlManager::GetInstance().Insert(std::move(app_control));
+  } else {
+    result->Error("Internal error", "Could not create AppControl.");
   }
-  auto app = std::make_unique<AppControl>(app_control);
-  int id = app->GetId();
-  map_.insert({id, std::move(app)});
-  result->Success(EncodableValue(id));
 }
 
 void AppControlChannel::Dispose(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  map_.erase(app_control->GetId());
+  AppControlManager::GetInstance().Remove(app_control->id());
   result->Success();
 }
 
 void AppControlChannel::Reply(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -194,13 +163,19 @@ void AppControlChannel::Reply(
     return;
   }
 
-  EncodableValueHolder<int> request_id(map_ptr, "requestId");
-  if (!request_id || map_.find(*request_id) == map_.end()) {
-    result->Error("Could not reply", "Invalid request app control");
+  EncodableValueHolder<int32_t> request_id(map_ptr, "requestId");
+  if (!request_id) {
+    result->Error("Invalid arguments", "Invalid requestId parameter");
+    return;
+  }
+  auto request_app_control =
+      AppControlManager::GetInstance().FindById(*request_id);
+  if (!request_app_control) {
+    result->Error("Invalid arguments",
+                  "Could not find AppControl with the given ID.");
     return;
   }
 
-  auto request_app_control = map_[*request_id];
   EncodableValueHolder<std::string> result_str(map_ptr, "result");
   if (!result_str) {
     result->Error("Could not reply", "Invalid result parameter");
@@ -215,7 +190,7 @@ void AppControlChannel::Reply(
 }
 
 void AppControlChannel::SendLaunchRequest(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -225,23 +200,29 @@ void AppControlChannel::SendLaunchRequest(
   }
 
   EncodableValueHolder<bool> wait_for_reply(map_ptr, "waitForReply");
-
-  AppControlResult ret;
   if (wait_for_reply && *wait_for_reply) {
-    ret = app_control->SendLaunchRequestWithReply(std::move(reply_sink_), this);
+    auto result_ptr = result.release();
+    auto on_reply = [result_ptr](const EncodableValue& response) {
+      result_ptr->Success(response);
+      delete result_ptr;
+    };
+    AppControlResult ret = app_control->SendLaunchRequestWithReply(on_reply);
+    if (!ret) {
+      result_ptr->Error(ret.message());
+      delete result_ptr;
+    }
   } else {
-    ret = app_control->SendLaunchRequest();
-  }
-
-  if (ret) {
-    result->Success();
-  } else {
-    result->Error(ret.message());
+    AppControlResult ret = app_control->SendLaunchRequest();
+    if (ret) {
+      result->Success();
+    } else {
+      result->Error(ret.message());
+    }
   }
 }
 
 void AppControlChannel::SendTerminateRequest(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   AppControlResult ret = app_control->SendTerminateRequest();
   if (ret) {
@@ -252,7 +233,7 @@ void AppControlChannel::SendTerminateRequest(
 }
 
 void AppControlChannel::SetAppControlData(
-    std::shared_ptr<AppControl> app_control,
+    AppControl* app_control,
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   auto map_ptr = std::get_if<EncodableMap>(arguments);
@@ -301,8 +282,7 @@ void AppControlChannel::SetAppControlData(
   result->Success();
 }
 
-void AppControlChannel::SendAppControlDataEvent(
-    std::shared_ptr<AppControl> app_control) {
+void AppControlChannel::SendAppControlDataEvent(AppControl* app_control) {
   EncodableValue map = app_control->SerializeAppControlToMap();
   if (!map.IsNull()) {
     event_sink_->Success(map);

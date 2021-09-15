@@ -7,14 +7,12 @@
 
 #include <memory>
 #include <queue>
-#include <unordered_map>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/event_channel.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
 #include "flutter/shell/platform/tizen/channels/app_control.h"
-#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -25,10 +23,6 @@ class AppControlChannel {
 
   void NotifyAppControl(void* app_control);
 
-  void AddExistingAppControl(std::shared_ptr<AppControl> app_control) {
-    map_.insert({app_control->GetId(), app_control});
-  }
-
  private:
   void HandleMethodCall(const MethodCall<EncodableValue>& method_call,
                         std::unique_ptr<MethodResult<EncodableValue>> result);
@@ -36,42 +30,35 @@ class AppControlChannel {
   void UnregisterEventHandler();
   void SendAlreadyQueuedEvents();
 
-  void RegisterReplyHandler(std::unique_ptr<EventSink<EncodableValue>> events);
-  void UnregisterReplyHandler();
-
-  std::shared_ptr<AppControl> GetAppControl(const EncodableValue* arguments);
+  AppControl* GetAppControl(const EncodableValue* arguments);
 
   void CreateAppControl(std::unique_ptr<MethodResult<EncodableValue>> result);
 
-  void Dispose(std::shared_ptr<AppControl> app_control,
+  void Dispose(AppControl* app_control,
                std::unique_ptr<MethodResult<EncodableValue>> result);
-  void Reply(std::shared_ptr<AppControl> app_control,
+  void Reply(AppControl* app_control,
              const EncodableValue* arguments,
              std::unique_ptr<MethodResult<EncodableValue>> result);
-  void SendLaunchRequest(std::shared_ptr<AppControl> app_control,
+  void SendLaunchRequest(AppControl* app_control,
                          const EncodableValue* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendTerminateRequest(
-      std::shared_ptr<AppControl> app_control,
+      AppControl* app_control,
       std::unique_ptr<MethodResult<EncodableValue>> result);
 
-  void SetAppControlData(std::shared_ptr<AppControl> app_control,
+  void SetAppControlData(AppControl* app_control,
                          const EncodableValue* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
-  void SendAppControlDataEvent(std::shared_ptr<AppControl> app_control);
+  void SendAppControlDataEvent(AppControl* app_control);
 
   std::unique_ptr<MethodChannel<EncodableValue>> method_channel_;
   std::unique_ptr<EventChannel<EncodableValue>> event_channel_;
-  std::unique_ptr<EventChannel<EncodableValue>> reply_channel_;
   std::unique_ptr<EventSink<EncodableValue>> event_sink_;
-  std::shared_ptr<EventSink<EncodableValue>> reply_sink_;
 
   // We need this queue, because there is no quarantee
   // that EventChannel on Dart side will be registered
   // before native OnAppControl event
-  std::queue<std::shared_ptr<AppControl>> queue_;
-
-  std::unordered_map<int, std::shared_ptr<AppControl>> map_;
+  std::queue<AppControl*> queue_;
 };
 
 }  // namespace flutter
