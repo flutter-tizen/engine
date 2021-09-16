@@ -304,9 +304,12 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
   auto reply_callback = [](app_control_h request, app_control_h reply,
                            app_control_result_e result, void* user_data) {
     auto app_control = static_cast<AppControl*>(user_data);
-    auto reply_app_control = std::make_unique<AppControl>(reply);
     EncodableMap map;
+
+    auto reply_app_control = std::make_unique<AppControl>(reply);
     map[EncodableValue("reply")] = reply_app_control->SerializeToMap();
+    AppControlManager::GetInstance().Insert(std::move(reply_app_control));
+
     if (result == APP_CONTROL_RESULT_APP_STARTED) {
       map[EncodableValue("result")] = EncodableValue("appStarted");
     } else if (result == APP_CONTROL_RESULT_SUCCEEDED) {
@@ -318,7 +321,6 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     }
     app_control->on_reply_(EncodableValue(map));
     app_control->on_reply_ = nullptr;
-    AppControlManager::GetInstance().Insert(std::move(reply_app_control));
   };
   on_reply_ = on_reply;
   return app_control_send_launch_request(handle_, reply_callback, this);
