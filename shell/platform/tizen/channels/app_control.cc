@@ -72,44 +72,65 @@ AppControl::~AppControl() {
   }
 }
 
-AppControlResult AppControl::GetAppId(char** app_id) {
-  return app_control_get_app_id(handle_, app_id);
+AppControlResult AppControl::GetString(std::string& string,
+                                       int func(app_control_h, char**)) {
+  char* output;
+  AppControlResult ret = func(handle_, &output);
+  if (!ret) {
+    return ret;
+  }
+  if (output) {
+    string = output;
+    free(output);
+  } else {
+    string = "";
+  }
+  return APP_CONTROL_ERROR_NONE;
 }
 
-AppControlResult AppControl::SetAppId(const char* app_id) {
-  return app_control_set_app_id(handle_, app_id);
+AppControlResult AppControl::SetString(const std::string& string,
+                                       int func(app_control_h, const char*)) {
+  return func(handle_, string.c_str());
 }
 
-AppControlResult AppControl::GetOperation(char** operation) {
-  return app_control_get_operation(handle_, operation);
+AppControlResult AppControl::GetAppId(std::string& app_id) {
+  return GetString(app_id, app_control_get_app_id);
 }
 
-AppControlResult AppControl::SetOperation(const char* operation) {
-  return app_control_set_operation(handle_, operation);
+AppControlResult AppControl::SetAppId(const std::string& app_id) {
+  return SetString(app_id, app_control_set_app_id);
 }
 
-AppControlResult AppControl::GetUri(char** uri) {
-  return app_control_get_uri(handle_, uri);
+AppControlResult AppControl::GetOperation(std::string& operation) {
+  return GetString(operation, app_control_get_operation);
 }
 
-AppControlResult AppControl::SetUri(const char* uri) {
-  return app_control_set_uri(handle_, uri);
+AppControlResult AppControl::SetOperation(const std::string& operation) {
+  return SetString(operation, app_control_set_operation);
 }
 
-AppControlResult AppControl::GetMime(char** mime) {
-  return app_control_get_mime(handle_, mime);
+AppControlResult AppControl::GetUri(std::string& uri) {
+  return GetString(uri, app_control_get_uri);
 }
 
-AppControlResult AppControl::SetMime(const char* mime) {
-  return app_control_set_mime(handle_, mime);
+AppControlResult AppControl::SetUri(const std::string& uri) {
+  return SetString(uri, app_control_set_uri);
 }
 
-AppControlResult AppControl::GetCategory(char** category) {
-  return app_control_get_category(handle_, category);
+AppControlResult AppControl::GetMime(std::string& mime) {
+  return GetString(mime, app_control_get_mime);
 }
 
-AppControlResult AppControl::SetCategory(const char* category) {
-  return app_control_set_category(handle_, category);
+AppControlResult AppControl::SetMime(const std::string& mime) {
+  return SetString(mime, app_control_set_mime);
+}
+
+AppControlResult AppControl::GetCategory(std::string& category) {
+  return GetString(category, app_control_get_category);
+}
+
+AppControlResult AppControl::SetCategory(const std::string& category) {
+  return SetString(category, app_control_set_category);
 }
 
 AppControlResult AppControl::GetLaunchMode(std::string& launch_mode) {
@@ -228,8 +249,8 @@ AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
   return AppControlResult();
 }
 
-AppControlResult AppControl::GetCaller(char** caller) {
-  return app_control_get_caller(handle_, caller);
+AppControlResult AppControl::GetCaller(std::string& caller) {
+  return GetString(caller, &app_control_get_caller);
 }
 
 AppControlResult AppControl::IsReplyRequested(bool& value) {
@@ -238,15 +259,14 @@ AppControlResult AppControl::IsReplyRequested(bool& value) {
 
 EncodableValue AppControl::SerializeToMap() {
   AppControlResult results[7];
-  char *app_id, *operation, *uri, *mime, *category;
-  results[0] = GetAppId(&app_id);
-  results[1] = GetOperation(&operation);
-  results[2] = GetUri(&uri);
-  results[3] = GetMime(&mime);
-  results[4] = GetCategory(&category);
-  std::string launch_mode;
-  results[5] = GetLaunchMode(launch_mode);
+  std::string app_id, operation, uri, mime, category, launch_mode;
   EncodableMap extra_data;
+  results[0] = GetAppId(app_id);
+  results[1] = GetOperation(operation);
+  results[2] = GetUri(uri);
+  results[3] = GetMime(mime);
+  results[4] = GetCategory(category);
+  results[5] = GetLaunchMode(launch_mode);
   results[6] = GetExtraData(extra_data);
   for (AppControlResult result : results) {
     if (!result) {
@@ -255,8 +275,9 @@ EncodableValue AppControl::SerializeToMap() {
       return EncodableValue(EncodableMap());
     }
   }
-  char* caller_app_id;
-  GetCaller(&caller_app_id);
+
+  std::string caller_app_id;
+  GetCaller(caller_app_id);
   bool should_reply = false;
   IsReplyRequested(should_reply);
 

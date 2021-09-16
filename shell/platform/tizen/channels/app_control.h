@@ -70,21 +70,21 @@ class AppControl {
   int32_t id() { return id_; }
   app_control_h handle() { return handle_; }
 
-  AppControlResult GetAppId(char** app_id);
-  AppControlResult SetAppId(const char* app_id);
-  AppControlResult GetOperation(char** operation);
-  AppControlResult SetOperation(const char* operation);
-  AppControlResult GetUri(char** uri);
-  AppControlResult SetUri(const char* uri);
-  AppControlResult GetMime(char** mime);
-  AppControlResult SetMime(const char* mime);
-  AppControlResult GetCategory(char** category);
-  AppControlResult SetCategory(const char* category);
+  AppControlResult GetAppId(std::string& app_id);
+  AppControlResult SetAppId(const std::string& app_id);
+  AppControlResult GetOperation(std::string& operation);
+  AppControlResult SetOperation(const std::string& operation);
+  AppControlResult GetUri(std::string& uri);
+  AppControlResult SetUri(const std::string& uri);
+  AppControlResult GetMime(std::string& mime);
+  AppControlResult SetMime(const std::string& mime);
+  AppControlResult GetCategory(std::string& category);
+  AppControlResult SetCategory(const std::string& category);
   AppControlResult GetLaunchMode(std::string& launch_mode);
   AppControlResult SetLaunchMode(const std::string& launch_mode);
   AppControlResult GetExtraData(EncodableMap& map);
   AppControlResult SetExtraData(const EncodableMap& map);
-  AppControlResult GetCaller(char** caller);
+  AppControlResult GetCaller(std::string& caller);
   AppControlResult IsReplyRequested(bool& value);
 
   EncodableValue SerializeToMap();
@@ -96,6 +96,10 @@ class AppControl {
   AppControlResult Reply(AppControl* reply, const std::string& result);
 
  private:
+  AppControlResult GetString(std::string& string,
+                             int func(app_control_h, char**));
+  AppControlResult SetString(const std::string& string,
+                             int func(app_control_h, const char*));
   AppControlResult AddExtraData(std::string key, EncodableValue value);
 
   static int32_t next_id_;
