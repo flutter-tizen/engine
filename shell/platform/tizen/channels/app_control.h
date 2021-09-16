@@ -61,8 +61,8 @@ class AppControl {
   // handle.
   explicit AppControl();
 
-  // Creates an instance of AppControl by creating a copy of existing
-  // application control |handle|.
+  // Creates an instance of AppControl by duplicating an existing application
+  // control |handle|.
   explicit AppControl(app_control_h handle);
 
   virtual ~AppControl();

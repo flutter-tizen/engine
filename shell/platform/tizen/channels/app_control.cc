@@ -250,7 +250,7 @@ AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
 }
 
 AppControlResult AppControl::GetCaller(std::string& caller) {
-  return GetString(caller, &app_control_get_caller);
+  return GetString(caller, app_control_get_caller);
 }
 
 AppControlResult AppControl::IsReplyRequested(bool& value) {
@@ -270,27 +270,32 @@ EncodableValue AppControl::SerializeToMap() {
   results[6] = GetExtraData(extra_data);
   for (AppControlResult result : results) {
     if (!result) {
-      FT_LOG(Error) << "Failed to serialize AppControl data: "
+      FT_LOG(Error) << "Failed to serialize application control data: "
                     << result.message();
-      return EncodableValue(EncodableMap());
+      return EncodableValue();
     }
   }
-
-  std::string caller_app_id;
-  GetCaller(caller_app_id);
+  std::string caller;
   bool should_reply = false;
+  GetCaller(caller);
   IsReplyRequested(should_reply);
 
   EncodableMap map;
   map[EncodableValue("id")] = EncodableValue(id_);
-  map[EncodableValue("appId")] = EncodableValue(app_id);
-  map[EncodableValue("operation")] = EncodableValue(operation);
-  map[EncodableValue("mime")] = EncodableValue(mime);
-  map[EncodableValue("category")] = EncodableValue(category);
-  map[EncodableValue("uri")] = EncodableValue(uri);
+  map[EncodableValue("appId")] =
+      app_id.empty() ? EncodableValue() : EncodableValue(app_id);
+  map[EncodableValue("operation")] =
+      operation.empty() ? EncodableValue() : EncodableValue(operation);
+  map[EncodableValue("uri")] =
+      uri.empty() ? EncodableValue() : EncodableValue(uri);
+  map[EncodableValue("mime")] =
+      mime.empty() ? EncodableValue() : EncodableValue(mime);
+  map[EncodableValue("category")] =
+      category.empty() ? EncodableValue() : EncodableValue(category);
   map[EncodableValue("launchMode")] = EncodableValue(launch_mode);
   map[EncodableValue("extraData")] = EncodableValue(extra_data);
-  map[EncodableValue("callerAppId")] = EncodableValue(caller_app_id);
+  map[EncodableValue("callerAppId")] =
+      caller.empty() ? EncodableValue() : EncodableValue(caller);
   map[EncodableValue("shouldReply")] = EncodableValue(should_reply);
   return EncodableValue(map);
 }
@@ -304,12 +309,9 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
   auto reply_callback = [](app_control_h request, app_control_h reply,
                            app_control_result_e result, void* user_data) {
     auto app_control = static_cast<AppControl*>(user_data);
-    EncodableMap map;
-
     auto reply_app_control = std::make_unique<AppControl>(reply);
+    EncodableMap map;
     map[EncodableValue("reply")] = reply_app_control->SerializeToMap();
-    AppControlManager::GetInstance().Insert(std::move(reply_app_control));
-
     if (result == APP_CONTROL_RESULT_APP_STARTED) {
       map[EncodableValue("result")] = EncodableValue("appStarted");
     } else if (result == APP_CONTROL_RESULT_SUCCEEDED) {
@@ -319,6 +321,7 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     } else if (result == APP_CONTROL_RESULT_CANCELED) {
       map[EncodableValue("result")] = EncodableValue("canceled");
     }
+    AppControlManager::GetInstance().Insert(std::move(reply_app_control));
     app_control->on_reply_(EncodableValue(map));
     app_control->on_reply_ = nullptr;
   };

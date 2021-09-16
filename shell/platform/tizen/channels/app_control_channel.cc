@@ -108,7 +108,7 @@ void AppControlChannel::RegisterEventHandler(
     std::unique_ptr<EventSink<EncodableValue>> events) {
   event_sink_ = std::move(events);
 
-  // Send any queued events.
+  // Send already queued events if any.
   while (!queue_.empty()) {
     SendAppControlEvent(queue_.front());
     queue_.pop();
