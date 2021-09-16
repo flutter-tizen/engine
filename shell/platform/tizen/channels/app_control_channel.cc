@@ -239,19 +239,19 @@ void AppControlChannel::SetAppControlData(
 
   std::vector<AppControlResult> results;
   if (app_id) {
-    results.push_back(app_control->SetAppId(*app_id));
+    results.push_back(app_control->SetAppId(app_id->c_str()));
   }
   if (operation) {
-    results.push_back(app_control->SetOperation(*operation));
+    results.push_back(app_control->SetOperation(operation->c_str()));
   }
   if (uri) {
-    results.push_back(app_control->SetUri(*uri));
+    results.push_back(app_control->SetUri(uri->c_str()));
   }
   if (mime) {
-    results.push_back(app_control->SetMime(*mime));
+    results.push_back(app_control->SetMime(mime->c_str()));
   }
   if (category) {
-    results.push_back(app_control->SetCategory(*category));
+    results.push_back(app_control->SetCategory(category->c_str()));
   }
   if (launch_mode) {
     results.push_back(app_control->SetLaunchMode(*launch_mode));
