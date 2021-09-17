@@ -67,8 +67,15 @@ void AppControlChannel::HandleMethodCall(
 
   // The methods "create" and "dispose" are deprecated and will be removed in
   // the future.
-  if (method_name.compare("create") == 0) {
-    Create(std::move(result));
+  if (method_name == "create") {
+    auto app_control = std::make_unique<AppControl>();
+    if (app_control->handle()) {
+      result->Success(EncodableValue(app_control->id()));
+      AppControlManager::GetInstance().Insert(std::move(app_control));
+    } else {
+      result->Error("Internal error",
+                    "Could not create an instance of AppControl.");
+    }
     return;
   }
 
@@ -89,15 +96,16 @@ void AppControlChannel::HandleMethodCall(
     return;
   }
 
-  if (method_name.compare("dispose") == 0) {
-    Dispose(app_control, std::move(result));
-  } else if (method_name.compare("reply") == 0) {
+  if (method_name == "dispose") {
+    AppControlManager::GetInstance().Remove(app_control->id());
+    result->Success();
+  } else if (method_name == "reply") {
     Reply(app_control, arguments, std::move(result));
-  } else if (method_name.compare("sendLaunchRequest") == 0) {
+  } else if (method_name == "sendLaunchRequest") {
     SendLaunchRequest(app_control, arguments, std::move(result));
-  } else if (method_name.compare("sendTerminateRequest") == 0) {
+  } else if (method_name == "sendTerminateRequest") {
     SendTerminateRequest(app_control, std::move(result));
-  } else if (method_name.compare("setAppControlData") == 0) {
+  } else if (method_name == "setAppControlData") {
     SetAppControlData(app_control, arguments, std::move(result));
   } else {
     result->NotImplemented();
@@ -117,25 +125,6 @@ void AppControlChannel::RegisterEventHandler(
 
 void AppControlChannel::UnregisterEventHandler() {
   event_sink_.reset();
-}
-
-void AppControlChannel::Create(
-    std::unique_ptr<MethodResult<EncodableValue>> result) {
-  auto app_control = std::make_unique<AppControl>();
-  if (app_control->handle()) {
-    result->Success(EncodableValue(app_control->id()));
-    AppControlManager::GetInstance().Insert(std::move(app_control));
-  } else {
-    result->Error("Internal error",
-                  "Could not create an instance of AppControl.");
-  }
-}
-
-void AppControlChannel::Dispose(
-    AppControl* app_control,
-    std::unique_ptr<MethodResult<EncodableValue>> result) {
-  AppControlManager::GetInstance().Remove(app_control->id());
-  result->Success();
 }
 
 void AppControlChannel::Reply(

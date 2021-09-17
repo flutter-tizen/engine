@@ -29,9 +29,6 @@ class AppControlChannel {
   void RegisterEventHandler(std::unique_ptr<EventSink<EncodableValue>> events);
   void UnregisterEventHandler();
 
-  void Create(std::unique_ptr<MethodResult<EncodableValue>> result);
-  void Dispose(AppControl* app_control,
-               std::unique_ptr<MethodResult<EncodableValue>> result);
   void Reply(AppControl* app_control,
              const EncodableMap* arguments,
              std::unique_ptr<MethodResult<EncodableValue>> result);
