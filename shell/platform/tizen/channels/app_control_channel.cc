@@ -99,6 +99,14 @@ void AppControlChannel::HandleMethodCall(
   if (method_name == "dispose") {
     AppControlManager::GetInstance().Remove(app_control->id());
     result->Success();
+  } else if (method_name == "getMatchedAppIds") {
+    EncodableList app_ids;
+    AppControlResult ret = app_control->GetMatchedAppIds(app_ids);
+    if (ret) {
+      result->Success(EncodableValue(app_ids));
+    } else {
+      result->Error(ret.code(), ret.message());
+    }
   } else if (method_name == "reply") {
     Reply(app_control, arguments, std::move(result));
   } else if (method_name == "sendLaunchRequest") {
