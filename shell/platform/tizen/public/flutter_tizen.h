@@ -91,6 +91,13 @@ FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
 FLUTTER_EXPORT FlutterDesktopMessengerRef
 FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
 
+// Return backing elm window for manipulation in host application.
+FLUTTER_EXPORT void* FlutterDesktopViewGetWindow(FlutterDesktopViewRef view);
+
+// Returns the view associated with this registrar's engine instance.
+FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopPluginRegistrarGetView(
+    FlutterDesktopPluginRegistrarRef registrar);
+
 // Posts an app control to the engine instance.
 FLUTTER_EXPORT void FlutterDesktopNotifyAppControl(
     FlutterDesktopEngineRef engine,
