@@ -21,14 +21,12 @@ constexpr char kEventChannelName[] = "tizen/internal/app_control_event";
 AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
   method_channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
-
   method_channel_->SetMethodCallHandler([this](const auto& call, auto result) {
     this->HandleMethodCall(call, std::move(result));
   });
 
   event_channel_ = std::make_unique<EventChannel<EncodableValue>>(
       messenger, kEventChannelName, &StandardMethodCodec::GetInstance());
-
   auto event_channel_handler = std::make_unique<StreamHandlerFunctions<>>(
       [this](const EncodableValue* arguments,
              std::unique_ptr<EventSink<>>&& events)
@@ -41,7 +39,6 @@ AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
         UnregisterEventHandler();
         return nullptr;
       });
-
   event_channel_->SetStreamHandler(std::move(event_channel_handler));
 }
 
@@ -54,11 +51,11 @@ void AppControlChannel::NotifyAppControl(void* handle) {
     FT_LOG(Error) << "Could not create an instance of AppControl.";
     return;
   }
-  if (!event_sink_) {
-    FT_LOG(Info) << "EventChannel not set yet.";
-    queue_.push(app_control.get());
+  if (event_sink_) {
+    SendAppControlEvent(app_control.get());
   } else {
-    SendAppControlDataEvent(app_control.get());
+    FT_LOG(Info) << "No event channel has been set up.";
+    queue_.push(app_control.get());
   }
   AppControlManager::GetInstance().Insert(std::move(app_control));
 }
@@ -66,32 +63,50 @@ void AppControlChannel::NotifyAppControl(void* handle) {
 void AppControlChannel::HandleMethodCall(
     const MethodCall<EncodableValue>& method_call,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  const auto arguments = method_call.arguments();
   const auto& method_name = method_call.method_name();
 
-  // AppControl is not needed.
-  if (method_name.compare("create") == 0) {
-    CreateAppControl(std::move(result));
+  // The methods "create" and "dispose" are deprecated and will be removed in
+  // the future.
+  if (method_name == "create") {
+    auto app_control = std::make_unique<AppControl>();
+    if (app_control->handle()) {
+      result->Success(EncodableValue(app_control->id()));
+      AppControlManager::GetInstance().Insert(std::move(app_control));
+    } else {
+      result->Error("Internal error",
+                    "Could not create an instance of AppControl.");
+    }
     return;
   }
 
-  // AppControl is needed.
-  auto app_control = GetAppControl(arguments);
-  if (app_control == nullptr) {
-    result->Error("Could not find app_control", "Invalid id provided");
+  auto arguments = std::get_if<EncodableMap>(method_call.arguments());
+  if (!arguments) {
+    result->Error("Invalid arguments");
+    return;
+  }
+  EncodableValueHolder<int32_t> id(arguments, "id");
+  if (!id) {
+    result->Error("Invalid arguments", "No ID provided.");
+    return;
+  }
+  auto app_control = AppControlManager::GetInstance().FindById(*id);
+  if (!app_control) {
+    result->Error("Invalid arguments",
+                  "No instance of AppControl matches the given ID.");
     return;
   }
 
-  if (method_name.compare("dispose") == 0) {
-    Dispose(app_control, std::move(result));
-  } else if (method_name.compare("reply") == 0) {
+  if (method_name == "dispose") {
+    AppControlManager::GetInstance().Remove(app_control->id());
+    result->Success();
+  } else if (method_name == "reply") {
     Reply(app_control, arguments, std::move(result));
-  } else if (method_name.compare("sendLaunchRequest") == 0) {
+  } else if (method_name == "sendLaunchRequest") {
     SendLaunchRequest(app_control, arguments, std::move(result));
-  } else if (method_name.compare("setAppControlData") == 0) {
-    SetAppControlData(app_control, arguments, std::move(result));
-  } else if (method_name.compare("sendTerminateRequest") == 0) {
+  } else if (method_name == "sendTerminateRequest") {
     SendTerminateRequest(app_control, std::move(result));
+  } else if (method_name == "setAppControlData") {
+    SetAppControlData(app_control, arguments, std::move(result));
   } else {
     result->NotImplemented();
   }
@@ -100,106 +115,73 @@ void AppControlChannel::HandleMethodCall(
 void AppControlChannel::RegisterEventHandler(
     std::unique_ptr<EventSink<EncodableValue>> events) {
   event_sink_ = std::move(events);
-  SendAlreadyQueuedEvents();
+
+  // Send already queued events if any.
+  while (!queue_.empty()) {
+    SendAppControlEvent(queue_.front());
+    queue_.pop();
+  }
 }
 
 void AppControlChannel::UnregisterEventHandler() {
   event_sink_.reset();
 }
 
-void AppControlChannel::SendAlreadyQueuedEvents() {
-  while (!queue_.empty()) {
-    SendAppControlDataEvent(queue_.front());
-    queue_.pop();
-  }
-}
-
-AppControl* AppControlChannel::GetAppControl(const EncodableValue* arguments) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
-    FT_LOG(Error) << "Invalid arguments.";
-    return nullptr;
-  }
-
-  EncodableValueHolder<int32_t> id(map_ptr, "id");
-  if (!id) {
-    FT_LOG(Error) << "Could not get proper id from arguments.";
-    return nullptr;
-  }
-
-  auto app_control = AppControlManager::GetInstance().FindById(*id);
-  if (!app_control) {
-    FT_LOG(Error) << "Could not find AppControl with id " << *id;
-    return nullptr;
-  }
-  return app_control;
-}
-
-void AppControlChannel::CreateAppControl(
-    std::unique_ptr<MethodResult<EncodableValue>> result) {
-  auto app_control = std::make_unique<AppControl>();
-  if (app_control->handle()) {
-    result->Success(EncodableValue(app_control->id()));
-    AppControlManager::GetInstance().Insert(std::move(app_control));
-  } else {
-    result->Error("Internal error", "Could not create AppControl.");
-  }
-}
-
-void AppControlChannel::Dispose(
-    AppControl* app_control,
-    std::unique_ptr<MethodResult<EncodableValue>> result) {
-  AppControlManager::GetInstance().Remove(app_control->id());
-  result->Success();
-}
-
 void AppControlChannel::Reply(
     AppControl* app_control,
-    const EncodableValue* arguments,
+    const EncodableMap* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
-    result->Error("Invalid arguments");
+  EncodableValueHolder<std::string> result_str(arguments, "result");
+  if (!result_str) {
+    result->Error("Invalid arguments", "No result provided.");
     return;
   }
 
-  EncodableValueHolder<int32_t> request_id(map_ptr, "requestId");
+  EncodableValueHolder<int32_t> reply_id(arguments, "replyId");
+  if (reply_id) {
+    auto reply_app_control =
+        AppControlManager::GetInstance().FindById(*reply_id);
+    if (!reply_app_control) {
+      result->Error("Invalid arguments",
+                    "No instance of AppControl matches the given ID.");
+      return;
+    }
+    AppControlResult ret = app_control->Reply(reply_app_control, *result_str);
+    if (ret) {
+      result->Success();
+    } else {
+      result->Error(ret.code(), ret.message());
+    }
+    return;
+  }
+
+  // Deprecated. Use replyId instead.
+  EncodableValueHolder<int32_t> request_id(arguments, "requestId");
   if (!request_id) {
-    result->Error("Invalid arguments", "Invalid requestId parameter");
+    result->Error("Invalid arguments",
+                  "Either replyId or requestId must be provided.");
     return;
   }
   auto request_app_control =
       AppControlManager::GetInstance().FindById(*request_id);
   if (!request_app_control) {
     result->Error("Invalid arguments",
-                  "Could not find AppControl with the given ID.");
-    return;
-  }
-
-  EncodableValueHolder<std::string> result_str(map_ptr, "result");
-  if (!result_str) {
-    result->Error("Could not reply", "Invalid result parameter");
+                  "No instance of AppControl matches the given ID.");
     return;
   }
   AppControlResult ret = request_app_control->Reply(app_control, *result_str);
   if (ret) {
     result->Success();
   } else {
-    result->Error("Could not reply to app control", ret.message());
+    result->Error(ret.code(), ret.message());
   }
 }
 
 void AppControlChannel::SendLaunchRequest(
     AppControl* app_control,
-    const EncodableValue* arguments,
+    const EncodableMap* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
-    result->Error("Invalid arguments");
-    return;
-  }
-
-  EncodableValueHolder<bool> wait_for_reply(map_ptr, "waitForReply");
+  EncodableValueHolder<bool> wait_for_reply(arguments, "waitForReply");
   if (wait_for_reply && *wait_for_reply) {
     auto result_ptr = result.release();
     auto on_reply = [result_ptr](const EncodableValue& response) {
@@ -208,7 +190,7 @@ void AppControlChannel::SendLaunchRequest(
     };
     AppControlResult ret = app_control->SendLaunchRequestWithReply(on_reply);
     if (!ret) {
-      result_ptr->Error(ret.message());
+      result_ptr->Error(ret.code(), ret.message());
       delete result_ptr;
     }
   } else {
@@ -216,7 +198,7 @@ void AppControlChannel::SendLaunchRequest(
     if (ret) {
       result->Success();
     } else {
-      result->Error(ret.message());
+      result->Error(ret.code(), ret.message());
     }
   }
 }
@@ -228,62 +210,55 @@ void AppControlChannel::SendTerminateRequest(
   if (ret) {
     result->Success();
   } else {
-    result->Error("Could not terminate", ret.message());
+    result->Error(ret.code(), ret.message());
   }
 }
 
 void AppControlChannel::SetAppControlData(
     AppControl* app_control,
-    const EncodableValue* arguments,
+    const EncodableMap* arguments,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
-    result->Error("Invalid arguments");
-    return;
-  }
-
-  EncodableValueHolder<std::string> app_id(map_ptr, "appId");
-  EncodableValueHolder<std::string> operation(map_ptr, "operation");
-  EncodableValueHolder<std::string> mime(map_ptr, "mime");
-  EncodableValueHolder<std::string> category(map_ptr, "category");
-  EncodableValueHolder<std::string> launch_mode(map_ptr, "launchMode");
-  EncodableValueHolder<std::string> uri(map_ptr, "uri");
-  EncodableValueHolder<EncodableMap> extra_data(map_ptr, "extraData");
+  EncodableValueHolder<std::string> app_id(arguments, "appId");
+  EncodableValueHolder<std::string> operation(arguments, "operation");
+  EncodableValueHolder<std::string> uri(arguments, "uri");
+  EncodableValueHolder<std::string> mime(arguments, "mime");
+  EncodableValueHolder<std::string> category(arguments, "category");
+  EncodableValueHolder<std::string> launch_mode(arguments, "launchMode");
+  EncodableValueHolder<EncodableMap> extra_data(arguments, "extraData");
 
   std::vector<AppControlResult> results;
-
   if (app_id) {
-    results.emplace_back(app_control->SetAppId(*app_id));
+    results.push_back(app_control->SetAppId(*app_id));
   }
   if (operation) {
-    results.emplace_back(app_control->SetOperation(*operation));
-  }
-  if (mime) {
-    results.emplace_back(app_control->SetMime(*mime));
-  }
-  if (category) {
-    results.emplace_back(app_control->SetCategory(*category));
+    results.push_back(app_control->SetOperation(*operation));
   }
   if (uri) {
-    results.emplace_back(app_control->SetUri(*uri));
+    results.push_back(app_control->SetUri(*uri));
+  }
+  if (mime) {
+    results.push_back(app_control->SetMime(*mime));
+  }
+  if (category) {
+    results.push_back(app_control->SetCategory(*category));
   }
   if (launch_mode) {
-    results.emplace_back(app_control->SetLaunchMode(*launch_mode));
+    results.push_back(app_control->SetLaunchMode(*launch_mode));
   }
   if (extra_data) {
-    results.emplace_back(app_control->SetExtraData(*extra_data));
+    results.push_back(app_control->SetExtraData(*extra_data));
   }
-  for (size_t i = 0; i < results.size(); i++) {
-    if (!results[i]) {
-      result->Error("Could not set value for app control",
-                    results[i].message());
+  for (AppControlResult ret : results) {
+    if (!ret) {
+      result->Error(ret.code(), ret.message());
+      return;
     }
   }
   result->Success();
 }
 
-void AppControlChannel::SendAppControlDataEvent(AppControl* app_control) {
-  EncodableValue map = app_control->SerializeAppControlToMap();
+void AppControlChannel::SendAppControlEvent(AppControl* app_control) {
+  EncodableValue map = app_control->SerializeToMap();
   if (!map.IsNull()) {
     event_sink_->Success(map);
   }

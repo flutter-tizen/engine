@@ -48,7 +48,8 @@ AppControl::AppControl() : id_(next_id_++) {
   app_control_h handle = nullptr;
   AppControlResult ret = app_control_create(&handle);
   if (!ret) {
-    FT_LOG(Error) << "app_control_create() failed: " << ret.message();
+    FT_LOG(Error) << "Failed to create an application control handle: "
+                  << ret.message();
     return;
   }
   handle_ = handle;
@@ -58,7 +59,8 @@ AppControl::AppControl(app_control_h handle) : id_(next_id_++) {
   app_control_h clone = nullptr;
   AppControlResult ret = app_control_clone(&clone, handle);
   if (!ret) {
-    FT_LOG(Error) << "app_control_clone() failed: " << ret.message();
+    FT_LOG(Error) << "Failed to clone an application control handle: "
+                  << ret.message();
     return;
   }
   handle_ = clone;
@@ -70,95 +72,33 @@ AppControl::~AppControl() {
   }
 }
 
-AppControlResult AppControl::GetString(std::string& str,
+AppControlResult AppControl::GetString(std::string& string,
                                        int func(app_control_h, char**)) {
-  char* op;
-  AppControlResult ret = func(handle_, &op);
+  char* output;
+  AppControlResult ret = func(handle_, &output);
   if (!ret) {
     return ret;
   }
-  if (op != nullptr) {
-    str = std::string{op};
-    free(op);
+  if (output) {
+    string = output;
+    free(output);
   } else {
-    str = "";
+    string = "";
   }
-  return AppControlResult(APP_CONTROL_ERROR_NONE);
+  return APP_CONTROL_ERROR_NONE;
 }
 
-AppControlResult AppControl::SetString(const std::string& str,
+AppControlResult AppControl::SetString(const std::string& string,
                                        int func(app_control_h, const char*)) {
-  int ret = func(handle_, str.c_str());
-  return AppControlResult(ret);
+  return func(handle_, string.c_str());
 }
 
-bool OnAppControlExtraDataCallback(app_control_h app,
-                                   const char* key,
-                                   void* user_data) {
-  auto extra_data = static_cast<EncodableMap*>(user_data);
-  bool is_array = false;
-  int ret = app_control_is_extra_data_array(app, key, &is_array);
-  if (ret != APP_CONTROL_ERROR_NONE) {
-    FT_LOG(Error) << "app_control_is_extra_data_array() failed at key " << key;
-    return false;
-  }
-
-  if (is_array) {
-    char** strings = nullptr;
-    int length = 0;
-    ret = app_control_get_extra_data_array(app, key, &strings, &length);
-    if (ret != APP_CONTROL_ERROR_NONE) {
-      FT_LOG(Error) << "app_control_get_extra_data_array() failed at key "
-                    << key;
-      return false;
-    }
-    EncodableList list;
-    for (int i = 0; i < length; i++) {
-      list.push_back(EncodableValue(std::string(strings[i])));
-      free(strings[i]);
-    }
-    free(strings);
-    extra_data->insert(
-        {EncodableValue(std::string(key)), EncodableValue(list)});
-  } else {
-    char* value = nullptr;
-    ret = app_control_get_extra_data(app, key, &value);
-    if (ret != APP_CONTROL_ERROR_NONE) {
-      FT_LOG(Error) << "app_control_get_extra_data() failed at key " << key;
-      return false;
-    }
-    extra_data->insert(
-        {EncodableValue(std::string(key)), EncodableValue(std::string(value))});
-    free(value);
-  }
-
-  return true;
+AppControlResult AppControl::GetAppId(std::string& app_id) {
+  return GetString(app_id, app_control_get_app_id);
 }
 
-AppControlResult AppControl::GetExtraData(EncodableMap& value) {
-  EncodableMap extra_data;
-  int ret = app_control_foreach_extra_data(
-      handle_, OnAppControlExtraDataCallback, &extra_data);
-  if (ret == APP_CONTROL_ERROR_NONE) {
-    value = std::move(extra_data);
-  }
-  return AppControlResult(ret);
-}
-
-AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
-  for (const auto& v : map) {
-    if (!std::holds_alternative<std::string>(v.first)) {
-      FT_LOG(Error) << "Key for extra data has to be string, omitting.";
-      continue;
-    }
-    std::string key = std::get<std::string>(v.first);
-    AppControlResult ret = AddExtraData(key, v.second);
-    if (!ret) {
-      FT_LOG(Error) << "Invalid data at " << key << ", omitting.";
-      continue;
-    }
-  }
-  return AppControlResult();
+AppControlResult AppControl::SetAppId(const std::string& app_id) {
+  return SetString(app_id, app_control_set_app_id);
 }
 
 AppControlResult AppControl::GetOperation(std::string& operation) {
@@ -193,76 +133,170 @@ AppControlResult AppControl::SetCategory(const std::string& category) {
   return SetString(category, app_control_set_category);
 }
 
-AppControlResult AppControl::GetAppId(std::string& app_id) {
-  return GetString(app_id, app_control_get_app_id);
+AppControlResult AppControl::GetLaunchMode(std::string& launch_mode) {
+  app_control_launch_mode_e launch_mode_e;
+  AppControlResult ret = app_control_get_launch_mode(handle_, &launch_mode_e);
+  if (!ret) {
+    return ret;
+  }
+  if (launch_mode_e == APP_CONTROL_LAUNCH_MODE_GROUP) {
+    launch_mode = "group";
+  } else {
+    launch_mode = "single";
+  }
+  return APP_CONTROL_ERROR_NONE;
 }
 
-AppControlResult AppControl::SetAppId(const std::string& app_id) {
-  return SetString(app_id, app_control_set_app_id);
+AppControlResult AppControl::SetLaunchMode(const std::string& launch_mode) {
+  app_control_launch_mode_e launch_mode_e;
+  if (launch_mode == "group") {
+    launch_mode_e = APP_CONTROL_LAUNCH_MODE_GROUP;
+  } else {
+    launch_mode_e = APP_CONTROL_LAUNCH_MODE_SINGLE;
+  }
+  return app_control_set_launch_mode(handle_, launch_mode_e);
+}
+
+bool OnAppControlExtraDataCallback(app_control_h handle,
+                                   const char* key,
+                                   void* user_data) {
+  auto extra_data = static_cast<EncodableMap*>(user_data);
+
+  bool is_array = false;
+  int ret = app_control_is_extra_data_array(handle, key, &is_array);
+  if (ret != APP_CONTROL_ERROR_NONE) {
+    FT_LOG(Error) << "app_control_is_extra_data_array() failed at key " << key;
+    return false;
+  }
+
+  if (is_array) {
+    char** strings = nullptr;
+    int length = 0;
+    ret = app_control_get_extra_data_array(handle, key, &strings, &length);
+    if (ret != APP_CONTROL_ERROR_NONE) {
+      FT_LOG(Error) << "app_control_get_extra_data_array() failed at key "
+                    << key;
+      return false;
+    }
+    EncodableList list;
+    for (int i = 0; i < length; i++) {
+      list.push_back(EncodableValue(std::string(strings[i])));
+      free(strings[i]);
+    }
+    free(strings);
+    extra_data->insert(
+        {EncodableValue(std::string(key)), EncodableValue(list)});
+  } else {
+    char* value = nullptr;
+    ret = app_control_get_extra_data(handle, key, &value);
+    if (ret != APP_CONTROL_ERROR_NONE) {
+      FT_LOG(Error) << "app_control_get_extra_data() failed at key " << key;
+      return false;
+    }
+    extra_data->insert(
+        {EncodableValue(std::string(key)), EncodableValue(std::string(value))});
+    free(value);
+  }
+  return true;
+}
+
+AppControlResult AppControl::GetExtraData(EncodableMap& map) {
+  EncodableMap extra_data;
+  AppControlResult ret = app_control_foreach_extra_data(
+      handle_, OnAppControlExtraDataCallback, &extra_data);
+  if (ret) {
+    map = std::move(extra_data);
+  }
+  return ret;
+}
+
+AppControlResult AppControl::AddExtraData(std::string key,
+                                          EncodableValue value) {
+  if (std::holds_alternative<EncodableList>(value)) {
+    auto strings = std::vector<const char*>();
+    for (const EncodableValue& value : std::get<EncodableList>(value)) {
+      if (std::holds_alternative<std::string>(value)) {
+        strings.push_back(std::get<std::string>(value).c_str());
+      } else {
+        return APP_ERROR_INVALID_PARAMETER;
+      }
+    }
+    return app_control_add_extra_data_array(handle_, key.c_str(),
+                                            strings.data(), strings.size());
+  } else if (std::holds_alternative<std::string>(value)) {
+    return app_control_add_extra_data(handle_, key.c_str(),
+                                      std::get<std::string>(value).c_str());
+  } else {
+    return APP_ERROR_INVALID_PARAMETER;
+  }
+}
+
+AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
+  for (const auto& v : map) {
+    if (!std::holds_alternative<std::string>(v.first)) {
+      FT_LOG(Error) << "Invalid key. Omitting.";
+      continue;
+    }
+    const auto& key = std::get<std::string>(v.first);
+    AppControlResult ret = AddExtraData(key, v.second);
+    if (!ret) {
+      FT_LOG(Error)
+          << "The value for the key " << key
+          << " must be either a string or a list of strings. Omitting.";
+      continue;
+    }
+  }
+  return AppControlResult();
 }
 
 AppControlResult AppControl::GetCaller(std::string& caller) {
   return GetString(caller, app_control_get_caller);
 }
 
-AppControlResult AppControl::GetLaunchMode(std::string& launch_mode) {
-  app_control_launch_mode_e launch_mode_e;
-  int ret = app_control_get_launch_mode(handle_, &launch_mode_e);
-  if (ret != APP_CONTROL_ERROR_NONE) {
-    return AppControlResult(ret);
-  }
-  launch_mode =
-      (launch_mode_e == APP_CONTROL_LAUNCH_MODE_SINGLE ? "single" : "group");
-  return AppControlResult(APP_CONTROL_ERROR_NONE);
+AppControlResult AppControl::IsReplyRequested(bool& value) {
+  return app_control_is_reply_requested(handle_, &value);
 }
 
-AppControlResult AppControl::SetLaunchMode(const std::string& launch_mode) {
-  app_control_launch_mode_e launch_mode_e;
-  if (launch_mode.compare("single")) {
-    launch_mode_e = APP_CONTROL_LAUNCH_MODE_SINGLE;
-  } else {
-    launch_mode_e = APP_CONTROL_LAUNCH_MODE_GROUP;
-  }
-  int ret = app_control_set_launch_mode(handle_, launch_mode_e);
-  return AppControlResult(ret);
-}
-
-bool AppControl::IsReplyRequested() {
-  bool requested = false;
-  app_control_is_reply_requested(handle_, &requested);
-  return requested;
-}
-
-EncodableValue AppControl::SerializeAppControlToMap() {
-  std::string app_id, operation, mime, category, uri, caller_id, launch_mode;
+EncodableValue AppControl::SerializeToMap() {
   AppControlResult results[7];
+  std::string app_id, operation, uri, mime, category, launch_mode;
+  EncodableMap extra_data;
   results[0] = GetAppId(app_id);
   results[1] = GetOperation(operation);
-  results[2] = GetMime(mime);
-  results[3] = GetCategory(category);
-  results[4] = GetUri(uri);
+  results[2] = GetUri(uri);
+  results[3] = GetMime(mime);
+  results[4] = GetCategory(category);
   results[5] = GetLaunchMode(launch_mode);
-  // Caller Id is optional.
-  GetCaller(caller_id);
-  EncodableMap extra_data;
   results[6] = GetExtraData(extra_data);
-  for (int i = 0; i < 7; i++) {
-    if (!results[i]) {
+  for (AppControlResult result : results) {
+    if (!result) {
+      FT_LOG(Error) << "Failed to serialize application control data: "
+                    << result.message();
       return EncodableValue();
     }
   }
+  std::string caller;
+  bool should_reply = false;
+  GetCaller(caller);
+  IsReplyRequested(should_reply);
+
   EncodableMap map;
-  map[EncodableValue("id")] = EncodableValue(id());
-  map[EncodableValue("appId")] = EncodableValue(app_id);
-  map[EncodableValue("operation")] = EncodableValue(operation);
-  map[EncodableValue("mime")] = EncodableValue(mime);
-  map[EncodableValue("category")] = EncodableValue(category);
-  map[EncodableValue("uri")] = EncodableValue(uri);
-  map[EncodableValue("callerAppId")] = EncodableValue(caller_id);
+  map[EncodableValue("id")] = EncodableValue(id_);
+  map[EncodableValue("appId")] =
+      app_id.empty() ? EncodableValue() : EncodableValue(app_id);
+  map[EncodableValue("operation")] =
+      operation.empty() ? EncodableValue() : EncodableValue(operation);
+  map[EncodableValue("uri")] =
+      uri.empty() ? EncodableValue() : EncodableValue(uri);
+  map[EncodableValue("mime")] =
+      mime.empty() ? EncodableValue() : EncodableValue(mime);
+  map[EncodableValue("category")] =
+      category.empty() ? EncodableValue() : EncodableValue(category);
   map[EncodableValue("launchMode")] = EncodableValue(launch_mode);
   map[EncodableValue("extraData")] = EncodableValue(extra_data);
-  map[EncodableValue("shouldReply")] = EncodableValue(IsReplyRequested());
-
+  map[EncodableValue("callerAppId")] =
+      caller.empty() ? EncodableValue() : EncodableValue(caller);
+  map[EncodableValue("shouldReply")] = EncodableValue(should_reply);
   return EncodableValue(map);
 }
 
@@ -274,11 +308,10 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     ReplyCallback on_reply) {
   auto reply_callback = [](app_control_h request, app_control_h reply,
                            app_control_result_e result, void* user_data) {
-    AppControl* app_control = static_cast<AppControl*>(user_data);
-    auto app_control_reply = std::make_unique<AppControl>(reply);
+    auto app_control = static_cast<AppControl*>(user_data);
+    auto reply_app_control = std::make_unique<AppControl>(reply);
     EncodableMap map;
-    map[EncodableValue("reply")] =
-        app_control_reply->SerializeAppControlToMap();
+    map[EncodableValue("reply")] = reply_app_control->SerializeToMap();
     if (result == APP_CONTROL_RESULT_APP_STARTED) {
       map[EncodableValue("result")] = EncodableValue("appStarted");
     } else if (result == APP_CONTROL_RESULT_SUCCEEDED) {
@@ -288,17 +321,16 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     } else if (result == APP_CONTROL_RESULT_CANCELED) {
       map[EncodableValue("result")] = EncodableValue("canceled");
     }
+    AppControlManager::GetInstance().Insert(std::move(reply_app_control));
     app_control->on_reply_(EncodableValue(map));
     app_control->on_reply_ = nullptr;
-    AppControlManager::GetInstance().Insert(std::move(app_control_reply));
   };
   on_reply_ = on_reply;
   return app_control_send_launch_request(handle_, reply_callback, this);
 }
 
 AppControlResult AppControl::SendTerminateRequest() {
-  AppControlResult ret = app_control_send_terminate_request(handle_);
-  return ret;
+  return app_control_send_terminate_request(handle_);
 }
 
 AppControlResult AppControl::Reply(AppControl* reply,
@@ -313,47 +345,10 @@ AppControlResult AppControl::Reply(AppControl* reply,
   } else if (result == "canceled") {
     result_e = APP_CONTROL_RESULT_CANCELED;
   } else {
-    return AppControlResult(APP_CONTROL_ERROR_INVALID_PARAMETER);
+    return APP_CONTROL_ERROR_INVALID_PARAMETER;
   }
-  AppControlResult ret = app_control_reply_to_launch_request(
-      reply->handle(), this->handle_, result_e);
-  return ret;
-}
-
-AppControlResult AppControl::AddExtraData(std::string key,
-                                          EncodableValue value) {
-  bool is_array = std::holds_alternative<EncodableList>(value);
-  if (is_array) {
-    EncodableList& list = std::get<EncodableList>(value);
-    return AddExtraDataList(key, list);
-  } else {
-    bool is_string = std::holds_alternative<std::string>(value);
-    if (is_string) {
-      int ret = app_control_add_extra_data(
-          handle_, key.c_str(), std::get<std::string>(value).c_str());
-      return AppControlResult(ret);
-    } else {
-      return AppControlResult(APP_ERROR_INVALID_PARAMETER);
-    }
-  }
-  return AppControlResult(APP_CONTROL_ERROR_NONE);
-}
-
-AppControlResult AppControl::AddExtraDataList(std::string& key,
-                                              EncodableList& list) {
-  size_t length = list.size();
-  auto strings = std::vector<const char*>(length);
-  for (size_t i = 0; i < length; i++) {
-    bool is_string = std::holds_alternative<std::string>(list[i]);
-    if (is_string) {
-      strings[i] = std::get<std::string>(list[i]).c_str();
-    } else {
-      return AppControlResult(APP_ERROR_INVALID_PARAMETER);
-    }
-  }
-  int ret = app_control_add_extra_data_array(handle_, key.c_str(),
-                                             strings.data(), length);
-  return AppControlResult(ret);
+  return app_control_reply_to_launch_request(reply->handle_, this->handle_,
+                                             result_e);
 }
 
 }  // namespace flutter

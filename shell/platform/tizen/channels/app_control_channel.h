@@ -28,36 +28,28 @@ class AppControlChannel {
                         std::unique_ptr<MethodResult<EncodableValue>> result);
   void RegisterEventHandler(std::unique_ptr<EventSink<EncodableValue>> events);
   void UnregisterEventHandler();
-  void SendAlreadyQueuedEvents();
 
-  AppControl* GetAppControl(const EncodableValue* arguments);
-
-  void CreateAppControl(std::unique_ptr<MethodResult<EncodableValue>> result);
-
-  void Dispose(AppControl* app_control,
-               std::unique_ptr<MethodResult<EncodableValue>> result);
   void Reply(AppControl* app_control,
-             const EncodableValue* arguments,
+             const EncodableMap* arguments,
              std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendLaunchRequest(AppControl* app_control,
-                         const EncodableValue* arguments,
+                         const EncodableMap* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
   void SendTerminateRequest(
       AppControl* app_control,
       std::unique_ptr<MethodResult<EncodableValue>> result);
-
   void SetAppControlData(AppControl* app_control,
-                         const EncodableValue* arguments,
+                         const EncodableMap* arguments,
                          std::unique_ptr<MethodResult<EncodableValue>> result);
-  void SendAppControlDataEvent(AppControl* app_control);
+
+  void SendAppControlEvent(AppControl* app_control);
 
   std::unique_ptr<MethodChannel<EncodableValue>> method_channel_;
   std::unique_ptr<EventChannel<EncodableValue>> event_channel_;
   std::unique_ptr<EventSink<EncodableValue>> event_sink_;
 
-  // We need this queue, because there is no quarantee
-  // that EventChannel on Dart side will be registered
-  // before native OnAppControl event
+  // We need this queue, because there is no quarantee that EventChannel on
+  // Dart side will be registered before native OnAppControl event.
   std::queue<AppControl*> queue_;
 };
 

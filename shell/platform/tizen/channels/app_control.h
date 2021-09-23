@@ -7,6 +7,7 @@
 
 #include <app.h>
 
+#include <string>
 #include <unordered_map>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
@@ -45,6 +46,8 @@ struct AppControlResult {
   // Returns false on error.
   operator bool() const { return (APP_CONTROL_ERROR_NONE == error_code); }
 
+  std::string code() { return std::to_string(error_code); }
+
   std::string message() { return get_error_message(error_code); }
 
   int error_code;
@@ -54,13 +57,21 @@ class AppControl {
  public:
   using ReplyCallback = std::function<void(const EncodableValue& response)>;
 
+  // Creates an instance of AppControl by allocating a new application control
+  // handle.
   explicit AppControl();
+
+  // Creates an instance of AppControl by duplicating an existing application
+  // control |handle|.
   explicit AppControl(app_control_h handle);
+
   virtual ~AppControl();
 
   int32_t id() { return id_; }
   app_control_h handle() { return handle_; }
 
+  AppControlResult GetAppId(std::string& app_id);
+  AppControlResult SetAppId(const std::string& app_id);
   AppControlResult GetOperation(std::string& operation);
   AppControlResult SetOperation(const std::string& operation);
   AppControlResult GetUri(std::string& uri);
@@ -69,14 +80,14 @@ class AppControl {
   AppControlResult SetMime(const std::string& mime);
   AppControlResult GetCategory(std::string& category);
   AppControlResult SetCategory(const std::string& category);
-  AppControlResult GetAppId(std::string& app_id);
-  AppControlResult SetAppId(const std::string& app_id);
-  AppControlResult GetCaller(std::string& caller);
   AppControlResult GetLaunchMode(std::string& launch_mode);
   AppControlResult SetLaunchMode(const std::string& launch_mode);
-  bool IsReplyRequested();
+  AppControlResult GetExtraData(EncodableMap& map);
+  AppControlResult SetExtraData(const EncodableMap& map);
+  AppControlResult GetCaller(std::string& caller);
+  AppControlResult IsReplyRequested(bool& value);
 
-  EncodableValue SerializeAppControlToMap();
+  EncodableValue SerializeToMap();
 
   AppControlResult SendLaunchRequest();
   AppControlResult SendLaunchRequestWithReply(ReplyCallback on_reply);
@@ -84,20 +95,17 @@ class AppControl {
 
   AppControlResult Reply(AppControl* reply, const std::string& result);
 
-  AppControlResult GetExtraData(EncodableMap& value);
-  AppControlResult SetExtraData(const EncodableMap& value);
-
  private:
-  AppControlResult GetString(std::string& str, int func(app_control_h, char**));
-  AppControlResult SetString(const std::string& str,
+  AppControlResult GetString(std::string& string,
+                             int func(app_control_h, char**));
+  AppControlResult SetString(const std::string& string,
                              int func(app_control_h, const char*));
-
   AppControlResult AddExtraData(std::string key, EncodableValue value);
-  AppControlResult AddExtraDataList(std::string& key, EncodableList& list);
 
-  app_control_h handle_ = nullptr;
-  int32_t id_;
   static int32_t next_id_;
+
+  int32_t id_;
+  app_control_h handle_ = nullptr;
   ReplyCallback on_reply_ = nullptr;
 };
 
