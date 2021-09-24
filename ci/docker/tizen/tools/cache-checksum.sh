@@ -40,7 +40,7 @@ if [[ "$COMMAND" == "restore" ]]; then
     fi
 
     # Set mtime of files in $TARGET_DIRS to OLD time.
-    for d in $(find $TARGET_DIRS -type d -not -path "*/.git*"); do
+    for d in $(find $TARGET_DIRS -type d); do
         touch -c -m -d @1600000000 $d/* &
     done
 
