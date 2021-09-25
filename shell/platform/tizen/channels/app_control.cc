@@ -300,6 +300,23 @@ EncodableValue AppControl::SerializeToMap() {
   return EncodableValue(map);
 }
 
+AppControlResult AppControl::GetMatchedAppIds(EncodableList& list) {
+  EncodableList app_ids;
+  AppControlResult ret = app_control_foreach_app_matched(
+      handle_,
+      [](app_control_h app_control, const char* app_id,
+         void* user_data) -> bool {
+        auto app_ids = static_cast<EncodableList*>(user_data);
+        app_ids->push_back(EncodableValue(app_id));
+        return true;
+      },
+      &app_ids);
+  if (ret) {
+    list = std::move(app_ids);
+  }
+  return ret;
+}
+
 AppControlResult AppControl::SendLaunchRequest() {
   return app_control_send_launch_request(handle_, nullptr, nullptr);
 }

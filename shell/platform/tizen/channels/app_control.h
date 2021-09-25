@@ -89,6 +89,7 @@ class AppControl {
 
   EncodableValue SerializeToMap();
 
+  AppControlResult GetMatchedAppIds(EncodableList& list);
   AppControlResult SendLaunchRequest();
   AppControlResult SendLaunchRequestWithReply(ReplyCallback on_reply);
   AppControlResult SendTerminateRequest();
