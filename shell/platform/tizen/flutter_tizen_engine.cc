@@ -343,7 +343,7 @@ void FlutterTizenEngine::SendPointerEvent(const FlutterPointerEvent& event) {
 void FlutterTizenEngine::SendWindowMetrics(int32_t width,
                                            int32_t height,
                                            double pixel_ratio) {
-  FlutterWindowMetricsEvent event;
+  FlutterWindowMetricsEvent event = {};
   event.struct_size = sizeof(FlutterWindowMetricsEvent);
   event.width = width;
   event.height = height;

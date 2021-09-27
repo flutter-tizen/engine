@@ -67,6 +67,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
   event.scroll_delta_y = scroll_delta_y * 2;
   event.timestamp = timestamp * 1000;
   event.device = device_id;
+  event.device_kind = kFlutterPointerDeviceKindTouch;
 
   engine_->SendPointerEvent(event);
 }
