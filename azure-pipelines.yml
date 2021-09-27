@@ -8,17 +8,7 @@ pr:
 - flutter-*-tizen
 
 jobs:
-- job: format
-  pool:
-    name: Default
-    demands: Agent.os -equals Linux
-  steps:
-  - checkout: self
-    path: src/flutter
-  - bash: ci/format.sh
-    displayName: Verify formatting
 - job: test
-  dependsOn: format
   pool:
     name: Default
     demands: agent.os -equals Linux
