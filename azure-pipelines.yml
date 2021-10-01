@@ -8,17 +8,7 @@ pr:
 - flutter-*-tizen
 
 jobs:
-- job: format
-  pool:
-    name: Default
-    demands: Agent.os -equals Linux
-  steps:
-  - checkout: self
-    path: src/flutter
-  - bash: ci/format.sh
-    displayName: Verify formatting
 - job: test
-  dependsOn: format
   pool:
     name: Default
     demands: agent.os -equals Linux
@@ -85,6 +75,8 @@ jobs:
       gclient sync -f -D
       sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
       sed -i 's/"-Wno-psabi",//g' build/config/compiler/BUILD.gn
+      sed -i 's/"-Wno-unused-but-set-parameter",//g' build/config/compiler/BUILD.gn
+      sed -i 's/"-Wno-unused-but-set-variable",//g' build/config/compiler/BUILD.gn
     displayName: Disable build flags
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
