@@ -78,7 +78,6 @@ if [[ "$FLAG_REDUCE_DEPS" == "true" ]]; then
     sed -i -e '/src\/ios_tools/,+2d' $DEPS
     sed -i -e '/src\/third_party\/vulkan/,+2d' $DEPS
     sed -i -e '/src\/third_party\/angle/,+2d' $DEPS
-    sed -i -e '/src\/third_party\/abseil-cpp/,+2d' $DEPS
     sed -i -e '/src\/fuchsia\/sdk\/linux/,+9d' $DEPS
 fi
 

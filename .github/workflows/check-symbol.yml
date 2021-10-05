@@ -8,12 +8,8 @@ on:
 
 jobs:
   check:
-    if: |
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -34,7 +30,7 @@ jobs:
         env:
           ALLOWLIST: tizen_allowlist/4.0.0_native_whitelist_wearable_v12.txt
         run: |
-          python ci/docker/tizen/tools/check-symbol.py --allowlist=$ALLOWLIST \
+          python ci/tizen/check-symbol.py --allowlist=$ALLOWLIST \
             artifacts/libflutter_engine.so \
             artifacts/libflutter_tizen_wearable.so
 

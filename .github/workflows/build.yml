@@ -64,18 +64,18 @@ jobs:
 
       - name: gclient sync
         run: |
-          gclient-prepare-sync.sh --reduce-deps --shallow-sync
+          src/flutter/ci/tizen/gclient-prepare-sync.sh --reduce-deps --shallow-sync
           gclient sync -v --no-history --shallow
 
       - name: build
         run: |
-          cache-checksum.sh restore src/out/$OUTPUT_NAME
-          build-engine.sh \
+          src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
+          src/flutter/ci/tizen/build-engine.sh \
             --target-os ${{ matrix.os }} \
             --target-arch ${{ matrix.arch }} \
             --target-triple ${{ matrix.triple }} \
             --runtime-mode ${{ matrix.mode }} $BUILD_TARGET_OPT
-          cache-checksum.sh save src/out/$OUTPUT_NAME
+          src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'host'

@@ -59,8 +59,8 @@ else
     # FIXME: Remove unsupported options of tizen toolchains from BUILD.gn.
     sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' src/build/config/compiler/BUILD.gn
     sed -i 's/"-Wno-psabi",//g' src/build/config/compiler/BUILD.gn
-    sed -i 's/"-Wno-unused-but-set-parameter",//g' build/config/compiler/BUILD.gn
-    sed -i 's/"-Wno-unused-but-set-variable",//g' build/config/compiler/BUILD.gn
+    sed -i 's/"-Wno-unused-but-set-parameter",//g' src/build/config/compiler/BUILD.gn
+    sed -i 's/"-Wno-unused-but-set-variable",//g' src/build/config/compiler/BUILD.gn
 
     src/flutter/tools/gn \
         --target-os $BUILD_OS \

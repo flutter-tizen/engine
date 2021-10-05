@@ -14,10 +14,6 @@ ENV DEPOT_TOOLS_PATH=/usr/share/depot_tools
 ENV PATH=$PATH:${DEPOT_TOOLS_PATH}
 RUN git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git ${DEPOT_TOOLS_PATH}
 
-# Add engine building tools.
-ADD tools/* /engine/tools/
-ENV PATH=$PATH:/engine/tools
-
 
 #
 # Stage for build-engine-with-efl
