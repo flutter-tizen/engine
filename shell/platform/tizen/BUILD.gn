@@ -192,6 +192,7 @@ template("embedder") {
         "ecore_evas",
         "elementary",
         "evas",
+        "capi-ui-efl-util",
       ]
 
       public_configs += [ ":evas_gl_renderer" ]
@@ -201,7 +202,10 @@ template("embedder") {
         "tizen_vsync_waiter.cc",
       ]
 
-      libs += [ "ecore_wl2" ]
+      libs += [
+        "ecore_wl2",
+        "tizen-extension-client",
+      ]
     }
 
     public_deps = [ ":flutter_engine" ]

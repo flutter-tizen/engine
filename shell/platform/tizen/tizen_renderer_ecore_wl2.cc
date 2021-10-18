@@ -6,16 +6,125 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
+const uint32_t MAX_TIZEN_CLIENT_VERSION = 7;
+
+static void RegistryGlobalCallback(void* data,
+                                   struct wl_registry* registry,
+                                   uint32_t name,
+                                   const char* interface,
+                                   uint32_t version) {
+  auto* renderer = static_cast<TizenRendererEcoreWl2*>(data);
+  if (renderer) {
+    renderer->RegistryGlobalCallback(data, registry, name, interface, version);
+  }
+}
+
+static void RegistryGlobalCallbackRemove(void* data,
+                                         struct wl_registry* registry,
+                                         uint32_t id) {
+  auto* renderer = static_cast<TizenRendererEcoreWl2*>(data);
+  if (renderer) {
+    renderer->RegistryGlobalCallbackRemove(data, registry, id);
+  }
+}
+
+static void TizenPolicyConformant(void* data,
+                                  struct tizen_policy* tizenPolicy,
+                                  struct wl_surface* surface,
+                                  uint32_t isConformant) {}
+
+static void TizenPolicyConformantArea(void* data,
+                                      struct tizen_policy* tizenPolicy,
+                                      struct wl_surface* surface,
+                                      uint32_t conformantPart,
+                                      uint32_t state,
+                                      int32_t x,
+                                      int32_t y,
+                                      int32_t w,
+                                      int32_t h) {}
+
+static void TizenPolicyNotificationChangeDone(void* data,
+                                              struct tizen_policy* tizenPolicy,
+                                              struct wl_surface* surface,
+                                              int32_t level,
+                                              uint32_t state) {
+  auto* renderer = static_cast<TizenRendererEcoreWl2*>(data);
+  if (renderer) {
+    renderer->TizenPolicyNotificationChangeDone(data, tizenPolicy, surface,
+                                                level, state);
+  }
+}
+
+static void TizenPolicyTransientForDone(void* data,
+                                        struct tizen_policy* tizenPolicy,
+                                        uint32_t childId) {}
+
+static void TizenPolicyScreenModeChangeDone(void* data,
+                                            struct tizen_policy* tizenPolicy,
+                                            struct wl_surface* surface,
+                                            uint32_t mode,
+                                            uint32_t state) {}
+
+static void TizenPolicyIconifyStateChanged(void* data,
+                                           struct tizen_policy* tizenPolicy,
+                                           struct wl_surface* surface,
+                                           uint32_t iconified,
+                                           uint32_t force) {}
+
+static void TizenPolicySupportedAuxiliaryHints(void* data,
+                                               struct tizen_policy* tizenPolicy,
+                                               struct wl_surface* surface,
+                                               struct wl_array* hints,
+                                               uint32_t numNints) {}
+
+static void TizenPolicyAllowedAuxiliaryHint(void* data,
+                                            struct tizen_policy* tizenPolicy,
+                                            struct wl_surface* surface,
+                                            int id) {}
+
+static void TizenPolicyAuxiliaryMessage(void* data,
+                                        struct tizen_policy* tizenPolicy,
+                                        struct wl_surface* surface,
+                                        const char* key,
+                                        const char* val,
+                                        struct wl_array* options) {}
+
+static void TizenPolicyConformantRegion(void* data,
+                                        struct tizen_policy* tizenPolicy,
+                                        struct wl_surface* surface,
+                                        uint32_t conformantPart,
+                                        uint32_t state,
+                                        int32_t x,
+                                        int32_t y,
+                                        int32_t w,
+                                        int32_t h,
+                                        uint32_t serial) {}
+
+const struct wl_registry_listener registryListener = {
+    RegistryGlobalCallback, RegistryGlobalCallbackRemove};
+
+const struct tizen_policy_listener tizenPolicyListener = {
+    TizenPolicyConformant,
+    TizenPolicyConformantArea,
+    TizenPolicyNotificationChangeDone,
+    TizenPolicyTransientForDone,
+    TizenPolicyScreenModeChangeDone,
+    TizenPolicyIconifyStateChanged,
+    TizenPolicySupportedAuxiliaryHints,
+    TizenPolicyAllowedAuxiliaryHint,
+    TizenPolicyAuxiliaryMessage,
+    TizenPolicyConformantRegion};
+
 TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
                                              bool transparent,
                                              bool focusable,
+                                             bool top,
                                              Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, top, delegate) {
   InitializeRenderer();
 }
 
@@ -286,7 +395,25 @@ bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
   if (initial_geometry_.h > 0) {
     *height = initial_geometry_.h;
   }
+  if (top_) {
+    wl_display_ = ecore_wl2_display_get(ecore_wl2_display_);
+    if (wl_display_) {
+      wl_display* displayWrapper =
+          static_cast<wl_display*>(wl_proxy_create_wrapper(wl_display_));
+      if (displayWrapper) {
+        wl_event_queue_ = wl_display_create_queue(wl_display_);
+        if (wl_event_queue_) {
+          wl_proxy_set_queue(reinterpret_cast<wl_proxy*>(displayWrapper),
+                             wl_event_queue_);
 
+          wl_registry* registry = wl_display_get_registry(displayWrapper);
+          wl_registry_add_listener(registry, &registryListener, this);
+        }
+
+        wl_proxy_wrapper_destroy(displayWrapper);
+      }
+    }
+  }
   return true;
 }
 
@@ -296,7 +423,17 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
 
   ecore_wl2_window_ =
       ecore_wl2_window_new(ecore_wl2_display_, nullptr, x, y, width, height);
-  ecore_wl2_window_type_set(ecore_wl2_window_, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+  ecore_wl2_window_type_set(ecore_wl2_window_,
+                            top_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
+                                 : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+  if (top_) {
+    while (!tizen_policy_) {
+      wl_display_dispatch_queue(wl_display_, wl_event_queue_);
+    }
+    tizen_policy_set_notification_level(
+        tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_),
+        TIZEN_POLICY_LEVEL_TOP);
+  }
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
@@ -562,6 +699,43 @@ bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
     return true;
   }
   return false;
+}
+
+void TizenRendererEcoreWl2::RegistryGlobalCallback(void* data,
+                                                   struct wl_registry* registry,
+                                                   uint32_t name,
+                                                   const char* interface,
+                                                   uint32_t version) {
+  if (strcmp(interface, tizen_policy_interface.name) == 0) {
+    uint32_t clientVersion = std::min(version, MAX_TIZEN_CLIENT_VERSION);
+
+    tizen_policy_ = static_cast<tizen_policy*>(wl_registry_bind(
+        registry, name, &tizen_policy_interface, clientVersion));
+    if (!tizen_policy_) {
+      FT_LOG(Error) << "wl_registry_bind(tizen_policy_interface) is failed.";
+      return;
+    }
+
+    tizen_policy_add_listener(tizen_policy_, &tizenPolicyListener, data);
+
+    FT_LOG(Info) << "tizen_policy_add_listener is called.";
+  }
+}
+
+void TizenRendererEcoreWl2::RegistryGlobalCallbackRemove(
+    void* data,
+    struct wl_registry* registry,
+    uint32_t id) {
+  tizen_policy_ = nullptr;
+}
+
+void TizenRendererEcoreWl2::TizenPolicyNotificationChangeDone(
+    void* data,
+    struct tizen_policy* tizenPolicy,
+    struct wl_surface* surface,
+    int32_t level,
+    uint32_t state) {
+  FT_LOG(Info) << " level = " << level << ", state = " << state;
 }
 
 }  // namespace flutter

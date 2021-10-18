@@ -8,6 +8,7 @@
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
 #include <Ecore_Wl2.h>
+#include <tizen-extension-client-protocol.h>
 #include <string>
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
@@ -19,6 +20,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   explicit TizenRendererEcoreWl2(WindowGeometry geometry,
                                  bool transparent,
                                  bool focusable,
+                                 bool top,
                                  Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
@@ -42,6 +44,19 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
+  void RegistryGlobalCallback(void* data,
+                              struct wl_registry* registry,
+                              uint32_t name,
+                              const char* interface,
+                              uint32_t version);
+  void RegistryGlobalCallbackRemove(void* data,
+                                    struct wl_registry* registry,
+                                    uint32_t id);
+  void TizenPolicyNotificationChangeDone(void* data,
+                                         struct tizen_policy* tizenPolicy,
+                                         struct wl_surface* surface,
+                                         int32_t level,
+                                         uint32_t state);
 
  private:
   bool InitializeRenderer();
@@ -77,6 +92,10 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 
   std::string egl_extention_str_;
+
+  wl_display* wl_display_ = nullptr;
+  wl_event_queue* wl_event_queue_ = nullptr;
+  tizen_policy* tizen_policy_ = nullptr;
 };
 
 }  // namespace flutter
