@@ -302,7 +302,7 @@ bool FlutterTizenEngine::SendPlatformMessage(
     const FlutterDesktopBinaryReply reply,
     void* user_data) {
   FlutterPlatformMessageResponseHandle* response_handle = nullptr;
-  if (reply != nullptr && user_data != nullptr) {
+  if (reply != nullptr) {
     FlutterEngineResult result =
         embedder_api_.PlatformMessageCreateResponseHandle(
             engine_, reply, user_data, &response_handle);
