@@ -9,12 +9,12 @@ namespace flutter {
 TizenRenderer::TizenRenderer(WindowGeometry geometry,
                              bool transparent,
                              bool focusable,
-                             bool top,
+                             bool top_level,
                              Delegate& delegate)
     : initial_geometry_(geometry),
       transparent_(transparent),
       focusable_(focusable),
-      top_(top),
+      top_level_(top_level),
       delegate_(delegate) {}
 
 TizenRenderer::~TizenRenderer() = default;

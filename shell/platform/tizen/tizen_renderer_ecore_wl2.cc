@@ -122,9 +122,9 @@ const struct tizen_policy_listener tizenPolicyListener = {
 TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
                                              bool transparent,
                                              bool focusable,
-                                             bool top,
+                                             bool top_level,
                                              Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, top, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
   InitializeRenderer();
 }
 
@@ -395,7 +395,7 @@ bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
   if (initial_geometry_.h > 0) {
     *height = initial_geometry_.h;
   }
-  if (top_) {
+  if (top_level_) {
     wl_display_ = ecore_wl2_display_get(ecore_wl2_display_);
     if (wl_display_) {
       wl_display* displayWrapper =
@@ -424,9 +424,9 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
   ecore_wl2_window_ =
       ecore_wl2_window_new(ecore_wl2_display_, nullptr, x, y, width, height);
   ecore_wl2_window_type_set(ecore_wl2_window_,
-                            top_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
-                                 : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
-  if (top_) {
+                            top_level_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
+                                       : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+  if (top_level_) {
     while (!tizen_policy_) {
       wl_display_dispatch_queue(wl_display_, wl_event_queue_);
     }

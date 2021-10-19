@@ -20,7 +20,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   explicit TizenRendererEcoreWl2(WindowGeometry geometry,
                                  bool transparent,
                                  bool focusable,
-                                 bool top,
+                                 bool top_level,
                                  Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
