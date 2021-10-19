@@ -43,6 +43,8 @@ class TizenInputMethodContext {
 
   void SetInputPannelLayout(std::string layout);
 
+  void SetInputPanelLayoutVariation(bool is_signed, bool is_decimal);
+
   void SetOnCommit(OnCommit callback) { on_commit_ = callback; }
 
   void SetOnPreeditChanged(OnPreeditChanged callback) {
