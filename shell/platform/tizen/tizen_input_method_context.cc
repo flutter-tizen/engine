@@ -23,34 +23,29 @@ const char* GetEcoreImfContextAvailableId() {
   return nullptr;
 }
 
-bool TextInputTypeToEcoreIMFInputPanelLayout(
-    const std::string& text_input_type,
-    Ecore_IMF_Input_Panel_Layout* panel_layout) {
+Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreIMFInputPanelLayout(
+    const std::string& text_input_type) {
   FT_ASSERT(panel_layout);
   if (text_input_type == "TextInputType.text" ||
       text_input_type == "TextInputType.multiline") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else if (text_input_type == "TextInputType.number") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY;
   } else if (text_input_type == "TextInputType.phone") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER;
   } else if (text_input_type == "TextInputType.datetime") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_DATETIME;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_DATETIME;
   } else if (text_input_type == "TextInputType.emailAddress") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL;
   } else if (text_input_type == "TextInputType.url") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_URL;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_URL;
   } else if (text_input_type == "TextInputType.visiblePassword") {
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
-  } else if (text_input_type == "TextInputType.name" ||
-             text_input_type == "TextInputType.address") {
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD;
+  } else {
     FT_LOG(Warn) << "The requested input type " << text_input_type
                  << " is not supported.";
-    *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
-  } else {
-    return false;
+    return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   }
-  return true;
 }
 
 Ecore_IMF_Keyboard_Modifiers EcoreInputModifierToEcoreIMFModifier(
@@ -183,10 +178,8 @@ void TizenInputMethodContext::HideInputPanel() {
 void TizenInputMethodContext::SetInputPanelLayout(
     const std::string& input_type) {
   FT_ASSERT(imf_context_);
-  Ecore_IMF_Input_Panel_Layout panel_layout;
-  if (TextInputTypeToEcoreIMFInputPanelLayout(input_type, &panel_layout)) {
-    ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
-  }
+  auto panel_layout = TextInputTypeToEcoreIMFInputPanelLayout(input_type);
+  ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
 }
 
 void TizenInputMethodContext::SetInputPanelLayoutVariation(bool is_signed,
