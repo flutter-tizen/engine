@@ -48,41 +48,41 @@ Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreIMFInputPanelLayout(
   }
 }
 
-Ecore_IMF_Keyboard_Modifiers EcoreInputModifierToEcoreIMFModifier(
-    unsigned int ecoreModifier) {
-  unsigned int modifier(ECORE_IMF_KEYBOARD_MODIFIER_NONE);
-  if (ecoreModifier & ECORE_EVENT_MODIFIER_SHIFT) {
-    modifier |= ECORE_IMF_KEYBOARD_MODIFIER_SHIFT;
+Ecore_IMF_Keyboard_Modifiers EcoreInputModifiersToEcoreIMFModifiers(
+    unsigned int ecore_modifiers) {
+  unsigned int modifiers(ECORE_IMF_KEYBOARD_MODIFIER_NONE);
+  if (ecore_modifiers & ECORE_EVENT_MODIFIER_SHIFT) {
+    modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_SHIFT;
   }
-  if (ecoreModifier & ECORE_EVENT_MODIFIER_ALT) {
-    modifier |= ECORE_IMF_KEYBOARD_MODIFIER_ALT;
+  if (ecore_modifiers & ECORE_EVENT_MODIFIER_ALT) {
+    modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_ALT;
   }
-  if (ecoreModifier & ECORE_EVENT_MODIFIER_CTRL) {
-    modifier |= ECORE_IMF_KEYBOARD_MODIFIER_CTRL;
+  if (ecore_modifiers & ECORE_EVENT_MODIFIER_CTRL) {
+    modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_CTRL;
   }
-  if (ecoreModifier & ECORE_EVENT_MODIFIER_WIN) {
-    modifier |= ECORE_IMF_KEYBOARD_MODIFIER_WIN;
+  if (ecore_modifiers & ECORE_EVENT_MODIFIER_WIN) {
+    modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_WIN;
   }
-  if (ecoreModifier & ECORE_EVENT_MODIFIER_ALTGR) {
-    modifier |= ECORE_IMF_KEYBOARD_MODIFIER_ALTGR;
+  if (ecore_modifiers & ECORE_EVENT_MODIFIER_ALTGR) {
+    modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_ALTGR;
   }
-  return static_cast<Ecore_IMF_Keyboard_Modifiers>(modifier);
+  return static_cast<Ecore_IMF_Keyboard_Modifiers>(modifiers);
 }
 
-Ecore_IMF_Keyboard_Locks EcoreInputModifierToEcoreIMFLock(
-    unsigned int modifier) {
+Ecore_IMF_Keyboard_Locks EcoreInputModifiersToEcoreIMFLocks(
+    unsigned int modifiers) {
   // If no other matches, returns NONE.
-  unsigned int lock(ECORE_IMF_KEYBOARD_LOCK_NONE);
-  if (modifier & ECORE_EVENT_LOCK_NUM) {
-    lock |= ECORE_IMF_KEYBOARD_LOCK_NUM;
+  unsigned int locks(ECORE_IMF_KEYBOARD_LOCK_NONE);
+  if (modifiers & ECORE_EVENT_LOCK_NUM) {
+    locks |= ECORE_IMF_KEYBOARD_LOCK_NUM;
   }
-  if (modifier & ECORE_EVENT_LOCK_CAPS) {
-    lock |= ECORE_IMF_KEYBOARD_LOCK_CAPS;
+  if (modifiers & ECORE_EVENT_LOCK_CAPS) {
+    locks |= ECORE_IMF_KEYBOARD_LOCK_CAPS;
   }
-  if (modifier & ECORE_EVENT_LOCK_SCROLL) {
-    lock |= ECORE_IMF_KEYBOARD_LOCK_SCROLL;
+  if (modifiers & ECORE_EVENT_LOCK_SCROLL) {
+    locks |= ECORE_IMF_KEYBOARD_LOCK_SCROLL;
   }
-  return static_cast<Ecore_IMF_Keyboard_Locks>(lock);
+  return static_cast<Ecore_IMF_Keyboard_Locks>(locks);
 }
 
 }  // namespace
@@ -140,8 +140,9 @@ bool TizenInputMethodContext::FilterEvent(Ecore_Event_Key* event,
   imf_event.string = event->string;
   imf_event.compose = event->compose;
   imf_event.timestamp = event->timestamp;
-  imf_event.modifiers = EcoreInputModifierToEcoreIMFModifier(event->modifiers);
-  imf_event.locks = EcoreInputModifierToEcoreIMFLock(event->modifiers);
+  imf_event.modifiers =
+      EcoreInputModifiersToEcoreIMFModifiers(event->modifiers);
+  imf_event.locks = EcoreInputModifiersToEcoreIMFLocks(event->modifiers);
   imf_event.dev_name = dev_name;
   imf_event.keycode = event->keycode;
 
