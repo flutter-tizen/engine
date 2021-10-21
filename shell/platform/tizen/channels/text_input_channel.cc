@@ -111,10 +111,10 @@ TextInputChannel::TextInputChannel(
     SendStateUpdate(*active_model_);
   });
 
-  input_method_context_->SetOnInputPannelStateChanged([this](int state) {
+  input_method_context_->SetOnInputPanelStateChanged([this](int state) {
     if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
       // Fallback for HW back-key.
-      input_method_context_->HideInputPannel();
+      input_method_context_->HideInputPanel();
       input_method_context_->ResetInputMethodContext();
       ResetTextEditingContext();
       is_software_keyboard_showing_ = false;
@@ -145,9 +145,9 @@ void TextInputChannel::HandleMethodCall(
   FT_LOG(Debug) << "method: " << method;
 
   if (method.compare(kShowMethod) == 0) {
-    input_method_context_->ShowInputPannel();
+    input_method_context_->ShowInputPanel();
   } else if (method.compare(kHideMethod) == 0) {
-    input_method_context_->HideInputPannel();
+    input_method_context_->HideInputPanel();
     input_method_context_->ResetInputMethodContext();
     ResetTextEditingContext();
   } else if (method.compare(kSetPlatformViewClient) == 0) {
@@ -208,13 +208,13 @@ void TextInputChannel::HandleMethodCall(
             is_decimal_iter->value.IsBool()) {
           is_decimal = is_decimal_iter->value.GetBool();
         }
-        input_method_context_->SetInputPannelLayout(input_type_);
+        input_method_context_->SetInputPanelLayout(input_type_);
         input_method_context_->SetInputPanelLayoutVariation(is_signed,
                                                             is_decimal);
         // The panel should be closed and reopened to fully apply the layout
         // change. See https://github.com/flutter-tizen/engine/pull/194.
-        input_method_context_->HideInputPannel();
-        input_method_context_->ShowInputPannel();
+        input_method_context_->HideInputPanel();
+        input_method_context_->ShowInputPanel();
       }
     }
 

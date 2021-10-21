@@ -138,7 +138,7 @@ void TizenInputMethodContext::Init() {
       imf_context_,
       reinterpret_cast<void*>(engine_->renderer()->GetWindowId()));
   SetContextOptions();
-  SetInputPannelOptions();
+  SetInputPanelOptions();
   RegisterEventCallbacks();
 }
 
@@ -176,9 +176,9 @@ bool TizenInputMethodContext::FilterEvent(Ecore_Event_Key* event,
   return ret;
 }
 
-InputPannelGeometry TizenInputMethodContext::GetInputPannelGeometry() {
+InputPanelGeometry TizenInputMethodContext::GetInputPanelGeometry() {
   FT_ASSERT(imf_context_);
-  InputPannelGeometry geometry;
+  InputPanelGeometry geometry;
   ecore_imf_context_input_panel_geometry_get(
       imf_context_, &geometry.x, &geometry.y, &geometry.w, &geometry.h);
   return geometry;
@@ -189,19 +189,19 @@ void TizenInputMethodContext::ResetInputMethodContext() {
   ecore_imf_context_reset(imf_context_);
 }
 
-void TizenInputMethodContext::ShowInputPannel() {
+void TizenInputMethodContext::ShowInputPanel() {
   FT_ASSERT(imf_context_);
   ecore_imf_context_input_panel_show(imf_context_);
   ecore_imf_context_focus_in(imf_context_);
 }
 
-void TizenInputMethodContext::HideInputPannel() {
+void TizenInputMethodContext::HideInputPanel() {
   FT_ASSERT(imf_context_);
   ecore_imf_context_focus_out(imf_context_);
   ecore_imf_context_input_panel_hide(imf_context_);
 }
 
-void TizenInputMethodContext::SetInputPannelLayout(std::string input_type) {
+void TizenInputMethodContext::SetInputPanelLayout(std::string input_type) {
   FT_ASSERT(imf_context_);
   Ecore_IMF_Input_Panel_Layout panel_layout;
   if (TextInputTypeToEcoreIMFInputPanelLayout(input_type, &panel_layout)) {
@@ -293,8 +293,8 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
       [](void* data, Ecore_IMF_Context* context, int value) {
         flutter::TizenInputMethodContext* self =
             static_cast<flutter::TizenInputMethodContext*>(data);
-        if (self->on_input_pannel_state_changed_) {
-          self->on_input_pannel_state_changed_(value);
+        if (self->on_input_panel_state_changed_) {
+          self->on_input_panel_state_changed_(value);
         }
       },
       this);
@@ -324,7 +324,7 @@ void TizenInputMethodContext::SetContextOptions() {
   ecore_imf_context_prediction_allow_set(imf_context_, EINA_FALSE);
 }
 
-void TizenInputMethodContext::SetInputPannelOptions() {
+void TizenInputMethodContext::SetInputPanelOptions() {
   FT_ASSERT(imf_context_);
   ecore_imf_context_input_panel_layout_set(imf_context_,
                                            ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL);
