@@ -10,6 +10,7 @@
 #include <Ecore_Input.h>
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 namespace flutter {
@@ -41,7 +42,7 @@ class TizenInputMethodContext {
 
   void HideInputPanel();
 
-  void SetInputPanelLayout(std::string layout);
+  void SetInputPanelLayout(const std::string& layout);
 
   void SetInputPanelLayoutVariation(bool is_signed, bool is_decimal);
 
@@ -62,16 +63,10 @@ class TizenInputMethodContext {
   }
 
  private:
-  void Init();
-
-  void Deinit();
-
   void RegisterEventCallbacks();
-
   void UnregisterEventCallbacks();
 
   void SetContextOptions();
-
   void SetInputPanelOptions();
 
   FlutterTizenEngine* engine_{nullptr};
