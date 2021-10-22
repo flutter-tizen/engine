@@ -9,7 +9,6 @@
 #include <Ecore_IMF.h>
 #include <Ecore_Input.h>
 
-#include <map>
 #include <memory>
 #include <string>
 
