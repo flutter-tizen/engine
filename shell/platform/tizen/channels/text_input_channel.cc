@@ -211,6 +211,10 @@ void TextInputChannel::HandleMethodCall(
         input_method_context_->SetInputPannelLayout(input_type_);
         input_method_context_->SetInputPanelLayoutVariation(is_signed,
                                                             is_decimal);
+        // The panel should be closed and reopened to fully apply the layout
+        // change. See https://github.com/flutter-tizen/engine/pull/194.
+        input_method_context_->HideInputPannel();
+        input_method_context_->ShowInputPannel();
       }
     }
 
