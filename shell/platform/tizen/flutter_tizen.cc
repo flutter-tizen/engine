@@ -39,6 +39,16 @@ FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
 
 }  // namespace
 
+// Returns the view corresponding to the given opaque API handle.
+static flutter::TizenRenderer* ViewFromHandle(FlutterDesktopViewRef ref) {
+  return reinterpret_cast<flutter::TizenRenderer*>(ref);
+}
+
+// Returns the opaque API handle for the given view instance.
+static FlutterDesktopViewRef HandleForView(flutter::TizenRenderer* view) {
+  return reinterpret_cast<FlutterDesktopViewRef>(view);
+}
+
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {

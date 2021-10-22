@@ -17,6 +17,10 @@
 extern "C" {
 #endif
 
+// Opaque reference to a Flutter window.
+struct FlutterDesktopView;
+typedef struct FlutterDesktopView* FlutterDesktopViewRef;
+
 // Opaque reference to a Flutter engine instance.
 struct FlutterDesktopEngine;
 typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;
@@ -86,6 +90,8 @@ FLUTTER_EXPORT void FlutterDesktopShutdownEngine(
 FLUTTER_EXPORT FlutterDesktopPluginRegistrarRef
 FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
                                  const char* plugin_name);
+
+// ========== View ==========
 
 // Returns the messenger associated with the engine.
 FLUTTER_EXPORT FlutterDesktopMessengerRef
