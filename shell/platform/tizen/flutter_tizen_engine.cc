@@ -77,6 +77,8 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
 
   plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
   plugin_registrar_->engine = this;
+
+  transformation_ = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 }
 
 FlutterTizenEngine::~FlutterTizenEngine() {
