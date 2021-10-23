@@ -247,7 +247,7 @@ void TextInputChannel::HandleMethodCall(
                                       ? composing_extent->value.GetInt()
                                       : -1;
 
-    if (composing_base_value == -1 && composing_extent_value == -1) {
+    if (composing_base_value < 0 || composing_extent_value < 0) {
       active_model_->EndComposing();
     } else {
       size_t composing_start =
