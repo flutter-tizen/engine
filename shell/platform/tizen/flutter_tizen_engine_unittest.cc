@@ -37,7 +37,7 @@ class FlutterTizenEngineTest : public ::testing::Test {
     engine_ = nullptr;
   }
 
-  FlutterTizenEngine* engine_;
+  FlutterTizenEngine* engine_ = nullptr;
 };
 
 class FlutterTizenEngineTestHeaded : public FlutterTizenEngineTest {
