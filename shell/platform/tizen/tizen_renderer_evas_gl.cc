@@ -665,6 +665,9 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
   evas_object_resize(evas_window_, *width, *height);
   evas_object_raise(evas_window_);
 
+  elm_win_indicator_mode_set(evas_window_, ELM_WIN_INDICATOR_SHOW);
+  elm_win_indicator_opacity_set(evas_window_, ELM_WIN_INDICATOR_OPAQUE);
+
   Evas_Object* bg = elm_bg_add(evas_window_);
   evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
 
