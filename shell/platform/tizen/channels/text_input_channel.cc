@@ -29,6 +29,8 @@ constexpr char kSetPlatformViewClient[] = "TextInput.setPlatformViewClient";
 constexpr char kTextInputAction[] = "inputAction";
 constexpr char kTextInputType[] = "inputType";
 constexpr char kTextInputTypeName[] = "name";
+constexpr char kTextInputTypeSigned[] = "signed";
+constexpr char kTextInputTypeDecimal[] = "decimal";
 constexpr char kComposingBaseKey[] = "composingBase";
 constexpr char kComposingExtentKey[] = "composingExtent";
 constexpr char kSelectionAffinityKey[] = "selectionAffinity";
@@ -192,7 +194,27 @@ void TextInputChannel::HandleMethodCall(
       if (input_type_json != input_type_info_json->value.MemberEnd() &&
           input_type_json->value.IsString()) {
         input_type_ = input_type_json->value.GetString();
+        bool is_signed = false;
+        auto is_signed_iter =
+            input_type_info_json->value.FindMember(kTextInputTypeSigned);
+        if (is_signed_iter != input_type_info_json->value.MemberEnd() &&
+            is_signed_iter->value.IsBool()) {
+          is_signed = is_signed_iter->value.GetBool();
+        }
+        bool is_decimal = false;
+        auto is_decimal_iter =
+            input_type_info_json->value.FindMember(kTextInputTypeDecimal);
+        if (is_decimal_iter != input_type_info_json->value.MemberEnd() &&
+            is_decimal_iter->value.IsBool()) {
+          is_decimal = is_decimal_iter->value.GetBool();
+        }
         input_method_context_->SetInputPannelLayout(input_type_);
+        input_method_context_->SetInputPanelLayoutVariation(is_signed,
+                                                            is_decimal);
+        // The panel should be closed and reopened to fully apply the layout
+        // change. See https://github.com/flutter-tizen/engine/pull/194.
+        input_method_context_->HideInputPannel();
+        input_method_context_->ShowInputPannel();
       }
     }
 

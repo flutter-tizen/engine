@@ -45,7 +45,7 @@ bool TextInputTypeToEcoreIMFInputPanelLayout(
   } else if (text_input_type == "TextInputType.name" ||
              text_input_type == "TextInputType.address") {
     FT_LOG(Warn) << "The requested input type " << text_input_type
-                 << "is not supported.";
+                 << " is not supported.";
     *panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
   } else {
     return false;
@@ -209,6 +209,22 @@ void TizenInputMethodContext::SetInputPannelLayout(std::string input_type) {
   }
 }
 
+void TizenInputMethodContext::SetInputPanelLayoutVariation(bool is_signed,
+                                                           bool is_decimal) {
+  Ecore_IMF_Input_Panel_Layout_Numberonly_Variation variation;
+  if (is_signed && is_decimal) {
+    variation =
+        ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY_VARIATION_SIGNED_AND_DECIMAL;
+  } else if (is_signed) {
+    variation = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY_VARIATION_SIGNED;
+  } else if (is_decimal) {
+    variation = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY_VARIATION_DECIMAL;
+  } else {
+    variation = ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY_VARIATION_NORMAL;
+  }
+  ecore_imf_context_input_panel_layout_variation_set(imf_context_, variation);
+}
+
 void TizenInputMethodContext::RegisterEventCallbacks() {
   FT_ASSERT(imf_context_);
 
@@ -314,7 +330,6 @@ void TizenInputMethodContext::SetInputPannelOptions() {
                                            ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL);
   ecore_imf_context_input_panel_return_key_type_set(
       imf_context_, ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DEFAULT);
-  ecore_imf_context_input_panel_layout_variation_set(imf_context_, 0);
   ecore_imf_context_input_panel_language_set(
       imf_context_, ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC);
 }
