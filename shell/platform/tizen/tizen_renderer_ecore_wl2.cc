@@ -369,6 +369,7 @@ void TizenRendererEcoreWl2::DestroyRenderer() {
   DestroyEglSurface();
   DestroyEglWindow();
   DestroyEcoreWlWindow();
+  DestroyWlEventQueue();
   ShutdownDisplay();
 }
 
@@ -736,6 +737,12 @@ void TizenRendererEcoreWl2::TizenPolicyNotificationChangeDone(
     int32_t level,
     uint32_t state) {
   FT_LOG(Info) << " level = " << level << ", state = " << state;
+}
+
+void TizenRendererEcoreWl2::DestroyWlEventQueue() {
+  if (wl_event_queue_) {
+    wl_event_queue_destroy(wl_event_queue_);
+  }
 }
 
 }  // namespace flutter
