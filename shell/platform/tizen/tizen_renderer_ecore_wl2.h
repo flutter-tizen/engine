@@ -44,19 +44,16 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
-  void RegistryGlobalCallback(void* data,
-                              struct wl_registry* registry,
-                              uint32_t name,
-                              const char* interface,
-                              uint32_t version);
-  void RegistryGlobalCallbackRemove(void* data,
-                                    struct wl_registry* registry,
-                                    uint32_t id);
-  void TizenPolicyNotificationChangeDone(void* data,
-                                         struct tizen_policy* tizenPolicy,
-                                         struct wl_surface* surface,
-                                         int32_t level,
-                                         uint32_t state);
+
+  // Callbacks for wl_registry_listener
+  void OnEnabledWlRegistryGlobalObject(void* data,
+                                       struct wl_registry* registry,
+                                       uint32_t name,
+                                       const char* interface,
+                                       uint32_t version);
+  void OnDisabledWlRegistryGlobalObject(void* data,
+                                        struct wl_registry* registry,
+                                        uint32_t id);
 
  private:
   bool InitializeRenderer();
@@ -79,8 +76,6 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
 
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
   void SendRotationChangeDone();
-
-  void DestroyWlEventQueue();
 
   Ecore_Wl2_Display* ecore_wl2_display_ = nullptr;
   Ecore_Wl2_Window* ecore_wl2_window_ = nullptr;
