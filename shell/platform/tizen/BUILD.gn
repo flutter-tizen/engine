@@ -169,6 +169,7 @@ template("embedder") {
         "capi-base-common",
         "capi-system-info",
         "capi-system-system-settings",
+        "capi-ui-efl-util",
         "dlog",
         "feedback",
         "tbm",
@@ -192,7 +193,6 @@ template("embedder") {
         "ecore_evas",
         "elementary",
         "evas",
-        "capi-ui-efl-util",
       ]
 
       public_configs += [ ":evas_gl_renderer" ]

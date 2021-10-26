@@ -10,7 +10,7 @@
 
 namespace flutter {
 
-const uint32_t MAX_TIZEN_CLIENT_VERSION = 7;
+const uint32_t kMaxTizenClientVersion = 7;
 
 static void RegistryGlobalCallback(void* data,
                                    struct wl_registry* registry,
@@ -104,10 +104,10 @@ static void TizenPolicyConformantRegion(void* data,
                                         int32_t h,
                                         uint32_t serial) {}
 
-const struct wl_registry_listener registryListener = {
+const struct wl_registry_listener kRegistryListener = {
     RegistryGlobalCallback, RegistryGlobalCallbackRemove};
 
-const struct tizen_policy_listener tizenPolicyListener = {
+const struct tizen_policy_listener kTizenPolicyListener = {
     TizenPolicyConformant,
     TizenPolicyConformantArea,
     TizenPolicyNotificationChangeDone,
@@ -408,7 +408,7 @@ bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
                              wl_event_queue_);
 
           wl_registry* registry = wl_display_get_registry(displayWrapper);
-          wl_registry_add_listener(registry, &registryListener, this);
+          wl_registry_add_listener(registry, &kRegistryListener, this);
         }
 
         wl_proxy_wrapper_destroy(displayWrapper);
@@ -708,7 +708,7 @@ void TizenRendererEcoreWl2::RegistryGlobalCallback(void* data,
                                                    const char* interface,
                                                    uint32_t version) {
   if (strcmp(interface, tizen_policy_interface.name) == 0) {
-    uint32_t clientVersion = std::min(version, MAX_TIZEN_CLIENT_VERSION);
+    uint32_t clientVersion = std::min(version, kMaxTizenClientVersion);
 
     tizen_policy_ = static_cast<tizen_policy*>(wl_registry_bind(
         registry, name, &tizen_policy_interface, clientVersion));
@@ -717,7 +717,7 @@ void TizenRendererEcoreWl2::RegistryGlobalCallback(void* data,
       return;
     }
 
-    tizen_policy_add_listener(tizen_policy_, &tizenPolicyListener, data);
+    tizen_policy_add_listener(tizen_policy_, &kTizenPolicyListener, data);
 
     FT_LOG(Info) << "tizen_policy_add_listener is called.";
   }
