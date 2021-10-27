@@ -366,12 +366,19 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
                                        : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
   if (top_level_) {
     // Wait until tizen_policy_ is initialized.
-    while (!tizen_policy_) {
+    size_t repeat_count = 3;
+    while (!tizen_policy_ && repeat_count--) {
       wl_display_dispatch_queue(wl_display_, wl_event_queue_);
     }
-    tizen_policy_set_notification_level(
-        tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_),
-        TIZEN_POLICY_LEVEL_TOP);
+    if (tizen_policy_ == nullptr) {
+      FT_LOG(Error)
+          << "Failed to initialize the tizen policy handle, the top_level "
+             "attribute is ignored.";
+    } else {
+      tizen_policy_set_notification_level(
+          tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_),
+          TIZEN_POLICY_LEVEL_TOP);
+    }
   }
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
@@ -650,14 +657,14 @@ void TizenRendererEcoreWl2::OnEnabledWlRegistryGlobalObject(
     uint32_t name,
     const char* interface,
     uint32_t version) {
-  // To use the Tizen Policy, initialize tizen_policy handle and add a listener
+  // To use the Tizen Policy, initialize tizen_policy handle and add a listener.
   if (strcmp(interface, tizen_policy_interface.name) == 0) {
-    uint32_t clientVersion = std::min(version, kMaxTizenClientVersion);
+    uint32_t client_version = std::min(version, kMaxTizenClientVersion);
 
     tizen_policy_ = static_cast<tizen_policy*>(wl_registry_bind(
-        registry, name, &tizen_policy_interface, clientVersion));
+        registry, name, &tizen_policy_interface, client_version));
     if (!tizen_policy_) {
-      FT_LOG(Error) << "wl_registry_bind(tizen_policy_interface) is failed.";
+      FT_LOG(Error) << "wl_registry_bind(tizen_policy_interface) failed.";
       return;
     }
     tizen_policy_add_listener(tizen_policy_, &kTizenPolicyListener, data);

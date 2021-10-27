@@ -45,7 +45,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
 
-  // Callbacks for wl_registry_listener
+  // Callbacks for wl_registry_listener.
   void OnEnabledWlRegistryGlobalObject(void* data,
                                        struct wl_registry* registry,
                                        uint32_t name,
