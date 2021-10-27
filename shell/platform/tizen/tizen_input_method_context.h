@@ -10,6 +10,7 @@
 #include <Ecore_Input.h>
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 namespace flutter {
@@ -18,11 +19,11 @@ using OnCommit = std::function<void(std::string str)>;
 using OnPreeditChanged = std::function<void(std::string str, int cursor_pos)>;
 using OnPreeditStart = std::function<void()>;
 using OnPreeditEnd = std::function<void()>;
-using OnInputPannelStateChanged = std::function<void(int value)>;
+using OnInputPanelStateChanged = std::function<void(int value)>;
 
 class FlutterTizenEngine;
 
-struct InputPannelGeometry {
+struct InputPanelGeometry {
   int32_t x = 0, y = 0, w = 0, h = 0;
 };
 
@@ -33,15 +34,15 @@ class TizenInputMethodContext {
 
   bool FilterEvent(Ecore_Event_Key* event, const char* dev_name);
 
-  InputPannelGeometry GetInputPannelGeometry();
+  InputPanelGeometry GetInputPanelGeometry();
 
   void ResetInputMethodContext();
 
-  void ShowInputPannel();
+  void ShowInputPanel();
 
-  void HideInputPannel();
+  void HideInputPanel();
 
-  void SetInputPannelLayout(std::string layout);
+  void SetInputPanelLayout(const std::string& layout);
 
   void SetInputPanelLayoutVariation(bool is_signed, bool is_decimal);
 
@@ -57,22 +58,16 @@ class TizenInputMethodContext {
 
   void SetOnPreeditEnd(OnPreeditEnd callback) { on_preedit_end_ = callback; }
 
-  void SetOnInputPannelStateChanged(OnInputPannelStateChanged callback) {
-    on_input_pannel_state_changed_ = callback;
+  void SetOnInputPanelStateChanged(OnInputPanelStateChanged callback) {
+    on_input_panel_state_changed_ = callback;
   }
 
  private:
-  void Init();
-
-  void Deinit();
-
   void RegisterEventCallbacks();
-
   void UnregisterEventCallbacks();
 
   void SetContextOptions();
-
-  void SetInputPannelOptions();
+  void SetInputPanelOptions();
 
   FlutterTizenEngine* engine_{nullptr};
   Ecore_IMF_Context* imf_context_{nullptr};
@@ -80,7 +75,7 @@ class TizenInputMethodContext {
   OnPreeditChanged on_preedit_changed_;
   OnPreeditStart on_preedit_start_;
   OnPreeditEnd on_preedit_end_;
-  OnInputPannelStateChanged on_input_pannel_state_changed_;
+  OnInputPanelStateChanged on_input_panel_state_changed_;
   std::unordered_map<Ecore_IMF_Callback_Type, Ecore_IMF_Event_Cb>
       event_callbacks_;
 };

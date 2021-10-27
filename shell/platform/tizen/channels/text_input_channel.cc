@@ -42,11 +42,8 @@ constexpr char kTextKey[] = "text";
 constexpr char kBadArgumentError[] = "Bad Arguments";
 constexpr char kInternalConsistencyError[] = "Internal Consistency Error";
 
-bool IsASCIIPrintableKey(char c) {
-  if (c >= 32 && c <= 126) {
-    return true;
-  }
-  return false;
+bool IsAsciiPrintableKey(char ch) {
+  return ch >= 32 && ch <= 126;
 }
 
 }  // namespace
@@ -111,10 +108,10 @@ TextInputChannel::TextInputChannel(
     SendStateUpdate(*active_model_);
   });
 
-  input_method_context_->SetOnInputPannelStateChanged([this](int state) {
+  input_method_context_->SetOnInputPanelStateChanged([this](int state) {
     if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
       // Fallback for HW back-key.
-      input_method_context_->HideInputPannel();
+      input_method_context_->HideInputPanel();
       input_method_context_->ResetInputMethodContext();
       ResetTextEditingContext();
       is_software_keyboard_showing_ = false;
@@ -145,18 +142,19 @@ void TextInputChannel::HandleMethodCall(
   FT_LOG(Debug) << "method: " << method;
 
   if (method.compare(kShowMethod) == 0) {
-    input_method_context_->ShowInputPannel();
+    input_method_context_->ShowInputPanel();
   } else if (method.compare(kHideMethod) == 0) {
-    input_method_context_->HideInputPannel();
+    input_method_context_->HideInputPanel();
     input_method_context_->ResetInputMethodContext();
     ResetTextEditingContext();
   } else if (method.compare(kSetPlatformViewClient) == 0) {
-    FT_UNIMPLEMENTED();
+    result->NotImplemented();
+    return;
   } else if (method.compare(kClearClientMethod) == 0) {
     active_model_ = nullptr;
   } else if (method.compare(kSetClientMethod) == 0) {
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
-      result->Error(kBadArgumentError, "Method invoked without args");
+      result->Error(kBadArgumentError, "Method invoked without args.");
       return;
     }
     const rapidjson::Document& args = *method_call.arguments();
@@ -169,7 +167,6 @@ void TextInputChannel::HandleMethodCall(
       result->Error(kBadArgumentError, "Could not set client, ID is null.");
       return;
     }
-
     if (client_config.IsNull()) {
       result->Error(kBadArgumentError,
                     "Could not set client, missing arguments.");
@@ -177,44 +174,42 @@ void TextInputChannel::HandleMethodCall(
 
     client_id_ = client_id_json.GetInt();
     input_action_ = "";
-    auto input_action_json = client_config.FindMember(kTextInputAction);
-
-    if (input_action_json != client_config.MemberEnd() &&
-        input_action_json->value.IsString()) {
-      input_action_ = input_action_json->value.GetString();
+    auto input_action_iter = client_config.FindMember(kTextInputAction);
+    if (input_action_iter != client_config.MemberEnd() &&
+        input_action_iter->value.IsString()) {
+      input_action_ = input_action_iter->value.GetString();
     }
 
     input_type_ = "";
-    auto input_type_info_json = client_config.FindMember(kTextInputType);
-
-    if (input_type_info_json != client_config.MemberEnd() &&
-        input_type_info_json->value.IsObject()) {
-      auto input_type_json =
-          input_type_info_json->value.FindMember(kTextInputTypeName);
-      if (input_type_json != input_type_info_json->value.MemberEnd() &&
-          input_type_json->value.IsString()) {
-        input_type_ = input_type_json->value.GetString();
+    auto input_type_info_iter = client_config.FindMember(kTextInputType);
+    if (input_type_info_iter != client_config.MemberEnd() &&
+        input_type_info_iter->value.IsObject()) {
+      auto input_type_iter =
+          input_type_info_iter->value.FindMember(kTextInputTypeName);
+      if (input_type_iter != input_type_info_iter->value.MemberEnd() &&
+          input_type_iter->value.IsString()) {
+        input_type_ = input_type_iter->value.GetString();
         bool is_signed = false;
         auto is_signed_iter =
-            input_type_info_json->value.FindMember(kTextInputTypeSigned);
-        if (is_signed_iter != input_type_info_json->value.MemberEnd() &&
+            input_type_info_iter->value.FindMember(kTextInputTypeSigned);
+        if (is_signed_iter != input_type_info_iter->value.MemberEnd() &&
             is_signed_iter->value.IsBool()) {
           is_signed = is_signed_iter->value.GetBool();
         }
         bool is_decimal = false;
         auto is_decimal_iter =
-            input_type_info_json->value.FindMember(kTextInputTypeDecimal);
-        if (is_decimal_iter != input_type_info_json->value.MemberEnd() &&
+            input_type_info_iter->value.FindMember(kTextInputTypeDecimal);
+        if (is_decimal_iter != input_type_info_iter->value.MemberEnd() &&
             is_decimal_iter->value.IsBool()) {
           is_decimal = is_decimal_iter->value.GetBool();
         }
-        input_method_context_->SetInputPannelLayout(input_type_);
+        input_method_context_->SetInputPanelLayout(input_type_);
         input_method_context_->SetInputPanelLayoutVariation(is_signed,
                                                             is_decimal);
         // The panel should be closed and reopened to fully apply the layout
         // change. See https://github.com/flutter-tizen/engine/pull/194.
-        input_method_context_->HideInputPannel();
-        input_method_context_->ShowInputPannel();
+        input_method_context_->HideInputPanel();
+        input_method_context_->ShowInputPanel();
       }
     }
 
@@ -224,7 +219,7 @@ void TextInputChannel::HandleMethodCall(
     ResetTextEditingContext();
 
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
-      result->Error(kBadArgumentError, "Method invoked without args");
+      result->Error(kBadArgumentError, "Method invoked without args.");
       return;
     }
 
@@ -404,7 +399,7 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
   } else if (key == "Delete") {
     needs_update = active_model_->Delete();
   } else if (event->string && strlen(event->string) == 1 &&
-             IsASCIIPrintableKey(event->string[0])) {
+             IsAsciiPrintableKey(event->string[0])) {
     active_model_->AddCodePoint(event->string[0]);
     needs_update = true;
   } else if (key == "Return" ||
@@ -447,4 +442,5 @@ bool TextInputChannel::ShouldNotFilterEvent(std::string key, bool is_ime) {
   }
   return false;
 }
+
 }  // namespace flutter
