@@ -319,7 +319,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
 #if defined(__X64_SHELL__)
   bool is_ime = false;
 #elif defined(WEARABLE_PROFILE)
-  // Hardware keyboard not supported on watches.
+  // Hardware keyboard is not supported on watch devices.
   bool is_ime = true;
   // FIXME: Only for wearable.
   if (is_ime && strcmp(event->key, "Select") == 0) {
@@ -327,7 +327,8 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event) {
     FT_LOG(Debug) << "Entering select mode.";
   }
 #else
-  bool is_ime = strcmp(ecore_device_name_get(event->dev), "ime") == 0;
+  auto device_name = ecore_device_name_get(event->dev);
+  bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
 #endif
 
   if (ShouldNotFilterEvent(event->key, is_ime)) {
