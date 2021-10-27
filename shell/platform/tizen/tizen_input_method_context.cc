@@ -13,13 +13,10 @@ const char* GetEcoreImfContextAvailableId() {
   Eina_List* modules;
 
   modules = ecore_imf_context_available_ids_get();
-  if (!modules) {
-    return nullptr;
+  if (modules) {
+    void* module;
+    EINA_LIST_FREE(modules, module) { return static_cast<const char*>(module); }
   }
-
-  void* module;
-  EINA_LIST_FREE(modules, module) { return static_cast<const char*>(module); }
-
   return nullptr;
 }
 

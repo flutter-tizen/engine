@@ -272,7 +272,8 @@ void TextInputChannel::HandleMethodCall(
       size_t cursor_offset = selection_base_value - composing_start;
 
       active_model_->SetComposingRange(
-          flutter::TextRange(composing_base_value, composing_extent_value),
+          flutter::TextRange(static_cast<size_t>(composing_base_value),
+                             static_cast<size_t>(composing_extent_value)),
           cursor_offset);
     }
     SendStateUpdate(*active_model_);

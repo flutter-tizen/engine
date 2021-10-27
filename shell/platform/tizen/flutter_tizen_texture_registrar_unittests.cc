@@ -40,7 +40,7 @@ class FlutterTizenTextureRegistrarTest : public ::testing::Test {
     engine_ = nullptr;
   }
 
-  FlutterTizenEngine* engine_;
+  FlutterTizenEngine* engine_ = nullptr;
 };
 
 TEST_F(FlutterTizenTextureRegistrarTest, CreateDestroy) {
