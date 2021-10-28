@@ -310,6 +310,13 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
     ecore_wl2_window_focus_skip_set(ecore_wl2_window_, EINA_TRUE);
   }
 
+  ecore_wl2_window_indicator_state_set(ecore_wl2_window_,
+                                       ECORE_WL2_INDICATOR_STATE_ON);
+  ecore_wl2_window_indicator_opacity_set(ecore_wl2_window_,
+                                         ECORE_WL2_INDICATOR_OPAQUE);
+  ecore_wl2_indicator_visible_type_set(ecore_wl2_window_,
+                                       ECORE_WL2_INDICATOR_VISIBLE_TYPE_SHOWN);
+
   int rotations[4] = {0, 90, 180, 270};
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations,
                                            sizeof(rotations) / sizeof(int));
