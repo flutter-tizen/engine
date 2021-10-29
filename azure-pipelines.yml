@@ -8,31 +8,7 @@ pr:
 - flutter-*-tizen
 
 jobs:
-- job: test
-  pool:
-    name: Default
-    demands: agent.os -equals Linux
-  timeoutInMinutes: 20
-  cancelTimeoutInMinutes: 1
-  steps:
-  - checkout: self
-    path: src/flutter
-  - bash: |
-      gclient sync -f -D
-      flutter/tools/gn \
-      --no-goma \
-      --runtime-mode debug \
-      --enable-fontconfig \
-      --build-tizen-shell
-      ninja -C out/host_debug
-    displayName: Host build
-    workingDirectory: $(Pipeline.Workspace)/src
-    failOnStderr: true
-  - bash: out/host_debug/flutter_tizen_unittests
-    displayName: Run tests
-    workingDirectory: $(Pipeline.Workspace)/src
 - job: build
-  dependsOn: test
   strategy:
     matrix:
       tizen-arm-release:
@@ -96,13 +72,6 @@ jobs:
     displayName: Build
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
-  - bash: |
-      ../check_symbols.py out/linux_$(mode)_$(arch)/libflutter_engine.so
-      ../check_symbols.py out/linux_$(mode)_$(arch)/libflutter_tizen_wearable.so
-    displayName: Verify symbol references
-    workingDirectory: $(Pipeline.Workspace)/src
-    failOnStderr: true
-    condition: eq(variables['System.JobName'], 'tizen-arm-release')
   - bash: |
       OUTDIR=$(Build.StagingDirectory)
       cp out/linux_$(mode)_$(arch)/libflutter_*.so $OUTDIR
