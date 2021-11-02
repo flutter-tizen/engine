@@ -90,7 +90,8 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
                                             int32_t width,
                                             int32_t height,
                                             bool transparent,
-                                            bool focusable) {
+                                            bool focusable,
+                                            bool top_level) {
   TizenRenderer::Geometry geometry = {x, y, width, height};
 
 #ifdef TIZEN_RENDERER_EVAS_GL
