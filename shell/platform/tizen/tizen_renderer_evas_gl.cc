@@ -739,6 +739,13 @@ void TizenRendererEvasGL::SetRotate(int angle) {
   received_rotation_ = true;
 }
 
+void TizenRendererEvasGL::SetGeometry(int32_t x,
+                                      int32_t y,
+                                      int32_t width,
+                                      int32_t height) {
+  FT_UNIMPLEMENTED();
+}
+
 void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
                                              int32_t y,
                                              int32_t width,

@@ -36,12 +36,16 @@ class TizenRendererEvasGL : public TizenRenderer {
   uintptr_t GetWindowId() override;
   void* GetWindowHandle() override;
 
+  void SetRotate(int angle) override;
+  void SetGeometry(int32_t x,
+                   int32_t y,
+                   int32_t width,
+                   int32_t height) override;
   void ResizeWithRotation(int32_t x,
                           int32_t y,
                           int32_t width,
                           int32_t height,
                           int32_t angle) override;
-  void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
 

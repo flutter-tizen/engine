@@ -58,9 +58,8 @@ void WindowChannel::HandleMethodCall(
     result->Success(EncodableValue(map));
   } else if (method_name == "setWindowGeometry") {
 #ifdef TIZEN_RENDERER_EVAS_GL
-    FT_LOG(Error) << "setGeometry is not supported on wearables.";
-    result->Error("Not supported",
-                  "setGeometry is not supported on wearables.");
+    FT_LOG(Error) << "setWindowGeometry is not supported on evas_gl.";
+    result->NotImplemented();
 #else
     auto arguments = std::get_if<EncodableMap>(method_call.arguments());
     if (!arguments) {

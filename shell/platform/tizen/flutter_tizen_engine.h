@@ -145,12 +145,10 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   void SetWindowOrientation(int32_t degree);
   void OnOrientationChange(int32_t degree) override;
-#ifndef TIZEN_RENDERER_EVAS_GL
   void OnGeometryChange(int32_t x,
                         int32_t y,
                         int32_t width,
                         int32_t height) override;
-#endif
   void OnVsync(intptr_t baton,
                uint64_t frame_start_time_nanos,
                uint64_t frame_target_time_nanos);

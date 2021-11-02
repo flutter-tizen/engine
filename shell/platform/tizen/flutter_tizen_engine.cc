@@ -420,7 +420,6 @@ void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
   SetWindowOrientation(degree);
 }
 
-#ifndef TIZEN_RENDERER_EVAS_GL
 void FlutterTizenEngine::OnGeometryChange(int32_t x,
                                           int32_t y,
                                           int32_t width,
@@ -428,12 +427,10 @@ void FlutterTizenEngine::OnGeometryChange(int32_t x,
   if (!renderer_->IsValid()) {
     return;
   }
-  static_cast<TizenRendererEcoreWl2*>(renderer_.get())
-      ->SetGeometry(x, y, width, height);
+  renderer_->SetGeometry(x, y, width, height);
   renderer_->ResizeWithRotation(x, y, width, height, 0);
   SendWindowMetrics(x, y, width, height, 0.0);
 }
-#endif
 
 void FlutterTizenEngine::OnVsync(intptr_t baton,
                                  uint64_t frame_start_time_nanos,
