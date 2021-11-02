@@ -593,6 +593,7 @@ void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
       }
     }
   }
+  eina_iterator_free(iter);
 
   if (tizen_policy_ == nullptr) {
     FT_LOG(Error)
