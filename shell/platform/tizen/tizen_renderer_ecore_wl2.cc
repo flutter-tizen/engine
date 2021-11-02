@@ -306,7 +306,7 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
                             top_level_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
                                        : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
   if (top_level_) {
-    SetTizenPolicyNotificationlevel(TIZEN_POLICY_LEVEL_TOP);
+    SetTizenPolicyNotificationLevel(TIZEN_POLICY_LEVEL_TOP);
   }
 
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
@@ -576,16 +576,16 @@ bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
   return false;
 }
 
-void TizenRendererEcoreWl2::SetTizenPolicyNotificationlevel(int level) {
-  Eina_Iterator* itr = ecore_wl2_display_globals_get(ecore_wl2_display_);
+void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
+  Eina_Iterator* iter = ecore_wl2_display_globals_get(ecore_wl2_display_);
   struct wl_registry* registry =
       ecore_wl2_display_registry_get(ecore_wl2_display_);
 
-  if (itr && registry) {
+  if (iter && registry) {
     Ecore_Wl2_Global* global = nullptr;
 
     // Retrieve global objects to bind tizen policy
-    EINA_ITERATOR_FOREACH(itr, global) {
+    EINA_ITERATOR_FOREACH(iter, global) {
       if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
         tizen_policy_ = static_cast<tizen_policy*>(
             wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));

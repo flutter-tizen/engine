@@ -9,6 +9,7 @@
 #include <EGL/egl.h>
 #include <Ecore_Wl2.h>
 #include <tizen-extension-client-protocol.h>
+
 #include <string>
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
@@ -63,7 +64,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   bool ChooseEGLConfiguration();
   void PrintEGLError();
   void DestroyEglSurface();
-  void SetTizenPolicyNotificationlevel(int level);
+  void SetTizenPolicyNotificationLevel(int level);
 
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
   void SendRotationChangeDone();
