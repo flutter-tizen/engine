@@ -90,9 +90,8 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
                                             int32_t width,
                                             int32_t height,
                                             bool transparent,
-                                            bool focusable,
-                                            bool top_level) {
-  TizenRenderer::WindowGeometry geometry = {x, y, width, height};
+                                            bool focusable) {
+  TizenRenderer::Geometry geometry = {x, y, width, height};
 
 #ifdef TIZEN_RENDERER_EVAS_GL
   renderer_ = std::make_unique<TizenRendererEvasGL>(
@@ -248,16 +247,7 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
 #ifndef __X64_SHELL__
   app_control_channel_ = std::make_unique<AppControlChannel>(
       internal_plugin_registrar_->messenger());
-  if (IsHeaded()) {
-#ifdef TIZEN_RENDERER_EVAS_GL
-    window_channel_ = std::make_unique<WindowChannel>(
-        internal_plugin_registrar_->messenger(), renderer_.get());
-#else
-    window_channel_ = std::make_unique<WindowChannel>(
-        internal_plugin_registrar_->messenger(), renderer_.get(), this);
-#endif  // TIZEN_RENDERER_EVAS_GL
-  }
-#endif  // !__X64_SHELL__
+#endif
   lifecycle_channel_ = std::make_unique<LifecycleChannel>(
       internal_plugin_registrar_->messenger());
   platform_channel_ = std::make_unique<PlatformChannel>(
@@ -276,6 +266,15 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     text_input_channel_ = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(),
         std::make_unique<TizenInputMethodContext>(this));
+#ifndef __X64_SHELL__
+#ifdef TIZEN_RENDERER_EVAS_GL
+    window_channel_ = std::make_unique<WindowChannel>(
+        internal_plugin_registrar_->messenger(), renderer_.get());
+#else
+    window_channel_ = std::make_unique<WindowChannel>(
+        internal_plugin_registrar_->messenger(), renderer_.get(), this);
+#endif  // TIZEN_RENDERER_EVAS_GL
+#endif  // !__X64_SHELL__
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
@@ -390,7 +389,7 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
   renderer_->SetRotate(degree);
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - degree) * M_PI / 180;
-  auto geometry = renderer_->GetCurrentGeometry();
+  auto geometry = renderer_->GetWindowGeometry();
   double width = geometry.w;
   double height = geometry.h;
 
@@ -413,7 +412,7 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
     std::swap(width, height);
   }
   renderer_->ResizeWithRotation(geometry.x, geometry.y, width, height, degree);
-  // Window position does not change on rotation regardless of it's size.
+  // Window position does not change on rotation regardless of its orientation.
   SendWindowMetrics(geometry.x, geometry.y, width, height, 0.0);
 }
 

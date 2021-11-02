@@ -227,9 +227,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 #ifndef __X64_SHELL__
   // A plugin that implements Tizen app_control channels.
   std::unique_ptr<AppControlChannel> app_control_channel_;
-
-  // A plugin that implements the Tizen window channel.
-  std::unique_ptr<WindowChannel> window_channel_;
 #endif
 
   // A plugin that implements the Flutter keyevent channel.
@@ -252,6 +249,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // A plugin that implements the Flutter textinput channel.
   std::unique_ptr<TextInputChannel> text_input_channel_;
+
+#ifndef __X64_SHELL__
+  // A plugin that implements the Tizen window channel.
+  std::unique_ptr<WindowChannel> window_channel_;
+#endif
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;

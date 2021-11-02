@@ -16,7 +16,7 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 namespace flutter {
 
-TizenRendererEvasGL::TizenRendererEvasGL(WindowGeometry geometry,
+TizenRendererEvasGL::TizenRendererEvasGL(Geometry geometry,
                                          bool transparent,
                                          bool focusable,
                                          bool top_level,
@@ -546,15 +546,15 @@ void* TizenRendererEvasGL::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::WindowGeometry TizenRendererEvasGL::GetCurrentGeometry() {
-  WindowGeometry result;
+TizenRenderer::Geometry TizenRendererEvasGL::GetWindowGeometry() {
+  Geometry result;
   evas_object_geometry_get(evas_window_, &result.x, &result.y, &result.w,
                            &result.h);
   return result;
 }
 
-TizenRenderer::WindowGeometry TizenRendererEvasGL::GetScreenGeometry() {
-  WindowGeometry result;
+TizenRenderer::Geometry TizenRendererEvasGL::GetScreenGeometry() {
+  Geometry result;
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.w,

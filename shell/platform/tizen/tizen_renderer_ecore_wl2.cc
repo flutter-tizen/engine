@@ -11,7 +11,7 @@
 
 namespace flutter {
 
-TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
+TizenRendererEcoreWl2::TizenRendererEcoreWl2(Geometry geometry,
                                              bool transparent,
                                              bool focusable,
                                              bool top_level,
@@ -206,15 +206,15 @@ void* TizenRendererEcoreWl2::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetCurrentGeometry() {
-  WindowGeometry result;
+TizenRenderer::Geometry TizenRendererEcoreWl2::GetWindowGeometry() {
+  Geometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.x, &result.y,
                                 &result.w, &result.h);
   return result;
 }
 
-TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetScreenGeometry() {
-  WindowGeometry result;
+TizenRenderer::Geometry TizenRendererEcoreWl2::GetScreenGeometry() {
+  Geometry result;
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.w, &result.h);
   return result;
 }

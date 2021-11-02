@@ -12,7 +12,7 @@ namespace flutter {
 
 class TizenRenderer {
  public:
-  struct WindowGeometry {
+  struct Geometry {
     int32_t x{0}, y{0}, w{0}, h{0};
   };
 
@@ -39,10 +39,10 @@ class TizenRenderer {
   virtual void* OnProcResolver(const char* name) = 0;
 
   // Returns the geometry of the current window.
-  virtual WindowGeometry GetCurrentGeometry() = 0;
+  virtual Geometry GetWindowGeometry() = 0;
 
   // Returns the geometry of the display screen.
-  virtual WindowGeometry GetScreenGeometry() = 0;
+  virtual Geometry GetScreenGeometry() = 0;
 
   virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
@@ -58,13 +58,13 @@ class TizenRenderer {
   virtual bool IsSupportedExtention(const char* name) = 0;
 
  protected:
-  explicit TizenRenderer(WindowGeometry geometry,
+  explicit TizenRenderer(Geometry geometry,
                          bool transparent,
                          bool focusable,
                          bool top_level,
                          Delegate& delegate);
 
-  WindowGeometry initial_geometry_;
+  Geometry initial_geometry_;
   bool transparent_;
   bool focusable_;
   bool top_level_;

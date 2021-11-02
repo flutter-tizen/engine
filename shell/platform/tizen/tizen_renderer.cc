@@ -6,7 +6,7 @@
 
 namespace flutter {
 
-TizenRenderer::TizenRenderer(WindowGeometry geometry,
+TizenRenderer::TizenRenderer(Geometry geometry,
                              bool transparent,
                              bool focusable,
                              bool top_level,

@@ -18,7 +18,7 @@ namespace flutter {
 
 class TizenRendererEcoreWl2 : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2(WindowGeometry geometry,
+  explicit TizenRendererEcoreWl2(Geometry geometry,
                                  bool transparent,
                                  bool focusable,
                                  bool top_level,
@@ -32,8 +32,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   uint32_t OnGetFBO() override;
   void* OnProcResolver(const char* name) override;
 
-  WindowGeometry GetCurrentGeometry() override;
-  WindowGeometry GetScreenGeometry() override;
+  Geometry GetWindowGeometry() override;
+  Geometry GetScreenGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
   void* GetWindowHandle() override;

@@ -6,7 +6,6 @@
 #define EMBEDDER_WINDOW_CHANNEL_H_
 
 #include <memory>
-#include <queue>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
