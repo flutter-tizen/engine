@@ -50,11 +50,13 @@ class TizenRenderer {
   explicit TizenRenderer(WindowGeometry geometry,
                          bool transparent,
                          bool focusable,
+                         bool top_level,
                          Delegate& delegate);
 
   WindowGeometry initial_geometry_;
   bool transparent_;
   bool focusable_;
+  bool top_level_;
   Delegate& delegate_;
 
   bool is_valid_ = false;

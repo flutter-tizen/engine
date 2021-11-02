@@ -14,8 +14,9 @@ namespace flutter {
 TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
                                              bool transparent,
                                              bool focusable,
+                                             bool top_level,
                                              Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
   InitializeRenderer();
 }
 
@@ -296,7 +297,18 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
 
   ecore_wl2_window_ =
       ecore_wl2_window_new(ecore_wl2_display_, nullptr, x, y, width, height);
-  ecore_wl2_window_type_set(ecore_wl2_window_, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+
+  // Change the window type to use the tizen policy for notification window
+  // according to top_level_.
+  // Note: ECORE_WL2_WINDOW_TYPE_TOPLEVEL is similar to "ELM_WIN_BASIC" and it
+  // does not mean that the window always will be overlaid on other apps :(
+  ecore_wl2_window_type_set(ecore_wl2_window_,
+                            top_level_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
+                                       : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+  if (top_level_) {
+    SetTizenPolicyNotificationLevel(TIZEN_POLICY_LEVEL_TOP);
+  }
+
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
@@ -569,6 +581,36 @@ bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
     return true;
   }
   return false;
+}
+
+void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
+  Eina_Iterator* iter = ecore_wl2_display_globals_get(ecore_wl2_display_);
+  struct wl_registry* registry =
+      ecore_wl2_display_registry_get(ecore_wl2_display_);
+
+  if (iter && registry) {
+    Ecore_Wl2_Global* global = nullptr;
+
+    // Retrieve global objects to bind tizen policy
+    EINA_ITERATOR_FOREACH(iter, global) {
+      if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
+        tizen_policy_ = static_cast<tizen_policy*>(
+            wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));
+        break;
+      }
+    }
+  }
+  eina_iterator_free(iter);
+
+  if (tizen_policy_ == nullptr) {
+    FT_LOG(Error)
+        << "Failed to initialize the tizen policy handle, the top_level "
+           "attribute is ignored.";
+    return;
+  }
+
+  tizen_policy_set_notification_level(
+      tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
 }
 
 }  // namespace flutter

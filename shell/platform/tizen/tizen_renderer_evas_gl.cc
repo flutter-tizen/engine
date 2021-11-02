@@ -10,13 +10,18 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/logger.h"
 
+#ifndef __X64_SHELL__
+#include <ui/efl_util.h>
+#endif
+
 namespace flutter {
 
 TizenRendererEvasGL::TizenRendererEvasGL(WindowGeometry geometry,
                                          bool transparent,
                                          bool focusable,
+                                         bool top_level,
                                          Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, delegate) {
+    : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
   InitializeRenderer();
 
   // Clear once to remove noise.
@@ -639,10 +644,17 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
                                                   int32_t* height) {
   elm_config_accel_preference_set("hw:opengl");
 
-  evas_window_ = elm_win_add(NULL, NULL, ELM_WIN_BASIC);
+  evas_window_ = elm_win_add(NULL, NULL,
+                             top_level_ ? ELM_WIN_NOTIFICATION : ELM_WIN_BASIC);
   if (!evas_window_) {
     return nullptr;
   }
+#ifndef __X64_SHELL__
+  if (top_level_) {
+    efl_util_set_notification_window_level(evas_window_,
+                                           EFL_UTIL_NOTIFICATION_LEVEL_TOP);
+  }
+#endif
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
 

@@ -38,6 +38,8 @@ typedef struct {
   bool transparent;
   // Whether the window should be focusable or not.
   bool focusable;
+  // Whether the window should be on top layer or not.
+  bool top_level;
 } FlutterDesktopWindowProperties;
 
 // Properties for configuring a Flutter engine instance.

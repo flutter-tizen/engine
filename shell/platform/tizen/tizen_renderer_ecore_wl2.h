@@ -8,6 +8,8 @@
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
 #include <Ecore_Wl2.h>
+#include <tizen-extension-client-protocol.h>
+
 #include <string>
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
@@ -19,6 +21,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   explicit TizenRendererEcoreWl2(WindowGeometry geometry,
                                  bool transparent,
                                  bool focusable,
+                                 bool top_level,
                                  Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
@@ -61,6 +64,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   bool ChooseEGLConfiguration();
   void PrintEGLError();
   void DestroyEglSurface();
+  void SetTizenPolicyNotificationLevel(int level);
 
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
   void SendRotationChangeDone();
@@ -77,6 +81,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 
   std::string egl_extention_str_;
+
+  tizen_policy* tizen_policy_ = nullptr;
 };
 
 }  // namespace flutter

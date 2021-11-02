@@ -19,6 +19,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   explicit TizenRendererEvasGL(WindowGeometry geometry,
                                bool transparent,
                                bool focusable,
+                               bool top_level,
                                Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 

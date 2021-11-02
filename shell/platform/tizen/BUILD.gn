@@ -169,6 +169,7 @@ template("embedder") {
         "capi-base-common",
         "capi-system-info",
         "capi-system-system-settings",
+        "capi-ui-efl-util",
         "dlog",
         "feedback",
         "tbm",
@@ -201,7 +202,10 @@ template("embedder") {
         "tizen_vsync_waiter.cc",
       ]
 
-      libs += [ "ecore_wl2" ]
+      libs += [
+        "ecore_wl2",
+        "tizen-extension-client",
+      ]
     }
 
     public_deps = [ ":flutter_engine" ]

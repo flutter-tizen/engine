@@ -67,7 +67,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
                           int32_t width,
                           int32_t height,
                           bool transparent,
-                          bool focusable);
+                          bool focusable,
+                          bool top_level);
 
   // Starts running the engine with the given entrypoint. If null, defaults to
   // main().
