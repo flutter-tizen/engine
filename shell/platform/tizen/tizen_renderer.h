@@ -38,7 +38,12 @@ class TizenRenderer {
   virtual uint32_t OnGetFBO() = 0;
   virtual void* OnProcResolver(const char* name) = 0;
 
+  // Returns the geometry of the current window.
   virtual WindowGeometry GetCurrentGeometry() = 0;
+
+  // Returns the geometry of the display screen.
+  virtual WindowGeometry GetScreenGeometry() = 0;
+
   virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
   virtual void* GetWindowHandle() = 0;

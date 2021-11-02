@@ -31,6 +31,7 @@ class TizenRendererEvasGL : public TizenRenderer {
   void* OnProcResolver(const char* name) override;
 
   WindowGeometry GetCurrentGeometry() override;
+  WindowGeometry GetScreenGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
   void* GetWindowHandle() override;

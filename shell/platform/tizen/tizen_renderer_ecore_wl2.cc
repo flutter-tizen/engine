@@ -213,6 +213,12 @@ TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetCurrentGeometry() {
   return result;
 }
 
+TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetScreenGeometry() {
+  WindowGeometry result;
+  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.w, &result.h);
+  return result;
+}
+
 int32_t TizenRendererEcoreWl2::GetDpi() {
   auto* output = ecore_wl2_window_output_find(ecore_wl2_window_);
   if (!output) {

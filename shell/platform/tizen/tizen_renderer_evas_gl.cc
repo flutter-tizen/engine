@@ -553,6 +553,15 @@ TizenRenderer::WindowGeometry TizenRendererEvasGL::GetCurrentGeometry() {
   return result;
 }
 
+TizenRenderer::WindowGeometry TizenRendererEvasGL::GetScreenGeometry() {
+  WindowGeometry result;
+  auto* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
+  ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.w,
+                                 &result.h);
+  return result;
+}
+
 int32_t TizenRendererEvasGL::GetDpi() {
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));

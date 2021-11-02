@@ -80,14 +80,10 @@ void WindowChannel::HandleMethodCall(
     result->Success();
 #endif
   } else if (method_name == "getScreenSize") {
-    int width, height;
-    system_info_get_platform_int("http://tizen.org/feature/screen.width",
-                                 &width);
-    system_info_get_platform_int("http://tizen.org/feature/screen.height",
-                                 &height);
+    TizenRenderer::WindowGeometry geometry = renderer_->GetScreenGeometry();
     EncodableMap map;
-    map[EncodableValue("width")] = EncodableValue(width);
-    map[EncodableValue("height")] = EncodableValue(height);
+    map[EncodableValue("width")] = EncodableValue(geometry.w);
+    map[EncodableValue("height")] = EncodableValue(geometry.h);
     result->Success(EncodableValue(map));
   } else {
     result->NotImplemented();
