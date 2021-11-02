@@ -6,50 +6,8 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+
 #include "flutter/shell/platform/tizen/logger.h"
-
-namespace {
-
-const uint32_t kMaxTizenClientVersion = 7;
-
-const struct wl_registry_listener kRegistryListener = {
-    [](void* data,
-       struct wl_registry* registry,
-       uint32_t name,
-       const char* interface,
-       uint32_t version) {
-      auto* renderer = static_cast<flutter::TizenRendererEcoreWl2*>(data);
-      if (renderer) {
-        renderer->OnEnabledWlRegistryGlobalObject(data, registry, name,
-                                                  interface, version);
-      }
-    },
-    [](void* data, struct wl_registry* registry, uint32_t id) {
-      auto* renderer = static_cast<flutter::TizenRendererEcoreWl2*>(data);
-      if (renderer) {
-        renderer->OnDisabledWlRegistryGlobalObject(data, registry, id);
-      }
-    }};
-
-const struct tizen_policy_listener kTizenPolicyListener = {
-    nullptr,
-    nullptr,
-    [](void* data,
-       struct tizen_policy* policy,
-       struct wl_surface* surface,
-       int32_t level,
-       uint32_t state) {
-      FT_LOG(Debug) << "Notification policy is changed(level: " << level
-                    << ", state: " << state << ").";
-    },
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr};
-}  // namespace
 
 namespace flutter {
 
@@ -329,24 +287,7 @@ bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
   if (initial_geometry_.h > 0) {
     *height = initial_geometry_.h;
   }
-  if (top_level_) {
-    wl_display_ = ecore_wl2_display_get(ecore_wl2_display_);
-    if (wl_display_) {
-      wl_display* display_wrapper =
-          static_cast<wl_display*>(wl_proxy_create_wrapper(wl_display_));
-      if (display_wrapper) {
-        wl_event_queue_ = wl_display_create_queue(wl_display_);
-        if (wl_event_queue_) {
-          wl_proxy_set_queue(reinterpret_cast<wl_proxy*>(display_wrapper),
-                             wl_event_queue_);
 
-          wl_registry* registry = wl_display_get_registry(display_wrapper);
-          wl_registry_add_listener(registry, &kRegistryListener, this);
-        }
-        wl_proxy_wrapper_destroy(display_wrapper);
-      }
-    }
-  }
   return true;
 }
 
@@ -365,21 +306,9 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
                             top_level_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
                                        : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
   if (top_level_) {
-    // Wait until tizen_policy_ is initialized.
-    size_t repeat_count = 3;
-    while (!tizen_policy_ && repeat_count--) {
-      wl_display_dispatch_queue(wl_display_, wl_event_queue_);
-    }
-    if (tizen_policy_ == nullptr) {
-      FT_LOG(Error)
-          << "Failed to initialize the tizen policy handle, the top_level "
-             "attribute is ignored.";
-    } else {
-      tizen_policy_set_notification_level(
-          tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_),
-          TIZEN_POLICY_LEVEL_TOP);
-    }
+    SetTizenPolicyNotificationlevel(TIZEN_POLICY_LEVEL_TOP);
   }
+
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
@@ -430,10 +359,6 @@ void TizenRendererEcoreWl2::DestroyEcoreWlWindow() {
 }
 
 void TizenRendererEcoreWl2::ShutdownDisplay() {
-  if (wl_event_queue_) {
-    wl_event_queue_destroy(wl_event_queue_);
-  }
-
   if (ecore_wl2_display_) {
     ecore_wl2_display_disconnect(ecore_wl2_display_);
     ecore_wl2_display_ = nullptr;
@@ -651,31 +576,33 @@ bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
   return false;
 }
 
-void TizenRendererEcoreWl2::OnEnabledWlRegistryGlobalObject(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t name,
-    const char* interface,
-    uint32_t version) {
-  // To use the Tizen Policy, initialize tizen_policy handle and add a listener.
-  if (strcmp(interface, tizen_policy_interface.name) == 0) {
-    uint32_t client_version = std::min(version, kMaxTizenClientVersion);
+void TizenRendererEcoreWl2::SetTizenPolicyNotificationlevel(int level) {
+  Eina_Iterator* itr = ecore_wl2_display_globals_get(ecore_wl2_display_);
+  struct wl_registry* registry =
+      ecore_wl2_display_registry_get(ecore_wl2_display_);
 
-    tizen_policy_ = static_cast<tizen_policy*>(wl_registry_bind(
-        registry, name, &tizen_policy_interface, client_version));
-    if (!tizen_policy_) {
-      FT_LOG(Error) << "wl_registry_bind(tizen_policy_interface) failed.";
-      return;
+  if (itr && registry) {
+    Ecore_Wl2_Global* global = nullptr;
+
+    // Retrieve global objects to bind tizen policy
+    EINA_ITERATOR_FOREACH(itr, global) {
+      if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
+        tizen_policy_ = static_cast<tizen_policy*>(
+            wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));
+        break;
+      }
     }
-    tizen_policy_add_listener(tizen_policy_, &kTizenPolicyListener, data);
   }
-}
 
-void TizenRendererEcoreWl2::OnDisabledWlRegistryGlobalObject(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t id) {
-  tizen_policy_ = nullptr;
+  if (tizen_policy_ == nullptr) {
+    FT_LOG(Error)
+        << "Failed to initialize the tizen policy handle, the top_level "
+           "attribute is ignored.";
+    return;
+  }
+
+  tizen_policy_set_notification_level(
+      tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
 }
 
 }  // namespace flutter

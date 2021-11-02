@@ -45,16 +45,6 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
 
-  // Callbacks for wl_registry_listener.
-  void OnEnabledWlRegistryGlobalObject(void* data,
-                                       struct wl_registry* registry,
-                                       uint32_t name,
-                                       const char* interface,
-                                       uint32_t version);
-  void OnDisabledWlRegistryGlobalObject(void* data,
-                                        struct wl_registry* registry,
-                                        uint32_t id);
-
  private:
   bool InitializeRenderer();
   void Show();
@@ -73,6 +63,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   bool ChooseEGLConfiguration();
   void PrintEGLError();
   void DestroyEglSurface();
+  void SetTizenPolicyNotificationlevel(int level);
 
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
   void SendRotationChangeDone();
@@ -90,8 +81,6 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
 
   std::string egl_extention_str_;
 
-  wl_display* wl_display_ = nullptr;
-  wl_event_queue* wl_event_queue_ = nullptr;
   tizen_policy* tizen_policy_ = nullptr;
 };
 
