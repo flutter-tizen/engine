@@ -268,14 +268,9 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
         internal_plugin_registrar_->messenger(),
         std::make_unique<TizenInputMethodContext>(this));
 #ifndef __X64_SHELL__
-#ifdef TIZEN_RENDERER_EVAS_GL
-    window_channel_ = std::make_unique<WindowChannel>(
-        internal_plugin_registrar_->messenger(), renderer_.get());
-#else
     window_channel_ = std::make_unique<WindowChannel>(
         internal_plugin_registrar_->messenger(), renderer_.get(), this);
-#endif  // TIZEN_RENDERER_EVAS_GL
-#endif  // !__X64_SHELL__
+#endif
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
@@ -425,12 +420,16 @@ void FlutterTizenEngine::OnGeometryChange(int32_t x,
                                           int32_t y,
                                           int32_t width,
                                           int32_t height) {
+#ifdef TIZEN_RENDERER_EVAS_GL
+  FT_UNIMPLEMENTED();
+#else
   if (!renderer_->IsValid()) {
     return;
   }
   renderer_->SetGeometry(x, y, width, height);
   renderer_->ResizeWithRotation(x, y, width, height, 0);
   SendWindowMetrics(x, y, width, height, 0.0);
+#endif
 }
 
 void FlutterTizenEngine::OnVsync(intptr_t baton,

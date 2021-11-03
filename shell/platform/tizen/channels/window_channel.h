@@ -16,13 +16,9 @@ namespace flutter {
 
 class WindowChannel {
  public:
-#ifdef TIZEN_RENDERER_EVAS_GL
-  WindowChannel(BinaryMessenger* messenger, TizenRenderer* renderer);
-#else
-  WindowChannel(BinaryMessenger* messenger,
-                TizenRenderer* renderer,
-                TizenRenderer::Delegate* delegate);
-#endif
+  explicit WindowChannel(BinaryMessenger* messenger,
+                         TizenRenderer* renderer,
+                         TizenRenderer::Delegate* delegate);
   virtual ~WindowChannel();
 
  private:
@@ -34,9 +30,7 @@ class WindowChannel {
   // A reference to the renderer object managed by FlutterTizenEngine.
   // This can be nullptr if the engine is running in headless mode.
   TizenRenderer* renderer_;
-#ifndef TIZEN_RENDERER_EVAS_GL
   TizenRenderer::Delegate* delegate_;
-#endif
 };
 
 }  // namespace flutter

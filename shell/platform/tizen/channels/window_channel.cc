@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
 #include "window_channel.h"
-
-#include <system_info.h>
+#pragma clang diagnostic pop
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
 #include "flutter/shell/platform/tizen/logger.h"
-
 namespace flutter {
 
 namespace {
@@ -18,17 +18,6 @@ constexpr char kChannelName[] = "tizen/internal/window";
 
 }  // namespace
 
-#ifdef TIZEN_RENDERER_EVAS_GL
-WindowChannel::WindowChannel(BinaryMessenger* messenger,
-                             TizenRenderer* renderer)
-    : renderer_(renderer) {
-  channel_ = std::make_unique<MethodChannel<EncodableValue>>(
-      messenger, kChannelName, &StandardMethodCodec::GetInstance());
-  channel_->SetMethodCallHandler([this](const auto& call, auto result) {
-    this->HandleMethodCall(call, std::move(result));
-  });
-}
-#else
 WindowChannel::WindowChannel(BinaryMessenger* messenger,
                              TizenRenderer* renderer,
                              TizenRenderer::Delegate* delegate)
@@ -39,7 +28,6 @@ WindowChannel::WindowChannel(BinaryMessenger* messenger,
     this->HandleMethodCall(call, std::move(result));
   });
 }
-#endif
 
 WindowChannel::~WindowChannel() {}
 
