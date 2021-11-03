@@ -214,7 +214,7 @@ TizenRenderer::Geometry TizenRendererEcoreWl2::GetWindowGeometry() {
 }
 
 TizenRenderer::Geometry TizenRendererEcoreWl2::GetScreenGeometry() {
-  Geometry result;
+  Geometry result = {};
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.w, &result.h);
   return result;
 }
