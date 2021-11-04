@@ -22,7 +22,6 @@ const char* GetEcoreImfContextAvailableId() {
 
 Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreIMFInputPanelLayout(
     const std::string& text_input_type) {
-  FT_ASSERT(panel_layout);
   if (text_input_type == "TextInputType.text" ||
       text_input_type == "TextInputType.multiline") {
     return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;

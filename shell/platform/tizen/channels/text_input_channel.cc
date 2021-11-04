@@ -267,8 +267,8 @@ void TextInputChannel::HandleMethodCall(
     if (composing_base_value == -1 && composing_extent_value == -1) {
       active_model_->EndComposing();
     } else {
-      size_t composing_start =
-          std::min(composing_base_value, composing_extent_value);
+      size_t composing_start = static_cast<size_t>(
+          std::min(composing_base_value, composing_extent_value));
       size_t cursor_offset = selection_base_value - composing_start;
 
       active_model_->SetComposingRange(

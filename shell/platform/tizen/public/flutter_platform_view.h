@@ -59,7 +59,8 @@ class PlatformView {
 class PlatformViewFactory {
  public:
   PlatformViewFactory(flutter::PluginRegistrar* registrar)
-      : registrar_(registrar),
+      : platform_window_(nullptr),
+        registrar_(registrar),
         codec_(flutter::StandardMessageCodec::GetInstance(nullptr)) {}
   virtual ~PlatformViewFactory() {}
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
