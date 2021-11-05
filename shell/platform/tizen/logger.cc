@@ -15,6 +15,52 @@
 #include <cstdlib>
 #include <iostream>
 
+namespace {
+
+std::string GetLogLevelInitial(int level) {
+  if (level == flutter::kLogLevelDebug) {
+    return "D";
+  } else if (level == flutter::kLogLevelInfo) {
+    return "I";
+  } else if (level == flutter::kLogLevelWarn) {
+    return "W";
+  } else if (level == flutter::kLogLevelError) {
+    return "E";
+  } else if (level == flutter::kLogLevelFatal) {
+    return "F";
+  } else {
+    return "I";
+  }
+}
+
+#ifndef __X64_SHELL__
+static void PrintToDlog(int level, const std::string& message) {
+  log_priority priority;
+  if (level == flutter::kLogLevelDebug) {
+    priority = DLOG_DEBUG;
+  } else if (level == flutter::kLogLevelInfo) {
+    priority = DLOG_INFO;
+  } else if (level == flutter::kLogLevelWarn) {
+    priority = DLOG_WARN;
+  } else if (level == flutter::kLogLevelError) {
+    priority = DLOG_ERROR;
+  } else if (level == flutter::kLogLevelFatal) {
+    priority = DLOG_FATAL;
+  } else {
+    priority = DLOG_INFO;
+  }
+#ifdef TV_PROFILE
+  // dlog_print(..) which is an alias of __dlog_print(LOG_ID_APPS, ..) is not
+  // compatible on TV devices.
+  __dlog_print(LOG_ID_MAIN, priority, "ConsoleMessage", "%s", message.c_str());
+#else
+  dlog_print(priority, "ConsoleMessage", "%s", message.c_str());
+#endif
+}
+#endif  // __X64_SHELL__
+
+}  // namespace
+
 namespace flutter {
 
 void* Logger::Redirect(void* arg) {
@@ -138,33 +184,15 @@ void Logger::Print(int level, const std::string& message) {
   std::cerr << message << std::endl;
   std::cerr.flush();
 #else
+  // Write to logging pipe so that the message is forwarded to the host.
   if (logging_port_ > 0) {
-    // TODO: tag and level, else statement.
-    std::string formatted = message + '\n';
+    std::string prefix = "[" + GetLogLevelInitial(level) + "] ";
+    std::string formatted = prefix + message + '\n';
     write(logging_pipe_[1], formatted.c_str(), formatted.size());
   }
-  log_priority priority;
-  if (level == kLogLevelDebug) {
-    priority = DLOG_DEBUG;
-  } else if (level == kLogLevelInfo) {
-    priority = DLOG_INFO;
-  } else if (level == kLogLevelWarn) {
-    priority = DLOG_WARN;
-  } else if (level == kLogLevelError) {
-    priority = DLOG_ERROR;
-  } else if (level == kLogLevelFatal) {
-    priority = DLOG_FATAL;
-  } else {
-    priority = DLOG_INFO;
-  }
-#ifdef TV_PROFILE
-  // dlog_print(..) which is an alias of __dlog_print(LOG_ID_APPS, ..) is not
-  // compatible on TV devices.
-  __dlog_print(LOG_ID_MAIN, priority, "ConsoleMessage", "%s", message.c_str());
-#else
-  dlog_print(priority, "ConsoleMessage", "%s", message.c_str());
+  // Also write to dlog for convenience.
+  PrintToDlog(level, message);
 #endif
-#endif  // __X64_SHELL__
 }
 
 LogMessage::LogMessage(int level,
