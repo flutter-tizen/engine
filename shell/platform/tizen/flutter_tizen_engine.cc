@@ -148,11 +148,6 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
       switches.begin(), switches.end(), std::back_inserter(argv),
       [](const std::string& arg) -> const char* { return arg.c_str(); });
 
-  if (std::find(switches.begin(), switches.end(), "--verbose-logging") !=
-      switches.end()) {
-    Logger::SetLoggingLevel(kLogLevelDebug);
-  }
-
   const std::vector<std::string>& entrypoint_args =
       project_->dart_entrypoint_arguments();
   std::vector<const char*> entrypoint_argv;

@@ -7,6 +7,9 @@
 #ifndef __X64_SHELL__
 #include <dlog.h>
 #endif
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cstdlib>
@@ -19,24 +22,83 @@ void* Logger::Redirect(void* arg) {
   ssize_t size;
   char buffer[1024];
 
-  while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+  while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0 &&
+         is_running_) {
     buffer[size] = 0;
     Print(pipe == stdout_pipe_ ? kLogLevelInfo : kLogLevelError,
           std::string(buffer));
   }
+  return nullptr;
+}
 
-  close(pipe[0]);
-  close(pipe[1]);
+void* Logger::Forward(void* arg) {
+  if (logging_port_ == 0) {
+    return nullptr;
+  }
 
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (fd < 0) {
+    FT_LOG(Error) << "Error opening a socket.";
+    return nullptr;
+  }
+  int optval = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+  struct sockaddr_in addr = {};
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_port = htons(logging_port_);
+  if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    FT_LOG(Error) << "Error on binding: " << strerror(errno);
+    close(fd);
+    return nullptr;
+  }
+  if (listen(fd, 1) < 0) {
+    FT_LOG(Error) << "Error listening to incoming connection: "
+                  << strerror(errno);
+    close(fd);
+    return nullptr;
+  }
+
+  struct sockaddr_in client_addr;
+  socklen_t addr_len = sizeof(client_addr);
+  int new_fd = accept(fd, (struct sockaddr*)&client_addr, &addr_len);
+  if (new_fd < 0) {
+    FT_LOG(Error) << "Error on accept: " << strerror(errno);
+    close(fd);
+    return nullptr;
+  }
+  FT_LOG(Info) << "Accepted connection on port: " << logging_port_;
+  close(fd);
+
+  ssize_t size;
+  char buffer[1024];
+
+  if (write(new_fd, "ACCEPTED", 8) < 0) {
+    FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
+    close(new_fd);
+    return nullptr;
+  }
+  while ((size = read(logging_pipe_[0], buffer, sizeof(buffer) - 1)) > 0 &&
+         is_running_) {
+    if (write(new_fd, buffer, size) < 0) {
+      FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
+      break;
+    }
+  }
+  close(new_fd);
   return nullptr;
 }
 
 void Logger::Start() {
-  if (started_) {
-    FT_LOG(Info) << "The threads have already started.";
+  if (is_running_) {
+    FT_LOG(Info) << "The logging threads have already started.";
     return;
   }
-  if (pipe(stdout_pipe_) < 0 || pipe(stderr_pipe_) < 0) {
+  is_running_ = true;
+
+  if (pipe(stdout_pipe_) < 0 || pipe(stderr_pipe_) < 0 ||
+      pipe(logging_pipe_) < 0) {
     FT_LOG(Error) << "Failed to create pipes.";
     return;
   }
@@ -45,30 +107,42 @@ void Logger::Start() {
     return;
   }
   if (pthread_create(&stdout_thread_, 0, Redirect, stdout_pipe_) != 0 ||
-      pthread_create(&stderr_thread_, 0, Redirect, stderr_pipe_) != 0) {
+      pthread_create(&stderr_thread_, 0, Redirect, stderr_pipe_) != 0 ||
+      pthread_create(&logging_thread_, 0, Forward, nullptr) != 0) {
     FT_LOG(Error) << "Failed to create threads.";
     return;
   }
   if (pthread_detach(stdout_thread_) != 0 ||
-      pthread_detach(stderr_thread_) != 0) {
+      pthread_detach(stderr_thread_) != 0 ||
+      pthread_detach(logging_thread_) != 0) {
     FT_LOG(Warn) << "Failed to detach threads.";
   }
-  started_ = true;
 }
 
-int Logger::GetLoggingLevel() {
-  return logging_level_;
+void Logger::Stop() {
+  if (!is_running_) {
+    return;
+  }
+  is_running_ = false;
+
+  close(stdout_pipe_[0]);
+  close(stdout_pipe_[1]);
+  close(stderr_pipe_[0]);
+  close(stderr_pipe_[1]);
+  close(logging_pipe_[0]);
+  close(logging_pipe_[1]);
 }
 
-void Logger::SetLoggingLevel(int level) {
-  logging_level_ = level;
-}
-
-void Logger::Print(int level, std::string message) {
+void Logger::Print(int level, const std::string& message) {
 #ifdef __X64_SHELL__
   std::cerr << message << std::endl;
   std::cerr.flush();
 #else
+  if (logging_port_ > 0) {
+    // TODO: tag and level, else statement.
+    std::string formatted = message + '\n';
+    write(logging_pipe_[1], formatted.c_str(), formatted.size());
+  }
   log_priority priority;
   if (level == kLogLevelDebug) {
     priority = DLOG_DEBUG;
@@ -84,8 +158,8 @@ void Logger::Print(int level, std::string message) {
     priority = DLOG_INFO;
   }
 #ifdef TV_PROFILE
-  // LOG_ID_MAIN must be used to display logs properly on TV devices.
-  // Note: dlog_print(...) is an alias of __dlog_print(LOG_ID_APPS, ...).
+  // dlog_print(..) which is an alias of __dlog_print(LOG_ID_APPS, ..) is not
+  // compatible on TV devices.
   __dlog_print(LOG_ID_MAIN, priority, "ConsoleMessage", "%s", message.c_str());
 #else
   dlog_print(priority, "ConsoleMessage", "%s", message.c_str());

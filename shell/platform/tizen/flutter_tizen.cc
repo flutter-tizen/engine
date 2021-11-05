@@ -5,6 +5,7 @@
 
 #include "public/flutter_tizen.h"
 
+#include "flutter/fml/command_line.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
@@ -28,7 +29,16 @@ static FlutterDesktopEngineRef HandleForEngine(
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {
+  fml::CommandLine switches = fml::CommandLineFromArgcArgv(
+      engine_properties.switches_count, engine_properties.switches);
+  if (switches.HasOption("verbose-logging")) {
+    flutter::Logger::SetLoggingLevel(flutter::kLogLevelDebug);
+  }
 #ifndef __X64_SHELL__
+  std::string logging_port;
+  if (switches.GetOptionValue("tizen-logging-port", &logging_port)) {
+    flutter::Logger::SetLoggingPort(std::stoi(logging_port));
+  }
   flutter::Logger::Start();
 #endif
 
@@ -48,6 +58,9 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
 }
 
 void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
+#ifndef __X64_SHELL__
+  flutter::Logger::Stop();
+#endif
   auto engine = EngineFromHandle(engine_ref);
   engine->StopEngine();
   delete engine;
