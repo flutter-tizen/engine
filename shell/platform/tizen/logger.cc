@@ -133,13 +133,13 @@ void Logger::Start() {
     FT_LOG(Info) << "The threads have already started.";
     return;
   }
-  is_running_ = true;
-
   if (pipe(stdout_pipe_) < 0 || pipe(stderr_pipe_) < 0 ||
       pipe(logging_pipe_) < 0) {
     FT_LOG(Error) << "Failed to create pipes.";
     return;
   }
+  is_running_ = true;
+
   if (dup2(stdout_pipe_[1], 1) < 0 || dup2(stderr_pipe_[1], 2) < 0) {
     FT_LOG(Error) << "Failed to duplicate file descriptors.";
     return;

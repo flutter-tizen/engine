@@ -211,7 +211,6 @@ template("embedder") {
     public_deps = [ ":flutter_engine" ]
 
     deps = [
-      "//flutter/fml:command_line",
       "//flutter/shell/platform/common:common_cpp",
       "//flutter/shell/platform/common:common_cpp_input",
       "//flutter/shell/platform/common:common_cpp_library_headers",
