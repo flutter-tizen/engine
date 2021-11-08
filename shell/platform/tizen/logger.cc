@@ -178,7 +178,7 @@ void Logger::Print(int level, const std::string& message) {
 #else
   // Write the message to the logging pipe so that it can be forwarded to the
   // connected host.
-  if (logging_port_ > 0) {
+  if (logging_port_ > 0 && level >= kLogLevelInfo) {
     std::string prefix = "[" + GetLevelName(level) + "] ";
     std::string formatted = prefix + message + "\n";
     write(logging_pipe_[1], formatted.c_str(), formatted.size());
