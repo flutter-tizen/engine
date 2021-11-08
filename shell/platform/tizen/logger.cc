@@ -17,6 +17,7 @@
 
 namespace {
 
+#ifndef __X64_SHELL__
 constexpr char kLogTag[] = "ConsoleMessage";
 
 std::string GetLevelName(int level) {
@@ -34,7 +35,6 @@ std::string GetLevelName(int level) {
   }
 }
 
-#ifndef __X64_SHELL__
 log_priority LevelToPriority(int level) {
   switch (level) {
     case flutter::kLogLevelDebug:
@@ -49,7 +49,7 @@ log_priority LevelToPriority(int level) {
       return DLOG_FATAL;
   }
 }
-#endif
+#endif  // __X64_SHELL__
 
 }  // namespace
 
