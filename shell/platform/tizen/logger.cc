@@ -9,55 +9,47 @@
 #endif
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstdlib>
 #include <iostream>
 
 namespace {
 
-std::string GetLogLevelInitial(int level) {
-  if (level == flutter::kLogLevelDebug) {
-    return "D";
-  } else if (level == flutter::kLogLevelInfo) {
-    return "I";
-  } else if (level == flutter::kLogLevelWarn) {
-    return "W";
-  } else if (level == flutter::kLogLevelError) {
-    return "E";
-  } else if (level == flutter::kLogLevelFatal) {
-    return "F";
-  } else {
-    return "I";
+constexpr char kLogTag[] = "ConsoleMessage";
+
+std::string GetLevelName(int level) {
+  switch (level) {
+    case flutter::kLogLevelDebug:
+      return "D";
+    default:
+      return "I";
+    case flutter::kLogLevelWarn:
+      return "W";
+    case flutter::kLogLevelError:
+      return "E";
+    case flutter::kLogLevelFatal:
+      return "F";
   }
 }
 
 #ifndef __X64_SHELL__
-static void PrintToDlog(int level, const std::string& message) {
-  log_priority priority;
-  if (level == flutter::kLogLevelDebug) {
-    priority = DLOG_DEBUG;
-  } else if (level == flutter::kLogLevelInfo) {
-    priority = DLOG_INFO;
-  } else if (level == flutter::kLogLevelWarn) {
-    priority = DLOG_WARN;
-  } else if (level == flutter::kLogLevelError) {
-    priority = DLOG_ERROR;
-  } else if (level == flutter::kLogLevelFatal) {
-    priority = DLOG_FATAL;
-  } else {
-    priority = DLOG_INFO;
+log_priority LevelToPriority(int level) {
+  switch (level) {
+    case flutter::kLogLevelDebug:
+      return DLOG_DEBUG;
+    default:
+      return DLOG_INFO;
+    case flutter::kLogLevelWarn:
+      return DLOG_WARN;
+    case flutter::kLogLevelError:
+      return DLOG_ERROR;
+    case flutter::kLogLevelFatal:
+      return DLOG_FATAL;
   }
-#ifdef TV_PROFILE
-  // dlog_print(..) which is an alias of __dlog_print(LOG_ID_APPS, ..) is not
-  // compatible on TV devices.
-  __dlog_print(LOG_ID_MAIN, priority, "ConsoleMessage", "%s", message.c_str());
-#else
-  dlog_print(priority, "ConsoleMessage", "%s", message.c_str());
-#endif
 }
-#endif  // __X64_SHELL__
+#endif
 
 }  // namespace
 
@@ -66,7 +58,7 @@ namespace flutter {
 void* Logger::Redirect(void* arg) {
   int* pipe = static_cast<int*>(arg);
   ssize_t size;
-  char buffer[1024];
+  char buffer[4096];
 
   while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0 &&
          is_running_) {
@@ -114,18 +106,18 @@ void* Logger::Forward(void* arg) {
     close(fd);
     return nullptr;
   }
-  FT_LOG(Info) << "Accepted connection on port: " << logging_port_;
+  FT_LOG(Info) << "Connection accepted on port: " << logging_port_;
   close(fd);
 
   ssize_t size;
-  char buffer[1024];
+  char buffer[4096];
 
   if (write(new_fd, "ACCEPTED", 8) < 0) {
     FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
     close(new_fd);
     return nullptr;
   }
-  while ((size = read(logging_pipe_[0], buffer, sizeof(buffer) - 1)) > 0 &&
+  while ((size = read(logging_pipe_[0], buffer, sizeof(buffer))) > 0 &&
          is_running_) {
     if (write(new_fd, buffer, size) < 0) {
       FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
@@ -138,7 +130,7 @@ void* Logger::Forward(void* arg) {
 
 void Logger::Start() {
   if (is_running_) {
-    FT_LOG(Info) << "The logging threads have already started.";
+    FT_LOG(Info) << "The threads have already started.";
     return;
   }
   is_running_ = true;
@@ -184,15 +176,24 @@ void Logger::Print(int level, const std::string& message) {
   std::cerr << message << std::endl;
   std::cerr.flush();
 #else
-  // Write to logging pipe so that the message is forwarded to the host.
+  // Write the message to the logging pipe so that it can be forwarded to the
+  // connected host.
   if (logging_port_ > 0) {
-    std::string prefix = "[" + GetLogLevelInitial(level) + "] ";
-    std::string formatted = prefix + message + '\n';
+    std::string prefix = "[" + GetLevelName(level) + "] ";
+    std::string formatted = prefix + message + "\n";
     write(logging_pipe_[1], formatted.c_str(), formatted.size());
   }
-  // Also write to dlog for convenience.
-  PrintToDlog(level, message);
+
+  // Also print to dlog for convenience.
+  log_priority priority = LevelToPriority(level);
+#ifdef TV_PROFILE
+  // dlog_print(..) which is an alias of __dlog_print(LOG_ID_APPS, ..) is not
+  // valid on TV devices.
+  __dlog_print(LOG_ID_MAIN, priority, kLogTag, "%s", message.c_str());
+#else
+  dlog_print(priority, kLogTag, "%s", message.c_str());
 #endif
+#endif  // __X64_SHELL__
 }
 
 LogMessage::LogMessage(int level,
