@@ -290,6 +290,9 @@ bool FlutterTizenEngine::StopEngine() {
     if (plugin_registrar_destruction_callback_) {
       plugin_registrar_destruction_callback_(plugin_registrar_.get());
     }
+#ifndef TIZEN_RENDERER_EVAS_GL
+    tizen_vsync_waiter_.reset();
+#endif
     FlutterEngineResult result = embedder_api_.Shutdown(engine_);
     engine_ = nullptr;
     return (result == kSuccess);
