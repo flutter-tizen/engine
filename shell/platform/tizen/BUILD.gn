@@ -157,6 +157,7 @@ template("embedder") {
         "channels/app_control_channel.cc",
         "channels/platform_channel_tizen.cc",
         "channels/settings_channel_tizen.cc",
+        "channels/window_channel.cc",
         "external_texture_surface_gl_tizen.cc",
         "system_utils_tizen.cc",
       ]

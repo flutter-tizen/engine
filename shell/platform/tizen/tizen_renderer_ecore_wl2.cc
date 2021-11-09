@@ -553,6 +553,14 @@ void TizenRendererEcoreWl2::SetRotate(int angle) {
   received_rotation_ = true;
 }
 
+void TizenRendererEcoreWl2::SetGeometry(int32_t x,
+                                        int32_t y,
+                                        int32_t width,
+                                        int32_t height) {
+  ecore_wl2_window_geometry_set(ecore_wl2_window_, x, y, width, height);
+  ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
+}
+
 void TizenRendererEcoreWl2::ResizeWithRotation(int32_t x,
                                                int32_t y,
                                                int32_t width,

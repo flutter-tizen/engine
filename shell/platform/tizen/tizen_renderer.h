@@ -19,6 +19,12 @@ class TizenRenderer {
   class Delegate {
    public:
     virtual void OnOrientationChange(int32_t degree) = 0;
+#ifndef TIZEN_RENDERER_EVAS_GL
+    virtual void OnGeometryChange(int32_t x,
+                                  int32_t y,
+                                  int32_t width,
+                                  int32_t height) = 0;
+#endif
   };
 
   virtual ~TizenRenderer();
