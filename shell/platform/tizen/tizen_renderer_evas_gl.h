@@ -16,7 +16,7 @@ namespace flutter {
 
 class TizenRendererEvasGL : public TizenRenderer {
  public:
-  explicit TizenRendererEvasGL(WindowGeometry geometry,
+  explicit TizenRendererEvasGL(Geometry geometry,
                                bool transparent,
                                bool focusable,
                                bool top_level,
@@ -30,17 +30,22 @@ class TizenRendererEvasGL : public TizenRenderer {
   uint32_t OnGetFBO() override;
   void* OnProcResolver(const char* name) override;
 
-  WindowGeometry GetCurrentGeometry() override;
+  Geometry GetWindowGeometry() override;
+  Geometry GetScreenGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
   void* GetWindowHandle() override;
 
+  void SetRotate(int angle) override;
+  void SetGeometry(int32_t x,
+                   int32_t y,
+                   int32_t width,
+                   int32_t height) override;
   void ResizeWithRotation(int32_t x,
                           int32_t y,
                           int32_t width,
                           int32_t height,
                           int32_t angle) override;
-  void SetRotate(int angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
   bool IsSupportedExtention(const char* name) override;
 

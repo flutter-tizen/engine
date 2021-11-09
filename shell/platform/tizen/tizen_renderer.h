@@ -12,13 +12,17 @@ namespace flutter {
 
 class TizenRenderer {
  public:
-  struct WindowGeometry {
+  struct Geometry {
     int32_t x{0}, y{0}, w{0}, h{0};
   };
 
   class Delegate {
    public:
     virtual void OnOrientationChange(int32_t degree) = 0;
+    virtual void OnGeometryChange(int32_t x,
+                                  int32_t y,
+                                  int32_t width,
+                                  int32_t height) = 0;
   };
 
   virtual ~TizenRenderer();
@@ -32,12 +36,21 @@ class TizenRenderer {
   virtual uint32_t OnGetFBO() = 0;
   virtual void* OnProcResolver(const char* name) = 0;
 
-  virtual WindowGeometry GetCurrentGeometry() = 0;
+  // Returns the geometry of the current window.
+  virtual Geometry GetWindowGeometry() = 0;
+
+  // Returns the geometry of the display screen.
+  virtual Geometry GetScreenGeometry() = 0;
+
   virtual int32_t GetDpi() = 0;
   virtual uintptr_t GetWindowId() = 0;
   virtual void* GetWindowHandle() = 0;
 
   virtual void SetRotate(int angle) = 0;
+  virtual void SetGeometry(int32_t x,
+                           int32_t y,
+                           int32_t width,
+                           int32_t height) = 0;
   virtual void ResizeWithRotation(int32_t x,
                                   int32_t y,
                                   int32_t width,
@@ -47,13 +60,13 @@ class TizenRenderer {
   virtual bool IsSupportedExtention(const char* name) = 0;
 
  protected:
-  explicit TizenRenderer(WindowGeometry geometry,
+  explicit TizenRenderer(Geometry geometry,
                          bool transparent,
                          bool focusable,
                          bool top_level,
                          Delegate& delegate);
 
-  WindowGeometry initial_geometry_;
+  Geometry initial_geometry_;
   bool transparent_;
   bool focusable_;
   bool top_level_;

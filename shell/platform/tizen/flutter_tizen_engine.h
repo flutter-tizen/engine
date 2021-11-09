@@ -21,6 +21,7 @@
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
 #include "flutter/shell/platform/tizen/channels/settings_channel.h"
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
+#include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
@@ -136,10 +137,18 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // Sends a window metrics update to the Flutter engine using current window
   // dimensions in physical
-  void SendWindowMetrics(int32_t width, int32_t height, double pixel_ratio);
+  void SendWindowMetrics(int32_t x,
+                         int32_t y,
+                         int32_t width,
+                         int32_t height,
+                         double pixel_ratio);
 
   void SetWindowOrientation(int32_t degree);
   void OnOrientationChange(int32_t degree) override;
+  void OnGeometryChange(int32_t x,
+                        int32_t y,
+                        int32_t width,
+                        int32_t height) override;
   void OnVsync(intptr_t baton,
                uint64_t frame_start_time_nanos,
                uint64_t frame_target_time_nanos);
@@ -238,6 +247,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // A plugin that implements the Flutter textinput channel.
   std::unique_ptr<TextInputChannel> text_input_channel_;
+
+#ifndef __X64_SHELL__
+  // A plugin that implements the Tizen window channel.
+  std::unique_ptr<WindowChannel> window_channel_;
+#endif
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;

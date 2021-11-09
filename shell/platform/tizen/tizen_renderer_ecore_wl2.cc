@@ -11,7 +11,7 @@
 
 namespace flutter {
 
-TizenRendererEcoreWl2::TizenRendererEcoreWl2(WindowGeometry geometry,
+TizenRendererEcoreWl2::TizenRendererEcoreWl2(Geometry geometry,
                                              bool transparent,
                                              bool focusable,
                                              bool top_level,
@@ -206,10 +206,16 @@ void* TizenRendererEcoreWl2::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::WindowGeometry TizenRendererEcoreWl2::GetCurrentGeometry() {
-  WindowGeometry result;
+TizenRenderer::Geometry TizenRendererEcoreWl2::GetWindowGeometry() {
+  Geometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.x, &result.y,
                                 &result.w, &result.h);
+  return result;
+}
+
+TizenRenderer::Geometry TizenRendererEcoreWl2::GetScreenGeometry() {
+  Geometry result = {};
+  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.w, &result.h);
   return result;
 }
 
@@ -551,6 +557,14 @@ Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void* data,
 void TizenRendererEcoreWl2::SetRotate(int angle) {
   ecore_wl2_window_rotation_set(ecore_wl2_window_, angle);
   received_rotation_ = true;
+}
+
+void TizenRendererEcoreWl2::SetGeometry(int32_t x,
+                                        int32_t y,
+                                        int32_t width,
+                                        int32_t height) {
+  ecore_wl2_window_geometry_set(ecore_wl2_window_, x, y, width, height);
+  ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
 }
 
 void TizenRendererEcoreWl2::ResizeWithRotation(int32_t x,

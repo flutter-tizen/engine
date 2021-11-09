@@ -92,7 +92,7 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
                                             bool transparent,
                                             bool focusable,
                                             bool top_level) {
-  TizenRenderer::WindowGeometry geometry = {x, y, width, height};
+  TizenRenderer::Geometry geometry = {x, y, width, height};
 
 #ifdef TIZEN_RENDERER_EVAS_GL
   renderer_ = std::make_unique<TizenRendererEvasGL>(
@@ -267,6 +267,10 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     text_input_channel_ = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(),
         std::make_unique<TizenInputMethodContext>(this));
+#ifndef __X64_SHELL__
+    window_channel_ = std::make_unique<WindowChannel>(
+        internal_plugin_registrar_->messenger(), renderer_.get(), this);
+#endif
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
@@ -343,11 +347,15 @@ void FlutterTizenEngine::SendPointerEvent(const FlutterPointerEvent& event) {
   embedder_api_.SendPointerEvent(engine_, &event, 1);
 }
 
-void FlutterTizenEngine::SendWindowMetrics(int32_t width,
+void FlutterTizenEngine::SendWindowMetrics(int32_t x,
+                                           int32_t y,
+                                           int32_t width,
                                            int32_t height,
                                            double pixel_ratio) {
   FlutterWindowMetricsEvent event = {};
   event.struct_size = sizeof(FlutterWindowMetricsEvent);
+  event.left = static_cast<size_t>(x);
+  event.top = static_cast<size_t>(y);
   event.width = static_cast<size_t>(width);
   event.height = static_cast<size_t>(height);
   if (pixel_ratio == 0.0) {
@@ -377,7 +385,7 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
   renderer_->SetRotate(degree);
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - degree) * M_PI / 180;
-  auto geometry = renderer_->GetCurrentGeometry();
+  auto geometry = renderer_->GetWindowGeometry();
   double width = geometry.w;
   double height = geometry.h;
 
@@ -397,18 +405,31 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
   };
   touch_event_handler_->rotation = degree;
   if (degree == 90 || degree == 270) {
-    renderer_->ResizeWithRotation(geometry.x, geometry.y, height, width,
-                                  degree);
-    SendWindowMetrics(height, width, 0.0);
-  } else {
-    renderer_->ResizeWithRotation(geometry.x, geometry.y, width, height,
-                                  degree);
-    SendWindowMetrics(width, height, 0.0);
+    std::swap(width, height);
   }
+  renderer_->ResizeWithRotation(geometry.x, geometry.y, width, height, degree);
+  // Window position does not change on rotation regardless of its orientation.
+  SendWindowMetrics(geometry.x, geometry.y, width, height, 0.0);
 }
 
 void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
   SetWindowOrientation(degree);
+}
+
+void FlutterTizenEngine::OnGeometryChange(int32_t x,
+                                          int32_t y,
+                                          int32_t width,
+                                          int32_t height) {
+#ifdef TIZEN_RENDERER_EVAS_GL
+  FT_UNIMPLEMENTED();
+#else
+  if (!renderer_->IsValid()) {
+    return;
+  }
+  renderer_->SetGeometry(x, y, width, height);
+  renderer_->ResizeWithRotation(x, y, width, height, 0);
+  SendWindowMetrics(x, y, width, height, 0.0);
+#endif
 }
 
 void FlutterTizenEngine::OnVsync(intptr_t baton,
@@ -456,8 +477,8 @@ bool FlutterTizenEngine::MarkExternalTextureFrameAvailable(int64_t texture_id) {
               engine_, texture_id) == kSuccess);
 }
 
-// The Flutter Engine calls out to this function when new platform messages are
-// available.
+// The Flutter Engine calls out to this function when new platform messages
+// are available.
 
 // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
 FlutterDesktopMessage FlutterTizenEngine::ConvertToDesktopMessage(
