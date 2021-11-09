@@ -348,8 +348,8 @@ void FlutterTizenEngine::SendWindowMetrics(int32_t width,
                                            double pixel_ratio) {
   FlutterWindowMetricsEvent event = {};
   event.struct_size = sizeof(FlutterWindowMetricsEvent);
-  event.width = width;
-  event.height = height;
+  event.width = static_cast<size_t>(width);
+  event.height = static_cast<size_t>(height);
   if (pixel_ratio == 0.0) {
     // The scale factor is computed based on the display DPI and the current
     // profile. A fixed DPI value (72) is used on TVs. See:
