@@ -632,17 +632,6 @@ deps = {
 
 hooks = [
   {
-    # This clobbers when necessary (based on get_landmines.py). It must be the
-    # first hook so that other things that get/generate into the output
-    # directory will not subsequently be clobbered.
-    'name': 'landmines',
-    'pattern': '.',
-    'action': [
-        'python3',
-        'src/build/landmines.py',
-    ],
-  },
-  {
     # Update the Windows toolchain if necessary.
     'name': 'win_toolchain',
     'condition': 'download_windows_deps',
