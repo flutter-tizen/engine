@@ -7,6 +7,7 @@
 
 #include <Ecore.h>
 #include <tdm_client.h>
+#include <mutex>
 
 #include "flutter/shell/platform/embedder/embedder.h"
 
@@ -22,6 +23,7 @@ class TdmClient {
   void DestroyTdm();
   bool IsValid();
   void WaitVblank(intptr_t baton);
+  void OnEngineStop();
   static void VblankCallback(tdm_client_vblank* vblank,
                              tdm_error error,
                              unsigned int sequence,
@@ -30,6 +32,7 @@ class TdmClient {
                              void* user_data);
 
  private:
+  std::mutex engine_mutex_;
   tdm_client* client_{nullptr};
   tdm_client_output* output_{nullptr};
   tdm_client_vblank* vblank_{nullptr};
@@ -42,6 +45,7 @@ class TizenVsyncWaiter {
   TizenVsyncWaiter(FlutterTizenEngine* engine);
   virtual ~TizenVsyncWaiter();
   void AsyncWaitForVsync(intptr_t baton);
+  void SetTdmClient(TdmClient* tdm_client);
 
  private:
   void Send(int event, intptr_t baton);
@@ -49,6 +53,7 @@ class TizenVsyncWaiter {
   Ecore_Thread* vblank_thread_{nullptr};
   Eina_Thread_Queue* vblank_thread_queue_{nullptr};
   FlutterTizenEngine* engine_{nullptr};
+  TdmClient* tdm_client_{nullptr};
 };
 
 }  // namespace flutter

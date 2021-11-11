@@ -27,11 +27,18 @@ TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
+  if (tdm_client_) {
+    tdm_client_->OnEngineStop();
+  }
   Send(kMessageQuit, 0);
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
   }
+}
+
+void TizenVsyncWaiter::SetTdmClient(TdmClient* tdm_client) {
+  tdm_client_ = tdm_client;
 }
 
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
@@ -62,6 +69,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* tizen_vsync_waiter =
       reinterpret_cast<TizenVsyncWaiter*>(data);
   TdmClient tdm_client(tizen_vsync_waiter->engine_);
+  tizen_vsync_waiter->SetTdmClient(&tdm_client);
   if (!tdm_client.IsValid()) {
     FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
@@ -104,6 +112,11 @@ TdmClient::TdmClient(FlutterTizenEngine* engine) {
 
 TdmClient::~TdmClient() {
   DestroyTdm();
+}
+
+void TdmClient::OnEngineStop() {
+  std::lock_guard<std::mutex> lock(engine_mutex_);
+  engine_ = nullptr;
 }
 
 void TdmClient::WaitVblank(intptr_t baton) {
@@ -164,12 +177,13 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                void* user_data) {
   TdmClient* client = reinterpret_cast<TdmClient*>(user_data);
   FT_ASSERT(client != nullptr);
-  FT_ASSERT(client->engine_ != nullptr);
-
-  uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
-  uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-  client->engine_->OnVsync(client->baton_, frame_start_time_nanos,
-                           frame_target_time_nanos);
+  std::lock_guard<std::mutex> lock(client->engine_mutex_);
+  if (client->engine_) {
+    uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
+    uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
+    client->engine_->OnVsync(client->baton_, frame_start_time_nanos,
+                             frame_target_time_nanos);
+  }
 }
 
 }  // namespace flutter
