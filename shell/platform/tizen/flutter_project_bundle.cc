@@ -67,16 +67,34 @@ FlutterProjectBundle::FlutterProjectBundle(
     }
   }
 
-  switches_.insert(switches_.end(), properties.switches,
-                   properties.switches + properties.switches_count);
+  engine_arguments_.insert(engine_arguments_.end(), properties.switches,
+                           properties.switches + properties.switches_count);
 }
 
 bool FlutterProjectBundle::HasValidPaths() {
   return !assets_path_.empty() && !icu_path_.empty();
 }
 
-// Attempts to load AOT data from the given path, which must be absolute and
-// non-empty. Logs and returns nullptr on failure.
+bool FlutterProjectBundle::HasArgument(const std::string& name) {
+  return std::find(engine_arguments_.begin(), engine_arguments_.end(), name) !=
+         engine_arguments_.end();
+}
+
+bool FlutterProjectBundle::GetArgumentValue(const std::string& name,
+                                            std::string* value) {
+  auto iter =
+      std::find(engine_arguments_.begin(), engine_arguments_.end(), name);
+  if (iter == engine_arguments_.end()) {
+    return false;
+  }
+  auto next = std::next(iter);
+  if (next == engine_arguments_.end()) {
+    return false;
+  }
+  *value = *next;
+  return true;
+}
+
 UniqueAotDataPtr FlutterProjectBundle::LoadAotData(
     const FlutterEngineProcTable& engine_procs) {
   if (aot_library_path_.empty()) {

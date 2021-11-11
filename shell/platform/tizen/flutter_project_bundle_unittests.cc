@@ -34,7 +34,7 @@ TEST(FlutterProjectBundle, BasicPropertiesRelativePaths) {
   EXPECT_EQ(project.icu_path().filename().string(), "icudtl.dat");
 }
 
-TEST(FlutterProjectBundle, SwitchesEmpty) {
+TEST(FlutterProjectBundle, EmptyEngineArguments) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "foo/flutter_assets";
   properties.icu_data_path = "foo/icudtl.dat";
@@ -45,10 +45,10 @@ TEST(FlutterProjectBundle, SwitchesEmpty) {
 
   FlutterProjectBundle project(properties);
 
-  EXPECT_EQ(project.switches().size(), 0u);
+  EXPECT_EQ(project.engine_arguments().size(), 0u);
 }
 
-TEST(FlutterProjectBundle, Switches) {
+TEST(FlutterProjectBundle, HasEngineArguments) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "foo/flutter_assets";
   properties.icu_data_path = "foo/icudtl.dat";
@@ -62,9 +62,9 @@ TEST(FlutterProjectBundle, Switches) {
 
   FlutterProjectBundle project(properties);
 
-  EXPECT_EQ(project.switches().size(), 2u);
-  EXPECT_EQ(project.switches()[0], "--abc");
-  EXPECT_EQ(project.switches()[1], "--foo=\"bar, baz\"");
+  EXPECT_EQ(project.engine_arguments().size(), 2u);
+  EXPECT_EQ(project.engine_arguments()[0], "--abc");
+  EXPECT_EQ(project.engine_arguments()[1], "--foo=\"bar, baz\"");
 }
 
 }  // namespace testing

@@ -21,27 +21,32 @@ constexpr int kLogLevelFatal = 4;
 
 class Logger {
  public:
-  // Starts logging threads which constantly redirect stdout/stderr to dlog.
-  // The threads should be started only once per process.
   static void Start();
+  static void Stop();
 
-  static int GetLoggingLevel();
-  static void SetLoggingLevel(int level);
+  static int GetLoggingLevel() { return logging_level_; }
+  static void SetLoggingLevel(int level) { logging_level_ = level; }
 
-  static void Print(int level, std::string message);
+  static void SetLoggingPort(int32_t port) { logging_port_ = port; }
+
+  static void Print(int level, const std::string& message);
 
  private:
   explicit Logger();
 
   static void* Redirect(void* arg);
+  static void* Forward(void* arg);
 
-  static inline bool started_ = false;
+  static inline bool is_running_ = false;
   static inline int stdout_pipe_[2];
   static inline int stderr_pipe_[2];
+  static inline int logging_pipe_[2];
   static inline pthread_t stdout_thread_;
   static inline pthread_t stderr_thread_;
+  static inline pthread_t logging_thread_;
 
   static inline int logging_level_ = kLogLevelError;
+  static inline int32_t logging_port_ = 0;
 };
 
 class LogMessage {

@@ -39,8 +39,16 @@ class FlutterProjectBundle {
   // Returns the path to the ICU data file.
   const std::filesystem::path& icu_path() { return icu_path_; }
 
-  // Returns any switches that should be passed to the engine.
-  const std::vector<std::string> switches() { return switches_; }
+  // Returns the arguments to be passed to the engine.
+  const std::vector<std::string> engine_arguments() {
+    return engine_arguments_;
+  }
+
+  // Returns true if |engine_arguments| contains the argument |name|.
+  bool HasArgument(const std::string& name);
+
+  // Gets the value of the argument |name| from |engine_arguments|.
+  bool GetArgumentValue(const std::string& name, std::string* value);
 
   // Attempts to load AOT data for this bundle. The returned data must be
   // retained until any engine instance it is passed to has been shut down.
@@ -57,7 +65,7 @@ class FlutterProjectBundle {
  private:
   std::filesystem::path assets_path_;
   std::filesystem::path icu_path_;
-  std::vector<std::string> switches_ = {};
+  std::vector<std::string> engine_arguments_ = {};
 
   // Path to the AOT library file, if any.
   std::filesystem::path aot_library_path_;

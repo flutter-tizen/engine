@@ -13,26 +13,47 @@
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 
+namespace {
+
 // Returns the engine corresponding to the given opaque API handle.
-static flutter::FlutterTizenEngine* EngineFromHandle(
-    FlutterDesktopEngineRef ref) {
+flutter::FlutterTizenEngine* EngineFromHandle(FlutterDesktopEngineRef ref) {
   return reinterpret_cast<flutter::FlutterTizenEngine*>(ref);
 }
 
 // Returns the opaque API handle for the given engine instance.
-static FlutterDesktopEngineRef HandleForEngine(
-    flutter::FlutterTizenEngine* engine) {
+FlutterDesktopEngineRef HandleForEngine(flutter::FlutterTizenEngine* engine) {
   return reinterpret_cast<FlutterDesktopEngineRef>(engine);
 }
+
+// Returns the texture registrar corresponding to the given opaque API handle.
+flutter::FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
+    FlutterDesktopTextureRegistrarRef ref) {
+  return reinterpret_cast<flutter::FlutterTizenTextureRegistrar*>(ref);
+}
+
+// Returns the opaque API handle for the given texture registrar instance.
+FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
+    flutter::FlutterTizenTextureRegistrar* registrar) {
+  return reinterpret_cast<FlutterDesktopTextureRegistrarRef>(registrar);
+}
+
+}  // namespace
 
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {
+  flutter::FlutterProjectBundle project(engine_properties);
+  if (project.HasArgument("--verbose-logging")) {
+    flutter::Logger::SetLoggingLevel(flutter::kLogLevelDebug);
+  }
 #ifndef __X64_SHELL__
+  std::string logging_port;
+  if (project.GetArgumentValue("--tizen-logging-port", &logging_port)) {
+    flutter::Logger::SetLoggingPort(std::stoi(logging_port));
+  }
   flutter::Logger::Start();
 #endif
 
-  flutter::FlutterProjectBundle project(engine_properties);
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
   if (window_properties.headed) {
     engine->InitializeRenderer(
@@ -48,6 +69,9 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
 }
 
 void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
+#ifndef __X64_SHELL__
+  flutter::Logger::Stop();
+#endif
   auto engine = EngineFromHandle(engine_ref);
   engine->StopEngine();
   delete engine;
@@ -159,18 +183,6 @@ void FlutterRegisterViewFactory(
   registrar->engine->platform_view_channel()->ViewFactories().insert(
       std::pair<std::string, std::unique_ptr<PlatformViewFactory>>(
           view_type, std::move(view_factory)));
-}
-
-// Returns the texture registrar corresponding to the given opaque API handle.
-static flutter::FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
-    FlutterDesktopTextureRegistrarRef ref) {
-  return reinterpret_cast<flutter::FlutterTizenTextureRegistrar*>(ref);
-}
-
-// Returns the opaque API handle for the given texture registrar instance.
-static FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
-    flutter::FlutterTizenTextureRegistrar* registrar) {
-  return reinterpret_cast<FlutterDesktopTextureRegistrarRef>(registrar);
 }
 
 FlutterDesktopTextureRegistrarRef FlutterDesktopRegistrarGetTextureRegistrar(

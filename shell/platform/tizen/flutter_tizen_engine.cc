@@ -142,16 +142,11 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   // FlutterProjectArgs is expecting a full argv, so when processing it for
   // flags the first item is treated as the executable and ignored. Add a dummy
   // value so that all provided arguments are used.
-  std::vector<std::string> switches = project_->switches();
-  std::vector<const char*> argv = {"placeholder"};
+  std::vector<std::string> engine_args = project_->engine_arguments();
+  std::vector<const char*> engine_argv = {"placeholder"};
   std::transform(
-      switches.begin(), switches.end(), std::back_inserter(argv),
+      engine_args.begin(), engine_args.end(), std::back_inserter(engine_argv),
       [](const std::string& arg) -> const char* { return arg.c_str(); });
-
-  if (std::find(switches.begin(), switches.end(), "--verbose-logging") !=
-      switches.end()) {
-    Logger::SetLoggingLevel(kLogLevelDebug);
-  }
 
   const std::vector<std::string>& entrypoint_args =
       project_->dart_entrypoint_arguments();
@@ -200,8 +195,9 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   args.struct_size = sizeof(FlutterProjectArgs);
   args.assets_path = assets_path_string.c_str();
   args.icu_data_path = icu_path_string.c_str();
-  args.command_line_argc = static_cast<int>(argv.size());
-  args.command_line_argv = argv.size() > 0 ? argv.data() : nullptr;
+  args.command_line_argc = static_cast<int>(engine_argv.size());
+  args.command_line_argv =
+      engine_argv.size() > 0 ? engine_argv.data() : nullptr;
   args.dart_entrypoint_argc = static_cast<int>(entrypoint_argv.size());
   args.dart_entrypoint_argv =
       entrypoint_argv.size() > 0 ? entrypoint_argv.data() : nullptr;
