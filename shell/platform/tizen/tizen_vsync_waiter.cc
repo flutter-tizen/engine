@@ -27,8 +27,8 @@ TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  if (tdmClient_) {
-    tdmClient_->OnEngineStop();
+  if (tdm_client_) {
+    tdm_client_->OnEngineStop();
   }
   Send(kMessageQuit, 0);
   if (vblank_thread_) {
@@ -37,8 +37,8 @@ TizenVsyncWaiter::~TizenVsyncWaiter() {
   }
 }
 
-void TizenVsyncWaiter::SetTdmClient(TdmClient* tdmClient) {
-  tdmClient_ = tdmClient;
+void TizenVsyncWaiter::SetTdmClient(TdmClient* tdm_client) {
+  tdm_client_ = tdm_client;
 }
 
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
@@ -107,7 +107,6 @@ TdmClient::TdmClient(FlutterTizenEngine* engine) {
   if (!CreateTdm()) {
     FT_LOG(Error) << "CreateTdm() failed.";
   }
-  std::lock_guard<std::mutex> lock(engine_mutex_);
   engine_ = engine;
 }
 
@@ -178,6 +177,7 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                void* user_data) {
   TdmClient* client = reinterpret_cast<TdmClient*>(user_data);
   FT_ASSERT(client != nullptr);
+  std::lock_guard<std::mutex> lock(client->engine_mutex_);
   if (client->engine_) {
     uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
     uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
