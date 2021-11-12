@@ -59,6 +59,7 @@ config("rootstrap_include_dirs") {
     "$local_prefix/include/eo-1",
     "$local_prefix/include/feedback",
     "$local_prefix/include/system",
+    "$local_prefix/include/tzsh",
     "$local_prefix/include/wayland-extension",
   ]
 
@@ -175,6 +176,8 @@ template("embedder") {
         "feedback",
         "tbm",
         "tdm-client",
+        "tzsh_common",
+        "tzsh_softkey",
         "EGL",
         "GLESv2",
       ]

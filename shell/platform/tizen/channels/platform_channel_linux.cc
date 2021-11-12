@@ -22,6 +22,15 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
   FT_UNIMPLEMENTED();
 }
 
+void PlatformChannel::RestoreSystemUIOverlays() {
+  FT_UNIMPLEMENTED();
+}
+
+void PlatformChannel::SetEnabledSystemUIOverlays(
+    const std::vector<std::string>& overlays) {
+  FT_UNIMPLEMENTED();
+}
+
 void PlatformChannel::SetPreferredOrientations(
     const std::vector<std::string>& orientations) {
   FT_UNIMPLEMENTED();
