@@ -7,6 +7,7 @@
 #ifndef __X64_SHELL__
 #include <dlog.h>
 #endif
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -60,8 +61,7 @@ void* Logger::Redirect(void* arg) {
   ssize_t size;
   char buffer[4096];
 
-  while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0 &&
-         is_running_) {
+  while ((size = read(pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
     buffer[size] = 0;
     Print(pipe == stdout_pipe_ ? kLogLevelInfo : kLogLevelError,
           std::string(buffer));
@@ -109,20 +109,17 @@ void* Logger::Forward(void* arg) {
   FT_LOG(Info) << "Connection accepted on port: " << logging_port_;
   close(fd);
 
-  ssize_t size;
-  char buffer[4096];
-
   if (write(new_fd, "ACCEPTED", 8) < 0) {
     FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
     close(new_fd);
     return nullptr;
   }
-  while ((size = read(logging_pipe_[0], buffer, sizeof(buffer))) > 0 &&
-         is_running_) {
-    if (write(new_fd, buffer, size) < 0) {
-      FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
-      break;
-    }
+  ssize_t size;
+  while ((size = splice(logging_pipe_[0], nullptr, new_fd, nullptr, 4096,
+                        SPLICE_F_MOVE)) > 0) {
+  }
+  if (size < 0) {
+    FT_LOG(Error) << "Error writing to socket: " << strerror(errno);
   }
   close(new_fd);
   return nullptr;
