@@ -97,8 +97,6 @@ class TizenWindowSystemShell {
   TizenWindowSystemShell(const TizenWindowSystemShell&) = delete;
   TizenWindowSystemShell& operator=(const TizenWindowSystemShell&) = delete;
 
-  bool IsSoftkeyShown() { return is_softkey_shown_; }
-
   void InitializeSoftkey(uint32_t window_id) {
     if (tizen_shell_softkey_ || !tizen_shell_) {
       return;
@@ -117,6 +115,8 @@ class TizenWindowSystemShell {
     }
   }
 
+  bool IsSoftkeyShown() { return is_softkey_shown_; }
+
   void ShowSoftkey() {
     if (!tizen_shell_softkey_) {
       return;
@@ -125,6 +125,7 @@ class TizenWindowSystemShell {
     if (ret != TZSH_ERROR_NONE) {
       FT_LOG(Error) << "tzsh_softkey_global_show() failed with error: "
                     << get_error_message(ret);
+      return;
     }
     is_softkey_shown_ = true;
   }
@@ -139,6 +140,7 @@ class TizenWindowSystemShell {
     if (ret != TZSH_ERROR_NONE) {
       FT_LOG(Error) << "tzsh_softkey_global_hide() failed with error: "
                     << get_error_message(ret);
+      return;
     }
     is_softkey_shown_ = false;
   }
