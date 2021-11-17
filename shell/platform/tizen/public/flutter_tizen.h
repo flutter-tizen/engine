@@ -91,8 +91,6 @@ FLUTTER_EXPORT FlutterDesktopPluginRegistrarRef
 FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
                                  const char* plugin_name);
 
-// ========== View ==========
-
 // Returns the messenger associated with the engine.
 FLUTTER_EXPORT FlutterDesktopMessengerRef
 FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
