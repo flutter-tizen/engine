@@ -97,7 +97,12 @@ FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
 FLUTTER_EXPORT FlutterDesktopMessengerRef
 FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
 
-// Return backing elm window for manipulation in host application.
+/**
+ * Return backing window for manipulation in host application.
+ *
+ * If run engine on a wearable device, need cast void* to Evas_Objct*,
+ * otherwise cast void* to Ecore_Wl2_Window*.
+ */
 FLUTTER_EXPORT void* FlutterDesktopViewGetWindow(FlutterDesktopViewRef view);
 
 // Returns the view associated with this registrar's engine instance.
