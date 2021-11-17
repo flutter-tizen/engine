@@ -29,6 +29,8 @@ class PlatformChannel {
   void SystemNavigatorPop();
   void PlaySystemSound(const std::string& sound_type);
   void HapticFeedbackVibrate(const std::string& feedback_type);
+  void RestoreSystemUIOverlays();
+  void SetEnabledSystemUIOverlays(const std::vector<std::string>& overlays);
   void SetPreferredOrientations(const std::vector<std::string>& orientations);
 
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;

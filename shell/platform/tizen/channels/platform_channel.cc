@@ -18,14 +18,16 @@ constexpr char kSetClipboardDataMethod[] = "Clipboard.setData";
 constexpr char kPlaySoundMethod[] = "SystemSound.play";
 constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
-constexpr char kSetPreferredOrientationsMethod[] =
-    "SystemChrome.setPreferredOrientations";
-constexpr char kSetApplicationSwitcherDescriptionMethod[] =
-    "SystemChrome.setApplicationSwitcherDescription";
-constexpr char kSetEnabledSystemUIOverlaysMethod[] =
-    "SystemChrome.setEnabledSystemUIOverlays";
 constexpr char kRestoreSystemUIOverlaysMethod[] =
     "SystemChrome.restoreSystemUIOverlays";
+constexpr char kSetApplicationSwitcherDescriptionMethod[] =
+    "SystemChrome.setApplicationSwitcherDescription";
+constexpr char kSetEnabledSystemUIModeMethod[] =
+    "SystemChrome.setEnabledSystemUIMode";
+constexpr char kSetEnabledSystemUIOverlaysMethod[] =
+    "SystemChrome.setEnabledSystemUIOverlays";
+constexpr char kSetPreferredOrientationsMethod[] =
+    "SystemChrome.setPreferredOrientations";
 constexpr char kSetSystemUIOverlayStyleMethod[] =
     "SystemChrome.setSystemUIOverlayStyle";
 
@@ -100,6 +102,17 @@ void PlatformChannel::HandleMethodCall(
     }
     text_clipboard = iter->value.GetString();
     result->Success();
+  } else if (method == kRestoreSystemUIOverlaysMethod) {
+    RestoreSystemUIOverlays();
+    result->Success();
+  } else if (method == kSetEnabledSystemUIOverlaysMethod) {
+    const auto& list = arguments[0];
+    std::vector<std::string> overlays;
+    for (auto iter = list.Begin(); iter != list.End(); ++iter) {
+      overlays.push_back(iter->GetString());
+    }
+    SetEnabledSystemUIOverlays(overlays);
+    result->Success();
   } else if (method == kSetPreferredOrientationsMethod) {
     const auto& list = arguments[0];
     std::vector<std::string> orientations;
@@ -110,9 +123,7 @@ void PlatformChannel::HandleMethodCall(
     result->Success();
   } else if (method == kSetApplicationSwitcherDescriptionMethod) {
     result->NotImplemented();
-  } else if (method == kSetEnabledSystemUIOverlaysMethod) {
-    result->NotImplemented();
-  } else if (method == kRestoreSystemUIOverlaysMethod) {
+  } else if (method == kSetEnabledSystemUIModeMethod) {
     result->NotImplemented();
   } else if (method == kSetSystemUIOverlayStyleMethod) {
     result->NotImplemented();
