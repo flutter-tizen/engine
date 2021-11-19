@@ -29,7 +29,7 @@ class TizenRenderer {
 
   bool IsValid() { return is_valid_; }
 
-  virtual void* GetRenderTarget() = 0;
+  virtual void* GetWindow() = 0;
   virtual bool OnMakeCurrent() = 0;
   virtual bool OnClearCurrent() = 0;
   virtual bool OnMakeResourceCurrent() = 0;

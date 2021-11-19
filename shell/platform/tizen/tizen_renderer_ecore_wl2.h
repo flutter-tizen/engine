@@ -25,7 +25,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
                                  Delegate& delegate);
   virtual ~TizenRendererEcoreWl2();
 
-  void* GetRenderTarget() override;
+  void* GetWindow() override;
   bool OnMakeCurrent() override;
   bool OnClearCurrent() override;
   bool OnMakeResourceCurrent() override;

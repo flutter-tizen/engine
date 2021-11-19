@@ -23,7 +23,7 @@ class TizenRendererEvasGL : public TizenRenderer {
                                Delegate& delegate);
   virtual ~TizenRendererEvasGL();
 
-  void* GetRenderTarget() override;
+  void* GetWindow() override;
   bool OnMakeCurrent() override;
   bool OnClearCurrent() override;
   bool OnMakeResourceCurrent() override;

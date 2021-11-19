@@ -627,7 +627,7 @@ void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
       tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
 }
 
-void* TizenRendererEcoreWl2::GetRenderTarget() {
+void* TizenRendererEcoreWl2::GetWindow() {
   return ecore_wl2_window_;
 }
 
