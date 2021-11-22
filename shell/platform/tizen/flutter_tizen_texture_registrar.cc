@@ -97,10 +97,10 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
     case kFlutterDesktopGpuBufferTexture:
       ExternalTextureExtensionType gl_extension =
           ExternalTextureExtensionType::kNone;
-      if (engine_->renderer()->IsSupportedExtention(
+      if (engine_->renderer()->IsSupportedExtension(
               "EGL_TIZEN_image_native_surface")) {
         gl_extension = ExternalTextureExtensionType::kNativeSurface;
-      } else if (engine_->renderer()->IsSupportedExtention(
+      } else if (engine_->renderer()->IsSupportedExtension(
                      "EGL_EXT_image_dma_buf_import")) {
         gl_extension = ExternalTextureExtensionType::kDmaBuffer;
       }

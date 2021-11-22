@@ -15,7 +15,7 @@ namespace flutter {
 class ExternalTextureSurfaceGL : public ExternalTexture {
  public:
   ExternalTextureSurfaceGL(
-      ExternalTextureExtensionType gl_extention,
+      ExternalTextureExtensionType gl_extension,
       FlutterDesktopGpuBufferTextureCallback texture_callback,
       FlutterDesktopGpuBufferDestructionCallback destruction_callback,
       void* user_data);

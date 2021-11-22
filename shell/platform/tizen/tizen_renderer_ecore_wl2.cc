@@ -384,7 +384,7 @@ bool TizenRendererEcoreWl2::SetupEglSurface() {
     FT_LOG(Error) << "ChooseEGLConfiguration() failed.";
     return false;
   }
-  egl_extention_str_ = eglQueryString(egl_display_, EGL_EXTENSIONS);
+  egl_extension_str_ = eglQueryString(egl_display_, EGL_EXTENSIONS);
 
   const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
   egl_context_ = eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT,
@@ -590,11 +590,8 @@ void TizenRendererEcoreWl2::SetPreferredOrientations(
                                            rotations.size());
 }
 
-bool TizenRendererEcoreWl2::IsSupportedExtention(const char* name) {
-  if (strstr(egl_extention_str_.c_str(), name)) {
-    return true;
-  }
-  return false;
+bool TizenRendererEcoreWl2::IsSupportedExtension(const char* name) {
+  return strstr(egl_extension_str_.c_str(), name);
 }
 
 void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
