@@ -37,16 +37,6 @@ FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
   return reinterpret_cast<FlutterDesktopTextureRegistrarRef>(registrar);
 }
 
-// Returns the renderer corresponding to the given opaque API handle.
-flutter::TizenRenderer* RendererFromHandle(FlutterDesktopRendererRef ref) {
-  return reinterpret_cast<flutter::TizenRenderer*>(ref);
-}
-
-// Returns the opaque API handle for the given renderer instance.
-FlutterDesktopRendererRef HandleForRenderer(flutter::TizenRenderer* renderer) {
-  return reinterpret_cast<FlutterDesktopRendererRef>(renderer);
-}
-
 }  // namespace
 
 FlutterDesktopEngineRef FlutterDesktopRunEngine(
@@ -87,13 +77,8 @@ void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
   delete engine;
 }
 
-void* FlutterDesktopRendererGetWindow(FlutterDesktopRendererRef renderer) {
-  return RendererFromHandle(renderer)->GetWindow();
-}
-
-FlutterDesktopRendererRef FlutterDesktopPluginRegistrarGetRenderer(
-    FlutterDesktopPluginRegistrarRef registrar) {
-  return HandleForRenderer(registrar->engine->renderer());
+void* FlutterDesktopGetWindow(FlutterDesktopPluginRegistrarRef registrar) {
+  return registrar->engine->renderer()->GetWindow();
 }
 
 void FlutterDesktopPluginRegistrarEnableInputBlocking(

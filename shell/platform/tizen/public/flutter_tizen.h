@@ -17,10 +17,6 @@
 extern "C" {
 #endif
 
-// Opaque reference to a Flutter renderer.
-struct FlutterDesktopRenderer;
-typedef struct FlutterDesktopRenderer* FlutterDesktopRendererRef;
-
 // Opaque reference to a Flutter engine instance.
 struct FlutterDesktopEngine;
 typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;
@@ -101,12 +97,7 @@ FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
  * If run engine on a wearable device, need cast void* to Evas_Objct*,
  * otherwise cast void* to Ecore_Wl2_Window*.
  */
-FLUTTER_EXPORT void* FlutterDesktopRendererGetWindow(
-    FlutterDesktopRendererRef renderer);
-
-// Returns the renderer associated with this registrar's engine instance.
-FLUTTER_EXPORT FlutterDesktopRendererRef
-FlutterDesktopPluginRegistrarGetRenderer(
+FLUTTER_EXPORT void* FlutterDesktopGetWindow(
     FlutterDesktopPluginRegistrarRef registrar);
 
 // Posts an app control to the engine instance.
