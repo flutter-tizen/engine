@@ -47,7 +47,7 @@ class TizenRendererEvasGL : public TizenRenderer {
                           int32_t height,
                           int32_t angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
-  bool IsSupportedExtention(const char* name) override;
+  bool IsSupportedExtension(const char* name) override;
 
   Evas_Object* GetImageHandle();
 

@@ -45,11 +45,11 @@ static void OnCollectTexture(void* textureGL) {
 }
 
 ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
-    ExternalTextureExtensionType gl_extention,
+    ExternalTextureExtensionType gl_extension,
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     FlutterDesktopGpuBufferDestructionCallback destruction_callback,
     void* user_data)
-    : ExternalTexture(gl_extention),
+    : ExternalTexture(gl_extension),
       texture_callback_(texture_callback),
       destruction_callback_(destruction_callback),
       user_data_(user_data) {}
@@ -90,12 +90,12 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
 
 #ifdef TIZEN_RENDERER_EVAS_GL
   EvasGLImage egl_src_image = nullptr;
-  if (state_->gl_extention == ExternalTextureExtensionType::kNativeSurface) {
+  if (state_->gl_extension == ExternalTextureExtensionType::kNativeSurface) {
     int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
     egl_src_image = evasglCreateImageForContext(
         g_evas_gl, evas_gl_current_context_get(g_evas_gl),
         EVAS_GL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
-  } else if (state_->gl_extention == ExternalTextureExtensionType::kDmaBuffer) {
+  } else if (state_->gl_extension == ExternalTextureExtensionType::kDmaBuffer) {
     FT_LOG(Error)
         << "EGL_EXT_image_dma_buf_import is not supported this renderer.";
     return false;
@@ -127,13 +127,13 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
           eglGetProcAddress("eglCreateImageKHR"));
   EGLImageKHR egl_src_image = nullptr;
 
-  if (state_->gl_extention == ExternalTextureExtensionType::kNativeSurface) {
+  if (state_->gl_extension == ExternalTextureExtensionType::kNativeSurface) {
     const EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE,
                               EGL_NONE};
     egl_src_image =
         n_eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
                             EGL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
-  } else if (state_->gl_extention == ExternalTextureExtensionType::kDmaBuffer) {
+  } else if (state_->gl_extension == ExternalTextureExtensionType::kDmaBuffer) {
     EGLint attribs[50];
     int atti = 0;
     int plane_fd_ext[4] = {EGL_DMA_BUF_PLANE0_FD_EXT, EGL_DMA_BUF_PLANE1_FD_EXT,
@@ -172,7 +172,7 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
   }
 
   if (!egl_src_image) {
-    if (state_->gl_extention != ExternalTextureExtensionType::kNone) {
+    if (state_->gl_extension != ExternalTextureExtensionType::kNone) {
       FT_LOG(Error) << "eglCreateImageKHR failed with an error "
                     << eglGetError() << " for texture ID: " << texture_id_;
     } else {

@@ -49,7 +49,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
                           int32_t height,
                           int32_t angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
-  bool IsSupportedExtention(const char* name) override;
+  bool IsSupportedExtension(const char* name) override;
 
  private:
   bool InitializeRenderer();
@@ -85,7 +85,7 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   EGLContext egl_resource_context_ = EGL_NO_CONTEXT;
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 
-  std::string egl_extention_str_;
+  std::string egl_extension_str_;
 
   tizen_policy* tizen_policy_ = nullptr;
 };

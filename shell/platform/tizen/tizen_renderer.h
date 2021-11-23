@@ -57,7 +57,7 @@ class TizenRenderer {
                                   int32_t height,
                                   int32_t degree) = 0;
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
-  virtual bool IsSupportedExtention(const char* name) = 0;
+  virtual bool IsSupportedExtension(const char* name) = 0;
 
  protected:
   explicit TizenRenderer(Geometry geometry,

@@ -281,4 +281,5 @@ void PlatformViewChannel::OnTouch(
 
   result->Success();
 }
+
 }  // namespace flutter
