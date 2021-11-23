@@ -77,6 +77,10 @@ void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
   delete engine;
 }
 
+void* FlutterDesktopGetWindow(FlutterDesktopPluginRegistrarRef registrar) {
+  return registrar->engine->renderer()->GetWindowHandle();
+}
+
 void FlutterDesktopPluginRegistrarEnableInputBlocking(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* channel) {

@@ -91,6 +91,15 @@ FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
 FLUTTER_EXPORT FlutterDesktopMessengerRef
 FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
 
+/**
+ * Return backing window for manipulation in host application.
+ *
+ * If run engine on a wearable device, need cast void* to Evas_Objct*,
+ * otherwise cast void* to Ecore_Wl2_Window*.
+ */
+FLUTTER_EXPORT void* FlutterDesktopGetWindow(
+    FlutterDesktopPluginRegistrarRef registrar);
+
 // Posts an app control to the engine instance.
 FLUTTER_EXPORT void FlutterDesktopNotifyAppControl(
     FlutterDesktopEngineRef engine,

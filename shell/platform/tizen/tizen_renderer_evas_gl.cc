@@ -576,7 +576,7 @@ uintptr_t TizenRendererEvasGL::GetWindowId() {
 }
 
 void* TizenRendererEvasGL::GetWindowHandle() {
-  return nullptr;
+  return evas_window_;
 }
 
 Evas_Object* TizenRendererEvasGL::GetImageHandle() {
