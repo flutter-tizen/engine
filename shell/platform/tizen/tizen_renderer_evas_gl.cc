@@ -576,7 +576,7 @@ uintptr_t TizenRendererEvasGL::GetWindowId() {
 }
 
 void* TizenRendererEvasGL::GetWindowHandle() {
-  return nullptr;
+  return evas_window_;
 }
 
 Evas_Object* TizenRendererEvasGL::GetImageHandle() {
@@ -769,10 +769,6 @@ void TizenRendererEvasGL::SetPreferredOrientations(
 
 bool TizenRendererEvasGL::IsSupportedExtention(const char* name) {
   return strcmp(name, "EGL_TIZEN_image_native_surface") == 0;
-}
-
-void* TizenRendererEvasGL::GetWindow() {
-  return evas_window_;
 }
 
 }  // namespace flutter
