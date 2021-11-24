@@ -77,7 +77,7 @@ class PlatformViewFactory {
 extern "C" {
 #endif
 
-FLUTTER_EXPORT void FlutterRegisterViewFactory(
+FLUTTER_EXPORT void FlutterDesktopRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory);

@@ -179,7 +179,7 @@ void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsDetached();
 }
 
-void FlutterRegisterViewFactory(
+void FlutterDesktopRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory) {
