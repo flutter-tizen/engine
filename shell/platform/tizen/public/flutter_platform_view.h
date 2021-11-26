@@ -19,8 +19,7 @@ class PlatformView {
   PlatformView(flutter::PluginRegistrar* registrar,
                int view_id,
                void* platform_window)
-      : platform_window_(platform_window),
-        registrar_(registrar),
+      : registrar_(registrar),
         view_id_(view_id),
         texture_id_(0),
         is_focused_(false) {}
@@ -46,9 +45,6 @@ class PlatformView {
   virtual void DispatchKeyDownEvent(Ecore_Event_Key* key) = 0;
   virtual void DispatchKeyUpEvent(Ecore_Event_Key* key) = 0;
 
- protected:
-  void* platform_window_;
-
  private:
   flutter::PluginRegistrar* registrar_;
   int view_id_;
@@ -59,8 +55,7 @@ class PlatformView {
 class PlatformViewFactory {
  public:
   PlatformViewFactory(flutter::PluginRegistrar* registrar)
-      : platform_window_(nullptr),
-        registrar_(registrar),
+      : registrar_(registrar),
         codec_(flutter::StandardMessageCodec::GetInstance(nullptr)) {}
   virtual ~PlatformViewFactory() {}
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
@@ -72,10 +67,6 @@ class PlatformViewFactory {
                                double height,
                                const ByteMessage& parameters) = 0;
   virtual void Dispose() = 0;
-  void SetWindow(void* platform_window) { platform_window_ = platform_window; }
-
- protected:
-  void* platform_window_;
 
  private:
   flutter::PluginRegistrar* registrar_;
@@ -86,7 +77,7 @@ class PlatformViewFactory {
 extern "C" {
 #endif
 
-FLUTTER_EXPORT void FlutterRegisterViewFactory(
+FLUTTER_EXPORT void FlutterDesktopRegisterViewFactory(
     FlutterDesktopPluginRegistrarRef registrar,
     const char* view_type,
     std::unique_ptr<PlatformViewFactory> view_factory);
