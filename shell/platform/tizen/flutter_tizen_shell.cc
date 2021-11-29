@@ -114,6 +114,6 @@ class FlutterApp {
 };
 
 int main(int argc, char* argv[]) {
-  auto app = new FlutterApp();
-  return app->Run(argc, argv);
+  FlutterApp app;
+  return app.Run(argc, argv);
 }

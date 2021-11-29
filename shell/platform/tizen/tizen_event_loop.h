@@ -10,7 +10,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <condition_variable>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -40,8 +39,7 @@ class TizenEventLoop {
 
   bool RunsTasksOnCurrentThread() const;
 
-  void ExcuteTaskEvents(
-      std::chrono::nanoseconds max_wait = std::chrono::nanoseconds::max());
+  void ExecuteTaskEvents();
 
   // Post a Flutter engine tasks to the event loop for delayed execution.
   void PostTask(FlutterTask flutter_task, uint64_t flutter_target_time_nanos);
@@ -71,8 +69,7 @@ class TizenEventLoop {
   TaskExpiredCallback on_task_expired_;
   std::mutex task_queue_mutex_;
   std::priority_queue<Task, std::deque<Task>, Task::Comparer> task_queue_;
-  std::condition_variable task_queue_cv_;
-  std::vector<FlutterTask> expired_tasks_;
+  std::vector<Task> expired_tasks_;
   std::mutex expired_tasks_mutex_;
   std::atomic<std::uint64_t> task_order_{0};
 
@@ -81,10 +78,6 @@ class TizenEventLoop {
 
   // Returns a TaskTimePoint computed from the given target time from Flutter.
   TaskTimePoint TimePointFromFlutterTime(uint64_t flutter_target_time_nanos);
-
-  static void ExcuteTaskEvents(void* data, void* buffer, unsigned int nbyte);
-
-  static Eina_Bool TaskTimerCallback(void* data);
 };
 
 class TizenPlatformEventLoop : public TizenEventLoop {
