@@ -28,7 +28,6 @@ class TizenRenderer {
   virtual ~TizenRenderer();
 
   bool IsValid() { return is_valid_; }
-  bool IsUserGeometrySupported() { return is_user_geometry_supported_; }
   virtual bool OnMakeCurrent() = 0;
   virtual bool OnClearCurrent() = 0;
   virtual bool OnMakeResourceCurrent() = 0;
@@ -73,7 +72,6 @@ class TizenRenderer {
   Delegate& delegate_;
 
   bool is_valid_ = false;
-  bool is_user_geometry_supported_ = false;
   bool received_rotation_ = false;
 };
 

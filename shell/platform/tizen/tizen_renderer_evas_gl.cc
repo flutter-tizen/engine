@@ -664,22 +664,9 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
     efl_util_set_notification_window_level(evas_window_,
                                            EFL_UTIL_NOTIFICATION_LEVEL_TOP);
   }
-  // Please uncomment below when Tizen 5.5 or later was chosen as default
-  /*
-  char* value = nullptr;
-  int ret = 0;
-  ret = system_info_get_platform_string(
-      "http://tizen.org/feature/platform.version", &value);
-  if (ret == SYSTEM_INFO_ERROR_NONE) {
-    std::string version_str(value);
-    free(value);
-    float version = std::stof(version_str);
-    if (version >= 5.5) {
-      elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
-      is_user_geometry_supported_ = true;
-    }
-  }
-  */
+  // Please uncomment below and enable setWindowGeometry of window channel when
+  // Tizen 5.5 or later was chosen as default.
+  // elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
 #endif
 
   auto* ecore_evas =

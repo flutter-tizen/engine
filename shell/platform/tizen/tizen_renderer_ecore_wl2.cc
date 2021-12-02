@@ -318,7 +318,6 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
   ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
-  is_user_geometry_supported_ = true;
 
   if (transparent_) {
     ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_TRUE);
