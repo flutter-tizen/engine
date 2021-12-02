@@ -10,6 +10,7 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/logger.h"
 
+#include <system_info.h>
 #ifndef __X64_SHELL__
 #include <ui/efl_util.h>
 #endif
@@ -664,6 +665,20 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
                                            EFL_UTIL_NOTIFICATION_LEVEL_TOP);
   }
 #endif
+  char* value = nullptr;
+  int ret = 0;
+  ret = system_info_get_platform_string(
+      "http://tizen.org/feature/platform.version", &value);
+  if (ret == SYSTEM_INFO_ERROR_NONE) {
+    std::string version_str(value);
+    free(value);
+    float version = std::stof(version_str);
+    if (version >= 5.5) {
+      elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
+      is_user_geometry_supported_ = true;
+    }
+  }
+
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
 
@@ -743,7 +758,24 @@ void TizenRendererEvasGL::SetGeometry(int32_t x,
                                       int32_t y,
                                       int32_t width,
                                       int32_t height) {
-  FT_UNIMPLEMENTED();
+  evas_object_move(evas_window_, x, y);
+  evas_object_resize(evas_window_, width, height);
+
+  evas_object_resize(graphics_adapter_, width, height);
+
+  evas_object_image_native_surface_set(graphics_adapter_, nullptr);
+
+  evas_gl_surface_destroy(evas_gl_, gl_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
+
+  evas_object_image_size_set(graphics_adapter_, width, height);
+  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
+  gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
+                                                        width, height, nullptr);
+
+  Evas_Native_Surface ns;
+  evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
+  evas_object_image_native_surface_set(graphics_adapter_, &ns);
 }
 
 void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
