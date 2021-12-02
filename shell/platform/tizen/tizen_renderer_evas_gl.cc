@@ -664,6 +664,8 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
     efl_util_set_notification_window_level(evas_window_,
                                            EFL_UTIL_NOTIFICATION_LEVEL_TOP);
   }
+  // Please uncomment below when Tizen 5.5 or later was chosen as default
+  /*
   char* value = nullptr;
   int ret = 0;
   ret = system_info_get_platform_string(
@@ -677,6 +679,7 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
       is_user_geometry_supported_ = true;
     }
   }
+  */
 #endif
 
   auto* ecore_evas =
