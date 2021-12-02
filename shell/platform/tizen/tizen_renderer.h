@@ -28,6 +28,7 @@ class TizenRenderer {
   virtual ~TizenRenderer();
 
   bool IsValid() { return is_valid_; }
+
   virtual bool OnMakeCurrent() = 0;
   virtual bool OnClearCurrent() = 0;
   virtual bool OnMakeResourceCurrent() = 0;

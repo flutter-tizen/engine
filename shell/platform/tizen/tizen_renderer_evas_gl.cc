@@ -11,7 +11,6 @@ EVAS_GL_GLOBAL_GLES3_DEFINE();
 #include "flutter/shell/platform/tizen/logger.h"
 
 #ifndef __X64_SHELL__
-#include <system_info.h>
 #include <ui/efl_util.h>
 #endif
 
