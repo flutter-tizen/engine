@@ -34,7 +34,8 @@ class TizenRendererEvasGL : public TizenRenderer {
   Geometry GetScreenGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
-  void* GetWindowHandle() override;
+
+  void* GetWindowHandle() override { return evas_window_; }
 
   void SetRotate(int angle) override;
   void SetGeometry(int32_t x,
@@ -47,36 +48,31 @@ class TizenRendererEvasGL : public TizenRenderer {
                           int32_t height,
                           int32_t angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
+
   bool IsSupportedExtension(const char* name) override;
 
-  Evas_Object* GetImageHandle();
+  Evas_Object* GetImageHandle() { return graphics_adapter_; }
 
  private:
-  void ClearColor(float r, float g, float b, float a);
-
-  bool InitializeRenderer();
   void Show();
-  void DestroyRenderer();
 
+  bool SetupEvasWindow();
   bool SetupEvasGL();
-  Evas_Object* SetupEvasWindow(int32_t* width, int32_t* height);
-  void DestroyEvasGL();
   void DestroyEvasWindow();
+  void DestroyEvasGL();
 
   static void RotationEventCb(void* data, Evas_Object* obj, void* event_info);
   void SendRotationChangeDone();
 
-  Evas_Object* evas_window_{nullptr};
-  Evas_Object* graphics_adapter_{nullptr};
+  Evas_Object* evas_window_ = nullptr;
+  Evas_Object* graphics_adapter_ = nullptr;
 
-  Evas_GL_Config* gl_config_{nullptr};
-  Evas_GL* evas_gl_{nullptr};
-
-  Evas_GL_Context* gl_context_{nullptr};
-  Evas_GL_Context* gl_resource_context_{nullptr};
-
-  Evas_GL_Surface* gl_surface_{nullptr};
-  Evas_GL_Surface* gl_resource_surface_{nullptr};
+  Evas_GL* evas_gl_ = nullptr;
+  Evas_GL_Config* gl_config_ = nullptr;
+  Evas_GL_Context* gl_context_ = nullptr;
+  Evas_GL_Context* gl_resource_context_ = nullptr;
+  Evas_GL_Surface* gl_surface_ = nullptr;
+  Evas_GL_Surface* gl_resource_surface_ = nullptr;
 };
 
 }  // namespace flutter
