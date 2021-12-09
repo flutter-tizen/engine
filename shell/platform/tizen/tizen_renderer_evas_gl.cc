@@ -751,7 +751,6 @@ void TizenRendererEvasGL::SetGeometry(int32_t x,
   evas_object_resize(evas_window_, width, height);
 
   evas_object_resize(graphics_adapter_, width, height);
-
   evas_object_image_native_surface_set(graphics_adapter_, nullptr);
 
   evas_gl_surface_destroy(evas_gl_, gl_surface_);
@@ -762,9 +761,9 @@ void TizenRendererEvasGL::SetGeometry(int32_t x,
   gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
                                                         width, height, nullptr);
 
-  Evas_Native_Surface ns;
-  evas_gl_native_surface_get(evas_gl_, gl_surface_, &ns);
-  evas_object_image_native_surface_set(graphics_adapter_, &ns);
+  Evas_Native_Surface native_surface;
+  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
+  evas_object_image_native_surface_set(graphics_adapter_, &native_surface);
 }
 
 void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
