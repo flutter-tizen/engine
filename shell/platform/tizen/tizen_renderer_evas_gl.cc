@@ -663,7 +663,11 @@ Evas_Object* TizenRendererEvasGL::SetupEvasWindow(int32_t* width,
     efl_util_set_notification_window_level(evas_window_,
                                            EFL_UTIL_NOTIFICATION_LEVEL_TOP);
   }
+  // Please uncomment below and enable setWindowGeometry of window channel when
+  // Tizen 5.5 or later was chosen as default.
+  // elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
 #endif
+
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
 
@@ -743,7 +747,23 @@ void TizenRendererEvasGL::SetGeometry(int32_t x,
                                       int32_t y,
                                       int32_t width,
                                       int32_t height) {
-  FT_UNIMPLEMENTED();
+  evas_object_move(evas_window_, x, y);
+  evas_object_resize(evas_window_, width, height);
+
+  evas_object_resize(graphics_adapter_, width, height);
+  evas_object_image_native_surface_set(graphics_adapter_, nullptr);
+
+  evas_gl_surface_destroy(evas_gl_, gl_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
+
+  evas_object_image_size_set(graphics_adapter_, width, height);
+  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
+  gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
+                                                        width, height, nullptr);
+
+  Evas_Native_Surface native_surface;
+  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
+  evas_object_image_native_surface_set(graphics_adapter_, &native_surface);
 }
 
 void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
