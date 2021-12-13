@@ -671,7 +671,6 @@ bool TizenRendererEvasGL::SetupEvasWindow() {
     initial_geometry_.h = height;
   }
 
-  elm_win_alpha_set(evas_window_, EINA_FALSE);
   evas_object_move(evas_window_, initial_geometry_.x, initial_geometry_.y);
   evas_object_resize(evas_window_, initial_geometry_.w, initial_geometry_.h);
   evas_object_raise(evas_window_);
@@ -679,11 +678,17 @@ bool TizenRendererEvasGL::SetupEvasWindow() {
   elm_win_indicator_mode_set(evas_window_, ELM_WIN_INDICATOR_SHOW);
   elm_win_indicator_opacity_set(evas_window_, ELM_WIN_INDICATOR_OPAQUE);
 
-  Evas_Object* bg = elm_bg_add(evas_window_);
-  evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
+  if (transparent_) {
+    elm_win_alpha_set(evas_window_, EINA_TRUE);
+  } else {
+    elm_win_alpha_set(evas_window_, EINA_FALSE);
 
-  evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  elm_win_resize_object_add(evas_window_, bg);
+    Evas_Object* bg = elm_bg_add(evas_window_);
+    evas_object_color_set(bg, 0, 0, 0, 0);
+
+    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(evas_window_, bg);
+  }
 
   graphics_adapter_ =
       evas_object_image_filled_add(evas_object_evas_get(evas_window_));
