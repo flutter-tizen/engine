@@ -36,7 +36,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   Geometry GetScreenGeometry() override;
   int32_t GetDpi() override;
   uintptr_t GetWindowId() override;
-  void* GetWindowHandle() override;
+
+  void* GetWindowHandle() override { return ecore_wl2_window_; }
 
   void SetRotate(int angle) override;
   void SetGeometry(int32_t x,
@@ -49,36 +50,31 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
                           int32_t height,
                           int32_t angle) override;
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
+
   bool IsSupportedExtension(const char* name) override;
 
  private:
-  bool InitializeRenderer();
   void Show();
-  void DestroyRenderer();
 
-  bool SetupDisplay(int32_t* width, int32_t* height);
-  bool SetupEcoreWlWindow(int32_t width, int32_t height);
-  bool SetupEglWindow(int32_t width, int32_t height);
-  EGLDisplay GetEGLDisplay();
-  EGLNativeWindowType GetEGLNativeWindowType();
-  void DestroyEglWindow();
-  void DestroyEcoreWlWindow();
-  void ShutdownDisplay();
+  bool SetupEcoreWl2();
+  bool SetupEGL();
 
-  bool SetupEglSurface();
   bool ChooseEGLConfiguration();
   void PrintEGLError();
-  void DestroyEglSurface();
-  void SetTizenPolicyNotificationLevel(int level);
+
+  void DestroyEcoreWl2();
+  void DestroyEGL();
 
   static Eina_Bool RotationEventCb(void* data, int type, void* event);
   void SendRotationChangeDone();
+
+  void SetTizenPolicyNotificationLevel(int level);
 
   Ecore_Wl2_Display* ecore_wl2_display_ = nullptr;
   Ecore_Wl2_Window* ecore_wl2_window_ = nullptr;
   Ecore_Wl2_Egl_Window* ecore_wl2_egl_window_ = nullptr;
 
-  EGLConfig egl_config_;
+  EGLConfig egl_config_ = nullptr;
   EGLDisplay egl_display_ = EGL_NO_DISPLAY;
   EGLContext egl_context_ = EGL_NO_CONTEXT;
   EGLSurface egl_surface_ = EGL_NO_SURFACE;

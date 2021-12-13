@@ -17,11 +17,22 @@ TizenRendererEcoreWl2::TizenRendererEcoreWl2(Geometry geometry,
                                              bool top_level,
                                              Delegate& delegate)
     : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
-  InitializeRenderer();
+  if (!SetupEcoreWl2()) {
+    FT_LOG(Error) << "Could not set up Ecore Wl2.";
+    return;
+  }
+  if (!SetupEGL()) {
+    FT_LOG(Error) << "Could not set up EGL.";
+    return;
+  }
+  Show();
+
+  is_valid_ = true;
 }
 
 TizenRendererEcoreWl2::~TizenRendererEcoreWl2() {
-  DestroyRenderer();
+  DestroyEGL();
+  DestroyEcoreWl2();
 }
 
 bool TizenRendererEcoreWl2::OnMakeCurrent() {
@@ -31,6 +42,7 @@ bool TizenRendererEcoreWl2::OnMakeCurrent() {
   if (eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_) !=
       EGL_TRUE) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not make the onscreen context current.";
     return false;
   }
   return true;
@@ -43,6 +55,7 @@ bool TizenRendererEcoreWl2::OnClearCurrent() {
   if (eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
                      EGL_NO_CONTEXT) != EGL_TRUE) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not clear the context.";
     return false;
   }
   return true;
@@ -55,6 +68,7 @@ bool TizenRendererEcoreWl2::OnMakeResourceCurrent() {
   if (eglMakeCurrent(egl_display_, egl_resource_surface_, egl_resource_surface_,
                      egl_resource_context_) != EGL_TRUE) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not make the offscreen context current.";
     return false;
   }
   return true;
@@ -72,13 +86,14 @@ bool TizenRendererEcoreWl2::OnPresent() {
 
   if (eglSwapBuffers(egl_display_, egl_surface_) != EGL_TRUE) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not swap EGL buffers.";
     return false;
   }
   return true;
 }
 
 uint32_t TizenRendererEcoreWl2::OnGetFBO() {
-  if (!is_valid_) {
+  if (!IsValid()) {
     return 999;
   }
   return 0;
@@ -232,77 +247,40 @@ uintptr_t TizenRendererEcoreWl2::GetWindowId() {
   return ecore_wl2_window_id_get(ecore_wl2_window_);
 }
 
-void* TizenRendererEcoreWl2::GetWindowHandle() {
-  return ecore_wl2_window_;
-}
-
-bool TizenRendererEcoreWl2::InitializeRenderer() {
-  int32_t width, height;
-  if (!SetupDisplay(&width, &height)) {
-    FT_LOG(Error) << "SetupDisplay() failed.";
-    return false;
-  }
-  if (!SetupEcoreWlWindow(width, height)) {
-    FT_LOG(Error) << "SetupEcoreWlWindow() failed.";
-    return false;
-  }
-  if (!SetupEglWindow(width, height)) {
-    FT_LOG(Error) << "SetupEglWindow() failed.";
-    return false;
-  }
-  if (!SetupEglSurface()) {
-    FT_LOG(Error) << "SetupEglSurface() failed.";
-    return false;
-  }
-  Show();
-  is_valid_ = true;
-  return true;
-}
-
 void TizenRendererEcoreWl2::Show() {
   ecore_wl2_window_show(ecore_wl2_window_);
 }
 
-void TizenRendererEcoreWl2::DestroyRenderer() {
-  DestroyEglSurface();
-  DestroyEglWindow();
-  DestroyEcoreWlWindow();
-  ShutdownDisplay();
-}
-
-bool TizenRendererEcoreWl2::SetupDisplay(int32_t* width, int32_t* height) {
+bool TizenRendererEcoreWl2::SetupEcoreWl2() {
   if (!ecore_wl2_init()) {
-    FT_LOG(Error) << "Could not initialize ecore_wl2.";
+    FT_LOG(Error) << "Could not initialize Ecore Wl2.";
     return false;
   }
+
   ecore_wl2_display_ = ecore_wl2_display_connect(nullptr);
-  if (ecore_wl2_display_ == nullptr) {
-    FT_LOG(Error) << "Display not found.";
+  if (!ecore_wl2_display_) {
+    FT_LOG(Error) << "Ecore Wl2 display not found.";
     return false;
   }
   ecore_wl2_sync();
 
-  ecore_wl2_display_screen_size_get(ecore_wl2_display_, width, height);
-  if (*width == 0 || *height == 0) {
-    FT_LOG(Error) << "Invalid screen size: " << *width << " x " << *height;
+  int32_t width, height;
+  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &width, &height);
+  if (width == 0 || height == 0) {
+    FT_LOG(Error) << "Invalid screen size: " << width << " x " << height;
     return false;
   }
-  if (initial_geometry_.w > 0) {
-    *width = initial_geometry_.w;
+
+  if (initial_geometry_.w == 0) {
+    initial_geometry_.w = width;
   }
-  if (initial_geometry_.h > 0) {
-    *height = initial_geometry_.h;
+  if (initial_geometry_.h == 0) {
+    initial_geometry_.h = height;
   }
 
-  return true;
-}
-
-bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
-  int32_t x = initial_geometry_.x;
-  int32_t y = initial_geometry_.y;
-
-  ecore_wl2_window_ =
-      ecore_wl2_window_new(ecore_wl2_display_, nullptr, x, y, width, height);
+  ecore_wl2_window_ = ecore_wl2_window_new(
+      ecore_wl2_display_, nullptr, initial_geometry_.x, initial_geometry_.y,
+      initial_geometry_.w, initial_geometry_.h);
 
   // Change the window type to use the tizen policy for notification window
   // according to top_level_.
@@ -315,7 +293,8 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
     SetTizenPolicyNotificationLevel(TIZEN_POLICY_LEVEL_TOP);
   }
 
-  ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
+  ecore_wl2_window_position_set(ecore_wl2_window_, initial_geometry_.x,
+                                initial_geometry_.y);
   ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
                                 "wm.policy.win.user.geometry", "1");
 
@@ -324,6 +303,7 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
   } else {
     ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_FALSE);
   }
+
   if (!focusable_) {
     ecore_wl2_window_focus_skip_set(ecore_wl2_window_, EINA_TRUE);
   }
@@ -343,85 +323,69 @@ bool TizenRendererEcoreWl2::SetupEcoreWlWindow(int32_t width, int32_t height) {
   return true;
 }
 
-bool TizenRendererEcoreWl2::SetupEglWindow(int32_t width, int32_t height) {
-  ecore_wl2_egl_window_ =
-      ecore_wl2_egl_window_create(ecore_wl2_window_, width, height);
-  return ecore_wl2_egl_window_ != nullptr;
-}
-
-EGLDisplay TizenRendererEcoreWl2::GetEGLDisplay() {
-  return eglGetDisplay(ecore_wl2_display_get(ecore_wl2_display_));
-}
-
-EGLNativeWindowType TizenRendererEcoreWl2::GetEGLNativeWindowType() {
-  return ecore_wl2_egl_window_native_get(ecore_wl2_egl_window_);
-}
-
-void TizenRendererEcoreWl2::DestroyEglWindow() {
-  if (ecore_wl2_egl_window_) {
-    ecore_wl2_egl_window_destroy(ecore_wl2_egl_window_);
-    ecore_wl2_egl_window_ = nullptr;
-  }
-}
-
-void TizenRendererEcoreWl2::DestroyEcoreWlWindow() {
-  if (ecore_wl2_window_) {
-    ecore_wl2_window_free(ecore_wl2_window_);
-    ecore_wl2_window_ = nullptr;
-  }
-}
-
-void TizenRendererEcoreWl2::ShutdownDisplay() {
-  if (ecore_wl2_display_) {
-    ecore_wl2_display_disconnect(ecore_wl2_display_);
-    ecore_wl2_display_ = nullptr;
-  }
-  ecore_wl2_shutdown();
-}
-
-bool TizenRendererEcoreWl2::SetupEglSurface() {
-  if (!ChooseEGLConfiguration()) {
-    FT_LOG(Error) << "ChooseEGLConfiguration() failed.";
+bool TizenRendererEcoreWl2::SetupEGL() {
+  ecore_wl2_egl_window_ = ecore_wl2_egl_window_create(
+      ecore_wl2_window_, initial_geometry_.w, initial_geometry_.h);
+  if (!ecore_wl2_egl_window_) {
+    FT_LOG(Error) << "Could not create an EGL window.";
     return false;
   }
+
+  if (!ChooseEGLConfiguration()) {
+    FT_LOG(Error) << "Could not choose an EGL configuration.";
+    return false;
+  }
+
   egl_extension_str_ = eglQueryString(egl_display_, EGL_EXTENSIONS);
 
-  const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-  egl_context_ = eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT,
-                                  context_attribs);
-  if (EGL_NO_CONTEXT == egl_context_) {
-    PrintEGLError();
-    return false;
+  {
+    const EGLint attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+
+    egl_context_ =
+        eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT, attribs);
+    if (egl_context_ == EGL_NO_CONTEXT) {
+      PrintEGLError();
+      FT_LOG(Error) << "Could not create an onscreen context.";
+      return false;
+    }
+
+    egl_resource_context_ =
+        eglCreateContext(egl_display_, egl_config_, egl_context_, attribs);
+    if (egl_resource_context_ == EGL_NO_CONTEXT) {
+      PrintEGLError();
+      FT_LOG(Error) << "Could not create an offscreen context.";
+      return false;
+    }
   }
 
-  egl_resource_context_ = eglCreateContext(egl_display_, egl_config_,
-                                           egl_context_, context_attribs);
-  if (EGL_NO_CONTEXT == egl_resource_context_) {
-    PrintEGLError();
-    return false;
+  {
+    const EGLint attribs[] = {EGL_NONE};
+
+    auto* egl_window = static_cast<EGLNativeWindowType*>(
+        ecore_wl2_egl_window_native_get(ecore_wl2_egl_window_));
+    egl_surface_ =
+        eglCreateWindowSurface(egl_display_, egl_config_, egl_window, attribs);
+    if (egl_surface_ == EGL_NO_SURFACE) {
+      FT_LOG(Error) << "Could not create an onscreen window surface.";
+      return false;
+    }
   }
 
-  EGLint* ptr = nullptr;
-  egl_surface_ = eglCreateWindowSurface(egl_display_, egl_config_,
-                                        GetEGLNativeWindowType(), ptr);
-  if (egl_surface_ == EGL_NO_SURFACE) {
-    FT_LOG(Error) << "eglCreateWindowSurface() failed.";
-    return false;
-  }
+  {
+    const EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
 
-  const EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
-  egl_resource_surface_ =
-      eglCreatePbufferSurface(egl_display_, egl_config_, attribs);
-  if (egl_resource_surface_ == EGL_NO_SURFACE) {
-    FT_LOG(Error) << "eglCreatePbufferSurface() failed.";
-    return false;
+    egl_resource_surface_ =
+        eglCreatePbufferSurface(egl_display_, egl_config_, attribs);
+    if (egl_resource_surface_ == EGL_NO_SURFACE) {
+      FT_LOG(Error) << "Could not create an offscreen window surface.";
+      return false;
+    }
   }
 
   return true;
 }
 
 bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
-  // egl CONTEXT
   EGLint config_attribs[] = {
       // clang-format off
       EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
@@ -436,45 +400,45 @@ bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
       // clang-format on
   };
 
-  EGLint major = 0;
-  EGLint minor = 0;
-  int buffer_size = 32;
-  egl_display_ = GetEGLDisplay();
+  egl_display_ = eglGetDisplay(ecore_wl2_display_get(ecore_wl2_display_));
   if (EGL_NO_DISPLAY == egl_display_) {
-    FT_LOG(Error) << "eglGetDisplay() failed.";
+    PrintEGLError();
+    FT_LOG(Error) << "Could not get EGL display.";
     return false;
   }
 
-  if (!eglInitialize(egl_display_, &major, &minor)) {
+  if (!eglInitialize(egl_display_, nullptr, nullptr)) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not initialize the EGL display.";
     return false;
   }
 
   if (!eglBindAPI(EGL_OPENGL_ES_API)) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not bind the ES API.";
     return false;
   }
 
-  EGLint num_config = 0;
-  // Query all framebuffer configurations.
-  if (!eglGetConfigs(egl_display_, NULL, 0, &num_config)) {
+  EGLint config_size = 0;
+  if (!eglGetConfigs(egl_display_, nullptr, 0, &config_size)) {
     PrintEGLError();
+    FT_LOG(Error) << "Could not query framebuffer configurations.";
     return false;
   }
-  EGLConfig* configs = (EGLConfig*)calloc(num_config, sizeof(EGLConfig));
-  EGLint num;
-  // Get the List of EGL framebuffer configuration matches with config_attribs
-  // in list "configs".
-  if (!eglChooseConfig(egl_display_, config_attribs, configs, num_config,
-                       &num)) {
+
+  EGLConfig* configs = (EGLConfig*)calloc(config_size, sizeof(EGLConfig));
+  EGLint num_config;
+  if (!eglChooseConfig(egl_display_, config_attribs, configs, config_size,
+                       &num_config)) {
     free(configs);
-    configs = NULL;
     PrintEGLError();
+    FT_LOG(Error) << "No matching configurations found.";
     return false;
   }
 
+  int buffer_size = 32;
   EGLint size;
-  for (int i = 0; i < num; i++) {
+  for (int i = 0; i < num_config; i++) {
     eglGetConfigAttrib(egl_display_, configs[i], EGL_BUFFER_SIZE, &size);
     if (buffer_size == size) {
       egl_config_ = configs[i];
@@ -482,7 +446,11 @@ bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
     }
   }
   free(configs);
-  configs = NULL;
+  if (!egl_config_) {
+    FT_LOG(Error) << "No matching configuration found.";
+    return false;
+  }
+
   return true;
 }
 
@@ -515,8 +483,21 @@ void TizenRendererEcoreWl2::PrintEGLError() {
   }
 }
 
-void TizenRendererEcoreWl2::DestroyEglSurface() {
-  if (EGL_NO_DISPLAY != egl_display_) {
+void TizenRendererEcoreWl2::DestroyEcoreWl2() {
+  if (ecore_wl2_window_) {
+    ecore_wl2_window_free(ecore_wl2_window_);
+    ecore_wl2_window_ = nullptr;
+  }
+
+  if (ecore_wl2_display_) {
+    ecore_wl2_display_disconnect(ecore_wl2_display_);
+    ecore_wl2_display_ = nullptr;
+  }
+  ecore_wl2_shutdown();
+}
+
+void TizenRendererEcoreWl2::DestroyEGL() {
+  if (egl_display_) {
     eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
                    EGL_NO_CONTEXT);
 
@@ -543,14 +524,20 @@ void TizenRendererEcoreWl2::DestroyEglSurface() {
     eglTerminate(egl_display_);
     egl_display_ = EGL_NO_DISPLAY;
   }
+
+  if (ecore_wl2_egl_window_) {
+    ecore_wl2_egl_window_destroy(ecore_wl2_egl_window_);
+    ecore_wl2_egl_window_ = nullptr;
+  }
 }
 
 Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void* data,
                                                  int type,
                                                  void* event) {
   auto* self = reinterpret_cast<TizenRendererEcoreWl2*>(data);
-  auto* ev = reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
-  self->delegate_.OnOrientationChange(ev->angle);
+  auto* rotation_event =
+      reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
+  self->delegate_.OnOrientationChange(rotation_event->angle);
   return ECORE_CALLBACK_PASS_ON;
 }
 
