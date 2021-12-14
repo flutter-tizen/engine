@@ -14,7 +14,7 @@
 namespace ui {
 
 AXEmbeddedObjectBehavior g_ax_embedded_object_behavior =
-#if defined(OS_WIN)
+#if defined(OS_WIN) || defined(OS_LINUX)
     AXEmbeddedObjectBehavior::kExposeCharacter;
 #else
     AXEmbeddedObjectBehavior::kSuppressCharacter;
