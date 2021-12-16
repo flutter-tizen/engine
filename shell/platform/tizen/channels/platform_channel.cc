@@ -15,6 +15,7 @@ constexpr char kChannelName[] = "flutter/platform";
 
 constexpr char kGetClipboardDataMethod[] = "Clipboard.getData";
 constexpr char kSetClipboardDataMethod[] = "Clipboard.setData";
+constexpr char kClipboardHasStringsMethod[] = "Clipboard.hasStrings";
 constexpr char kPlaySoundMethod[] = "SystemSound.play";
 constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
@@ -32,6 +33,7 @@ constexpr char kSetSystemUIOverlayStyleMethod[] =
     "SystemChrome.setSystemUIOverlayStyle";
 
 constexpr char kTextKey[] = "text";
+constexpr char kValueKey[] = "value";
 constexpr char kTextPlainFormat[] = "text/plain";
 constexpr char kUnknownClipboardFormatError[] =
     "Unknown clipboard format error";
@@ -102,6 +104,13 @@ void PlatformChannel::HandleMethodCall(
     }
     text_clipboard = iter->value.GetString();
     result->Success();
+  } else if (method == kClipboardHasStringsMethod) {
+    rapidjson::Document document;
+    document.SetObject();
+    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+    document.AddMember(rapidjson::Value(kValueKey, allocator),
+                       rapidjson::Value(!text_clipboard.empty()), allocator);
+    result->Success(document);
   } else if (method == kRestoreSystemUIOverlaysMethod) {
     RestoreSystemUIOverlays();
     result->Success();
