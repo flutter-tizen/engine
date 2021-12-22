@@ -40,9 +40,7 @@ class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
   }
   virtual ~ExternalTexture() = default;
 
-  /**
-   * Returns the unique id for the ExternalTextureGL instance.
-   */
+  // Returns the unique id for the ExternalTextureGL instance.
   int64_t TextureId() { return (int64_t)texture_id_; }
 
   virtual bool PopulateTexture(size_t width,
