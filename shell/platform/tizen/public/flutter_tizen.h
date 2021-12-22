@@ -91,9 +91,9 @@ FlutterDesktopGetPluginRegistrar(FlutterDesktopEngineRef engine,
 FLUTTER_EXPORT FlutterDesktopMessengerRef
 FlutterDesktopEngineGetMessenger(FlutterDesktopEngineRef engine);
 
-// Returns the window object associated with the Flutter app for manipulation.
+// Returns a window for manipulation in host application.
 //
-// If the engine runs on a wearable device, cast void* to Evas_Object*,
+// If the app runs on a wearable device, cast void* to Evas_Object*,
 // otherwise cast it to Ecore_Wl2_Window*.
 FLUTTER_EXPORT void* FlutterDesktopGetWindow(
     FlutterDesktopPluginRegistrarRef registrar);
