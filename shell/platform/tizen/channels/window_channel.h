@@ -14,6 +14,7 @@
 
 namespace flutter {
 
+// Channel to get/set application's window size and device's screen size.
 class WindowChannel {
  public:
   explicit WindowChannel(BinaryMessenger* messenger,
