@@ -41,7 +41,7 @@ if [[ "$COMMAND" == "restore" ]]; then
 
     # Set mtime of files in $TARGET_DIRS to OLD time.
     for d in $(find $TARGET_DIRS -type d); do
-        touch -c -m -d @1600000000 $d/* &
+        touch -t 202001010000 $d/* &
     done
 
     # Set mtime of changed files to NEW time.

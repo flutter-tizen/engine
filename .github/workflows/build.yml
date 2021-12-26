@@ -81,15 +81,13 @@ jobs:
         if: matrix.os == 'host'
         with:
           name: host-${{ matrix.arch }}-${{ matrix.mode }}
-          path: |
-            src/out/${{ env.OUTPUT_NAME }}/*_unittests
+          path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'linux'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}
-          path: |
-            src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
+          path: src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
 
       - uses: actions/upload-artifact@v2
         if: matrix.arch == 'arm' && matrix.mode == 'release'
@@ -100,6 +98,124 @@ jobs:
             src/out/linux_release_arm/public
             src/out/linux_release_arm/cpp_client_wrapper
             !src/out/linux_release_arm/cpp_client_wrapper/engine_method_result.cc
+
+      - uses: actions/upload-artifact@v2
+        if: (matrix.arch == 'arm' || matrix.arch == 'arm64') && (matrix.mode == 'release' || matrix.mode == 'profile')
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
+          path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
+
+  windows-build:
+    runs-on: windows-2019
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    steps:
+      - name: checkout engine
+        run: |
+          mkdir C:\workspace\engine\src\flutter
+          cd C:\workspace\engine\src\flutter
+          git config --global core.autocrlf true
+          git init --quiet
+          git remote add origin https://github.com/${{ github.repository }}
+          git fetch --depth 1 origin ${{ github.sha }}
+          git checkout FETCH_HEAD
+
+      - name: setup environments
+        run: |
+          Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Force
+          echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $Env:GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" >> $Env:GITHUB_ENV
+          echo "WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10" >> $Env:GITHUB_ENV
+
+      - name: install depot_tools
+        run: |
+          Invoke-WebRequest -Uri https://storage.googleapis.com/chrome-infra/depot_tools.zip -OutFile depot_tools.zip
+          7z x -y -o"C:\workspace\depot_tools" .\depot_tools.zip
+          echo "C:\workspace\depot_tools" >> $Env:GITHUB_PATH
+
+      - name: gclient sync
+        working-directory: C:\workspace\engine
+        run: |
+          gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
+          $env:PYTHONPATH="C:\workspace\depot_tools"
+          python3 src\flutter\ci\tizen\gclient-shallow-sync.py src\flutter\DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: build
+        working-directory: C:\workspace\engine\src
+        run: |
+          python3 .\flutter\tools\gn `
+            --linux --linux-cpu=${{ matrix.arch }} `
+            --runtime-mode=${{ matrix.mode }} `
+            --no-goma
+          ninja -C .\out\linux_${{ matrix.mode }}_${{ matrix.arch }} gen_snapshot
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_windows-x64
+          path: C:\workspace\engine\src\out\linux_${{ matrix.mode }}_${{ matrix.arch }}\gen_snapshot.exe
+
+  macos-build:
+    runs-on: macos-11
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    env:
+      OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src/flutter
+
+      - uses: actions/cache@v2
+        with:
+          path: src/out/${{ env.OUTPUT_NAME }}
+          key: out-macos-build-${{ env.OUTPUT_NAME }}-${{ github.sha }}
+          restore-keys: |
+            out-macos-build-${{ env.OUTPUT_NAME }}-
+
+      - name: install depot_tools
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$PWD/depot_tools" >> $GITHUB_PATH
+
+      - name: install required packages
+        run: |
+          brew install md5sha1sum
+
+      - name: gclient sync
+        run: |
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          PYTHONPATH="$PWD/depot_tools" python3 ./src/flutter/ci/tizen/gclient-shallow-sync.py src/flutter/DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: build
+        run: |
+          src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
+          # Change host_toolchain to mac/clang_x64.
+          sed -i "" "s|//build/toolchain/linux:clang_$host_cpu|//build/toolchain/mac:clang_$host_cpu|g" src/build/config/BUILDCONFIG.gn
+          # Pass dummy toolchain values to avoid using linux target toolchain settings.
+          python3 ./src/flutter/tools/gn \
+            --linux --linux-cpu=${{ matrix.arch }} \
+            --runtime-mode=${{ matrix.mode }} \
+            --no-goma \
+            --target-toolchain _ --target-sysroot _ --target-triple _
+          ninja -C ./src/out/$OUTPUT_NAME clang_x64/gen_snapshot
+          src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
+          path: src/out/linux_${{ matrix.mode }}_${{ matrix.arch }}/clang_x64/gen_snapshot
 
   test:
     needs: build
