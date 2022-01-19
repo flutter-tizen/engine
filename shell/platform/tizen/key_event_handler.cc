@@ -6,6 +6,11 @@
 
 #ifndef __X64_SHELL__
 #include <app.h>
+
+#ifndef TIZEN_RENDERER_EVAS_GL
+#define EFL_BETA_API_SUPPORT
+#include <Ecore_Wl2.h>
+#endif
 #endif
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
@@ -25,6 +30,18 @@ KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_UP, OnKey, this));
+
+#ifndef TIZEN_RENDERER_EVAS_GL
+  // Temporary workaround for handling special key events.
+  auto* window = reinterpret_cast<Ecore_Wl2_Window*>(
+      engine->renderer()->GetWindowHandle());
+  ecore_wl2_window_keygrab_set(window, "XF86PlayBack", 0, 0, 0,
+                               ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
+  ecore_wl2_window_keygrab_set(window, "XF86ChannelList", 0, 0, 0,
+                               ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
+  ecore_wl2_window_keygrab_set(window, "XF86SysMenu", 0, 0, 0,
+                               ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
+#endif
 }
 
 KeyEventHandler::~KeyEventHandler() {
@@ -50,7 +67,7 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
 
   if (engine->text_input_channel()) {
     if (engine->text_input_channel()->SendKeyEvent(key, is_down)) {
-      return ECORE_CALLBACK_PASS_ON;
+      return ECORE_CALLBACK_DONE;
     }
   }
 
@@ -76,7 +93,7 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* event) {
           }
         });
   }
-  return ECORE_CALLBACK_PASS_ON;
+  return ECORE_CALLBACK_DONE;
 }
 
 }  // namespace flutter
