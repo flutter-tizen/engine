@@ -193,6 +193,10 @@ class AX_EXPORT AXPlatformNodeAuraLinux : public AXPlatformNodeBase {
                               int y);
 #endif  // defined(ATK_CHECK_VERSION) && ATK_CHECK_VERSION(2, 32, 0)
 
+  bool SetHighlighted(AtkObject* obj);
+  bool MaybeInvalidateHighlighted(AtkObject* obj);
+  void InvalidateHighlighted();
+
   // Misc helpers
   void GetFloatAttributeInGValue(ax::mojom::FloatAttribute attr, GValue* value);
 

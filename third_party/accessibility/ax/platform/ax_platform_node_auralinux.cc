@@ -518,6 +518,28 @@ gboolean GrabFocus(AtkComponent* atk_component) {
   return obj->GrabFocus();
 }
 
+static gboolean GrabHighlight(AtkComponent* atk_component) {
+  g_return_val_if_fail(ATK_IS_COMPONENT(atk_component), FALSE);
+  AtkObject* atk_object = ATK_OBJECT(atk_component);
+  AXPlatformNodeAuraLinux* obj =
+      AXPlatformNodeAuraLinux::FromAtkObject(atk_object);
+  if (!obj)
+    return FALSE;
+
+  return obj->SetHighlighted(atk_object);
+}
+
+static gboolean ClearHighlight(AtkComponent* atk_component) {
+  g_return_val_if_fail(ATK_IS_COMPONENT(atk_component), FALSE);
+  AtkObject* atk_object = ATK_OBJECT(atk_component);
+  AXPlatformNodeAuraLinux* obj =
+      AXPlatformNodeAuraLinux::FromAtkObject(atk_object);
+  if (!obj)
+    return FALSE;
+
+  return obj->MaybeInvalidateHighlighted(atk_object);
+}
+
 #if defined(ATK_230)
 gboolean ScrollTo(AtkComponent* atk_component, AtkScrollType scroll_type) {
   g_return_val_if_fail(ATK_IS_COMPONENT(atk_component), FALSE);
@@ -553,6 +575,8 @@ void Init(AtkComponentIface* iface) {
   iface->get_size = GetSize;
   iface->ref_accessible_at_point = RefAccesibleAtPoint;
   iface->grab_focus = GrabFocus;
+  iface->grab_highlight = GrabHighlight;
+  iface->clear_highlight = ClearHighlight;
 #if defined(ATK_230)
   if (SupportsAtkComponentScrollingInterface()) {
     iface->scroll_to = ScrollTo;
@@ -3064,6 +3088,14 @@ void AXPlatformNodeAuraLinux::GetAtkState(AtkStateSet* atk_state_set) {
   if (!atk_object)
     return;
 
+  if (data.HasState(ax::mojom::State::kFocusable)) {
+    atk_state_set_add_state(atk_state_set, ATK_STATE_HIGHLIGHTABLE);
+  }
+  atk_state_set_add_state(atk_state_set, ATK_STATE_SHOWING);
+
+  if (atk_object_ && g_current_focused == atk_object_)
+    atk_state_set_add_state(atk_state_set, ATK_STATE_HIGHLIGHTED);
+
   if (delegate_->GetFocus() == atk_object)
     atk_state_set_add_state(atk_state_set, ATK_STATE_FOCUSED);
 
@@ -5012,6 +5044,50 @@ std::pair<int, int> AXPlatformNodeAuraLinux::GetSelectionOffsetsForAtk() {
     GetSelectionOffsets(&selection.first, &selection.second);
   }
   return selection;
+}
+
+bool AXPlatformNodeAuraLinux::SetHighlighted(AtkObject* obj) {
+  if (g_current_focused == obj) {
+    return false;
+  }
+
+  InvalidateHighlighted();
+
+  auto focused_obj = AXPlatformNodeAuraLinux::FromAtkObject(obj);
+
+  if (focused_obj) {
+    focused_obj->ScrollToNode(AXPlatformNodeBase::ScrollType::Anywhere);
+    focused_obj->GrabFocus();
+    g_current_focused = obj;
+
+    atk_object_notify_state_change(g_current_focused, ATK_STATE_HIGHLIGHTED,
+                                   true);
+
+    return true;
+  }
+
+  return false;
+}
+
+bool AXPlatformNodeAuraLinux::MaybeInvalidateHighlighted(AtkObject* obj) {
+  if (g_current_focused != obj)
+    return false;
+
+  InvalidateHighlighted();
+  return true;
+}
+
+void AXPlatformNodeAuraLinux::InvalidateHighlighted() {
+  if (!g_current_focused)
+    return;
+
+  auto highlighted_obj = g_current_focused;
+  g_current_focused = nullptr;
+
+  if (highlighted_obj) {
+    atk_object_notify_state_change(highlighted_obj, ATK_STATE_HIGHLIGHTED,
+                                   false);
+  }
 }
 
 }  // namespace ui
