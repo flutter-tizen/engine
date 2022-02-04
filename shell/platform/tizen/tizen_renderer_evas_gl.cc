@@ -4,8 +4,8 @@
 
 #include "tizen_renderer_evas_gl.h"
 
-#include <efl_extension.h>
 #ifndef __X64_SHELL__
+#include <efl_extension.h>
 #include <ui/efl_util.h>
 #endif
 
@@ -787,9 +787,11 @@ bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
 }
 
 void TizenRendererEvasGL::BindKeys(const std::vector<std::string>& keys) {
+#ifndef __X64_SHELL__
   for (const auto& key : keys) {
     eext_win_keygrab_set(evas_window_, key.c_str());
   }
+#endif
 }
 
 }  // namespace flutter

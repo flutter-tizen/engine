@@ -30,7 +30,7 @@ constexpr char kKeyDown[] = "keydown";
 constexpr char kGtkToolkit[] = "gtk";
 constexpr char kLinuxKeyMap[] = "linux";
 
-// Mapping from Tizen-specific key symbols to generalized (XKB) scan codes
+// Mapping from Tizen-specific key symbols to standard XKB scan codes
 // (mainly for TV remote control support).
 //
 // The values are originally defined in:
