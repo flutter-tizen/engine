@@ -611,4 +611,11 @@ void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
       tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
 }
 
+void TizenRendererEcoreWl2::BindKeys(const std::vector<std::string>& keys) {
+  for (const auto& key : keys) {
+    ecore_wl2_window_keygrab_set(ecore_wl2_window_, key.c_str(), 0, 0, 0,
+                                 ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
+  }
+}
+
 }  // namespace flutter

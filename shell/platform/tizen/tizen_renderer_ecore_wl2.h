@@ -53,6 +53,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
 
   bool IsSupportedExtension(const char* name) override;
 
+  void BindKeys(const std::vector<std::string>& keys) override;
+
  private:
   void Show();
 

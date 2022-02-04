@@ -37,6 +37,8 @@ class TizenRendererEvasGL : public TizenRenderer {
 
   void* GetWindowHandle() override { return evas_window_; }
 
+  Evas_Object* GetImageHandle() { return graphics_adapter_; }
+
   void SetRotate(int angle) override;
   void SetGeometry(int32_t x,
                    int32_t y,
@@ -51,7 +53,7 @@ class TizenRendererEvasGL : public TizenRenderer {
 
   bool IsSupportedExtension(const char* name) override;
 
-  Evas_Object* GetImageHandle() { return graphics_adapter_; }
+  void BindKeys(const std::vector<std::string>& keys) override;
 
  private:
   void Show();
