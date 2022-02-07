@@ -52,7 +52,7 @@ if [[ "$BUILD_OS" == "host" ]]; then
     ninja -C src/out/${BUILD_OS}_${BUILD_MODE} ${BUILD_TARGET}
 else
     if [[ -z "$BUILD_ARCH" || -z "$BUILD_TRIPLE" ]]; then
-        echo "required arguments are missing."
+        echo "Required arguments are missing."
         exit 1
     fi
 
@@ -71,8 +71,9 @@ else
         --target-triple $BUILD_TRIPLE \
         --runtime-mode $BUILD_MODE \
         --enable-fontconfig \
+        --no-full-dart-sdk \
+        --no-build-embedder-examples \
         --embedder-for-target \
-        --disable-desktop-embeddings \
         --build-tizen-shell
     ninja -C src/out/${BUILD_OS}_${BUILD_MODE}_${BUILD_ARCH} ${BUILD_TARGET}
 fi
