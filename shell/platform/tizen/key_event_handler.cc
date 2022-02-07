@@ -21,9 +21,8 @@ namespace {
 constexpr char kBackKey[] = "XF86Back";
 constexpr char kExitKey[] = "XF86Exit";
 
-// The system may define its default behavior for some special key events.
-// The following keys should always be handled by the app first.
-const std::vector<std::string> kRemappableSystemKeys = {
+// Keys that should always be handled by the app first but not by the system.
+const std::vector<std::string> kBindableSystemKeys = {
     "XF86Menu",           "XF86Back",        "XF86AudioPlay",
     "XF86AudioPause",     "XF86AudioStop",   "XF86AudioNext",
     "XF86AudioPrev",      "XF86AudioRewind", "XF86AudioForward",
@@ -42,7 +41,7 @@ KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
   if (!engine->renderer() || !engine->renderer()->IsValid()) {
     return;
   }
-  engine->renderer()->BindKeys(kRemappableSystemKeys);
+  engine->renderer()->BindKeys(kBindableSystemKeys);
 
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));

@@ -30,43 +30,17 @@ constexpr char kKeyDown[] = "keydown";
 constexpr char kGtkToolkit[] = "gtk";
 constexpr char kLinuxKeyMap[] = "linux";
 
-// Mapping from Tizen-specific key symbols to standard XKB scan codes
-// (mainly for TV remote control support).
+// Mapping from TV remote control key symbols to standard XKB scan codes.
 //
 // The values are originally defined in:
-// - xkb-tizen-data/tizen_key_layout.txt.common
+// - xkb-tizen-data/tizen_key_layout.txt.tv
 // - flutter/keyboard_maps.dart (kLinuxToPhysicalKey)
 const std::map<std::string, uint32_t> kSymbolToScanCode = {
-    {"XF86AudioRaiseVolume", 0x0000007b},   // audioVolumeUp
-    {"XF86AudioLowerVolume", 0x0000007a},   // audioVolumeDown
-    {"XF86Menu", 0x00000087},               // contextMenu
-    {"XF86PowerOff", 0x0000007c},           // power
-    {"XF86Home", 0x0000006e},               // home
-    {"XF86AudioPlay", 0x000000d7},          // mediaPlay
-    {"XF86AudioPause", 0x000000d1},         // mediaPause
-    {"XF86AudioStop", 0x000000ae},          // mediaStop
-    {"XF86AudioNext", 0x000000ab},          // mediaTrackNext
-    {"XF86AudioPrev", 0x000000ad},          // mediaTrackPrevious
-    {"XF86AudioRewind", 0x000000b0},        // mediaRewind
-    {"XF86AudioForward", 0x000000d8},       // mediaFastForward
-    {"XF86AudioPlayPause", 0x000000ac},     // mediaPlayPause
-    {"XF86AudioMute", 0x00000079},          // audioVolumeMute
-    {"XF86AudioRecord", 0x000000af},        // mediaRecord
-    {"XF86HomePage", 0x000000b4},           // browserHome
-    {"XF86WWW", 0x0000009e},                // launchInternetBrowser
-    {"XF86Mail", 0x000000a3},               // launchMail
-    {"XF86ScreenSaver", 0x0000024d},        // launchScreenSaver
-    {"XF86MonBrightnessDown", 0x000000e8},  // brightnessDown
-    {"XF86MonBrightnessUp", 0x000000e9},    // brightnessUp
-    {"XF86Call", 0x000000b1},               // launchPhone
-    {"XF86LowerChannel", 0x000001a3},       // channelDown
-    {"XF86RaiseChannel", 0x000001a2},       // channelUp
-    {"XF86SysMenu", 0x00000087},            // contextMenu
-    {"XF86Close", 0x000000d6},              // close
-    {"XF86Info", 0x0000016e},               // info
-    {"XF86Phone", 0x000000b1},              // launchPhone
-    {"XF86PlayBack", 0x000000ac},           // mediaPlayPause
-    {"XF86ChannelGuide", 0x00000172},       // programGuide
+    {"XF86AudioPlay", 0x000000d7},       // mediaPlay
+    {"XF86AudioPlayPause", 0x000000ac},  // mediaPlayPause
+    {"XF86Menu", 0x00000087},            // contextMenu
+    {"XF86PlayBack", 0x000000ac},        // mediaPlayPause
+    {"XF86SysMenu", 0x00000087},         // contextMenu
 };
 
 // Mapping from physical scan codes to logical (GTK) key codes.
@@ -284,14 +258,15 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
                                    bool is_down,
                                    std::function<void(bool)> callback) {
   uint32_t scan_code = key->keycode;
-  auto iter = kSymbolToScanCode.find(key->key);
-  if (iter != kSymbolToScanCode.end()) {
-    scan_code = iter->second;
+  auto iter1 = kSymbolToScanCode.find(key->key);
+  if (iter1 != kSymbolToScanCode.end()) {
+    scan_code = iter1->second;
   }
 
   uint32_t key_code = 0;
-  if (kScanCodeToKeyCode.count(scan_code)) {
-    key_code = kScanCodeToKeyCode.at(scan_code);
+  auto iter2 = kScanCodeToKeyCode.find(scan_code);
+  if (iter2 != kScanCodeToKeyCode.end()) {
+    key_code = iter2->second;
   }
 
   int modifiers = 0;
