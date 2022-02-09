@@ -66,6 +66,8 @@ jobs:
         --target-triple $(targetTriple) \
         --runtime-mode $(mode) \
         --enable-fontconfig \
+        --no-full-dart-sdk \
+        --no-build-embedder-examples \
         --embedder-for-target \
         --build-tizen-shell
       ninja -C out/linux_$(mode)_$(arch)

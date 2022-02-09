@@ -65,7 +65,8 @@ fi
 
 cat >.gclient <<EOF
 solutions = [
-  { "name"        : 'src/flutter',
+  {
+    "name"        : 'src/flutter',
     "url"         : 'https://github.com/flutter-tizen/engine.git',
     "deps_file"   : 'DEPS',
     "managed"     : False,
@@ -76,7 +77,6 @@ EOF
 if [[ "$FLAG_REDUCE_DEPS" == "true" ]]; then
     gclient setdep --var=download_android_deps=False --deps-file=$DEPS
     sed -i -e '/src\/ios_tools/,+2d' $DEPS
-    sed -i -e '/src\/third_party\/vulkan/,+2d' $DEPS
     sed -i -e '/src\/third_party\/angle/,+2d' $DEPS
     sed -i -e '/src\/fuchsia\/sdk\/linux/,+9d' $DEPS
 fi
