@@ -32,7 +32,7 @@ class TizenInputMethodContext {
   TizenInputMethodContext(FlutterTizenEngine* engine);
   ~TizenInputMethodContext();
 
-  bool FilterEvent(Ecore_Event_Key* event, const char* dev_name);
+  bool FilterEvent(Ecore_Event_Key* event, const char* dev_name, bool is_down);
 
   InputPanelGeometry GetInputPanelGeometry();
 

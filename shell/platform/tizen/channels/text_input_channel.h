@@ -43,7 +43,7 @@ class TextInputChannel {
       const MethodCall<rapidjson::Document>& method_call,
       std::unique_ptr<MethodResult<rapidjson::Document>> result);
   void SendStateUpdate(const TextInputModel& model);
-  bool FilterEvent(Ecore_Event_Key* event);
+  bool FilterEvent(Ecore_Event_Key* event, bool is_down);
   void HandleUnfilteredEvent(Ecore_Event_Key* event);
   void EnterPressed(TextInputModel* model, bool select);
   void ResetTextEditingContext() {

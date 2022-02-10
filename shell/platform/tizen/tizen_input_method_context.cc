@@ -20,7 +20,7 @@ const char* GetEcoreImfContextAvailableId() {
   return nullptr;
 }
 
-Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreIMFInputPanelLayout(
+Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreImfInputPanelLayout(
     const std::string& text_input_type) {
   if (text_input_type == "TextInputType.text" ||
       text_input_type == "TextInputType.multiline") {
@@ -44,7 +44,7 @@ Ecore_IMF_Input_Panel_Layout TextInputTypeToEcoreIMFInputPanelLayout(
   }
 }
 
-Ecore_IMF_Keyboard_Modifiers EcoreInputModifiersToEcoreIMFModifiers(
+Ecore_IMF_Keyboard_Modifiers EcoreInputModifiersToEcoreImfModifiers(
     unsigned int ecore_modifiers) {
   unsigned int modifiers(ECORE_IMF_KEYBOARD_MODIFIER_NONE);
   if (ecore_modifiers & ECORE_EVENT_MODIFIER_SHIFT) {
@@ -65,7 +65,7 @@ Ecore_IMF_Keyboard_Modifiers EcoreInputModifiersToEcoreIMFModifiers(
   return static_cast<Ecore_IMF_Keyboard_Modifiers>(modifiers);
 }
 
-Ecore_IMF_Keyboard_Locks EcoreInputModifiersToEcoreIMFLocks(
+Ecore_IMF_Keyboard_Locks EcoreInputModifiersToEcoreImfLocks(
     unsigned int modifiers) {
   // If no other matches, returns NONE.
   unsigned int locks(ECORE_IMF_KEYBOARD_LOCK_NONE);
@@ -79,6 +79,24 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifiersToEcoreIMFLocks(
     locks |= ECORE_IMF_KEYBOARD_LOCK_SCROLL;
   }
   return static_cast<Ecore_IMF_Keyboard_Locks>(locks);
+}
+
+template <typename T>
+T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
+  T imf_event;
+
+  imf_event.keyname = event->keyname;
+  imf_event.key = event->key;
+  imf_event.string = event->string;
+  imf_event.compose = event->compose;
+  imf_event.timestamp = event->timestamp;
+  imf_event.modifiers =
+      EcoreInputModifiersToEcoreImfModifiers(event->modifiers);
+  imf_event.locks = EcoreInputModifiersToEcoreImfLocks(event->modifiers);
+  imf_event.dev_name = dev_name;
+  imf_event.keycode = event->keycode;
+
+  return imf_event;
 }
 
 }  // namespace
@@ -125,26 +143,25 @@ TizenInputMethodContext::~TizenInputMethodContext() {
 }
 
 bool TizenInputMethodContext::FilterEvent(Ecore_Event_Key* event,
-                                          const char* dev_name) {
+                                          const char* dev_name,
+                                          bool is_down) {
   FT_ASSERT(imf_context_);
   FT_ASSERT(event);
   FT_ASSERT(dev_name);
-  Ecore_IMF_Event_Key_Down imf_event;
 
-  imf_event.keyname = event->keyname;
-  imf_event.key = event->key;
-  imf_event.string = event->string;
-  imf_event.compose = event->compose;
-  imf_event.timestamp = event->timestamp;
-  imf_event.modifiers =
-      EcoreInputModifiersToEcoreIMFModifiers(event->modifiers);
-  imf_event.locks = EcoreInputModifiersToEcoreIMFLocks(event->modifiers);
-  imf_event.dev_name = dev_name;
-  imf_event.keycode = event->keycode;
-
-  return ecore_imf_context_filter_event(
-      imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
-      reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
+  if (is_down) {
+    auto imf_event =
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event, dev_name);
+    return ecore_imf_context_filter_event(
+        imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
+        reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
+  } else {
+    auto imf_event =
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event, dev_name);
+    return ecore_imf_context_filter_event(
+        imf_context_, ECORE_IMF_EVENT_KEY_UP,
+        reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
+  }
 }
 
 InputPanelGeometry TizenInputMethodContext::GetInputPanelGeometry() {
@@ -175,7 +192,7 @@ void TizenInputMethodContext::HideInputPanel() {
 void TizenInputMethodContext::SetInputPanelLayout(
     const std::string& input_type) {
   FT_ASSERT(imf_context_);
-  auto panel_layout = TextInputTypeToEcoreIMFInputPanelLayout(input_type);
+  auto panel_layout = TextInputTypeToEcoreImfInputPanelLayout(input_type);
   ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
 }
 
