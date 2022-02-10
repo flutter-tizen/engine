@@ -128,10 +128,8 @@ bool TextInputChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
     return false;
   }
 
-  if (!FilterEvent(key, is_down)) {
-    if (is_down) {
-      HandleUnfilteredEvent(key);
-    }
+  if (!FilterEvent(key, is_down) && is_down) {
+    HandleUnfilteredEvent(key);
   }
 
   return true;
