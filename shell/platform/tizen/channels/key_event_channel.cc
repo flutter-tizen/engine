@@ -226,7 +226,7 @@ const std::map<uint32_t, uint32_t> kScanCodeToKeyCode = {
 // The values are originally defined in:
 // - efl/Ecore_Input.h
 // - flutter/raw_keyboard_linux.dart (GtkKeyHelper)
-const std::map<int, int> kModifierMap = {
+const std::map<int, int> kEcoreModifierToGtkModifier = {
     {0x0001, 1 << 0},   // SHIFT (modifierShift)
     {0x0002, 1 << 2},   // CTRL (modifierControl)
     {0x0004, 1 << 3},   // ALT (modifierMod1)
@@ -239,7 +239,7 @@ const std::map<int, int> kModifierMap = {
 uint32_t Utf8ToUtf32CodePoint(const char* utf8) {
   std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
   for (auto wchar : converter.from_bytes(utf8)) {
-    return std::uint_least32_t(wchar);
+    return wchar;
   }
   return 0;
 }
@@ -270,7 +270,7 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
   }
 
   int modifiers = 0;
-  for (auto element : kModifierMap) {
+  for (auto element : kEcoreModifierToGtkModifier) {
     if (element.first & key->modifiers) {
       modifiers |= element.second;
     }
