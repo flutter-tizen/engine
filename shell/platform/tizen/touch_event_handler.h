@@ -29,7 +29,6 @@ class TouchEventHandler {
   FlutterTizenEngine* engine_;
   std::vector<Ecore_Event_Handler*> touch_event_handlers_;
   bool pointer_state_ = false;
-  uintptr_t window_id_ = 0;
 
   void SendFlutterPointerEvent(FlutterPointerPhase phase,
                                double x,

@@ -4,15 +4,16 @@
 
 #include "tizen_renderer_evas_gl.h"
 
+#ifndef __X64_SHELL__
+#include <efl_extension.h>
+#include <ui/efl_util.h>
+#endif
+
 #include "tizen_evas_gl_helper.h"
 Evas_GL* g_evas_gl = nullptr;
 EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/logger.h"
-
-#ifndef __X64_SHELL__
-#include <ui/efl_util.h>
-#endif
 
 namespace flutter {
 
@@ -783,6 +784,14 @@ void TizenRendererEvasGL::SetPreferredOrientations(
 
 bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
   return strcmp(name, "EGL_TIZEN_image_native_surface") == 0;
+}
+
+void TizenRendererEvasGL::BindKeys(const std::vector<std::string>& keys) {
+#ifndef __X64_SHELL__
+  for (const auto& key : keys) {
+    eext_win_keygrab_set(evas_window_, key.c_str());
+  }
+#endif
 }
 
 }  // namespace flutter

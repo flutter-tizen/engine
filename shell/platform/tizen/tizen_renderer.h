@@ -60,6 +60,8 @@ class TizenRenderer {
 
   virtual bool IsSupportedExtension(const char* name) = 0;
 
+  virtual void BindKeys(const std::vector<std::string>& keys) = 0;
+
  protected:
   explicit TizenRenderer(Geometry geometry,
                          bool transparent,
