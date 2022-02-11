@@ -13,6 +13,9 @@ namespace flutter {
 
 TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
     : engine_(engine) {
+  if (!engine->renderer() || !engine->renderer()->IsValid()) {
+    return;
+  }
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, OnTouch, this));
   touch_event_handlers_.push_back(
@@ -21,7 +24,6 @@ TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
       ecore_event_handler_add(ECORE_EVENT_MOUSE_WHEEL, OnTouch, this));
   touch_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, OnTouch, this));
-  window_id_ = engine_->renderer()->GetWindowId();
 }
 
 TouchEventHandler::~TouchEventHandler() {
@@ -40,19 +42,17 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 int device_id = 0) {
   // Correct errors caused by window rotation.
   auto geometry = engine_->renderer()->GetWindowGeometry();
-  double width = geometry.w;
-  double height = geometry.h;
   double new_x = x, new_y = y;
 
   if (rotation == 90) {
-    new_x = height - y;
+    new_x = geometry.h - y;
     new_y = x;
   } else if (rotation == 180) {
-    new_x = width - x;
-    new_y = height - y;
+    new_x = geometry.w - x;
+    new_y = geometry.h - y;
   } else if (rotation == 270) {
     new_x = y;
-    new_y = width - x;
+    new_y = geometry.w - x;
   }
 
   FlutterPointerEvent event = {};
@@ -74,10 +74,11 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
 
 Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   auto* self = reinterpret_cast<TouchEventHandler*>(data);
+  auto window_id = self->engine_->renderer()->GetWindowId();
 
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    if (self->window_id_ == button_event->window) {
+    if (window_id == button_event->window) {
       self->pointer_state_ = true;
       self->SendFlutterPointerEvent(kDown, button_event->x, button_event->y, 0,
                                     0, button_event->timestamp,
@@ -87,7 +88,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
 
   } else if (type == ECORE_EVENT_MOUSE_BUTTON_UP) {
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
-    if (self->window_id_ == button_event->window) {
+    if (window_id == button_event->window) {
       self->pointer_state_ = false;
       self->SendFlutterPointerEvent(kUp, button_event->x, button_event->y, 0, 0,
                                     button_event->timestamp,
@@ -96,7 +97,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
     }
   } else if (type == ECORE_EVENT_MOUSE_MOVE) {
     auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
-    if (self->window_id_ == move_event->window) {
+    if (window_id == move_event->window) {
       if (self->pointer_state_) {
         self->SendFlutterPointerEvent(kMove, move_event->x, move_event->y, 0, 0,
                                       move_event->timestamp,
@@ -106,7 +107,7 @@ Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
     }
   } else if (type == ECORE_EVENT_MOUSE_WHEEL) {
     auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
-    if (self->window_id_ == wheel_event->window) {
+    if (window_id == wheel_event->window) {
       double scroll_delta_x = 0.0, scroll_delta_y = 0.0;
       if (wheel_event->direction == kScrollDirectionVertical) {
         scroll_delta_y += wheel_event->z;

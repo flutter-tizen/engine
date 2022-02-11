@@ -20,7 +20,7 @@ class KeyEventChannel {
   explicit KeyEventChannel(BinaryMessenger* messenger);
   virtual ~KeyEventChannel();
 
-  void SendKeyEvent(Ecore_Event_Key* key,
+  void SendKeyEvent(Ecore_Event_Key* event,
                     bool is_down,
                     std::function<void(bool)> callback);
 
