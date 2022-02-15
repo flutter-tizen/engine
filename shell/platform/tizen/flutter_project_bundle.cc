@@ -9,6 +9,8 @@
 #include "flutter/shell/platform/common/path_utils.h"
 #else
 #include <app_common.h>
+#include <linux/limits.h>
+#include <unistd.h>
 #endif
 
 #include <filesystem>
@@ -23,9 +25,15 @@ namespace {
 // Returns the path of the directory containing the app binary, or an empty
 // string if the directory cannot be found.
 std::filesystem::path GetExecutableDirectory() {
-  auto res_path = app_get_resource_path();
-  if (res_path == nullptr) {
-    return std::filesystem::path();
+  auto* res_path = app_get_resource_path();
+  if (!res_path) {
+    char buffer[PATH_MAX + 1];
+    auto length = readlink("/proc/self/exe", buffer, sizeof(buffer));
+    if (length > PATH_MAX) {
+      return std::filesystem::path();
+    }
+    std::filesystem::path executable_path(std::string(buffer, length));
+    return executable_path.remove_filename();
   }
   auto bin_path = std::filesystem::path(res_path) / ".." / "bin";
   free(res_path);
