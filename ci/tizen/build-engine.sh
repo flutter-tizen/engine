@@ -23,13 +23,9 @@ while [ $# -ne 0 ]; do
     -o | --target-os)
         shift; BUILD_OS=$1
         ;;
-    --build-target)
-        shift; BUILD_TARGET=$1
-        ;;
     *)
-        echo "Unknown argument \`$name\`"
-        exit 1
-        ;;
+        BUILD_TARGET="$@"
+        break
     esac
 
     shift

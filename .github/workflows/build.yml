@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-    branches:
-      - "flutter-*-tizen"
+    # branches:
+    #   - "flutter-*-tizen"
   pull_request:
 
 jobs:
@@ -29,10 +29,10 @@ jobs:
           - arch: x86
             os: linux
             triple: i586-tizen-linux-gnueabi
-          - arch: x64
-            os: host
-            triple: none
-            mode: debug
+          # - arch: x64
+          #   os: host
+          #   triple: none
+          #   mode: debug
         exclude:
           - arch: x86
             mode: release
@@ -40,11 +40,11 @@ jobs:
             mode: profile
 
     steps:
-      - name: setup variables for host
-        if: matrix.os == 'host'
-        run: |
-          echo "OUTPUT_NAME=host_${{ matrix.mode }}" >> $GITHUB_ENV
-          echo "BUILD_TARGET_OPT=--build-target flutter_tizen_unittests" >> $GITHUB_ENV
+      # - name: setup variables for host
+      #   if: matrix.os == 'host'
+      #   run: |
+      #     echo "OUTPUT_NAME=host_${{ matrix.mode }}" >> $GITHUB_ENV
+      #     echo "BUILD_TARGET_OPT=--build-target flutter_tizen_unittests" >> $GITHUB_ENV
 
       - name: setup variables for linux
         if: matrix.os == 'linux'
@@ -74,13 +74,20 @@ jobs:
             --target-os ${{ matrix.os }} \
             --target-arch ${{ matrix.arch }} \
             --target-triple ${{ matrix.triple }} \
-            --runtime-mode ${{ matrix.mode }} $BUILD_TARGET_OPT
+            --runtime-mode ${{ matrix.mode }} \
+            tizen flutter_tizen_unittests
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
 
+      # - uses: actions/upload-artifact@v2
+      #   if: matrix.os == 'host'
+      #   with:
+      #     name: host-${{ matrix.arch }}-${{ matrix.mode }}
+      #     path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
+
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'host'
+        if: matrix.arch == 'arm' && matrix.mode == 'release'
         with:
-          name: host-${{ matrix.arch }}-${{ matrix.mode }}
+          name: tizen-arm-unittests
           path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
       - uses: actions/upload-artifact@v2
@@ -104,12 +111,6 @@ jobs:
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
-
-      - uses: actions/upload-artifact@v2
-        if: matrix.arch == 'arm' && matrix.mode == 'release'
-        with:
-          name: unittests
-          path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
   windows-build:
     runs-on: windows-2019
@@ -223,28 +224,28 @@ jobs:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
           path: src/out/linux_${{ matrix.mode }}_${{ matrix.arch }}/clang_x64/gen_snapshot
 
-  host-test:
-    needs: build
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/flutter-tizen/build-engine:latest
-      credentials:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+  # host-test:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ghcr.io/flutter-tizen/build-engine:latest
+  #     credentials:
+  #       username: ${{ github.repository_owner }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
 
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: host-x64-debug
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: host-x64-debug
 
-      - name: prepare
-        run: |
-          /etc/init.d/dbus start
-          chmod +x flutter_tizen_unittests
+  #     - name: prepare
+  #       run: |
+  #         /etc/init.d/dbus start
+  #         chmod +x flutter_tizen_unittests
 
-      - name: run unittests
-        run: |
-          ./flutter_tizen_unittests
+  #     - name: run unittests
+  #       run: |
+  #         ./flutter_tizen_unittests
 
   test:
     needs: build
@@ -260,7 +261,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v2
         with:
-          name: unittests
+          name: tizen-arm-unittests
       - name: run unittests
         env:
           IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/tizen-headed-armv7l
