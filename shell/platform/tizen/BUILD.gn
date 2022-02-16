@@ -255,22 +255,11 @@ embedder("flutter_tizen_common") {
   defines = [ "COMMON_PROFILE" ]
 }
 
-embedder("flutter_desktop_source") {
+embedder("flutter_tizen_source") {
   target_type = "source_set"
   use_evas_gl_renderer = true
 
   defines = []
-}
-
-executable("flutter_tizen_shell") {
-  sources = [ "flutter_tizen_shell.cc" ]
-
-  deps = [
-    ":flutter_desktop_source",
-    "//flutter/shell/platform/common/client_wrapper:client_wrapper",
-    "//flutter/shell/platform/embedder:embedder_as_internal_library",
-    "//third_party/rapidjson",
-  ]
 }
 
 test_fixtures("flutter_tizen_fixtures") {
@@ -289,9 +278,11 @@ executable("flutter_tizen_unittests") {
     "testing/mock_engine.cc",
   ]
 
+  ldflags = [ "-Wl,--unresolved-symbols=ignore-in-shared-libs" ]
+
   deps = [
-    ":flutter_desktop_source",
     ":flutter_tizen_fixtures",
+    ":flutter_tizen_source",
     "//flutter/runtime:libdart",
     "//flutter/shell/platform/common:common_cpp",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
@@ -340,7 +331,5 @@ group("tizen") {
       ":flutter_tizen_tv",
       ":flutter_tizen_wearable",
     ]
-  } else {
-    deps += [ ":flutter_tizen_shell" ]
   }
 }
