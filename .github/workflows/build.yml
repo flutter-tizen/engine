@@ -105,6 +105,12 @@ jobs:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
 
+      - uses: actions/upload-artifact@v2
+        if: matrix.arch == 'arm' && matrix.mode == 'release'
+        with:
+          name: unittests
+          path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
+
   windows-build:
     runs-on: windows-2019
 
@@ -217,7 +223,7 @@ jobs:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
           path: src/out/linux_${{ matrix.mode }}_${{ matrix.arch }}/clang_x64/gen_snapshot
 
-  test:
+  host-test:
     needs: build
     runs-on: ubuntu-latest
     container:
@@ -239,3 +245,25 @@ jobs:
       - name: run unittests
         run: |
           ./flutter_tizen_unittests
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-qemu-action@v1
+        with:
+          platforms: arm
+      - uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: unittests
+      - name: run unittests
+        env:
+          IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/tizen-headed-armv7l
+        run: |
+          chmod +x flutter_tizen_unittests
+          docker run --rm -t -v `pwd`:/root ${IMAGE_TAG} /root/flutter_tizen_unittests
