@@ -54,6 +54,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: src/flutter
+          fetch-depth: 0
 
       - uses: actions/cache@v2
         with:
@@ -66,6 +67,13 @@ jobs:
         run: |
           src/flutter/ci/tizen/gclient-prepare-sync.sh --reduce-deps --shallow-sync
           gclient sync -v --no-history --shallow
+
+      - name: verify formatting
+        if: matrix.arch == 'arm' && matrix.mode == 'release'
+        working-directory: src/flutter
+        run: |
+          git remote add upstream https://github.com/flutter/engine.git
+          ci/format.sh
 
       - name: build
         run: |
