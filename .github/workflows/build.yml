@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flutter-tizen/build-engine:latest
+      image: ghcr.io/${{ github.repository_owner }}/build-engine:latest
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -21,36 +21,21 @@ jobs:
         mode: [debug, release, profile]
         include:
           - arch: arm
-            os: linux
             triple: armv7l-tizen-linux-gnueabi
           - arch: arm64
-            os: linux
             triple: aarch64-tizen-linux-gnu
           - arch: x86
-            os: linux
             triple: i586-tizen-linux-gnueabi
-          # - arch: x64
-          #   os: host
-          #   triple: none
-          #   mode: debug
         exclude:
           - arch: x86
             mode: release
           - arch: x86
             mode: profile
 
+    env:
+      OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
+
     steps:
-      # - name: setup variables for host
-      #   if: matrix.os == 'host'
-      #   run: |
-      #     echo "OUTPUT_NAME=host_${{ matrix.mode }}" >> $GITHUB_ENV
-      #     echo "BUILD_TARGET_OPT=--build-target flutter_tizen_unittests" >> $GITHUB_ENV
-
-      - name: setup variables for linux
-        if: matrix.os == 'linux'
-        run: |
-          echo "OUTPUT_NAME=linux_${{ matrix.mode }}_${{ matrix.arch }}" >> $GITHUB_ENV
-
       - uses: actions/checkout@v2
         with:
           path: src/flutter
@@ -71,18 +56,12 @@ jobs:
         run: |
           src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
           src/flutter/ci/tizen/build-engine.sh \
-            --target-os ${{ matrix.os }} \
+            --target-os linux \
             --target-arch ${{ matrix.arch }} \
             --target-triple ${{ matrix.triple }} \
             --runtime-mode ${{ matrix.mode }} \
             tizen flutter_tizen_unittests
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
-
-      # - uses: actions/upload-artifact@v2
-      #   if: matrix.os == 'host'
-      #   with:
-      #     name: host-${{ matrix.arch }}-${{ matrix.mode }}
-      #     path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
       - uses: actions/upload-artifact@v2
         if: matrix.arch == 'arm' && matrix.mode == 'release'
@@ -91,7 +70,6 @@ jobs:
           path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'linux'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}
           path: src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
@@ -224,44 +202,25 @@ jobs:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
           path: src/out/linux_${{ matrix.mode }}_${{ matrix.arch }}/clang_x64/gen_snapshot
 
-  # host-test:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: ghcr.io/flutter-tizen/build-engine:latest
-  #     credentials:
-  #       username: ${{ github.repository_owner }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
-
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: host-x64-debug
-
-  #     - name: prepare
-  #       run: |
-  #         /etc/init.d/dbus start
-  #         chmod +x flutter_tizen_unittests
-
-  #     - name: run unittests
-  #       run: |
-  #         ./flutter_tizen_unittests
-
   test:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - uses: docker/setup-qemu-action@v1
         with:
           platforms: arm
+
       - uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/download-artifact@v2
         with:
           name: tizen-arm-unittests
+
       - name: run unittests
         env:
           IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/tizen-headed-armv7l
