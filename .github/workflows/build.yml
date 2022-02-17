@@ -55,11 +55,27 @@ jobs:
       - name: build
         run: |
           src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
-          src/flutter/ci/tizen/build-engine.sh \
-            --target-arch ${{ matrix.arch }} \
+
+          # FIXME: Disable compile options unsupported by the Tizen toolchain.
+          sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' src/build/config/compiler/BUILD.gn
+          sed -i 's/"-Wno-psabi",//g' src/build/config/compiler/BUILD.gn
+          sed -i 's/"-Wno-unused-but-set-parameter",//g' src/build/config/compiler/BUILD.gn
+          sed -i 's/"-Wno-unused-but-set-variable",//g' src/build/config/compiler/BUILD.gn
+
+          src/flutter/tools/gn \
+            --target-os linux --linux-cpu ${{ matrix.arch }} \
+            --no-goma \
+            --target-toolchain /tizen_tools/toolchains \
+            --target-sysroot /tizen_tools/sysroot/${{ matrix.arch }} \
             --target-triple ${{ matrix.triple }} \
             --runtime-mode ${{ matrix.mode }} \
-            tizen flutter_tizen_unittests
+            --enable-fontconfig \
+            --no-full-dart-sdk \
+            --no-build-embedder-examples \
+            --embedder-for-target \
+            --build-tizen-shell
+          ninja -C src/out/$OUTPUT_NAME tizen flutter_tizen_unittests
+
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
 
       - uses: actions/upload-artifact@v2
@@ -179,21 +195,26 @@ jobs:
         run: |
           gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
           gclient setdep --var=download_android_deps=False --deps-file=src/flutter/DEPS
-          PYTHONPATH="$PWD/depot_tools" python3 ./src/flutter/ci/tizen/gclient-shallow-sync.py src/flutter/DEPS
+          PYTHONPATH="$PWD/depot_tools" python3 src/flutter/ci/tizen/gclient-shallow-sync.py src/flutter/DEPS
           gclient sync -v --no-history --shallow
 
       - name: build
         run: |
           src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
+
           # Change host_toolchain to mac/clang_x64.
           sed -i "" "s|//build/toolchain/linux:clang_$host_cpu|//build/toolchain/mac:clang_$host_cpu|g" src/build/config/BUILDCONFIG.gn
+
           # Pass dummy toolchain values to avoid using linux target toolchain settings.
-          python3 ./src/flutter/tools/gn \
+          src/flutter/tools/gn \
             --linux --linux-cpu=${{ matrix.arch }} \
-            --runtime-mode=${{ matrix.mode }} \
             --no-goma \
-            --target-toolchain _ --target-sysroot _ --target-triple _
-          ninja -C ./src/out/$OUTPUT_NAME clang_x64/gen_snapshot
+            --target-toolchain _ \
+            --target-sysroot _ \
+            --target-triple _ \
+            --runtime-mode=${{ matrix.mode }}
+          ninja -C src/out/$OUTPUT_NAME clang_x64/gen_snapshot
+
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
 
       - uses: actions/upload-artifact@v2
