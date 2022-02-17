@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-    # branches:
-    #   - "flutter-*-tizen"
+    branches:
+      - "flutter-*-tizen"
   pull_request:
 
 jobs:
