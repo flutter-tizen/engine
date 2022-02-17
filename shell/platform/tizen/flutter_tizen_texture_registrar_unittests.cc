@@ -4,6 +4,8 @@
 
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 
+#include <Ecore.h>
+
 #include <iostream>
 
 #include "flutter/shell/platform/embedder/test_utils/proc_table_replacement.h"
@@ -16,10 +18,7 @@ namespace testing {
 
 class FlutterTizenTextureRegistrarTest : public ::testing::Test {
  public:
-  FlutterTizenTextureRegistrarTest() {
-    ecore_init();
-    elm_init(0, nullptr);
-  }
+  FlutterTizenTextureRegistrarTest() { ecore_init(); }
 
  protected:
   void SetUp() {

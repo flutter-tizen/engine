@@ -257,7 +257,7 @@ embedder("flutter_tizen_common") {
 
 embedder("flutter_tizen_source") {
   target_type = "source_set"
-  use_evas_gl_renderer = true
+  use_evas_gl_renderer = false
 
   defines = []
 }
