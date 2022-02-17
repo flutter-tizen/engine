@@ -56,7 +56,6 @@ jobs:
         run: |
           src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
           src/flutter/ci/tizen/build-engine.sh \
-            --target-os linux \
             --target-arch ${{ matrix.arch }} \
             --target-triple ${{ matrix.triple }} \
             --runtime-mode ${{ matrix.mode }} \
