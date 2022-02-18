@@ -32,6 +32,8 @@
 #include "base/string_utils.h"
 #include "gfx/geometry/rect_conversions.h"
 
+static const char kActivateActionName[] = "activate";
+
 #if defined(ATK_CHECK_VERSION) && ATK_CHECK_VERSION(2, 10, 0)
 #define ATK_210
 #endif
@@ -633,7 +635,7 @@ const gchar* GetName(AtkAction* atk_action, gint index) {
   if (!obj)
     return nullptr;
 
-  return obj->GetDefaultActionName();
+  return kActivateActionName;
 }
 
 const gchar* GetKeybinding(AtkAction* atk_action, gint index) {
