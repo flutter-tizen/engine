@@ -82,7 +82,12 @@ jobs:
             --no-build-embedder-examples \
             --embedder-for-target \
             --build-tizen-shell
-          ninja -C src/out/$OUTPUT_NAME tizen flutter_tizen_unittests
+          ninja -C src/out/$OUTPUT_NAME tizen
+
+          # Build unittests.
+          if [[ "$OUTPUT_NAME" == "linux_release_arm" ]]; then
+            ninja -C src/out/$OUTPUT_NAME flutter_tizen_unittests
+          fi
 
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
 

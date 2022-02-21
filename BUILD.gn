@@ -6,6 +6,7 @@ import("//flutter/common/config.gni")
 import("//flutter/examples/examples.gni")
 import("//flutter/shell/platform/config.gni")
 import("//flutter/shell/platform/glfw/config.gni")
+import("//flutter/shell/platform/tizen/config.gni")
 import("//flutter/testing/testing.gni")
 import("//third_party/dart/build/dart/copy_tree.gni")
 
@@ -133,6 +134,10 @@ group("flutter") {
   if (is_android) {
     public_deps +=
         [ "//flutter/shell/platform/android:flutter_shell_native_unittests" ]
+  }
+
+  if (build_tizen_shell) {
+    public_deps += [ "//flutter/shell/platform/tizen:flutter_tizen_unittests" ]
   }
 
   # Compile all unittests targets if enabled.
