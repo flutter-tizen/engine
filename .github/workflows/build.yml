@@ -113,7 +113,7 @@ jobs:
             !src/out/linux_release_arm/cpp_client_wrapper/engine_method_result.cc
 
       - uses: actions/upload-artifact@v2
-        if: (matrix.arch == 'arm' || matrix.arch == 'arm64') && (matrix.mode == 'release' || matrix.mode == 'profile')
+        if: (matrix.arch == 'arm' || matrix.arch == 'arm64') && matrix.mode != 'debug'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
@@ -125,6 +125,9 @@ jobs:
       matrix:
         arch: [arm, arm64]
         mode: [release, profile]
+
+    env:
+      OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
       - name: checkout engine
@@ -165,12 +168,12 @@ jobs:
             --linux --linux-cpu=${{ matrix.arch }} `
             --runtime-mode=${{ matrix.mode }} `
             --no-goma
-          ninja -C .\out\linux_${{ matrix.mode }}_${{ matrix.arch }} gen_snapshot
+          ninja -C .\out\${{ env.OUTPUT_NAME }} gen_snapshot
 
       - uses: actions/upload-artifact@v2
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_windows-x64
-          path: C:\workspace\engine\src\out\linux_${{ matrix.mode }}_${{ matrix.arch }}\gen_snapshot.exe
+          path: C:\workspace\engine\src\out\${{ env.OUTPUT_NAME }}\gen_snapshot.exe
 
   macos-build:
     runs-on: macos-11
@@ -233,7 +236,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
-          path: src/out/linux_${{ matrix.mode }}_${{ matrix.arch }}/clang_x64/gen_snapshot
+          path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
 
   test:
     needs: build
