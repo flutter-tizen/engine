@@ -11,9 +11,7 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/embedder/embedder.h"
-#ifndef __X64_SHELL__
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
-#endif
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
 #include "flutter/shell/platform/tizen/channels/navigation_channel.h"
@@ -96,11 +94,9 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   TizenRenderer* renderer() { return renderer_.get(); }
 
-#ifndef __X64_SHELL__
   AppControlChannel* app_control_channel() {
     return app_control_channel_.get();
   }
-#endif
 
   KeyEventChannel* key_event_channel() { return key_event_channel_.get(); }
 
@@ -222,10 +218,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
 
-#ifndef __X64_SHELL__
   // A plugin that implements Tizen app_control channels.
   std::unique_ptr<AppControlChannel> app_control_channel_;
-#endif
 
   // A plugin that implements the Flutter keyevent channel.
   std::unique_ptr<KeyEventChannel> key_event_channel_;
@@ -248,10 +242,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // A plugin that implements the Flutter textinput channel.
   std::unique_ptr<TextInputChannel> text_input_channel_;
 
-#ifndef __X64_SHELL__
   // A plugin that implements the Tizen window channel.
   std::unique_ptr<WindowChannel> window_channel_;
-#endif
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;

@@ -317,9 +317,7 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
 bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
   bool handled = false;
 
-#if defined(__X64_SHELL__)
-  bool is_ime = false;
-#elif defined(WEARABLE_PROFILE)
+#ifdef WEARABLE_PROFILE
   // Hardware keyboard is not supported on watch devices.
   bool is_ime = true;
   // FIXME: Only for wearable.

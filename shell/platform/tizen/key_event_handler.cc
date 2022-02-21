@@ -4,11 +4,8 @@
 
 #include "key_event_handler.h"
 
-#ifdef __X64_SHELL__
-#include <cstdlib>
-#else
 #include <app.h>
-#endif
+
 #include <iostream>
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
@@ -94,11 +91,7 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* raw_event) {
               engine->navigation_channel()->PopRoute();
             }
           } else if (symbol == kExitKey && !is_down) {
-#ifdef __X64_SHELL__
-            exit(EXIT_SUCCESS);
-#else
             ui_app_exit();
-#endif
           }
         });
   }

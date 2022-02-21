@@ -6,9 +6,6 @@
 #define EMBEDDER_TOUCH_EVENT_HANDLER_H_
 
 #include <Ecore_Input.h>
-#ifdef __X64_SHELL__
-#include <Efl_Core.h>
-#endif
 
 #include <vector>
 

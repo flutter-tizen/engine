@@ -4,10 +4,8 @@
 
 #include "tizen_renderer_evas_gl.h"
 
-#ifndef __X64_SHELL__
 #include <efl_extension.h>
 #include <ui/efl_util.h>
-#endif
 
 #include "tizen_evas_gl_helper.h"
 Evas_GL* g_evas_gl = nullptr;
@@ -603,12 +601,10 @@ bool TizenRendererEvasGL::SetupEvasGL() {
   gl_config_->depth_bits = EVAS_GL_DEPTH_NONE;
   gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
 
-#ifndef __X64_SHELL__
   gl_context_ =
       evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_3_X);
   gl_resource_context_ =
       evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
-#endif
   if (!gl_context_) {
     FT_LOG(Error) << "Failed to create an Evas GL context with "
                      "EVAS_GL_GLES_3_X; trying with EVAS_GL_GLES_2_X.";
@@ -645,7 +641,6 @@ bool TizenRendererEvasGL::SetupEvasWindow() {
     FT_LOG(Error) << "Could not create an Evas window.";
     return false;
   }
-#ifndef __X64_SHELL__
   if (top_level_) {
     efl_util_set_notification_window_level(evas_window_,
                                            EFL_UTIL_NOTIFICATION_LEVEL_TOP);
@@ -653,7 +648,6 @@ bool TizenRendererEvasGL::SetupEvasWindow() {
   // Please uncomment below and enable setWindowGeometry of window channel when
   // Tizen 5.5 or later was chosen as default.
   // elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
-#endif
 
   auto* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
@@ -787,11 +781,9 @@ bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
 }
 
 void TizenRendererEvasGL::BindKeys(const std::vector<std::string>& keys) {
-#ifndef __X64_SHELL__
   for (const auto& key : keys) {
     eext_win_keygrab_set(evas_window_, key.c_str());
   }
-#endif
 }
 
 }  // namespace flutter

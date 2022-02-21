@@ -241,10 +241,8 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
 
   internal_plugin_registrar_ =
       std::make_unique<PluginRegistrar>(plugin_registrar_.get());
-#ifndef __X64_SHELL__
   app_control_channel_ = std::make_unique<AppControlChannel>(
       internal_plugin_registrar_->messenger());
-#endif
   lifecycle_channel_ = std::make_unique<LifecycleChannel>(
       internal_plugin_registrar_->messenger());
   platform_channel_ = std::make_unique<PlatformChannel>(
@@ -263,10 +261,9 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     text_input_channel_ = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(),
         std::make_unique<TizenInputMethodContext>(this));
-#ifndef __X64_SHELL__
     window_channel_ = std::make_unique<WindowChannel>(
         internal_plugin_registrar_->messenger(), renderer_.get(), this);
-#endif
+
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 

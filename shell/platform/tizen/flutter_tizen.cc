@@ -46,13 +46,11 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
   if (project.HasArgument("--verbose-logging")) {
     flutter::Logger::SetLoggingLevel(flutter::kLogLevelDebug);
   }
-#ifndef __X64_SHELL__
   std::string logging_port;
   if (project.GetArgumentValue("--tizen-logging-port", &logging_port)) {
     flutter::Logger::SetLoggingPort(std::stoi(logging_port));
   }
   flutter::Logger::Start();
-#endif
 
   auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
   if (window_properties.headed) {
@@ -69,9 +67,8 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
 }
 
 void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
-#ifndef __X64_SHELL__
   flutter::Logger::Stop();
-#endif
+
   auto engine = EngineFromHandle(engine_ref);
   engine->StopEngine();
   delete engine;
@@ -149,10 +146,8 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
 
 void FlutterDesktopNotifyAppControl(FlutterDesktopEngineRef engine,
                                     void* app_control) {
-#ifndef __X64_SHELL__
   EngineFromHandle(engine)->app_control_channel()->NotifyAppControl(
       app_control);
-#endif
 }
 
 void FlutterDesktopNotifyLocaleChange(FlutterDesktopEngineRef engine) {

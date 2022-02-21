@@ -4,9 +4,7 @@
 
 #include "logger.h"
 
-#ifndef __X64_SHELL__
 #include <dlog.h>
-#endif
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -18,7 +16,6 @@
 
 namespace {
 
-#ifndef __X64_SHELL__
 constexpr char kLogTag[] = "ConsoleMessage";
 
 std::string GetLevelName(int level) {
@@ -50,7 +47,6 @@ log_priority LevelToPriority(int level) {
       return DLOG_FATAL;
   }
 }
-#endif  // __X64_SHELL__
 
 }  // namespace
 
@@ -169,10 +165,6 @@ void Logger::Stop() {
 }
 
 void Logger::Print(int level, const std::string& message) {
-#ifdef __X64_SHELL__
-  std::cerr << message << std::endl;
-  std::cerr.flush();
-#else
   // Write the message to the logging pipe so that it can be forwarded to the
   // connected host.
   if (logging_port_ > 0 && level >= kLogLevelInfo) {
@@ -190,7 +182,6 @@ void Logger::Print(int level, const std::string& message) {
 #else
   dlog_print(priority, kLogTag, "%s", message.c_str());
 #endif
-#endif  // __X64_SHELL__
 }
 
 LogMessage::LogMessage(int level,
