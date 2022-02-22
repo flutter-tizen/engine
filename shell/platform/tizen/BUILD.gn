@@ -102,6 +102,7 @@ template("embedder") {
     sources = [
       "channels/app_control.cc",
       "channels/app_control_channel.cc",
+      "channels/feedback_manager.cc",
       "channels/key_event_channel.cc",
       "channels/lifecycle_channel.cc",
       "channels/navigation_channel.cc",

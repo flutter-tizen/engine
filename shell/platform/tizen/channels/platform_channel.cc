@@ -5,7 +5,6 @@
 #include "platform_channel.h"
 
 #include <app.h>
-#include <feedback.h>
 #ifdef COMMON_PROFILE
 #include <tzsh.h>
 #include <tzsh_softkey.h>
@@ -14,6 +13,7 @@
 #include <map>
 
 #include "flutter/shell/platform/common/json_method_codec.h"
+#include "flutter/shell/platform/tizen/channels/feedback_manager.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
@@ -54,67 +54,6 @@ constexpr char kPortraitUp[] = "DeviceOrientation.portraitUp";
 constexpr char kPortraitDown[] = "DeviceOrientation.portraitDown";
 constexpr char kLandscapeLeft[] = "DeviceOrientation.landscapeLeft";
 constexpr char kLandscapeRight[] = "DeviceOrientation.landscapeRight";
-
-class FeedbackManager {
- public:
-  static FeedbackManager& GetInstance() {
-    static FeedbackManager instance;
-    return instance;
-  }
-
-  FeedbackManager(const FeedbackManager&) = delete;
-  FeedbackManager& operator=(const FeedbackManager&) = delete;
-
-  void PlaySound(const std::string& sound_type) {
-    auto pattern = (sound_type == kSoundTypeClick) ? FEEDBACK_PATTERN_TAP
-                                                   : FEEDBACK_PATTERN_GENERAL;
-    Play(FEEDBACK_TYPE_SOUND, pattern);
-  }
-
-  void Vibrate(const std::string& feedback_type) {
-    // We use a single type of vibration (FEEDBACK_PATTERN_SIP) to implement
-    // HapticFeedback's vibrate, lightImpact, mediumImpact, heavyImpact, and
-    // selectionClick methods, because Tizen's "feedback" module has no
-    // dedicated vibration types for them.
-    // Thus, we ignore the feedback_type argument for "HapticFeedback.vibrate"
-    // calls.
-    Play(FEEDBACK_TYPE_VIBRATION, FEEDBACK_PATTERN_SIP);
-  }
-
- private:
-  FeedbackManager() {
-    int ret = feedback_initialize();
-    if (ret != FEEDBACK_ERROR_NONE) {
-      FT_LOG(Error) << "feedback_initialize() failed with error: "
-                    << get_error_message(ret);
-      return;
-    }
-    initialized_ = true;
-  }
-
-  ~FeedbackManager() {
-    if (initialized_) {
-      feedback_deinitialize();
-    }
-  }
-
-  void Play(feedback_type_e type, feedback_pattern_e pattern) {
-    if (!initialized_) {
-      return;
-    }
-    int ret = feedback_play_type(type, pattern);
-    if (ret == FEEDBACK_ERROR_PERMISSION_DENIED) {
-      FT_LOG(Error)
-          << "Permission denied. Add \"http://tizen.org/privilege/haptic\" "
-             "privilege to tizen-manifest.xml to use haptic feedbacks.";
-    } else if (ret != FEEDBACK_ERROR_NONE) {
-      FT_LOG(Error) << "feedback_play_type() failed with error: "
-                    << get_error_message(ret);
-    }
-  }
-
-  bool initialized_ = false;
-};
 
 #ifdef COMMON_PROFILE
 class TizenWindowSystemShell {
@@ -306,11 +245,15 @@ void PlatformChannel::SystemNavigatorPop() {
 }
 
 void PlatformChannel::PlaySystemSound(const std::string& sound_type) {
-  FeedbackManager::GetInstance().PlaySound(sound_type);
+  if (sound_type == kSoundTypeClick) {
+    FeedbackManager::GetInstance().PlayTapSound();
+  } else {
+    FeedbackManager::GetInstance().PlaySound();
+  }
 }
 
 void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
-  FeedbackManager::GetInstance().Vibrate(feedback_type);
+  FeedbackManager::GetInstance().Vibrate();
 }
 
 void PlatformChannel::RestoreSystemUIOverlays() {
