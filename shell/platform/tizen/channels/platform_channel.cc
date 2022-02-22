@@ -5,15 +5,12 @@
 #include "platform_channel.h"
 
 #include <app.h>
-#ifdef COMMON_PROFILE
-#include <tzsh.h>
-#include <tzsh_softkey.h>
-#endif
 
 #include <map>
 
 #include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/feedback_manager.h"
+#include "flutter/shell/platform/tizen/channels/tizen_shell.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
@@ -28,16 +25,18 @@ constexpr char kClipboardHasStringsMethod[] = "Clipboard.hasStrings";
 constexpr char kPlaySoundMethod[] = "SystemSound.play";
 constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
+#ifdef COMMON_PROFILE
 constexpr char kRestoreSystemUIOverlaysMethod[] =
     "SystemChrome.restoreSystemUIOverlays";
+constexpr char kSetEnabledSystemUIOverlaysMethod[] =
+    "SystemChrome.setEnabledSystemUIOverlays";
+#endif
+constexpr char kSetPreferredOrientationsMethod[] =
+    "SystemChrome.setPreferredOrientations";
 constexpr char kSetApplicationSwitcherDescriptionMethod[] =
     "SystemChrome.setApplicationSwitcherDescription";
 constexpr char kSetEnabledSystemUIModeMethod[] =
     "SystemChrome.setEnabledSystemUIMode";
-constexpr char kSetEnabledSystemUIOverlaysMethod[] =
-    "SystemChrome.setEnabledSystemUIOverlays";
-constexpr char kSetPreferredOrientationsMethod[] =
-    "SystemChrome.setPreferredOrientations";
 constexpr char kSetSystemUIOverlayStyleMethod[] =
     "SystemChrome.setSystemUIOverlayStyle";
 
@@ -50,93 +49,11 @@ constexpr char kUnknownClipboardError[] =
     "Unknown error during clipboard data retrieval";
 
 constexpr char kSoundTypeClick[] = "SystemSoundType.click";
+constexpr char kSystemUiOverlayBottom[] = "SystemUiOverlay.bottom";
 constexpr char kPortraitUp[] = "DeviceOrientation.portraitUp";
 constexpr char kPortraitDown[] = "DeviceOrientation.portraitDown";
 constexpr char kLandscapeLeft[] = "DeviceOrientation.landscapeLeft";
 constexpr char kLandscapeRight[] = "DeviceOrientation.landscapeRight";
-
-#ifdef COMMON_PROFILE
-class TizenWindowSystemShell {
- public:
-  static TizenWindowSystemShell& GetInstance() {
-    static TizenWindowSystemShell instance;
-    return instance;
-  }
-
-  TizenWindowSystemShell(const TizenWindowSystemShell&) = delete;
-  TizenWindowSystemShell& operator=(const TizenWindowSystemShell&) = delete;
-
-  void InitializeSoftkey(uint32_t window_id) {
-    if (tizen_shell_softkey_ || !tizen_shell_) {
-      return;
-    }
-    tizen_shell_softkey_ = tzsh_softkey_create(tizen_shell_, window_id);
-    if (!tizen_shell_softkey_) {
-      int ret = get_last_result();
-      if (ret == TZSH_ERROR_PERMISSION_DENIED) {
-        FT_LOG(Error) << "Permission denied. You need a "
-                         "\"http://tizen.org/privilege/windowsystem.admin\" "
-                         "privilege to use this method.";
-      } else {
-        FT_LOG(Error) << "tzsh_softkey_create() failed with error: "
-                      << get_error_message(ret);
-      }
-    }
-  }
-
-  bool IsSoftkeyShown() { return is_softkey_shown_; }
-
-  void ShowSoftkey() {
-    if (!tizen_shell_softkey_) {
-      return;
-    }
-    int ret = tzsh_softkey_global_show(tizen_shell_softkey_);
-    if (ret != TZSH_ERROR_NONE) {
-      FT_LOG(Error) << "tzsh_softkey_global_show() failed with error: "
-                    << get_error_message(ret);
-      return;
-    }
-    is_softkey_shown_ = true;
-  }
-
-  void HideSoftkey() {
-    if (!tizen_shell_softkey_) {
-      return;
-    }
-    // Always show the softkey before hiding it again, to avoid subtle bugs.
-    tzsh_softkey_global_show(tizen_shell_softkey_);
-    int ret = tzsh_softkey_global_hide(tizen_shell_softkey_);
-    if (ret != TZSH_ERROR_NONE) {
-      FT_LOG(Error) << "tzsh_softkey_global_hide() failed with error: "
-                    << get_error_message(ret);
-      return;
-    }
-    is_softkey_shown_ = false;
-  }
-
- private:
-  TizenWindowSystemShell() {
-    tizen_shell_ = tzsh_create(TZSH_TOOLKIT_TYPE_EFL);
-    if (!tizen_shell_) {
-      FT_LOG(Error) << "tzsh_create() failed with error: "
-                    << get_error_message(get_last_result());
-    }
-  }
-
-  ~TizenWindowSystemShell() {
-    if (tizen_shell_softkey_) {
-      tzsh_softkey_destroy(tizen_shell_softkey_);
-    }
-    if (tizen_shell_) {
-      tzsh_destroy(tizen_shell_);
-    }
-  }
-
-  tzsh_h tizen_shell_ = nullptr;
-  tzsh_softkey_h tizen_shell_softkey_ = nullptr;
-  bool is_softkey_shown_ = true;
-};
-#endif
 
 // Naive implementation using std::string as a container of internal clipboard
 // data.
@@ -209,6 +126,7 @@ void PlatformChannel::HandleMethodCall(
     document.AddMember(rapidjson::Value(kValueKey, allocator),
                        rapidjson::Value(!text_clipboard.empty()), allocator);
     result->Success(document);
+#ifdef COMMON_PROFILE
   } else if (method == kRestoreSystemUIOverlaysMethod) {
     RestoreSystemUIOverlays();
     result->Success();
@@ -220,6 +138,7 @@ void PlatformChannel::HandleMethodCall(
     }
     SetEnabledSystemUIOverlays(overlays);
     result->Success();
+#endif
   } else if (method == kSetPreferredOrientationsMethod) {
     const auto& list = arguments[0];
     std::vector<std::string> orientations;
@@ -257,41 +176,33 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
 }
 
 void PlatformChannel::RestoreSystemUIOverlays() {
-#ifdef COMMON_PROFILE
   if (!renderer_) {
     return;
   }
-  auto& tizen_shell = TizenWindowSystemShell::GetInstance();
-  tizen_shell.InitializeSoftkey(renderer_->GetWindowId());
+  auto& shell = TizenShell::GetInstance();
+  shell.InitializeSoftkey(renderer_->GetWindowId());
 
-  if (tizen_shell.IsSoftkeyShown()) {
-    tizen_shell.ShowSoftkey();
+  if (shell.IsSoftkeyShown()) {
+    shell.ShowSoftkey();
   } else {
-    tizen_shell.HideSoftkey();
+    shell.HideSoftkey();
   }
-#else
-  FT_UNIMPLEMENTED();
-#endif
 }
 
 void PlatformChannel::SetEnabledSystemUIOverlays(
     const std::vector<std::string>& overlays) {
-#ifdef COMMON_PROFILE
   if (!renderer_) {
     return;
   }
-  auto& tizen_shell = TizenWindowSystemShell::GetInstance();
-  tizen_shell.InitializeSoftkey(renderer_->GetWindowId());
+  auto& shell = TizenShell::GetInstance();
+  shell.InitializeSoftkey(renderer_->GetWindowId());
 
-  if (std::find(overlays.begin(), overlays.end(), "SystemUiOverlay.bottom") !=
+  if (std::find(overlays.begin(), overlays.end(), kSystemUiOverlayBottom) !=
       overlays.end()) {
-    tizen_shell.ShowSoftkey();
+    shell.ShowSoftkey();
   } else {
-    tizen_shell.HideSoftkey();
+    shell.HideSoftkey();
   }
-#else
-  FT_UNIMPLEMENTED();
-#endif
 }
 
 void PlatformChannel::SetPreferredOrientations(
