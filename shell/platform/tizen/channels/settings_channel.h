@@ -17,12 +17,10 @@ class SettingsChannel {
  public:
   explicit SettingsChannel(BinaryMessenger* messenger);
   virtual ~SettingsChannel();
-  void SendSettingsEvent();
 
  private:
+  void SendSettingsEvent();
   bool Prefer24HourTime();
-  void Init();
-  void Dispose();
 
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;
 };

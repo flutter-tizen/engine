@@ -109,7 +109,6 @@ template("embedder") {
       "channels/platform_channel_tizen.cc",
       "channels/platform_view_channel.cc",
       "channels/settings_channel.cc",
-      "channels/settings_channel_tizen.cc",
       "channels/text_input_channel.cc",
       "channels/window_channel.cc",
       "external_texture_pixel_gl.cc",
