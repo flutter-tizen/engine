@@ -218,7 +218,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
 
-  // A plugin that implements Tizen app_control channels.
+  // A plugin that implements the Tizen app_control channel.
   std::unique_ptr<AppControlChannel> app_control_channel_;
 
   // A plugin that implements the Flutter keyevent channel.
