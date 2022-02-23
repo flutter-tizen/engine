@@ -2,7 +2,8 @@ name: Check Symbols
 
 on:
   workflow_run:
-    workflows: ["Build"]
+    workflows:
+      - Build
     types:
       - completed
 
@@ -10,6 +11,7 @@ jobs:
   check:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -43,7 +45,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.payload.workflow_run.head_sha,
-              context: "Check Symbols",
+              context: 'Check Symbols',
               state: 'success',
               description: 'All symbols are valid'
             });
@@ -57,7 +59,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.payload.workflow_run.head_sha,
-              context: "Check Symbols",
+              context: 'Check Symbols',
               state: 'failure',
               description: 'Failed in checking symbols',
               target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
