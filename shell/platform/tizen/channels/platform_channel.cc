@@ -26,19 +26,13 @@ constexpr char kPlaySoundMethod[] = "SystemSound.play";
 constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
 #ifdef COMMON_PROFILE
-constexpr char kRestoreSystemUIOverlaysMethod[] =
+constexpr char kRestoreSystemUiOverlaysMethod[] =
     "SystemChrome.restoreSystemUIOverlays";
-constexpr char kSetEnabledSystemUIOverlaysMethod[] =
+constexpr char kSetEnabledSystemUiOverlaysMethod[] =
     "SystemChrome.setEnabledSystemUIOverlays";
 #endif
 constexpr char kSetPreferredOrientationsMethod[] =
     "SystemChrome.setPreferredOrientations";
-constexpr char kSetApplicationSwitcherDescriptionMethod[] =
-    "SystemChrome.setApplicationSwitcherDescription";
-constexpr char kSetEnabledSystemUIModeMethod[] =
-    "SystemChrome.setEnabledSystemUIMode";
-constexpr char kSetSystemUIOverlayStyleMethod[] =
-    "SystemChrome.setSystemUIOverlayStyle";
 
 constexpr char kTextKey[] = "text";
 constexpr char kValueKey[] = "value";
@@ -78,10 +72,10 @@ PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
 PlatformChannel::~PlatformChannel() {}
 
 void PlatformChannel::HandleMethodCall(
-    const MethodCall<rapidjson::Document>& call,
+    const MethodCall<rapidjson::Document>& method_call,
     std::unique_ptr<MethodResult<rapidjson::Document>> result) {
-  const auto method = call.method_name();
-  const auto arguments = call.arguments();
+  const auto& method = method_call.method_name();
+  const auto* arguments = method_call.arguments();
 
   if (method == kSystemNavigatorPopMethod) {
     SystemNavigatorPop();
@@ -127,16 +121,16 @@ void PlatformChannel::HandleMethodCall(
                        rapidjson::Value(!text_clipboard.empty()), allocator);
     result->Success(document);
 #ifdef COMMON_PROFILE
-  } else if (method == kRestoreSystemUIOverlaysMethod) {
-    RestoreSystemUIOverlays();
+  } else if (method == kRestoreSystemUiOverlaysMethod) {
+    RestoreSystemUiOverlays();
     result->Success();
-  } else if (method == kSetEnabledSystemUIOverlaysMethod) {
+  } else if (method == kSetEnabledSystemUiOverlaysMethod) {
     const auto& list = arguments[0];
     std::vector<std::string> overlays;
     for (auto iter = list.Begin(); iter != list.End(); ++iter) {
       overlays.push_back(iter->GetString());
     }
-    SetEnabledSystemUIOverlays(overlays);
+    SetEnabledSystemUiOverlays(overlays);
     result->Success();
 #endif
   } else if (method == kSetPreferredOrientationsMethod) {
@@ -147,12 +141,6 @@ void PlatformChannel::HandleMethodCall(
     }
     SetPreferredOrientations(orientations);
     result->Success();
-  } else if (method == kSetApplicationSwitcherDescriptionMethod) {
-    result->NotImplemented();
-  } else if (method == kSetEnabledSystemUIModeMethod) {
-    result->NotImplemented();
-  } else if (method == kSetSystemUIOverlayStyleMethod) {
-    result->NotImplemented();
   } else {
     FT_LOG(Info) << "Unimplemented method: " << method;
     result->NotImplemented();
@@ -175,7 +163,7 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
   FeedbackManager::GetInstance().Vibrate();
 }
 
-void PlatformChannel::RestoreSystemUIOverlays() {
+void PlatformChannel::RestoreSystemUiOverlays() {
   if (!renderer_) {
     return;
   }
@@ -189,7 +177,7 @@ void PlatformChannel::RestoreSystemUIOverlays() {
   }
 }
 
-void PlatformChannel::SetEnabledSystemUIOverlays(
+void PlatformChannel::SetEnabledSystemUiOverlays(
     const std::vector<std::string>& overlays) {
   if (!renderer_) {
     return;
@@ -220,7 +208,7 @@ void PlatformChannel::SetPreferredOrientations(
   for (const auto& orientation : orientations) {
     rotations.push_back(orientation_mapping.at(orientation));
   }
-  if (rotations.size() == 0) {
+  if (rotations.empty()) {
     // The empty list causes the application to defer to the operating system
     // default.
     rotations = {0, 90, 180, 270};
