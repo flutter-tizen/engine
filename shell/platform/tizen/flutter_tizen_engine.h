@@ -12,6 +12,8 @@
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
+#include "flutter/shell/platform/tizen/channels/accessibility_channel.h"
+#include "flutter/shell/platform/tizen/accessibility_settings.h"
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
 #include "flutter/shell/platform/tizen/channels/navigation_channel.h"
@@ -21,6 +23,7 @@
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
 #include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_accessibility_bridge_delegate.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
 #include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
@@ -165,6 +168,17 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // given |texture_id|.
   bool MarkExternalTextureFrameAvailable(int64_t texture_id);
 
+  // Get the accessibility bridge.
+  std::weak_ptr<flutter::AccessibilityBridge> GetAccessibilityBridge();
+
+  // Change semantics state when accessibility state is changed.
+  void SetSemanticsEnabled(bool enabled);
+
+  // Dispatch accessibility action back to the Flutter framework.
+  void DispatchAccessibilityAction(uint64_t target,
+                                   FlutterSemanticsAction action,
+                                   fml::MallocMapping data);
+
  private:
   friend class EngineModifier;
 
@@ -179,6 +193,15 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The user_data received by the render callbacks refers to the
   // FlutterTizenEngine.
   FlutterRendererConfig GetRendererConfig();
+
+  // Called when a semantics node update is received from the engine.
+  static void OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
+                                    void* user_data);
+
+  // Called when a semantics actions update is received from the engine.
+  static void OnUpdateSemanticsCustomActions(
+      const FlutterSemanticsCustomAction* action,
+      void* user_data);
 
   // The Flutter engine instance.
   FLUTTER_API_SYMBOL(FlutterEngine) engine_ = nullptr;
@@ -215,8 +238,16 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterDesktopOnPluginRegistrarDestroyed
       plugin_registrar_destruction_callback_{nullptr};
 
+  // The accessibility bridge for tizen platform.
+  std::shared_ptr<AccessibilityBridge> accessibility_bridge_;
+
+  std::unique_ptr<AccessibilitySettings> accessibility_settings_;
+
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
+
+  // A plugin that implements the Flutter accessibility channel.
+  std::unique_ptr<AccessibilityChannel> accessibility_channel_;
 
   // A plugin that implements the Tizen app_control channel.
   std::unique_ptr<AppControlChannel> app_control_channel_;

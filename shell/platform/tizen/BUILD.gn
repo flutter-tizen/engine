@@ -100,6 +100,8 @@ template("embedder") {
     public = _public_headers
 
     sources = [
+      "accessibility_settings.cc",
+      "channels/accessibility_channel.cc",
       "channels/app_control.cc",
       "channels/app_control_channel.cc",
       "channels/feedback_manager.cc",
@@ -116,7 +118,9 @@ template("embedder") {
       "external_texture_surface_gl.cc",
       "flutter_project_bundle.cc",
       "flutter_tizen.cc",
+      "flutter_tizen_accessibility_bridge_delegate.cc",
       "flutter_tizen_engine.cc",
+      "flutter_tizen_platform_node_delegate.cc",
       "flutter_tizen_texture_registrar.cc",
       "key_event_handler.cc",
       "logger.cc",
@@ -142,6 +146,7 @@ template("embedder") {
       "ecore_input",
       "efl-extension",
       "eina",
+      "elementary",
       "feedback",
       "tbm",
       "tdm-client",
@@ -189,6 +194,7 @@ template("embedder") {
 
     deps = [
       "//flutter/shell/platform/common:common_cpp",
+      "//flutter/shell/platform/common:common_cpp_accessibility",
       "//flutter/shell/platform/common:common_cpp_input",
       "//flutter/shell/platform/common:common_cpp_library_headers",
       "//flutter/shell/platform/common/client_wrapper:client_wrapper",
@@ -255,6 +261,7 @@ executable("flutter_tizen_unittests") {
     ":flutter_tizen_source",
     "//flutter/runtime:libdart",
     "//flutter/shell/platform/common:common_cpp",
+    "//flutter/shell/platform/common:common_cpp_accessibility",
     "//flutter/shell/platform/common/client_wrapper:client_wrapper",
     "//flutter/shell/platform/embedder:embedder_headers",
     "//flutter/shell/platform/embedder:embedder_test_utils",
