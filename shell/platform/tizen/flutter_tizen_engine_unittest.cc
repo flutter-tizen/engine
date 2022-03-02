@@ -26,6 +26,11 @@ class FlutterTizenEngineTest : public ::testing::Test {
 
     FlutterProjectBundle project(engine_prop);
     auto engine = std::make_unique<FlutterTizenEngine>(project);
+
+    EngineModifier modifier(engine.get());
+    // Force the non-AOT path unless overridden by the test.
+    modifier.embedder_api().RunsAOTCompiledDartCode = []() { return false; };
+
     engine_ = engine.release();
   }
 
