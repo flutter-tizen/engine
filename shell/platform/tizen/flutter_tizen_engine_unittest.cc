@@ -39,51 +39,6 @@ class FlutterTizenEngineTest : public ::testing::Test {
   FlutterTizenEngine* engine_ = nullptr;
 };
 
-class FlutterTizenEngineTestHeaded : public FlutterTizenEngineTest {
- protected:
-  void SetUp() {
-    FlutterTizenEngineTest::SetUp();
-    engine_->InitializeRenderer(0, 0, 800, 600, false, true, false);
-  }
-};
-
-TEST_F(FlutterTizenEngineTest, Run) {
-  EXPECT_TRUE(engine_ != nullptr);
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-}
-
-TEST_F(FlutterTizenEngineTest, Run_Twice) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_FALSE(engine_->RunEngine(nullptr));
-}
-
-TEST_F(FlutterTizenEngineTest, Stop) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->StopEngine());
-}
-
-TEST_F(FlutterTizenEngineTest, Stop_Twice) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->StopEngine());
-  EXPECT_FALSE(engine_->StopEngine());
-}
-
-TEST_F(FlutterTizenEngineTest, GetPluginRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->plugin_registrar() != nullptr);
-}
-
-TEST_F(FlutterTizenEngineTest, GetTextureRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->texture_registrar() == nullptr);
-}
-
-// Disabled for headless testing.
-TEST_F(FlutterTizenEngineTestHeaded, DISABLED_GetTextureRegistrar) {
-  EXPECT_TRUE(engine_->RunEngine(nullptr));
-  EXPECT_TRUE(engine_->texture_registrar() != nullptr);
-}
-
 TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
   EngineModifier modifier(engine_);
   bool run_called = false;
@@ -139,6 +94,8 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
   EXPECT_TRUE(run_called);
   EXPECT_TRUE(update_locales_called);
   EXPECT_TRUE(settings_message_sent);
+  EXPECT_TRUE(engine_->plugin_registrar() != nullptr);
+  EXPECT_TRUE(engine_->texture_registrar() == nullptr);
 
   modifier.embedder_api().Shutdown = [](auto engine) { return kSuccess; };
 }
