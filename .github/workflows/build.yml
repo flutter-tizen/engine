@@ -255,6 +255,10 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
+          name: tizen-arm-release
+
+      - uses: actions/download-artifact@v2
+        with:
           name: tizen-arm-unittests
 
       - name: run unittests

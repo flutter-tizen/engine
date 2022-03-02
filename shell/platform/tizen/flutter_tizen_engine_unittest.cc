@@ -94,8 +94,8 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
   EXPECT_TRUE(run_called);
   EXPECT_TRUE(update_locales_called);
   EXPECT_TRUE(settings_message_sent);
-  EXPECT_TRUE(engine_->plugin_registrar() != nullptr);
-  EXPECT_TRUE(engine_->texture_registrar() == nullptr);
+  EXPECT_NE(engine_->plugin_registrar(), nullptr);
+  EXPECT_EQ(engine_->texture_registrar(), nullptr);
 
   modifier.embedder_api().Shutdown = [](auto engine) { return kSuccess; };
 }
