@@ -94,9 +94,8 @@ source_set("common_cpp_accessibility") {
   ]
 
   if (!build_tizen_shell) {
-    public_deps += [
-      "//flutter/shell/platform/embedder:embedder_as_internal_library"
-    ]
+    public_deps +=
+        [ "//flutter/shell/platform/embedder:embedder_as_internal_library" ]
   }
 }
 
