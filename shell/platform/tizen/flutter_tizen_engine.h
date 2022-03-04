@@ -11,9 +11,9 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/embedder/embedder.h"
+#include "flutter/shell/platform/tizen/accessibility_settings.h"
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
 #include "flutter/shell/platform/tizen/channels/accessibility_channel.h"
-#include "flutter/shell/platform/tizen/accessibility_settings.h"
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
 #include "flutter/shell/platform/tizen/channels/navigation_channel.h"
@@ -178,6 +178,9 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   void DispatchAccessibilityAction(uint64_t target,
                                    FlutterSemanticsAction action,
                                    fml::MallocMapping data);
+
+  // Set bold font when accessibility high contrast state is changed.
+  void EnableAccessibilityFeature(bool bold_text);
 
  private:
   friend class EngineModifier;

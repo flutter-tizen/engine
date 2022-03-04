@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ACCESSIBILITY_SETTINGS_H_
-#define ACCESSIBILITY_SETTINGS_H_
+#ifndef EMBEDDER_ACCESSIBILITY_SETTINGS_H_
+#define EMBEDDER_ACCESSIBILITY_SETTINGS_H_
 
 #include <system/system_settings.h>
 
@@ -17,8 +17,10 @@ class AccessibilitySettings {
   virtual ~AccessibilitySettings();
 
   bool IsAccessibilityEnabled();
+  void OnHighContrastStateChanged();
 
  private:
+  bool GetHighContrastValue();
   static void OnScreenReaderStateChanged(system_settings_key_e key,
                                          void* user_data);
 
@@ -28,4 +30,4 @@ class AccessibilitySettings {
 
 }  // namespace flutter
 
-#endif  // ACCESSIBILITY_SETTINGS_H_
+#endif  // EMBEDDER_ACCESSIBILITY_SETTINGS_H_

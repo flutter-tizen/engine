@@ -480,6 +480,22 @@ bool FlutterTizenEngine::MarkExternalTextureFrameAvailable(int64_t texture_id) {
               engine_, texture_id) == kSuccess);
 }
 
+// Set bold font when accessibility high contrast state is
+// changed.
+void FlutterTizenEngine::EnableAccessibilityFeature(bool bold_text) {
+  if (engine_ == nullptr) {
+    return;
+  }
+
+  if (bold_text) {
+    embedder_api_.UpdateAccessibilityFeatures(
+        engine_, kFlutterAccessibilityFeatureBoldText);
+  } else {
+    embedder_api_.UpdateAccessibilityFeatures(engine_,
+                                              FlutterAccessibilityFeature(0));
+  }
+}
+
 // The Flutter Engine calls out to this function when new platform messages
 // are available.
 
