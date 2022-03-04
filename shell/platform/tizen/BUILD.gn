@@ -155,6 +155,7 @@ template("embedder") {
 
     if (embedder_for_target) {
       sources += [
+        "accessibility_settings.cc",
         "channels/app_control.cc",
         "channels/app_control_channel.cc",
         "channels/platform_channel_tizen.cc",
