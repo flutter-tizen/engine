@@ -16,16 +16,14 @@ class AccessibilitySettings {
   explicit AccessibilitySettings(FlutterTizenEngine* engine);
   virtual ~AccessibilitySettings();
 
-  bool IsAccessibilityEnabled();
-  void OnHighContrastStateChanged();
-
  private:
-  bool GetHighContrastValue();
+  static void OnHighContrastStateChanged(system_settings_key_e key,
+                                         void* user_data);
   static void OnScreenReaderStateChanged(system_settings_key_e key,
                                          void* user_data);
 
   FlutterTizenEngine* engine_;
-  bool screen_reader_enabled_;
+  bool screen_reader_enabled_ = false;
 };
 
 }  // namespace flutter

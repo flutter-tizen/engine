@@ -14,38 +14,41 @@
 namespace flutter {
 
 AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
-    : engine_(engine), screen_reader_enabled_(false) {
-  bool enabled = false;
+    : engine_(engine) {
+  bool tts_enabled = false;
   int result = system_settings_get_value_bool(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS, &enabled);
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS, &tts_enabled);
   if (result == SYSTEM_SETTINGS_ERROR_NONE) {
-    if (enabled) {
-      screen_reader_enabled_ = enabled;
-      engine_->SetSemanticsEnabled(enabled);
+    if (tts_enabled) {
+      screen_reader_enabled_ = tts_enabled;
+      engine_->SetSemanticsEnabled(tts_enabled);
     }
   } else {
     FT_LOG(Error) << "Failed to get value of accessibility tts.";
   }
 
-  // add listener for accessibility tts
+  // Add listener for accessibility tts
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS,
                                  OnScreenReaderStateChanged, this);
 
 #ifdef TV_PROFILE
+  // Set initialized value of accessibility high contrast.
+  int high_contrast_enabled = 0;
+  result = system_settings_get_value_int(
+      system_settings_key_e(
+          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
+      &high_contrast_enabled);
+  if (result == SYSTEM_SETTINGS_ERROR_NONE) {
+    engine_->EnableAccessibilityFeature(high_contrast_enabled);
+  } else {
+    FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
+  }
+
   // Add listener for accessibility high contrast.
   system_settings_set_changed_cb(
       system_settings_key_e(
           SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
-      [](system_settings_key_e key, void* user_data) -> void {
-        auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
-        self->OnHighContrastStateChanged();
-      },
-      this);
-
-  // Set initialized value of accessibility high contrast.
-  if (engine_ != nullptr) {
-    engine_->EnableAccessibilityFeature(GetHighContrastValue());
-  }
+      OnHighContrastStateChanged, this);
 #endif
 }
 
@@ -57,8 +60,23 @@ AccessibilitySettings::~AccessibilitySettings() {
 #endif
 }
 
-bool AccessibilitySettings::IsAccessibilityEnabled() {
-  return screen_reader_enabled_;
+void AccessibilitySettings::OnHighContrastStateChanged(
+    system_settings_key_e key,
+    void* user_data) {
+#ifdef TV_PROFILE
+  auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
+  int enabled = 0;
+  int result = system_settings_get_value_int(
+      system_settings_key_e(
+          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
+      &enabled);
+  if (result != SYSTEM_SETTINGS_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
+    return;
+  }
+
+  self->engine_->EnableAccessibilityFeature(enabled);
+#endif
 }
 
 void AccessibilitySettings::OnScreenReaderStateChanged(
@@ -76,28 +94,6 @@ void AccessibilitySettings::OnScreenReaderStateChanged(
     self->screen_reader_enabled_ = enabled;
     self->engine_->SetSemanticsEnabled(enabled);
   }
-}
-
-void AccessibilitySettings::OnHighContrastStateChanged() {
-  if (engine_ != nullptr) {
-    engine_->EnableAccessibilityFeature(GetHighContrastValue());
-  }
-}
-
-bool AccessibilitySettings::GetHighContrastValue() {
-  int enabled = 0;
-#ifdef TV_PROFILE
-  int ret = system_settings_get_value_int(
-      system_settings_key_e(
-          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
-      &enabled);
-  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
-    FT_LOG(Error)
-        << "Failed to get value of accessibility high contrast. ERROR CODE = "
-        << ret;
-  }
-#endif
-  return enabled;
 }
 
 }  // namespace flutter
