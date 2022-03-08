@@ -16,7 +16,7 @@ int32_t NativeCreateAppControl(Dart_Handle handle) {
   if (!app_control->handle()) {
     return -1;
   }
-  auto id = app_control->id();
+  int32_t id = app_control->id();
   Dart_NewFinalizableHandle_DL(
       handle, app_control.get(), 64,
       [](void* isolate_callback_data, void* peer) {

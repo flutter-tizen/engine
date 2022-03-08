@@ -21,9 +21,11 @@ constexpr char kEventChannelName[] = "tizen/internal/app_control_event";
 AppControlChannel::AppControlChannel(BinaryMessenger* messenger) {
   method_channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
-  method_channel_->SetMethodCallHandler([this](const auto& call, auto result) {
-    this->HandleMethodCall(call, std::move(result));
-  });
+  method_channel_->SetMethodCallHandler(
+      [this](const MethodCall<EncodableValue>& call,
+             std::unique_ptr<MethodResult<EncodableValue>> result) {
+        this->HandleMethodCall(call, std::move(result));
+      });
 
   event_channel_ = std::make_unique<EventChannel<EncodableValue>>(
       messenger, kEventChannelName, &StandardMethodCodec::GetInstance());
@@ -65,7 +67,7 @@ void AppControlChannel::HandleMethodCall(
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   const auto& method_name = method_call.method_name();
 
-  auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
+  const auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
   if (!arguments) {
     result->Error("Invalid arguments");
     return;
@@ -75,7 +77,7 @@ void AppControlChannel::HandleMethodCall(
     result->Error("Invalid arguments", "No ID provided.");
     return;
   }
-  auto* app_control = AppControlManager::GetInstance().FindById(*id);
+  AppControl* app_control = AppControlManager::GetInstance().FindById(*id);
   if (!app_control) {
     result->Error("Invalid arguments",
                   "No instance of AppControl matches the given ID.");
@@ -133,7 +135,7 @@ void AppControlChannel::Reply(
     result->Error("Invalid arguments", "No replyId provided.");
     return;
   }
-  auto* reply_app_control =
+  AppControl* reply_app_control =
       AppControlManager::GetInstance().FindById(*reply_id);
   if (!reply_app_control) {
     result->Error("Invalid arguments",
