@@ -36,26 +36,42 @@ PlatformViewChannel::~PlatformViewChannel() {
 }
 
 void PlatformViewChannel::Dispose() {
-  ClearViewInstances();
+  ClearViews();
   ClearViewFactories();
 }
 
-void PlatformViewChannel::RemoveViewInstanceIfNeeded(int view_id) {
-  auto it = view_instances_.find(view_id);
-  if (view_id >= 0 && it != view_instances_.end()) {
-    PlatformView* view_instance = it->second;
-    view_instance->Dispose();
-    delete view_instance;
-    view_instances_.erase(it);
+PlatformView* PlatformViewChannel::FindViewById(int view_id) {
+  auto it = views_.find(view_id);
+  if (it != views_.end()) {
+    return it->second;
+  }
+  return nullptr;
+}
+
+PlatformView* PlatformViewChannel::FindFocusedView() {
+  for (const auto& [view_id, view] : views_) {
+    if (view->IsFocused()) {
+      return view;
+    }
+  }
+  return nullptr;
+}
+
+void PlatformViewChannel::RemoveViewIfExists(int view_id) {
+  PlatformView* view = FindViewById(view_id);
+  if (view) {
+    view->Dispose();
+    delete view;
+    views_.erase(view_id);
   }
 }
 
-void PlatformViewChannel::ClearViewInstances() {
-  for (const auto& [view_id, view_instance] : view_instances_) {
-    view_instance->Dispose();
-    delete view_instance;
+void PlatformViewChannel::ClearViews() {
+  for (const auto& [view_id, view] : views_) {
+    view->Dispose();
+    delete view;
   }
-  view_instances_.clear();
+  views_.clear();
 }
 
 void PlatformViewChannel::ClearViewFactories() {
@@ -66,23 +82,14 @@ void PlatformViewChannel::ClearViewFactories() {
 }
 
 void PlatformViewChannel::SendKeyEvent(Ecore_Event_Key* event, bool is_down) {
-  PlatformView* view_instance = FocusedViewInstance();
-  if (view_instance) {
+  PlatformView* view = FindFocusedView();
+  if (view) {
     if (is_down) {
-      view_instance->DispatchKeyDownEvent(event);
+      view->DispatchKeyDownEvent(event);
     } else {
-      view_instance->DispatchKeyUpEvent(event);
+      view->DispatchKeyUpEvent(event);
     }
   }
-}
-
-PlatformView* PlatformViewChannel::FocusedViewInstance() {
-  for (const auto& [view_id, view_instance] : view_instances_) {
-    if (view_instance->IsFocused()) {
-      return view_instance;
-    }
-  }
-  return nullptr;
 }
 
 void PlatformViewChannel::HandleMethodCall(
@@ -110,16 +117,16 @@ void PlatformViewChannel::HandleMethodCall(
 void PlatformViewChannel::OnCreate(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto* map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
+  auto* map = std::get_if<EncodableMap>(arguments);
+  if (!map) {
     result->Error("Invalid arguments");
     return;
   }
 
-  EncodableValueHolder<std::string> view_type(map_ptr, "viewType");
-  EncodableValueHolder<int> view_id(map_ptr, "id");
-  EncodableValueHolder<double> width(map_ptr, "width");
-  EncodableValueHolder<double> height(map_ptr, "height");
+  EncodableValueHolder<std::string> view_type(map, "viewType");
+  EncodableValueHolder<int> view_id(map, "id");
+  EncodableValueHolder<double> width(map, "width");
+  EncodableValueHolder<double> height(map, "height");
 
   if (!view_type || !view_id || !width || !height) {
     result->Error("Invalid arguments");
@@ -127,25 +134,24 @@ void PlatformViewChannel::OnCreate(
   }
 
   FT_LOG(Info) << "Creating a platform view: " << view_type.value;
-  RemoveViewInstanceIfNeeded(*view_id);
+  RemoveViewIfExists(*view_id);
 
-  EncodableValueHolder<ByteMessage> params(map_ptr, "params");
+  EncodableValueHolder<ByteMessage> params(map, "params");
   ByteMessage byte_message;
   if (params) {
     byte_message = *params;
   }
   auto it = view_factories_.find(*view_type);
   if (it != view_factories_.end()) {
-    PlatformView* focused_view = FocusedViewInstance();
+    PlatformView* focused_view = FindFocusedView();
     if (focused_view) {
       focused_view->SetFocus(false);
     }
-    PlatformViewFactory* view_factory = it->second.get();
-    PlatformView* view_instance =
-        view_factory->Create(*view_id, *width, *height, byte_message);
-    if (view_instance) {
-      view_instances_[*view_id] = view_instance;
-      result->Success(EncodableValue(view_instance->GetTextureId()));
+    PlatformView* view =
+        it->second->Create(*view_id, *width, *height, byte_message);
+    if (view) {
+      views_[*view_id] = view;
+      result->Success(EncodableValue(view->GetTextureId()));
     } else {
       result->Error("Can't create view instance");
     }
@@ -158,80 +164,81 @@ void PlatformViewChannel::OnCreate(
 void PlatformViewChannel::OnClearFocus(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  const int* view_id_ptr = std::get_if<int>(arguments);
-  if (!view_id_ptr) {
+  const int* view_id = std::get_if<int>(arguments);
+  if (!view_id) {
     result->Error("Invalid arguments");
     return;
   }
 
-  auto it = view_instances_.find(*view_id_ptr);
-  if (it == view_instances_.end()) {
+  PlatformView* view = FindViewById(*view_id);
+  if (!view) {
     result->Error("Can't find view id");
     return;
   }
+  view->SetFocus(false);
+  view->ClearFocus();
 
-  it->second->SetFocus(false);
-  it->second->ClearFocus();
   result->Success();
 }
 
 void PlatformViewChannel::OnDispose(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto* map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
+  auto* map = std::get_if<EncodableMap>(arguments);
+  if (!map) {
     result->Error("Invalid arguments");
     return;
   }
 
-  EncodableValueHolder<int> view_id(map_ptr, "id");
+  EncodableValueHolder<int> view_id(map, "id");
   if (!view_id) {
     result->Error("Invalid arguments");
     return;
   }
 
-  if (view_instances_.find(*view_id) == view_instances_.end()) {
+  PlatformView* view = FindViewById(*view_id);
+  if (!view) {
     result->Error("Can't find view id");
     return;
   }
+  RemoveViewIfExists(*view_id);
 
-  RemoveViewInstanceIfNeeded(*view_id);
   result->Success();
 }
 
 void PlatformViewChannel::OnResize(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto* map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
+  auto* map = std::get_if<EncodableMap>(arguments);
+  if (!map) {
     result->Error("Invalid arguments");
     return;
   }
 
-  EncodableValueHolder<int> view_id(map_ptr, "id");
-  EncodableValueHolder<double> width(map_ptr, "width");
-  EncodableValueHolder<double> height(map_ptr, "height");
+  EncodableValueHolder<int> view_id(map, "id");
+  EncodableValueHolder<double> width(map, "width");
+  EncodableValueHolder<double> height(map, "height");
 
   if (!view_id || !width || !height) {
     result->Error("Invalid arguments");
     return;
   }
 
-  auto it = view_instances_.find(*view_id);
-  if (it == view_instances_.end()) {
+  PlatformView* view = FindViewById(*view_id);
+  if (!view) {
     result->Error("Can't find view id");
     return;
   }
+  view->Resize(*width, *height);
 
-  it->second->Resize(*width, *height);
   result->Success();
 }
 
 void PlatformViewChannel::OnTouch(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto* map_ptr = std::get_if<EncodableMap>(arguments);
-  if (!map_ptr) {
+  auto* map = std::get_if<EncodableMap>(arguments);
+  if (!map) {
     result->Error("Invalid arguments");
     return;
   }
@@ -239,17 +246,11 @@ void PlatformViewChannel::OnTouch(
   int type = 0, button = 0;
   double x = 0.0, y = 0.0, dx = 0.0, dy = 0.0;
 
-  EncodableValueHolder<EncodableList> event(map_ptr, "event");
-  EncodableValueHolder<int> view_id(map_ptr, "id");
+  EncodableValueHolder<EncodableList> event(map, "event");
+  EncodableValueHolder<int> view_id(map, "id");
 
   if (!view_id || !event || event->size() != 6) {
     result->Error("Invalid arguments");
-    return;
-  }
-
-  auto it = view_instances_.find(*view_id);
-  if (it == view_instances_.end()) {
-    result->Error("Can't find view id");
     return;
   }
 
@@ -260,19 +261,23 @@ void PlatformViewChannel::OnTouch(
   dx = std::get<double>(event->at(4));
   dy = std::get<double>(event->at(5));
 
-  PlatformView* view_instance = it->second;
-  view_instance->Touch(type, button, x, y, dx, dy);
+  PlatformView* view = FindViewById(*view_id);
+  if (!view) {
+    result->Error("Can't find view id");
+    return;
+  }
+  view->Touch(type, button, x, y, dx, dy);
 
-  if (!view_instance->IsFocused()) {
-    PlatformView* focused_view = FocusedViewInstance();
+  if (!view->IsFocused()) {
+    PlatformView* focused_view = FindFocusedView();
     if (focused_view) {
       focused_view->SetFocus(false);
     }
 
-    view_instance->SetFocus(true);
+    view->SetFocus(true);
     if (channel_ != nullptr) {
-      auto id = std::make_unique<EncodableValue>(*view_id);
-      channel_->InvokeMethod("viewFocused", std::move(id));
+      auto args = std::make_unique<EncodableValue>(*view_id);
+      channel_->InvokeMethod("viewFocused", std::move(args));
     }
   }
 

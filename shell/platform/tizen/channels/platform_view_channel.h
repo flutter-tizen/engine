@@ -33,10 +33,12 @@ class PlatformViewChannel {
   void SendKeyEvent(Ecore_Event_Key* event, bool is_down);
 
  private:
-  void RemoveViewInstanceIfNeeded(int view_id);
-  void ClearViewInstances();
+  PlatformView* FindViewById(int view_id);
+  PlatformView* FindFocusedView();
+
+  void RemoveViewIfExists(int view_id);
+  void ClearViews();
   void ClearViewFactories();
-  PlatformView* FocusedViewInstance();
 
   void HandleMethodCall(const MethodCall<EncodableValue>& call,
                         std::unique_ptr<MethodResult<EncodableValue>> result);
@@ -54,7 +56,7 @@ class PlatformViewChannel {
 
   std::unique_ptr<MethodChannel<EncodableValue>> channel_;
   std::map<std::string, std::unique_ptr<PlatformViewFactory>> view_factories_;
-  std::map<int, PlatformView*> view_instances_;
+  std::map<int, PlatformView*> views_;
 };
 
 }  // namespace flutter
