@@ -1,10 +1,9 @@
-// Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_FLUTTER_TIZEN_ACCESSIBILITY_BRIDGE_DELEGATE_H_
-#define EMBEDDER_FLUTTER_TIZEN_ACCESSIBILITY_BRIDGE_DELEGATE_H_
+#ifndef EMBEDDER_ACCESSIBILITY_BRIDGE_DELEGATE_TIZEN_H_
+#define EMBEDDER_ACCESSIBILITY_BRIDGE_DELEGATE_TIZEN_H_
 
 #include "flutter/shell/platform/common/accessibility_bridge.h"
 
@@ -14,11 +13,11 @@ class FlutterTizenEngine;
 
 // The tizen implementation of AccessibilityBridge::AccessibilityBridgeDelegate.
 // This delegate is used to create AccessibilityBridge in the tizen platform.
-class FlutterTizenAccessibilityBridgeDelegate
+class AccessibilityBridgeDelegateTizen
     : public AccessibilityBridge::AccessibilityBridgeDelegate {
  public:
-  explicit FlutterTizenAccessibilityBridgeDelegate(FlutterTizenEngine* engine);
-  virtual ~FlutterTizenAccessibilityBridgeDelegate() = default;
+  explicit AccessibilityBridgeDelegateTizen(FlutterTizenEngine* engine);
+  virtual ~AccessibilityBridgeDelegateTizen() = default;
 
   // |AccessibilityBridge::AccessibilityBridgeDelegate|
   void OnAccessibilityEvent(
@@ -39,4 +38,4 @@ class FlutterTizenAccessibilityBridgeDelegate
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_FLUTTER_TIZEN_ACCESSIBILITY_BRIDGE_DELEGATE_H_
+#endif  // EMBEDDER_ACCESSIBILITY_BRIDGE_DELEGATE_TIZEN_H_

@@ -1,9 +1,8 @@
-// Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flutter_tizen_platform_node_delegate.h"
+#include "flutter_platform_node_delegate_tizen.h"
 
 #include <app_common.h>
 
@@ -13,16 +12,16 @@
 
 namespace flutter {  // namespace
 
-FlutterTizenPlatformNodeDelegate::FlutterTizenPlatformNodeDelegate() {}
+FlutterPlatformNodeDelegateTizen::FlutterPlatformNodeDelegateTizen() {}
 
-FlutterTizenPlatformNodeDelegate::~FlutterTizenPlatformNodeDelegate() {
+FlutterPlatformNodeDelegateTizen::~FlutterPlatformNodeDelegateTizen() {
   if (platform_node_) {
     platform_node_->Destroy();
     platform_node_ = nullptr;
   }
 }
 
-void FlutterTizenPlatformNodeDelegate::Init(std::weak_ptr<OwnerBridge> bridge,
+void FlutterPlatformNodeDelegateTizen::Init(std::weak_ptr<OwnerBridge> bridge,
                                             ui::AXNode* node) {
   FlutterPlatformNodeDelegate::Init(bridge, node);
   platform_node_ = ui::AXPlatformNode::Create(this);
@@ -30,7 +29,7 @@ void FlutterTizenPlatformNodeDelegate::Init(std::weak_ptr<OwnerBridge> bridge,
                 << node->data().ToString();
 }
 
-void FlutterTizenPlatformNodeDelegate::NotifyAccessibilityEvent(
+void FlutterPlatformNodeDelegateTizen::NotifyAccessibilityEvent(
     ui::AXEventGenerator::Event event_type) {
   if (!platform_node_) {
     FT_LOG(Error) << "Platform node isn't created";
@@ -95,7 +94,7 @@ void FlutterTizenPlatformNodeDelegate::NotifyAccessibilityEvent(
 }
 
 gfx::NativeViewAccessible
-FlutterTizenPlatformNodeDelegate::GetNativeViewAccessible() {
+FlutterPlatformNodeDelegateTizen::GetNativeViewAccessible() {
   if (!platform_node_) {
     FT_LOG(Error) << "Platform node isn't created";
     return nullptr;
@@ -103,10 +102,10 @@ FlutterTizenPlatformNodeDelegate::GetNativeViewAccessible() {
   return platform_node_->GetNativeViewAccessible();
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformNodeDelegate::GetParent() {
+gfx::NativeViewAccessible FlutterPlatformNodeDelegateTizen::GetParent() {
   gfx::NativeViewAccessible parent = FlutterPlatformNodeDelegate::GetParent();
   if (!parent) {
-    parent = FlutterTizenPlatformAppDelegate::GetInstance()
+    parent = FlutterPlatformAppDelegateTizen::GetInstance()
                  .GetWindow()
                  .lock()
                  ->GetNativeViewAccessible();
@@ -114,7 +113,7 @@ gfx::NativeViewAccessible FlutterTizenPlatformNodeDelegate::GetParent() {
   return parent;
 }
 
-gfx::Rect FlutterTizenPlatformNodeDelegate::GetBoundsRect(
+gfx::Rect FlutterPlatformNodeDelegateTizen::GetBoundsRect(
     const ui::AXCoordinateSystem coordinate_system,
     const ui::AXClippingBehavior clipping_behavior,
     ui::AXOffscreenResult* offscreen_result) const {
@@ -126,7 +125,7 @@ gfx::Rect FlutterTizenPlatformNodeDelegate::GetBoundsRect(
   return bounds;
 }
 
-bool FlutterTizenPlatformNodeDelegate::HitTestPoint(
+bool FlutterPlatformNodeDelegateTizen::HitTestPoint(
     const gfx::Point& point) const {
   gfx::Rect bounds =
       GetBoundsRect(ui::AXCoordinateSystem::kScreenPhysicalPixels,
@@ -135,7 +134,7 @@ bool FlutterTizenPlatformNodeDelegate::HitTestPoint(
          point.y() >= bounds.y() && point.y() <= bounds.bottom();
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformNodeDelegate::HitTestSync(
+gfx::NativeViewAccessible FlutterPlatformNodeDelegateTizen::HitTestSync(
     int screen_physical_pixel_x,
     int screen_physical_pixel_y) const {
   gfx::NativeViewAccessible result = nullptr;
@@ -145,7 +144,7 @@ gfx::NativeViewAccessible FlutterTizenPlatformNodeDelegate::HitTestSync(
       std::static_pointer_cast<AccessibilityBridge>(GetOwnerBridge().lock());
   for (auto iter = ax_node->UnignoredChildrenBegin();
        iter != ax_node->UnignoredChildrenEnd(); ++iter) {
-    auto child = std::static_pointer_cast<FlutterTizenPlatformNodeDelegate>(
+    auto child = std::static_pointer_cast<FlutterPlatformNodeDelegateTizen>(
         bridge->GetFlutterPlatformNodeDelegateFromID(iter.get()->id()).lock());
     if (child->HitTestPoint(point)) {
       result = child->GetNativeViewAccessible();
@@ -162,13 +161,13 @@ gfx::NativeViewAccessible FlutterTizenPlatformNodeDelegate::HitTestSync(
   return result;
 }
 
-FlutterTizenPlatformWindowDelegate::FlutterTizenPlatformWindowDelegate() {
+FlutterPlatformWindowDelegateTizen::FlutterPlatformWindowDelegateTizen() {
   activated_ = false;
   data_.role = ax::mojom::Role::kWindow;
   platform_node_ = ui::AXPlatformNode::Create(this);
 }
 
-FlutterTizenPlatformWindowDelegate::~FlutterTizenPlatformWindowDelegate() {
+FlutterPlatformWindowDelegateTizen::~FlutterPlatformWindowDelegateTizen() {
   if (activated_) {
     static_cast<ui::AXPlatformNodeAuraLinux*>(platform_node_)
         ->NotifyAccessibilityEvent(ax::mojom::Event::kWindowDeactivated);
@@ -177,14 +176,14 @@ FlutterTizenPlatformWindowDelegate::~FlutterTizenPlatformWindowDelegate() {
   platform_node_ = nullptr;
 }
 
-void FlutterTizenPlatformWindowDelegate::SetGeometry(int32_t x,
+void FlutterPlatformWindowDelegateTizen::SetGeometry(int32_t x,
                                                      int32_t y,
                                                      int32_t width,
                                                      int32_t height) {
   geometry_ = gfx::Rect(x, y, width, height);
 }
 
-void FlutterTizenPlatformWindowDelegate::SetRootNode(
+void FlutterPlatformWindowDelegateTizen::SetRootNode(
     std::weak_ptr<FlutterPlatformNodeDelegate> node) {
   root_ = node;
   static_cast<ui::AXPlatformNodeAuraLinux*>(platform_node_)
@@ -192,21 +191,21 @@ void FlutterTizenPlatformWindowDelegate::SetRootNode(
   activated_ = true;
 }
 
-const ui::AXNodeData& FlutterTizenPlatformWindowDelegate::GetData() const {
+const ui::AXNodeData& FlutterPlatformWindowDelegateTizen::GetData() const {
   return data_;
 }
 
 gfx::NativeViewAccessible
-FlutterTizenPlatformWindowDelegate::GetNativeViewAccessible() {
+FlutterPlatformWindowDelegateTizen::GetNativeViewAccessible() {
   return platform_node_->GetNativeViewAccessible();
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformWindowDelegate::GetParent() {
-  return FlutterTizenPlatformAppDelegate::GetInstance()
+gfx::NativeViewAccessible FlutterPlatformWindowDelegateTizen::GetParent() {
+  return FlutterPlatformAppDelegateTizen::GetInstance()
       .GetNativeViewAccessible();
 }
 
-int FlutterTizenPlatformWindowDelegate::GetChildCount() const {
+int FlutterPlatformWindowDelegateTizen::GetChildCount() const {
   if (root_.expired()) {
     return 0;
   } else {
@@ -214,7 +213,7 @@ int FlutterTizenPlatformWindowDelegate::GetChildCount() const {
   }
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformWindowDelegate::ChildAtIndex(
+gfx::NativeViewAccessible FlutterPlatformWindowDelegateTizen::ChildAtIndex(
     int index) {
   if (index < 0 || index >= GetChildCount()) {
     return nullptr;
@@ -223,7 +222,7 @@ gfx::NativeViewAccessible FlutterTizenPlatformWindowDelegate::ChildAtIndex(
   return root_.lock()->GetNativeViewAccessible();
 }
 
-gfx::Rect FlutterTizenPlatformWindowDelegate::GetBoundsRect(
+gfx::Rect FlutterPlatformWindowDelegateTizen::GetBoundsRect(
     const ui::AXCoordinateSystem coordinate_system,
     const ui::AXClippingBehavior clipping_behavior,
     ui::AXOffscreenResult* offscreen_result) const {
@@ -231,12 +230,12 @@ gfx::Rect FlutterTizenPlatformWindowDelegate::GetBoundsRect(
   return geometry_;
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformWindowDelegate::HitTestSync(
+gfx::NativeViewAccessible FlutterPlatformWindowDelegateTizen::HitTestSync(
     int screen_physical_pixel_x,
     int screen_physical_pixel_y) const {
   gfx::Point point(screen_physical_pixel_x, screen_physical_pixel_y);
   if (!root_.expired()) {
-    auto node = std::static_pointer_cast<FlutterTizenPlatformNodeDelegate>(
+    auto node = std::static_pointer_cast<FlutterPlatformNodeDelegateTizen>(
         root_.lock());
     if (node->HitTestPoint(point)) {
       return node->HitTestSync(screen_physical_pixel_x,
@@ -255,7 +254,7 @@ gfx::NativeViewAccessible FlutterTizenPlatformWindowDelegate::HitTestSync(
   }
 }
 
-FlutterTizenPlatformAppDelegate::FlutterTizenPlatformAppDelegate() {
+FlutterPlatformAppDelegateTizen::FlutterPlatformAppDelegateTizen() {
   ui::AXPlatformNodeAuraLinux::EnableAXMode();
   data_.role = ax::mojom::Role::kApplication;
   platform_node_ = ui::AXPlatformNode::Create(this);
@@ -274,37 +273,37 @@ FlutterTizenPlatformAppDelegate::FlutterTizenPlatformAppDelegate() {
   ui::AXPlatformNodeAuraLinux::StaticInitialize();
 }
 
-FlutterTizenPlatformAppDelegate::~FlutterTizenPlatformAppDelegate() {
+FlutterPlatformAppDelegateTizen::~FlutterPlatformAppDelegateTizen() {
   platform_node_->Destroy();
   platform_node_ = nullptr;
 }
 
 // static
-FlutterTizenPlatformAppDelegate&
-FlutterTizenPlatformAppDelegate::GetInstance() {
-  static FlutterTizenPlatformAppDelegate TizenAppInstance;
+FlutterPlatformAppDelegateTizen&
+FlutterPlatformAppDelegateTizen::GetInstance() {
+  static FlutterPlatformAppDelegateTizen TizenAppInstance;
   return TizenAppInstance;
 }
 
-std::weak_ptr<FlutterTizenPlatformWindowDelegate>
-FlutterTizenPlatformAppDelegate::GetWindow() {
+std::weak_ptr<FlutterPlatformWindowDelegateTizen>
+FlutterPlatformAppDelegateTizen::GetWindow() {
   return window_;
 }
 
-void FlutterTizenPlatformAppDelegate::SetAccessibilityStatus(bool enabled) {
+void FlutterPlatformAppDelegateTizen::SetAccessibilityStatus(bool enabled) {
   if (!enabled && window_) {
     window_.reset();
   } else if (enabled && !window_) {
-    window_ = std::make_shared<FlutterTizenPlatformWindowDelegate>();
+    window_ = std::make_shared<FlutterPlatformWindowDelegateTizen>();
   }
 }
 
-const ui::AXNodeData& FlutterTizenPlatformAppDelegate::GetData() const {
+const ui::AXNodeData& FlutterPlatformAppDelegateTizen::GetData() const {
   return data_;
 }
 
 gfx::NativeViewAccessible
-FlutterTizenPlatformAppDelegate::GetNativeViewAccessible() {
+FlutterPlatformAppDelegateTizen::GetNativeViewAccessible() {
   if (platform_node_) {
     return platform_node_->GetNativeViewAccessible();
   } else {
@@ -312,7 +311,7 @@ FlutterTizenPlatformAppDelegate::GetNativeViewAccessible() {
   }
 }
 
-int FlutterTizenPlatformAppDelegate::GetChildCount() const {
+int FlutterPlatformAppDelegateTizen::GetChildCount() const {
   if (window_) {
     return 1;
   } else {
@@ -320,7 +319,7 @@ int FlutterTizenPlatformAppDelegate::GetChildCount() const {
   }
 }
 
-gfx::NativeViewAccessible FlutterTizenPlatformAppDelegate::ChildAtIndex(
+gfx::NativeViewAccessible FlutterPlatformAppDelegateTizen::ChildAtIndex(
     int index) {
   if (index < 0 || index >= GetChildCount()) {
     return nullptr;

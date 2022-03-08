@@ -1,20 +1,19 @@
-// Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_FLUTTER_TIZEN_PLATFORM_NODE_DELEGATE_H_
-#define EMBEDDER_FLUTTER_TIZEN_PLATFORM_NODE_DELEGATE_H_
+#ifndef EMBEDDER_FLUTTER_PLATFORM_NODE_DELEGATE_TIZEN_H_
+#define EMBEDDER_FLUTTER_PLATFORM_NODE_DELEGATE_TIZEN_H_
 
 #include "flutter/shell/platform/common/flutter_platform_node_delegate.h"
 
 namespace flutter {
 
 // The tizen implementation of FlutterPlatformNodeDelegate.
-class FlutterTizenPlatformNodeDelegate : public FlutterPlatformNodeDelegate {
+class FlutterPlatformNodeDelegateTizen : public FlutterPlatformNodeDelegate {
  public:
-  FlutterTizenPlatformNodeDelegate();
-  virtual ~FlutterTizenPlatformNodeDelegate();
+  FlutterPlatformNodeDelegateTizen();
+  virtual ~FlutterPlatformNodeDelegateTizen();
 
   void NotifyAccessibilityEvent(ui::AXEventGenerator::Event event_type);
 
@@ -34,8 +33,7 @@ class FlutterTizenPlatformNodeDelegate : public FlutterPlatformNodeDelegate {
 
   // |ui::AXPlatformNodeDelegate|
   gfx::NativeViewAccessible HitTestSync(
-      int screen_physical_pixel_x,
-      int screen_physical_pixel_y) const override;
+      int screen_physical_pixel_x, int screen_physical_pixel_y) const override;
 
   // |FlutterPlatformNodeDelegate|
   void Init(std::weak_ptr<OwnerBridge> bridge, ui::AXNode* node) override;
@@ -44,11 +42,11 @@ class FlutterTizenPlatformNodeDelegate : public FlutterPlatformNodeDelegate {
   ui::AXPlatformNode* platform_node_;
 };
 
-class FlutterTizenPlatformWindowDelegate
+class FlutterPlatformWindowDelegateTizen
     : public ui::AXPlatformNodeDelegateBase {
  public:
-  FlutterTizenPlatformWindowDelegate();
-  virtual ~FlutterTizenPlatformWindowDelegate();
+  FlutterPlatformWindowDelegateTizen();
+  virtual ~FlutterPlatformWindowDelegateTizen();
 
   void SetGeometry(int32_t x, int32_t y, int32_t width, int32_t height);
   void SetRootNode(std::weak_ptr<FlutterPlatformNodeDelegate> node);
@@ -76,8 +74,7 @@ class FlutterTizenPlatformWindowDelegate
 
   // |ui::AXPlatformNodeDelegateBase|
   gfx::NativeViewAccessible HitTestSync(
-      int screen_physical_pixel_x,
-      int screen_physical_pixel_y) const override;
+      int screen_physical_pixel_x, int screen_physical_pixel_y) const override;
 
  private:
   gfx::Rect geometry_;
@@ -87,18 +84,18 @@ class FlutterTizenPlatformWindowDelegate
   ui::AXNodeData data_;
 };
 
-class FlutterTizenPlatformAppDelegate : public ui::AXPlatformNodeDelegateBase {
+class FlutterPlatformAppDelegateTizen : public ui::AXPlatformNodeDelegateBase {
  public:
-  virtual ~FlutterTizenPlatformAppDelegate();
+  virtual ~FlutterPlatformAppDelegateTizen();
 
-  FlutterTizenPlatformAppDelegate(const FlutterTizenPlatformAppDelegate&) =
+  FlutterPlatformAppDelegateTizen(const FlutterPlatformAppDelegateTizen&) =
       delete;
-  FlutterTizenPlatformAppDelegate& operator=(
-      const FlutterTizenPlatformAppDelegate&) = delete;
+  FlutterPlatformAppDelegateTizen& operator=(
+      const FlutterPlatformAppDelegateTizen&) = delete;
 
-  static FlutterTizenPlatformAppDelegate& GetInstance();
+  static FlutterPlatformAppDelegateTizen& GetInstance();
 
-  std::weak_ptr<FlutterTizenPlatformWindowDelegate> GetWindow();
+  std::weak_ptr<FlutterPlatformWindowDelegateTizen> GetWindow();
   void SetAccessibilityStatus(bool enabled);
 
   // |ui::AXPlatformNodeDelegateBase|
@@ -114,13 +111,13 @@ class FlutterTizenPlatformAppDelegate : public ui::AXPlatformNodeDelegateBase {
   gfx::NativeViewAccessible ChildAtIndex(int index) override;
 
  private:
-  FlutterTizenPlatformAppDelegate();
+  FlutterPlatformAppDelegateTizen();
 
-  std::shared_ptr<FlutterTizenPlatformWindowDelegate> window_;
+  std::shared_ptr<FlutterPlatformWindowDelegateTizen> window_;
   ui::AXPlatformNode* platform_node_;
   ui::AXNodeData data_;
 };
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_FLUTTER_TIZEN_PLATFORM_NODE_DELEGATE_H_
+#endif  // EMBEDDER_FLUTTER_PLATFORM_NODE_DELEGATE_TIZEN_H_

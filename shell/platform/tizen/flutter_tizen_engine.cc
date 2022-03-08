@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "flutter/shell/platform/common/flutter_platform_node_delegate.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_platform_node_delegate.h"
+#include "flutter/shell/platform/tizen/flutter_platform_node_delegate_tizen.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
@@ -584,14 +584,14 @@ void FlutterTizenEngine::SetSemanticsEnabled(bool enabled) {
     accessibility_bridge_.reset();
   } else if (enabled && !accessibility_bridge_) {
     accessibility_bridge_ = std::make_shared<AccessibilityBridge>(
-        std::make_unique<FlutterTizenAccessibilityBridgeDelegate>(this));
+        std::make_unique<AccessibilityBridgeDelegateTizen>(this));
   }
 
   if (accessibility_channel_) {
     accessibility_channel_->SetState(enabled);
   }
 
-  FlutterTizenPlatformAppDelegate::GetInstance().SetAccessibilityStatus(
+  FlutterPlatformAppDelegateTizen::GetInstance().SetAccessibilityStatus(
       enabled);
 
   embedder_api_.UpdateSemanticsEnabled(engine_, enabled);
@@ -627,7 +627,7 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
       // Attaches the accessibility root to the window delegate.
       auto root = bridge->GetFlutterPlatformNodeDelegateFromID(0);
       auto window =
-          FlutterTizenPlatformAppDelegate::GetInstance().GetWindow().lock();
+          FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
       auto geometry = engine->renderer_->GetWindowGeometry();
       window->SetGeometry(geometry.x, geometry.y, geometry.w, geometry.h);
       window->SetRootNode(root);
