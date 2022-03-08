@@ -20,7 +20,7 @@ int32_t NativeCreateAppControl(Dart_Handle handle) {
   Dart_NewFinalizableHandle_DL(
       handle, app_control.get(), 64,
       [](void* isolate_callback_data, void* peer) {
-        auto app_control = reinterpret_cast<flutter::AppControl*>(peer);
+        auto* app_control = reinterpret_cast<flutter::AppControl*>(peer);
         flutter::AppControlManager::GetInstance().Remove(app_control->id());
       });
   flutter::AppControlManager::GetInstance().Insert(std::move(app_control));
@@ -28,13 +28,13 @@ int32_t NativeCreateAppControl(Dart_Handle handle) {
 }
 
 bool NativeAttachAppControl(int32_t id, Dart_Handle handle) {
-  auto app_control = flutter::AppControlManager::GetInstance().FindById(id);
+  auto* app_control = flutter::AppControlManager::GetInstance().FindById(id);
   if (!app_control || !app_control->handle()) {
     return false;
   }
   Dart_NewFinalizableHandle_DL(
       handle, app_control, 64, [](void* isolate_callback_data, void* peer) {
-        auto app_control = reinterpret_cast<flutter::AppControl*>(peer);
+        auto* app_control = reinterpret_cast<flutter::AppControl*>(peer);
         flutter::AppControlManager::GetInstance().Remove(app_control->id());
       });
   return true;
@@ -160,7 +160,7 @@ AppControlResult AppControl::SetLaunchMode(const std::string& launch_mode) {
 bool OnAppControlExtraDataCallback(app_control_h handle,
                                    const char* key,
                                    void* user_data) {
-  auto extra_data = static_cast<EncodableMap*>(user_data);
+  auto* extra_data = static_cast<EncodableMap*>(user_data);
 
   bool is_array = false;
   int ret = app_control_is_extra_data_array(handle, key, &is_array);
@@ -306,7 +306,7 @@ AppControlResult AppControl::GetMatchedAppIds(EncodableList& list) {
       handle_,
       [](app_control_h app_control, const char* app_id,
          void* user_data) -> bool {
-        auto app_ids = static_cast<EncodableList*>(user_data);
+        auto* app_ids = static_cast<EncodableList*>(user_data);
         app_ids->push_back(EncodableValue(app_id));
         return true;
       },
@@ -325,7 +325,7 @@ AppControlResult AppControl::SendLaunchRequestWithReply(
     ReplyCallback on_reply) {
   auto reply_callback = [](app_control_h request, app_control_h reply,
                            app_control_result_e result, void* user_data) {
-    auto app_control = static_cast<AppControl*>(user_data);
+    auto* app_control = static_cast<AppControl*>(user_data);
     auto reply_app_control = std::make_unique<AppControl>(reply);
     EncodableMap map;
     map[EncodableValue("reply")] = reply_app_control->SerializeToMap();

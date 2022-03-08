@@ -79,7 +79,7 @@ void AppControlChannel::HandleMethodCall(
     return;
   }
 
-  auto arguments = std::get_if<EncodableMap>(method_call.arguments());
+  auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
   if (!arguments) {
     result->Error("Invalid arguments");
     return;
@@ -89,7 +89,7 @@ void AppControlChannel::HandleMethodCall(
     result->Error("Invalid arguments", "No ID provided.");
     return;
   }
-  auto app_control = AppControlManager::GetInstance().FindById(*id);
+  auto* app_control = AppControlManager::GetInstance().FindById(*id);
   if (!app_control) {
     result->Error("Invalid arguments",
                   "No instance of AppControl matches the given ID.");
@@ -147,7 +147,7 @@ void AppControlChannel::Reply(
 
   EncodableValueHolder<int32_t> reply_id(arguments, "replyId");
   if (reply_id) {
-    auto reply_app_control =
+    auto* reply_app_control =
         AppControlManager::GetInstance().FindById(*reply_id);
     if (!reply_app_control) {
       result->Error("Invalid arguments",
@@ -170,7 +170,7 @@ void AppControlChannel::Reply(
                   "Either replyId or requestId must be provided.");
     return;
   }
-  auto request_app_control =
+  auto* request_app_control =
       AppControlManager::GetInstance().FindById(*request_id);
   if (!request_app_control) {
     result->Error("Invalid arguments",
@@ -191,7 +191,7 @@ void AppControlChannel::SendLaunchRequest(
     std::unique_ptr<MethodResult<EncodableValue>> result) {
   EncodableValueHolder<bool> wait_for_reply(arguments, "waitForReply");
   if (wait_for_reply && *wait_for_reply) {
-    auto result_ptr = result.release();
+    auto* result_ptr = result.release();
     auto on_reply = [result_ptr](const EncodableValue& response) {
       result_ptr->Success(response);
       delete result_ptr;
