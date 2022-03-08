@@ -7,6 +7,7 @@
 #include <Elementary.h>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
+#include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
@@ -25,30 +26,20 @@ AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger,
           kChannelName,
           &StandardMessageCodec::GetInstance())) {
   channel_->SetMessageHandler([&](const auto& message, auto reply) {
-    if (enabled_) {
-      if (std::holds_alternative<flutter::EncodableMap>(message)) {
-        auto eMessage = std::get<flutter::EncodableMap>(message);
-        auto& eType = eMessage[flutter::EncodableValue("type")];
-        auto& eData = eMessage[flutter::EncodableValue("data")];
-        if (std::holds_alternative<std::string>(eType)) {
-          std::string type = std::get<std::string>(eType);
-          FT_LOG(Info) << "Recevie " << type
-                       << " event from accessibility channel";
+    if (enabled_ && std::holds_alternative<EncodableMap>(message)) {
+      auto map = std::get<EncodableMap>(message);
+      EncodableValueHolder<std::string> type(&map, "type");
+      EncodableValueHolder<EncodableMap> data(&map, "data");
 
-          if (type.compare("announce") == 0) {
-            if (std::holds_alternative<flutter::EncodableMap>(eData)) {
-              auto data = std::get<flutter::EncodableMap>(eData);
-              auto& eMsg = data[flutter::EncodableValue("message")];
-              if (std::holds_alternative<std::string>(eMsg)) {
-                std::string msg = std::get<std::string>(eMsg);
-                elm_atspi_bridge_utils_say(msg.c_str(), true, nullptr, nullptr);
-              }
-            }
-            reply(flutter::EncodableValue());
-          }
+      FT_LOG(Info) << "Received " << *type << " message.";
+      if (type && *type == "announce" && data) {
+        EncodableValueHolder<std::string> msg(data.value, "message");
+        if (msg) {
+          elm_atspi_bridge_utils_say(msg->c_str(), true, nullptr, nullptr);
         }
       }
     }
+    reply(flutter::EncodableValue());
   });
 }
 
