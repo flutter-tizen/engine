@@ -13,7 +13,6 @@
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "rapidjson/document.h"
 
 class PlatformView;
 class PlatformViewFactory;
@@ -33,9 +32,11 @@ class PlatformViewChannel {
   std::map<std::string, std::unique_ptr<PlatformViewFactory>>& ViewFactories() {
     return view_factories_;
   }
+
   std::map<int, PlatformView*>& ViewInstances() { return view_instances_; }
 
-  void SendKeyEvent(Ecore_Event_Key* key, bool is_down);
+  void SendKeyEvent(Ecore_Event_Key* event, bool is_down);
+
   int CurrentFocusedViewId();
 
  private:

@@ -7,16 +7,16 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
-#include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 
 namespace flutter {
 
 namespace {
+
 constexpr char kChannelName[] = "flutter/platform_views";
+
 }  // namespace
 
 PlatformViewChannel::PlatformViewChannel(BinaryMessenger* messenger)
@@ -43,7 +43,7 @@ void PlatformViewChannel::Dispose() {
 void PlatformViewChannel::RemoveViewInstanceIfNeeded(int view_id) {
   auto it = view_instances_.find(view_id);
   if (view_id >= 0 && it != view_instances_.end()) {
-    auto view_instance = it->second;
+    auto* view_instance = it->second;
     view_instance->Dispose();
     delete view_instance;
     view_instances_.erase(it);
@@ -51,8 +51,7 @@ void PlatformViewChannel::RemoveViewInstanceIfNeeded(int view_id) {
 }
 
 void PlatformViewChannel::ClearViewInstances() {
-  // Clean-up view_instances_
-  for (auto const& [view_id, view_instance] : view_instances_) {
+  for (const auto& [view_id, view_instance] : view_instances_) {
     view_instance->Dispose();
     delete view_instance;
   }
@@ -60,21 +59,20 @@ void PlatformViewChannel::ClearViewInstances() {
 }
 
 void PlatformViewChannel::ClearViewFactories() {
-  // Clean-up view_factories_
-  for (auto const& [view_type, view_factory] : view_factories_) {
+  for (const auto& [view_type, view_factory] : view_factories_) {
     view_factory->Dispose();
   }
   view_factories_.clear();
 }
 
-void PlatformViewChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
+void PlatformViewChannel::SendKeyEvent(Ecore_Event_Key* event, bool is_down) {
   auto instances = ViewInstances();
   auto it = instances.find(CurrentFocusedViewId());
   if (it != instances.end()) {
     if (is_down) {
-      it->second->DispatchKeyDownEvent(key);
+      it->second->DispatchKeyDownEvent(event);
     } else {
-      it->second->DispatchKeyUpEvent(key);
+      it->second->DispatchKeyUpEvent(event);
     }
   }
 }
@@ -91,8 +89,8 @@ int PlatformViewChannel::CurrentFocusedViewId() {
 void PlatformViewChannel::HandleMethodCall(
     const MethodCall<EncodableValue>& call,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  const auto method = call.method_name();
-  const auto arguments = call.arguments();
+  const auto& method = call.method_name();
+  const auto* arguments = call.arguments();
 
   if (method == "create") {
     OnCreate(arguments, std::move(result));
@@ -113,7 +111,7 @@ void PlatformViewChannel::HandleMethodCall(
 void PlatformViewChannel::OnCreate(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
+  auto* map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     result->Error("Invalid arguments");
     return;
@@ -129,7 +127,7 @@ void PlatformViewChannel::OnCreate(
     return;
   }
 
-  FT_LOG(Info) << "Creating a platform view: " << *view_type.value;
+  FT_LOG(Info) << "Creating a platform view: " << view_type.value;
   RemoveViewInstanceIfNeeded(*view_id);
 
   EncodableValueHolder<ByteMessage> params(map_ptr, "params");
@@ -143,14 +141,13 @@ void PlatformViewChannel::OnCreate(
     if (focused_view != view_instances_.end()) {
       focused_view->second->SetFocus(false);
     }
-    auto view_instance =
+    auto* view_instance =
         it->second->Create(*view_id, *width, *height, byte_message);
     if (view_instance) {
-      view_instances_.insert(
-          std::pair<int, PlatformView*>(*view_id, view_instance));
+      view_instances_[*view_id] = view_instance;
       result->Success(EncodableValue(view_instance->GetTextureId()));
     } else {
-      result->Error("Can't create a webview instance!!");
+      result->Error("Can't create view instance");
     }
   } else {
     FT_LOG(Error) << "Can't find view type: " << *view_type;
@@ -161,7 +158,7 @@ void PlatformViewChannel::OnCreate(
 void PlatformViewChannel::OnClearFocus(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto view_id_ptr = std::get_if<int>(arguments);
+  const int* view_id_ptr = std::get_if<int>(arguments);
   if (!view_id_ptr) {
     result->Error("Invalid arguments");
     return;
@@ -181,14 +178,13 @@ void PlatformViewChannel::OnClearFocus(
 void PlatformViewChannel::OnDispose(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
+  auto* map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     result->Error("Invalid arguments");
     return;
   }
 
   EncodableValueHolder<int> view_id(map_ptr, "id");
-
   if (!view_id) {
     result->Error("Invalid arguments");
     return;
@@ -206,7 +202,7 @@ void PlatformViewChannel::OnDispose(
 void PlatformViewChannel::OnResize(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
+  auto* map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     result->Error("Invalid arguments");
     return;
@@ -234,7 +230,7 @@ void PlatformViewChannel::OnResize(
 void PlatformViewChannel::OnTouch(
     const EncodableValue* arguments,
     std::unique_ptr<MethodResult<EncodableValue>>&& result) {
-  auto map_ptr = std::get_if<EncodableMap>(arguments);
+  auto* map_ptr = std::get_if<EncodableMap>(arguments);
   if (!map_ptr) {
     result->Error("Invalid arguments");
     return;
@@ -247,7 +243,7 @@ void PlatformViewChannel::OnTouch(
   EncodableValueHolder<int> view_id(map_ptr, "id");
 
   if (!view_id || !event || event->size() != 6) {
-    result->Error("Invalid Arguments");
+    result->Error("Invalid arguments");
     return;
   }
 
