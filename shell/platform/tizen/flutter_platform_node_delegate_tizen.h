@@ -33,7 +33,8 @@ class FlutterPlatformNodeDelegateTizen : public FlutterPlatformNodeDelegate {
 
   // |ui::AXPlatformNodeDelegate|
   gfx::NativeViewAccessible HitTestSync(
-      int screen_physical_pixel_x, int screen_physical_pixel_y) const override;
+      int screen_physical_pixel_x,
+      int screen_physical_pixel_y) const override;
 
   // |FlutterPlatformNodeDelegate|
   void Init(std::weak_ptr<OwnerBridge> bridge, ui::AXNode* node) override;
@@ -74,7 +75,8 @@ class FlutterPlatformWindowDelegateTizen
 
   // |ui::AXPlatformNodeDelegateBase|
   gfx::NativeViewAccessible HitTestSync(
-      int screen_physical_pixel_x, int screen_physical_pixel_y) const override;
+      int screen_physical_pixel_x,
+      int screen_physical_pixel_y) const override;
 
  private:
   gfx::Rect geometry_;

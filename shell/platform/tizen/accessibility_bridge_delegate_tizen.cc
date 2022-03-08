@@ -41,7 +41,8 @@ void AccessibilityBridgeDelegateTizen::OnAccessibilityEvent(
 }
 
 void AccessibilityBridgeDelegateTizen::DispatchAccessibilityAction(
-    AccessibilityNodeId target, FlutterSemanticsAction action,
+    AccessibilityNodeId target,
+    FlutterSemanticsAction action,
     fml::MallocMapping data) {
   if (engine_) {
     engine_->DispatchAccessibilityAction(target, action, std::move(data));
