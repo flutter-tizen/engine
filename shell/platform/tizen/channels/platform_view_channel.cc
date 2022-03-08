@@ -43,7 +43,7 @@ void PlatformViewChannel::Dispose() {
 void PlatformViewChannel::RemoveViewInstanceIfNeeded(int view_id) {
   auto it = view_instances_.find(view_id);
   if (view_id >= 0 && it != view_instances_.end()) {
-    auto* view_instance = it->second;
+    PlatformView* view_instance = it->second;
     view_instance->Dispose();
     delete view_instance;
     view_instances_.erase(it);
@@ -66,31 +66,30 @@ void PlatformViewChannel::ClearViewFactories() {
 }
 
 void PlatformViewChannel::SendKeyEvent(Ecore_Event_Key* event, bool is_down) {
-  auto instances = ViewInstances();
-  auto it = instances.find(CurrentFocusedViewId());
-  if (it != instances.end()) {
+  PlatformView* view_instance = FocusedViewInstance();
+  if (view_instance) {
     if (is_down) {
-      it->second->DispatchKeyDownEvent(event);
+      view_instance->DispatchKeyDownEvent(event);
     } else {
-      it->second->DispatchKeyUpEvent(event);
+      view_instance->DispatchKeyUpEvent(event);
     }
   }
 }
 
-int PlatformViewChannel::CurrentFocusedViewId() {
-  for (auto it = view_instances_.begin(); it != view_instances_.end(); it++) {
-    if (it->second->IsFocused()) {
-      return it->second->GetViewId();
+PlatformView* PlatformViewChannel::FocusedViewInstance() {
+  for (const auto& [view_id, view_instance] : view_instances_) {
+    if (view_instance->IsFocused()) {
+      return view_instance;
     }
   }
-  return -1;
+  return nullptr;
 }
 
 void PlatformViewChannel::HandleMethodCall(
     const MethodCall<EncodableValue>& call,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  const auto& method = call.method_name();
-  const auto* arguments = call.arguments();
+  const std::string& method = call.method_name();
+  const EncodableValue* arguments = call.arguments();
 
   if (method == "create") {
     OnCreate(arguments, std::move(result));
@@ -137,12 +136,13 @@ void PlatformViewChannel::OnCreate(
   }
   auto it = view_factories_.find(*view_type);
   if (it != view_factories_.end()) {
-    auto focused_view = view_instances_.find(CurrentFocusedViewId());
-    if (focused_view != view_instances_.end()) {
-      focused_view->second->SetFocus(false);
+    PlatformView* focused_view = FocusedViewInstance();
+    if (focused_view) {
+      focused_view->SetFocus(false);
     }
-    auto* view_instance =
-        it->second->Create(*view_id, *width, *height, byte_message);
+    PlatformViewFactory* view_factory = it->second.get();
+    PlatformView* view_instance =
+        view_factory->Create(*view_id, *width, *height, byte_message);
     if (view_instance) {
       view_instances_[*view_id] = view_instance;
       result->Success(EncodableValue(view_instance->GetTextureId()));
@@ -260,15 +260,16 @@ void PlatformViewChannel::OnTouch(
   dx = std::get<double>(event->at(4));
   dy = std::get<double>(event->at(5));
 
-  it->second->Touch(type, button, x, y, dx, dy);
+  PlatformView* view_instance = it->second;
+  view_instance->Touch(type, button, x, y, dx, dy);
 
-  if (!it->second->IsFocused()) {
-    auto focused_view = view_instances_.find(CurrentFocusedViewId());
-    if (focused_view != view_instances_.end()) {
-      focused_view->second->SetFocus(false);
+  if (!view_instance->IsFocused()) {
+    PlatformView* focused_view = FocusedViewInstance();
+    if (focused_view) {
+      focused_view->SetFocus(false);
     }
 
-    it->second->SetFocus(true);
+    view_instance->SetFocus(true);
     if (channel_ != nullptr) {
       auto id = std::make_unique<EncodableValue>(*view_id);
       channel_->InvokeMethod("viewFocused", std::move(id));

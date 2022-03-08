@@ -25,21 +25,19 @@ class PlatformViewChannel {
   virtual ~PlatformViewChannel();
 
   void Dispose();
-  void RemoveViewInstanceIfNeeded(int view_id);
-  void ClearViewInstances();
-  void ClearViewFactories();
 
   std::map<std::string, std::unique_ptr<PlatformViewFactory>>& ViewFactories() {
     return view_factories_;
   }
 
-  std::map<int, PlatformView*>& ViewInstances() { return view_instances_; }
-
   void SendKeyEvent(Ecore_Event_Key* event, bool is_down);
 
-  int CurrentFocusedViewId();
-
  private:
+  void RemoveViewInstanceIfNeeded(int view_id);
+  void ClearViewInstances();
+  void ClearViewFactories();
+  PlatformView* FocusedViewInstance();
+
   void HandleMethodCall(const MethodCall<EncodableValue>& call,
                         std::unique_ptr<MethodResult<EncodableValue>> result);
 
