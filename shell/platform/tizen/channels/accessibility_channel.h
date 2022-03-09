@@ -18,10 +18,7 @@ class AccessibilityChannel {
   explicit AccessibilityChannel(BinaryMessenger* messenger, bool enabled);
   virtual ~AccessibilityChannel();
 
-  void SetState(bool enabled);
-
  private:
-  bool enabled_;
   std::unique_ptr<BasicMessageChannel<EncodableValue>> channel_;
 };
 

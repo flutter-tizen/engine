@@ -587,10 +587,6 @@ void FlutterTizenEngine::SetSemanticsEnabled(bool enabled) {
         std::make_unique<AccessibilityBridgeDelegateTizen>(this));
   }
 
-  if (accessibility_channel_) {
-    accessibility_channel_->SetState(enabled);
-  }
-
   FlutterPlatformAppDelegateTizen::GetInstance().SetAccessibilityStatus(
       enabled);
 

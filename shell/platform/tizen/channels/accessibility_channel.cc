@@ -20,13 +20,12 @@ constexpr char kChannelName[] = "flutter/accessibility";
 
 AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger,
                                            bool enabled)
-    : enabled_(enabled),
-      channel_(std::make_unique<BasicMessageChannel<EncodableValue>>(
+    : channel_(std::make_unique<BasicMessageChannel<EncodableValue>>(
           messenger,
           kChannelName,
           &StandardMessageCodec::GetInstance())) {
   channel_->SetMessageHandler([&](const auto& message, auto reply) {
-    if (enabled_ && std::holds_alternative<EncodableMap>(message)) {
+    if (std::holds_alternative<EncodableMap>(message)) {
       auto map = std::get<EncodableMap>(message);
       EncodableValueHolder<std::string> type(&map, "type");
       EncodableValueHolder<EncodableMap> data(&map, "data");
@@ -45,10 +44,6 @@ AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger,
 
 AccessibilityChannel::~AccessibilityChannel() {
   channel_->SetMessageHandler(nullptr);
-}
-
-void AccessibilityChannel::SetState(bool enabled) {
-  enabled_ = enabled;
 }
 
 }  // namespace flutter
