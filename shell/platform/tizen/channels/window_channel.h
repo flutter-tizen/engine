@@ -31,7 +31,8 @@ class WindowChannel {
   // A reference to the renderer object managed by FlutterTizenEngine.
   // This can be nullptr if the engine is running in headless mode.
   TizenRenderer* renderer_;
-  TizenRenderer::Delegate* delegate_;
+
+  [[maybe_unused]] TizenRenderer::Delegate* delegate_;
 };
 
 }  // namespace flutter

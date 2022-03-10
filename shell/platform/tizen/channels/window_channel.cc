@@ -2,10 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-private-field"
 #include "window_channel.h"
-#pragma clang diagnostic pop
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
@@ -25,9 +22,11 @@ WindowChannel::WindowChannel(BinaryMessenger* messenger,
     : renderer_(renderer), delegate_(delegate) {
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
-  channel_->SetMethodCallHandler([this](const auto& call, auto result) {
-    this->HandleMethodCall(call, std::move(result));
-  });
+  channel_->SetMethodCallHandler(
+      [this](const MethodCall<EncodableValue>& call,
+             std::unique_ptr<MethodResult<EncodableValue>> result) {
+        this->HandleMethodCall(call, std::move(result));
+      });
 }
 
 WindowChannel::~WindowChannel() {}
@@ -47,10 +46,10 @@ void WindowChannel::HandleMethodCall(
     result->Success(EncodableValue(map));
   } else if (method_name == "setWindowGeometry") {
 #ifdef TIZEN_RENDERER_EVAS_GL
-    FT_LOG(Error) << "setWindowGeometry is not supported on evas_gl.";
+    FT_LOG(Error) << "setWindowGeometry is not supported on Evas GL.";
     result->NotImplemented();
 #else
-    auto arguments = std::get_if<EncodableMap>(method_call.arguments());
+    const auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
     if (!arguments) {
       result->Error("Invalid arguments");
       return;
