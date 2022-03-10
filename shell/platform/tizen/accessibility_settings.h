@@ -22,8 +22,8 @@ class AccessibilitySettings {
   static void OnScreenReaderStateChanged(system_settings_key_e key,
                                          void* user_data);
 
-  FlutterTizenEngine* engine_;
-  bool screen_reader_enabled_ = false;
+  [[maybe_unused]] FlutterTizenEngine* engine_;
+  [[maybe_unused]] bool screen_reader_enabled_ = false;
 };
 
 }  // namespace flutter

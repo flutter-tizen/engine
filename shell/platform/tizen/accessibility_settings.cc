@@ -15,6 +15,7 @@ namespace flutter {
 
 AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
     : engine_(engine) {
+#ifndef WEARABLE_PROFILE
   bool tts_enabled = false;
   int result = system_settings_get_value_bool(
       SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS, &tts_enabled);
@@ -30,6 +31,7 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
   // Add listener for accessibility tts
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS,
                                  OnScreenReaderStateChanged, this);
+#endif
 
 #ifdef TV_PROFILE
   // Set initialized value of accessibility high contrast.
@@ -53,7 +55,9 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
 }
 
 AccessibilitySettings::~AccessibilitySettings() {
+#ifndef WEARABLE_PROFILE
   system_settings_unset_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS);
+#endif
 #ifdef TV_PROFILE
   system_settings_unset_changed_cb(system_settings_key_e(
       SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST));
@@ -82,6 +86,7 @@ void AccessibilitySettings::OnHighContrastStateChanged(
 void AccessibilitySettings::OnScreenReaderStateChanged(
     system_settings_key_e key,
     void* user_data) {
+#ifndef WEARABLE_PROFILE
   auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
   bool enabled = false;
   int result = system_settings_get_value_bool(key, &enabled);
@@ -94,6 +99,7 @@ void AccessibilitySettings::OnScreenReaderStateChanged(
     self->screen_reader_enabled_ = enabled;
     self->engine_->SetSemanticsEnabled(enabled);
   }
+#endif
 }
 
 }  // namespace flutter

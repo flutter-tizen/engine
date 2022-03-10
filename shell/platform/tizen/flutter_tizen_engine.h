@@ -8,10 +8,12 @@
 
 #include <memory>
 
+#ifndef WEARABLE_PROFILE
+#include "flutter/shell/platform/common/accessibility_bridge.h"
+#endif
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/embedder/embedder.h"
-#include "flutter/shell/platform/tizen/accessibility_bridge_delegate_tizen.h"
 #include "flutter/shell/platform/tizen/accessibility_settings.h"
 #include "flutter/shell/platform/tizen/channels/accessibility_channel.h"
 #include "flutter/shell/platform/tizen/channels/app_control_channel.h"
@@ -113,9 +115,11 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   TextInputChannel* text_input_channel() { return text_input_channel_.get(); }
 
+#ifndef WEARABLE_PROFILE
   std::weak_ptr<flutter::AccessibilityBridge> accessibility_bridge() {
     return accessibility_bridge_;
   }
+#endif
 
   // Sets |callback| to be called when the plugin registrar is destroyed.
   void SetPluginRegistrarDestructionCallback(
@@ -172,13 +176,15 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // given |texture_id|.
   bool MarkExternalTextureFrameAvailable(int64_t texture_id);
 
-  // Change semantics state when accessibility state is changed.
-  void SetSemanticsEnabled(bool enabled);
-
+#ifndef WEARABLE_PROFILE
   // Dispatch accessibility action back to the Flutter framework.
   void DispatchAccessibilityAction(uint64_t target,
                                    FlutterSemanticsAction action,
                                    fml::MallocMapping data);
+
+  // Change semantics state when accessibility state is changed.
+  void SetSemanticsEnabled(bool enabled);
+#endif
 
   // Set bold font when accessibility high contrast state is changed.
   void EnableAccessibilityFeature(bool bold_text);
@@ -198,6 +204,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // FlutterTizenEngine.
   FlutterRendererConfig GetRendererConfig();
 
+#ifndef WEARABLE_PROFILE
   // Called when a semantics node update is received from the engine.
   static void OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
                                     void* user_data);
@@ -206,6 +213,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   static void OnUpdateSemanticsCustomActions(
       const FlutterSemanticsCustomAction* action,
       void* user_data);
+#endif
 
   // The Flutter engine instance.
   FLUTTER_API_SYMBOL(FlutterEngine) engine_ = nullptr;
@@ -242,8 +250,10 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterDesktopOnPluginRegistrarDestroyed
       plugin_registrar_destruction_callback_{nullptr};
 
-  // The accessibility bridge for tizen platform.
+#ifndef WEARABLE_PROFILE
+  // The accessibility bridge for the Tizen platform.
   std::shared_ptr<AccessibilityBridge> accessibility_bridge_;
+#endif
 
   std::unique_ptr<AccessibilitySettings> accessibility_settings_;
 

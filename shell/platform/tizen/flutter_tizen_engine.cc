@@ -9,8 +9,10 @@
 #include <string>
 #include <vector>
 
-#include "flutter/shell/platform/common/flutter_platform_node_delegate.h"
+#ifndef WEARABLE_PROFILE
+#include "flutter/shell/platform/tizen/accessibility_bridge_delegate_tizen.h"
 #include "flutter/shell/platform/tizen/flutter_platform_node_delegate_tizen.h"
+#endif
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
@@ -215,9 +217,11 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
         auto message = engine->ConvertToDesktopMessage(*engine_message);
         engine->message_dispatcher_->HandleMessage(message);
       };
+  args.custom_task_runners = &custom_task_runners;
+#ifndef WEARABLE_PROFILE
   args.update_semantics_node_callback = OnUpdateSemanticsNode;
   args.update_semantics_custom_action_callback = OnUpdateSemanticsCustomActions;
-  args.custom_task_runners = &custom_task_runners;
+#endif
 #ifndef TIZEN_RENDERER_EVAS_GL
   if (IsHeaded()) {
     args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
@@ -566,6 +570,7 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
   return config;
 }
 
+#ifndef WEARABLE_PROFILE
 void FlutterTizenEngine::DispatchAccessibilityAction(
     uint64_t target,
     FlutterSemanticsAction action,
@@ -630,8 +635,9 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
                   << "]";
     bridge->AddFlutterSemanticsCustomActionUpdate(action);
   } else {
-    FT_LOG(Error) << "Accessibility bridge must be initialized. ";
+    FT_LOG(Error) << "Accessibility bridge must be initialized.";
   }
 }
+#endif
 
 }  // namespace flutter
