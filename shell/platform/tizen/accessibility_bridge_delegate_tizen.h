@@ -11,8 +11,8 @@ namespace flutter {
 
 class FlutterTizenEngine;
 
-// The tizen implementation of AccessibilityBridge::AccessibilityBridgeDelegate.
-// This delegate is used to create AccessibilityBridge in the tizen platform.
+// The Tizen implementation of AccessibilityBridge::AccessibilityBridgeDelegate.
+// This delegate is used to create AccessibilityBridge in the Tizen platform.
 class AccessibilityBridgeDelegateTizen
     : public AccessibilityBridge::AccessibilityBridgeDelegate {
  public:

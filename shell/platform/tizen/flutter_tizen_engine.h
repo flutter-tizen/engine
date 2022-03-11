@@ -113,6 +113,10 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   TextInputChannel* text_input_channel() { return text_input_channel_.get(); }
 
+  std::weak_ptr<flutter::AccessibilityBridge> accessibility_bridge() {
+    return accessibility_bridge_;
+  }
+
   // Sets |callback| to be called when the plugin registrar is destroyed.
   void SetPluginRegistrarDestructionCallback(
       FlutterDesktopOnPluginRegistrarDestroyed callback);
@@ -167,9 +171,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // Notifies the engine about a new frame being available for the
   // given |texture_id|.
   bool MarkExternalTextureFrameAvailable(int64_t texture_id);
-
-  // Get the accessibility bridge.
-  std::weak_ptr<flutter::AccessibilityBridge> GetAccessibilityBridge();
 
   // Change semantics state when accessibility state is changed.
   void SetSemanticsEnabled(bool enabled);

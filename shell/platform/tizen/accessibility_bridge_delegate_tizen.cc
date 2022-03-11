@@ -16,16 +16,12 @@ AccessibilityBridgeDelegateTizen::AccessibilityBridgeDelegateTizen(
 
 void AccessibilityBridgeDelegateTizen::OnAccessibilityEvent(
     ui::AXEventGenerator::TargetedEvent targeted_event) {
-  auto bridge = engine_->GetAccessibilityBridge().lock();
+  auto bridge = engine_->accessibility_bridge().lock();
   if (!bridge) {
     FT_LOG(Error) << "Accessibility bridge is deallocated";
     return;
   }
 
-  if (!targeted_event.node) {
-    FT_LOG(Error) << "AXNode of targeted event is null";
-    return;
-  }
   auto platform_node_delegate =
       bridge->GetFlutterPlatformNodeDelegateFromID(targeted_event.node->id())
           .lock();
@@ -44,9 +40,7 @@ void AccessibilityBridgeDelegateTizen::DispatchAccessibilityAction(
     AccessibilityNodeId target,
     FlutterSemanticsAction action,
     fml::MallocMapping data) {
-  if (engine_) {
-    engine_->DispatchAccessibilityAction(target, action, std::move(data));
-  }
+  engine_->DispatchAccessibilityAction(target, action, std::move(data));
 }
 
 std::shared_ptr<FlutterPlatformNodeDelegate>

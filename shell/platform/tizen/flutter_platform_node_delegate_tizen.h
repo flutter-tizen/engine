@@ -9,7 +9,7 @@
 
 namespace flutter {
 
-// The tizen implementation of FlutterPlatformNodeDelegate.
+// The Tizen implementation of FlutterPlatformNodeDelegate.
 class FlutterPlatformNodeDelegateTizen : public FlutterPlatformNodeDelegate {
  public:
   FlutterPlatformNodeDelegateTizen();

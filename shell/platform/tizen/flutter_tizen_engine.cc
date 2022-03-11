@@ -246,7 +246,7 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   internal_plugin_registrar_ =
       std::make_unique<PluginRegistrar>(plugin_registrar_.get());
   accessibility_channel_ = std::make_unique<AccessibilityChannel>(
-      internal_plugin_registrar_->messenger(), false);
+      internal_plugin_registrar_->messenger());
   app_control_channel_ = std::make_unique<AppControlChannel>(
       internal_plugin_registrar_->messenger());
   lifecycle_channel_ = std::make_unique<LifecycleChannel>(
@@ -277,6 +277,7 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   }
 
   accessibility_settings_ = std::make_unique<AccessibilitySettings>(this);
+
   SetupLocales();
 
   return true;
@@ -565,11 +566,6 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
   return config;
 }
 
-std::weak_ptr<AccessibilityBridge>
-FlutterTizenEngine::GetAccessibilityBridge() {
-  return accessibility_bridge_;
-}
-
 void FlutterTizenEngine::DispatchAccessibilityAction(
     uint64_t target,
     FlutterSemanticsAction action,
@@ -600,13 +596,13 @@ void FlutterTizenEngine::OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
   }
 
   FT_LOG(Debug) << "Update semantics node [id=" << node->id
-                << " label=" << node->label << " hint=" << node->hint
-                << " value=" << node->value << "]";
+                << ", label=" << node->label << ", hint=" << node->hint
+                << ", value=" << node->value << "]";
   auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
   if (engine->accessibility_bridge_) {
     engine->accessibility_bridge_->AddFlutterSemanticsNodeUpdate(node);
   } else {
-    FT_LOG(Error) << "Accessibility bridge must be initialized. ";
+    FT_LOG(Error) << "Accessibility bridge must be initialized.";
   }
 }
 
@@ -630,7 +626,7 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
       return;
     }
     FT_LOG(Debug) << "Update semantics custom action [id=" << action->id
-                  << " label=" << action->label << " hint=" << action->hint
+                  << ", label=" << action->label << ", hint=" << action->hint
                   << "]";
     bridge->AddFlutterSemanticsCustomActionUpdate(action);
   } else {

@@ -15,7 +15,7 @@ namespace flutter {
 
 class AccessibilityChannel {
  public:
-  explicit AccessibilityChannel(BinaryMessenger* messenger, bool enabled);
+  explicit AccessibilityChannel(BinaryMessenger* messenger);
   virtual ~AccessibilityChannel();
 
  private:

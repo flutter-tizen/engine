@@ -18,8 +18,7 @@ constexpr char kChannelName[] = "flutter/accessibility";
 
 }  // namespace
 
-AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger,
-                                           bool enabled)
+AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger)
     : channel_(std::make_unique<BasicMessageChannel<EncodableValue>>(
           messenger,
           kChannelName,

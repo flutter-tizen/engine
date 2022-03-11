@@ -10,7 +10,7 @@
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/third_party/accessibility/ax/platform/ax_platform_node_auralinux.h"
 
-namespace flutter {  // namespace
+namespace flutter {
 
 FlutterPlatformNodeDelegateTizen::FlutterPlatformNodeDelegateTizen() {}
 
@@ -38,7 +38,7 @@ void FlutterPlatformNodeDelegateTizen::NotifyAccessibilityEvent(
 
   auto paltform_node =
       static_cast<ui::AXPlatformNodeAuraLinux*>(platform_node_);
-  FT_LOG(Debug) << "handel event " << ui::ToString(event_type) << " on node "
+  FT_LOG(Debug) << "Handle event " << ui::ToString(event_type) << " on node "
                 << GetData().id;
   switch (event_type) {
     case ui::AXEventGenerator::Event::ACTIVE_DESCENDANT_CHANGED:
@@ -130,8 +130,7 @@ bool FlutterPlatformNodeDelegateTizen::HitTestPoint(
   gfx::Rect bounds =
       GetBoundsRect(ui::AXCoordinateSystem::kScreenPhysicalPixels,
                     ui::AXClippingBehavior::kUnclipped, nullptr);
-  return point.x() >= bounds.x() && point.x() <= bounds.right() &&
-         point.y() >= bounds.y() && point.y() <= bounds.bottom();
+  return bounds.Contains(point);
 }
 
 gfx::NativeViewAccessible FlutterPlatformNodeDelegateTizen::HitTestSync(
@@ -281,8 +280,8 @@ FlutterPlatformAppDelegateTizen::~FlutterPlatformAppDelegateTizen() {
 // static
 FlutterPlatformAppDelegateTizen&
 FlutterPlatformAppDelegateTizen::GetInstance() {
-  static FlutterPlatformAppDelegateTizen TizenAppInstance;
-  return TizenAppInstance;
+  static FlutterPlatformAppDelegateTizen instance;
+  return instance;
 }
 
 std::weak_ptr<FlutterPlatformWindowDelegateTizen>
