@@ -29,13 +29,11 @@ AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger)
       EncodableValueHolder<std::string> type(&map, "type");
       EncodableValueHolder<EncodableMap> data(&map, "data");
 
-      if (type) {
-        FT_LOG(Info) << "Received " << *type << " message.";
-        if (*type == "announce" && data) {
-          EncodableValueHolder<std::string> msg(data.value, "message");
-          if (msg) {
-            elm_atspi_bridge_utils_say(msg->c_str(), true, nullptr, nullptr);
-          }
+      FT_LOG(Info) << "Received " << *type << " message.";
+      if (type && *type == "announce" && data) {
+        EncodableValueHolder<std::string> msg(data.value, "message");
+        if (msg) {
+          elm_atspi_bridge_utils_say(msg->c_str(), true, nullptr, nullptr);
         }
       }
     }
