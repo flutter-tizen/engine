@@ -32,7 +32,7 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
   bool PopulateTexture(size_t width,
                        size_t height,
                        FlutterOpenGLTexture* opengl_texture) override;
-  void OnDestruction() override;
+  void ReleaseBuffer() override;
 
  private:
   FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;

@@ -30,7 +30,7 @@ struct ExternalTextureGLState {
 static std::atomic_long next_texture_id = {1};
 
 // An adaptation class of flutter engine and external texture interface.
-class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
+class ExternalTexture {
  public:
   ExternalTexture(ExternalTextureExtensionType gl_extension =
                       ExternalTextureExtensionType::kNone)
@@ -46,7 +46,7 @@ class ExternalTexture : public std::enable_shared_from_this<ExternalTexture> {
   virtual bool PopulateTexture(size_t width,
                                size_t height,
                                FlutterOpenGLTexture* opengl_texture) = 0;
-  virtual void OnDestruction(){};
+  virtual void ReleaseBuffer(){};
 
  protected:
   std::unique_ptr<ExternalTextureGLState> state_;
