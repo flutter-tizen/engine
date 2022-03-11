@@ -245,8 +245,7 @@ gfx::NativeViewAccessible FlutterPlatformWindowDelegateTizen::HitTestSync(
   gfx::Rect bounds =
       GetBoundsRect(ui::AXCoordinateSystem::kScreenPhysicalPixels,
                     ui::AXClippingBehavior::kUnclipped, nullptr);
-  if (point.x() >= bounds.x() && point.x() <= bounds.right() &&
-      point.y() >= bounds.y() && point.y() <= bounds.bottom()) {
+  if (bounds.Contains(point)) {
     return platform_node_->GetNativeViewAccessible();
   } else {
     return nullptr;

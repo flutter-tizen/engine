@@ -100,7 +100,6 @@ template("embedder") {
     public = _public_headers
 
     sources = [
-      "accessibility_bridge_delegate_tizen.cc",
       "accessibility_settings.cc",
       "channels/accessibility_channel.cc",
       "channels/app_control.cc",
@@ -117,7 +116,6 @@ template("embedder") {
       "channels/window_channel.cc",
       "external_texture_pixel_gl.cc",
       "external_texture_surface_gl.cc",
-      "flutter_platform_node_delegate_tizen.cc",
       "flutter_project_bundle.cc",
       "flutter_tizen.cc",
       "flutter_tizen_engine.cc",
@@ -194,13 +192,21 @@ template("embedder") {
 
     deps = [
       "//flutter/shell/platform/common:common_cpp",
-      "//flutter/shell/platform/common:common_cpp_accessibility",
       "//flutter/shell/platform/common:common_cpp_input",
       "//flutter/shell/platform/common:common_cpp_library_headers",
       "//flutter/shell/platform/common/client_wrapper:client_wrapper",
       "//third_party/dart/runtime:dart_api",
       "//third_party/rapidjson",
     ]
+
+    if (target_name != "flutter_tizen_wearable") {
+      sources += [
+        "accessibility_bridge_delegate_tizen.cc",
+        "flutter_platform_node_delegate_tizen.cc",
+      ]
+
+      deps += [ "//flutter/shell/platform/common:common_cpp_accessibility" ]
+    }
   }
 }
 
