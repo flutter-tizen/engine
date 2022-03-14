@@ -100,11 +100,13 @@ jobs:
         with:
           name: tizen-arm-unittests
           path: src/out/${{ env.OUTPUT_NAME }}/*_unittests
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}
           path: src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         if: matrix.arch == 'arm' && matrix.mode == 'release'
@@ -115,12 +117,14 @@ jobs:
             src/out/linux_release_arm/public
             src/out/linux_release_arm/cpp_client_wrapper
             !src/out/linux_release_arm/cpp_client_wrapper/engine_method_result.cc
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         if: (matrix.arch == 'arm' || matrix.arch == 'arm64') && matrix.mode != 'debug'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
+          if-no-files-found: error
 
   windows-build:
     runs-on: windows-2019
@@ -178,6 +182,7 @@ jobs:
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_windows-x64
           path: C:\workspace\engine\src\out\${{ env.OUTPUT_NAME }}\gen_snapshot.exe
+          if-no-files-found: error
 
   macos-build:
     runs-on: macos-11
@@ -241,6 +246,7 @@ jobs:
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
+          if-no-files-found: error
 
   test:
     needs: build
