@@ -184,11 +184,6 @@ int64_t TextureRegistrarImpl::RegisterTexture(TextureVariant* texture) {
       return buffer;
     };
 
-    info.gpu_buffer_config.destruction_callback = [](void* user_data) -> void {
-      auto texture = static_cast<GpuBufferTexture*>(user_data);
-      texture->Destruct();
-    };
-
     int64_t texture_id = FlutterDesktopTextureRegistrarRegisterExternalTexture(
         texture_registrar_ref_, &info);
     return texture_id;

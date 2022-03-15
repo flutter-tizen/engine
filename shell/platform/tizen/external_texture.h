@@ -46,7 +46,6 @@ class ExternalTexture {
   virtual bool PopulateTexture(size_t width,
                                size_t height,
                                FlutterOpenGLTexture* opengl_texture) = 0;
-  virtual void ReleaseBuffer(){};
 
  protected:
   std::unique_ptr<ExternalTextureGLState> state_;
