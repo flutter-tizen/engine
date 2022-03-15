@@ -89,9 +89,14 @@ source_set("common_cpp_accessibility") {
 
   public_deps = [
     "//flutter/fml:fml",
-    "//flutter/shell/platform/embedder:embedder_as_internal_library",
+    "//flutter/shell/platform/embedder:embedder_headers",
     "//flutter/third_party/accessibility",
   ]
+
+  if (!build_tizen_shell) {
+    public_deps +=
+        [ "//flutter/shell/platform/embedder:embedder_as_internal_library" ]
+  }
 }
 
 source_set("common_cpp") {

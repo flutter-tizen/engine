@@ -4,8 +4,6 @@
 
 #include "platform_view_channel.h"
 
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
-#include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
 #include "flutter/shell/platform/tizen/logger.h"

@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 
+#ifndef WEARABLE_PROFILE
+#include "flutter/shell/platform/tizen/accessibility_bridge_delegate_tizen.h"
+#include "flutter/shell/platform/tizen/flutter_platform_node_delegate_tizen.h"
+#endif
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
@@ -214,6 +218,10 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
         engine->message_dispatcher_->HandleMessage(message);
       };
   args.custom_task_runners = &custom_task_runners;
+#ifndef WEARABLE_PROFILE
+  args.update_semantics_node_callback = OnUpdateSemanticsNode;
+  args.update_semantics_custom_action_callback = OnUpdateSemanticsCustomActions;
+#endif
 #ifndef TIZEN_RENDERER_EVAS_GL
   if (IsHeaded()) {
     args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
@@ -241,6 +249,8 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
 
   internal_plugin_registrar_ =
       std::make_unique<PluginRegistrar>(plugin_registrar_.get());
+  accessibility_channel_ = std::make_unique<AccessibilityChannel>(
+      internal_plugin_registrar_->messenger());
   app_control_channel_ = std::make_unique<AppControlChannel>(
       internal_plugin_registrar_->messenger());
   lifecycle_channel_ = std::make_unique<LifecycleChannel>(
@@ -559,5 +569,75 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
   }
   return config;
 }
+
+#ifndef WEARABLE_PROFILE
+void FlutterTizenEngine::DispatchAccessibilityAction(
+    uint64_t target,
+    FlutterSemanticsAction action,
+    fml::MallocMapping data) {
+  embedder_api_.DispatchSemanticsAction(engine_, target, action,
+                                        data.GetMapping(), data.GetSize());
+}
+
+void FlutterTizenEngine::SetSemanticsEnabled(bool enabled) {
+  FT_LOG(Debug) << "Accessibility enabled: " << enabled;
+  if (!enabled && accessibility_bridge_) {
+    accessibility_bridge_.reset();
+  } else if (enabled && !accessibility_bridge_) {
+    accessibility_bridge_ = std::make_shared<AccessibilityBridge>(
+        std::make_unique<AccessibilityBridgeDelegateTizen>(this));
+  }
+
+  FlutterPlatformAppDelegateTizen::GetInstance().SetAccessibilityStatus(
+      enabled);
+
+  embedder_api_.UpdateSemanticsEnabled(engine_, enabled);
+}
+
+void FlutterTizenEngine::OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
+                                               void* user_data) {
+  if (node->id == kFlutterSemanticsNodeIdBatchEnd) {
+    return;
+  }
+
+  FT_LOG(Debug) << "Update semantics node [id=" << node->id
+                << ", label=" << node->label << ", hint=" << node->hint
+                << ", value=" << node->value << "]";
+  auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+  if (engine->accessibility_bridge_) {
+    engine->accessibility_bridge_->AddFlutterSemanticsNodeUpdate(node);
+  } else {
+    FT_LOG(Error) << "Accessibility bridge must be initialized.";
+  }
+}
+
+void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
+    const FlutterSemanticsCustomAction* action,
+    void* user_data) {
+  auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+  auto bridge = engine->accessibility_bridge_;
+  if (bridge) {
+    if (action->id == kFlutterSemanticsCustomActionIdBatchEnd) {
+      // Custom action with id = kFlutterSemanticsCustomActionIdBatchEnd
+      // indicates this is the end of the update batch.
+      bridge->CommitUpdates();
+      // Attaches the accessibility root to the window delegate.
+      auto root = bridge->GetFlutterPlatformNodeDelegateFromID(0);
+      auto window =
+          FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
+      auto geometry = engine->renderer_->GetWindowGeometry();
+      window->SetGeometry(geometry.x, geometry.y, geometry.w, geometry.h);
+      window->SetRootNode(root);
+      return;
+    }
+    FT_LOG(Debug) << "Update semantics custom action [id=" << action->id
+                  << ", label=" << action->label << ", hint=" << action->hint
+                  << "]";
+    bridge->AddFlutterSemanticsCustomActionUpdate(action);
+  } else {
+    FT_LOG(Error) << "Accessibility bridge must be initialized.";
+  }
+}
+#endif
 
 }  // namespace flutter

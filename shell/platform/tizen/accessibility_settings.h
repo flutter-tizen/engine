@@ -5,6 +5,8 @@
 #ifndef EMBEDDER_ACCESSIBILITY_SETTINGS_H_
 #define EMBEDDER_ACCESSIBILITY_SETTINGS_H_
 
+#include <system/system_settings.h>
+
 namespace flutter {
 
 class FlutterTizenEngine;
@@ -14,12 +16,14 @@ class AccessibilitySettings {
   explicit AccessibilitySettings(FlutterTizenEngine* engine);
   virtual ~AccessibilitySettings();
 
-  void OnHighContrastStateChanged();
-
  private:
-  bool GetHighContrastValue();
+  static void OnHighContrastStateChanged(system_settings_key_e key,
+                                         void* user_data);
+  static void OnScreenReaderStateChanged(system_settings_key_e key,
+                                         void* user_data);
 
-  FlutterTizenEngine* engine_;
+  [[maybe_unused]] FlutterTizenEngine* engine_;
+  [[maybe_unused]] bool screen_reader_enabled_ = false;
 };
 
 }  // namespace flutter

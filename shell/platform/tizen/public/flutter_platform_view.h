@@ -5,30 +5,32 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_PLATFORM_VIEW_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_PLATFORM_VIEW_H_
 
-#include <Ecore_IMF.h>
 #include <Ecore_Input.h>
-#include <stddef.h>
+#include <flutter/plugin_registrar.h>
+#include <flutter/standard_message_codec.h>
 #include <stdint.h>
 
 #include "flutter_export.h"
-
-using ByteMessage = std::vector<uint8_t>;
 
 class PlatformView {
  public:
   PlatformView(flutter::PluginRegistrar* registrar,
                int view_id,
                void* platform_window)
-      : registrar_(registrar),
-        view_id_(view_id),
-        texture_id_(0),
-        is_focused_(false) {}
+      : registrar_(registrar), view_id_(view_id) {}
+
   virtual ~PlatformView() {}
+
   int GetViewId() { return view_id_; }
+
   int GetTextureId() { return texture_id_; }
+
   void SetTextureId(int texture_id) { texture_id_ = texture_id; }
+
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
+
   virtual void Dispose() = 0;
+
   virtual void Resize(double width, double height) = 0;
   virtual void Touch(int type,
                      int button,
@@ -37,35 +39,43 @@ class PlatformView {
                      double dx,
                      double dy) = 0;
   virtual void SetDirection(int direction) = 0;
+
   virtual void ClearFocus() = 0;
-  void SetFocus(bool f) { is_focused_ = f; }
+
+  void SetFocus(bool focused) { is_focused_ = focused; }
+
   bool IsFocused() { return is_focused_; }
 
-  // Key input event
-  virtual void DispatchKeyDownEvent(Ecore_Event_Key* key) = 0;
-  virtual void DispatchKeyUpEvent(Ecore_Event_Key* key) = 0;
+  virtual void DispatchKeyDownEvent(Ecore_Event_Key* event) = 0;
+  virtual void DispatchKeyUpEvent(Ecore_Event_Key* event) = 0;
 
  private:
   flutter::PluginRegistrar* registrar_;
   int view_id_;
-  int texture_id_;
-  bool is_focused_;
+  int texture_id_ = 0;
+  bool is_focused_ = false;
 };
+
+using ByteMessage = std::vector<uint8_t>;
 
 class PlatformViewFactory {
  public:
   PlatformViewFactory(flutter::PluginRegistrar* registrar)
       : registrar_(registrar),
         codec_(flutter::StandardMessageCodec::GetInstance(nullptr)) {}
+
   virtual ~PlatformViewFactory() {}
+
   flutter::PluginRegistrar* GetPluginRegistrar() { return registrar_; }
+
   const flutter::MessageCodec<flutter::EncodableValue>& GetCodec() {
     return codec_;
   }
+
   virtual PlatformView* Create(int view_id,
                                double width,
                                double height,
-                               const ByteMessage& parameters) = 0;
+                               const ByteMessage& params) = 0;
   virtual void Dispose() = 0;
 
  private:
