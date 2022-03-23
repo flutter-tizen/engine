@@ -21,6 +21,7 @@ class SettingsChannel {
  private:
   void SendSettingsEvent();
   bool Prefer24HourTime();
+  float GetTextScaleFactor();
 
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;
 };
