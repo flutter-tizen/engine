@@ -74,29 +74,23 @@ float SettingsChannel::GetTextScaleFactor() {
   const float huge = 1.9;
   const float giant = 2.5;
 
-  int value = 1;
+  int value = SYSTEM_SETTINGS_FONT_SIZE_NORMAL;
   if (system_settings_get_value_int(SYSTEM_SETTINGS_KEY_FONT_SIZE, &value) ==
       SYSTEM_SETTINGS_ERROR_NONE) {
-    float scale = normal;
     switch (value) {
       case SYSTEM_SETTINGS_FONT_SIZE_SMALL:
-        scale = small;
-        break;
+        return small;
       case SYSTEM_SETTINGS_FONT_SIZE_LARGE:
-        scale = large;
-        break;
+        return large;
       case SYSTEM_SETTINGS_FONT_SIZE_HUGE:
-        scale = huge;
-        break;
+        return huge;
       case SYSTEM_SETTINGS_FONT_SIZE_GIANT:
-        scale = giant;
-        break;
+        return giant;
       default:
-        break;
+        return normal;
     }
-    return scale;
   }
-  return 1.0;
+  return normal;
 }
 
 }  // namespace flutter
