@@ -165,8 +165,9 @@ jobs:
         working-directory: C:\workspace\engine
         run: |
           gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
-          $env:PYTHONPATH="C:\workspace\depot_tools"
+          $Env:PYTHONPATH="C:\workspace\depot_tools"
           python3 src\flutter\ci\tizen\gclient-shallow-sync.py src\flutter\DEPS
+          $Env:PYTHONPATH=""
           gclient sync -v --no-history --shallow
 
       - name: build
