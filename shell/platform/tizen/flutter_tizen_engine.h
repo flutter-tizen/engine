@@ -186,8 +186,8 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   void SetSemanticsEnabled(bool enabled);
 #endif
 
-  // Set bold font when accessibility high contrast state is changed.
-  void EnableAccessibilityFeature(bool bold_text);
+  // Notifies the engine about enabled accessibility features.
+  void UpdateAccessibilityFeatures(bool invert_colors, bool high_contrast);
 
  private:
   friend class EngineModifier;
@@ -195,6 +195,7 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // Whether the engine is running in headed or headless mode.
   bool IsHeaded() { return renderer_ != nullptr; }
 
+  // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
   FlutterDesktopMessage ConvertToDesktopMessage(
       const FlutterPlatformMessage& engine_message);
 

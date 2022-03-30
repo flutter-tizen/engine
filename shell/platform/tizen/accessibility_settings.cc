@@ -41,7 +41,7 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
           SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
       &high_contrast_enabled);
   if (result == SYSTEM_SETTINGS_ERROR_NONE) {
-    engine_->EnableAccessibilityFeature(high_contrast_enabled);
+    engine_->UpdateAccessibilityFeatures(false, high_contrast_enabled);
   } else {
     FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
   }
@@ -79,7 +79,7 @@ void AccessibilitySettings::OnHighContrastStateChanged(
     return;
   }
 
-  self->engine_->EnableAccessibilityFeature(enabled);
+  self->engine_->UpdateAccessibilityFeatures(false, enabled);
 #endif
 }
 
