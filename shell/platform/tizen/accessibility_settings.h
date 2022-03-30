@@ -17,8 +17,8 @@ class AccessibilitySettings {
   virtual ~AccessibilitySettings();
 
  private:
-  static void OnHighContrastStateChanged(system_settings_key_e key,
-                                         void* user_data);
+  static void OnAccessibilityFeatureStateChanged(system_settings_key_e key,
+                                                 void* user_data);
   static void OnScreenReaderStateChanged(system_settings_key_e key,
                                          void* user_data);
 

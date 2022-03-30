@@ -9,7 +9,8 @@
 
 // SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST = 10059 has been
 // defined in system_settings_keys.h only for TV profile.
-#define SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST 10059
+#define SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST \
+  system_settings_key_e(10059)
 
 namespace flutter {
 
@@ -17,40 +18,40 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
     : engine_(engine) {
 #ifndef WEARABLE_PROFILE
   bool tts_enabled = false;
-  int result = system_settings_get_value_bool(
+  int ret = system_settings_get_value_bool(
       SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS, &tts_enabled);
-  if (result == SYSTEM_SETTINGS_ERROR_NONE) {
-    if (tts_enabled) {
-      screen_reader_enabled_ = tts_enabled;
-      engine_->SetSemanticsEnabled(tts_enabled);
-    }
-  } else {
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
     FT_LOG(Error) << "Failed to get value of accessibility tts.";
   }
-
-  // Add listener for accessibility tts
+  if (tts_enabled) {
+    screen_reader_enabled_ = tts_enabled;
+    engine_->SetSemanticsEnabled(tts_enabled);
+  }
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS,
                                  OnScreenReaderStateChanged, this);
 #endif
 
 #ifdef TV_PROFILE
-  // Set initialized value of accessibility high contrast.
-  int high_contrast_enabled = 0;
-  result = system_settings_get_value_int(
-      system_settings_key_e(
-          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
-      &high_contrast_enabled);
-  if (result == SYSTEM_SETTINGS_ERROR_NONE) {
-    engine_->UpdateAccessibilityFeatures(false, high_contrast_enabled);
-  } else {
+  bool nagative_color = false;
+  ret = system_settings_get_value_bool(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR, &nagative_color);
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to get value of accessibility negative color.";
+  }
+  system_settings_set_changed_cb(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR,
+      OnAccessibilityFeatureStateChanged, this);
+
+  int high_contrast = 0;
+  ret = system_settings_get_value_int(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST, &high_contrast);
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
     FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
   }
+  system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST,
+                                 OnAccessibilityFeatureStateChanged, this);
 
-  // Add listener for accessibility high contrast.
-  system_settings_set_changed_cb(
-      system_settings_key_e(
-          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
-      OnHighContrastStateChanged, this);
+  engine_->UpdateAccessibilityFeatures(nagative_color, high_contrast);
 #endif
 }
 
@@ -59,27 +60,34 @@ AccessibilitySettings::~AccessibilitySettings() {
   system_settings_unset_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_TTS);
 #endif
 #ifdef TV_PROFILE
-  system_settings_unset_changed_cb(system_settings_key_e(
-      SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST));
+  system_settings_unset_changed_cb(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR);
+  system_settings_unset_changed_cb(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST);
 #endif
 }
 
-void AccessibilitySettings::OnHighContrastStateChanged(
+void AccessibilitySettings::OnAccessibilityFeatureStateChanged(
     system_settings_key_e key,
     void* user_data) {
 #ifdef TV_PROFILE
   auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
-  int enabled = 0;
-  int result = system_settings_get_value_int(
-      system_settings_key_e(
-          SYSTEM_SETTINGS_KEY_MENU_SYSTEM_ACCESSIBILITY_HIGHCONTRAST),
-      &enabled);
-  if (result != SYSTEM_SETTINGS_ERROR_NONE) {
-    FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
-    return;
+
+  bool nagative_color = false;
+  int ret = system_settings_get_value_bool(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR, &nagative_color);
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to get value of accessibility negative color.";
   }
 
-  self->engine_->UpdateAccessibilityFeatures(false, enabled);
+  int high_contrast = 0;
+  ret = system_settings_get_value_int(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST, &high_contrast);
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
+  }
+
+  self->engine_->UpdateAccessibilityFeatures(nagative_color, high_contrast);
 #endif
 }
 
@@ -88,9 +96,10 @@ void AccessibilitySettings::OnScreenReaderStateChanged(
     void* user_data) {
 #ifndef WEARABLE_PROFILE
   auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
+
   bool enabled = false;
-  int result = system_settings_get_value_bool(key, &enabled);
-  if (result != SYSTEM_SETTINGS_ERROR_NONE) {
+  int ret = system_settings_get_value_bool(key, &enabled);
+  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
     FT_LOG(Error) << "Failed to get value of accessibility tts.";
     return;
   }
