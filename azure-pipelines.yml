@@ -55,7 +55,6 @@ jobs:
       sed -i 's/"-Wno-unused-but-set-variable",//g' build/config/compiler/BUILD.gn
     displayName: Disable build flags
     workingDirectory: $(Pipeline.Workspace)/src
-    failOnStderr: true
   - bash: |
       flutter/tools/gn \
         --target-os linux \
@@ -71,40 +70,9 @@ jobs:
         --embedder-for-target \
         --build-tizen-shell
       ninja -C out/linux_$(mode)_$(arch)
+      cp out/linux_$(mode)_$(arch)/libflutter_*.so $(Build.StagingDirectory)
     displayName: Build
-    workingDirectory: $(Pipeline.Workspace)/src
-    failOnStderr: true
-  - bash: |
-      OUTDIR=$(Build.StagingDirectory)
-      cp out/linux_$(mode)_$(arch)/libflutter_*.so $OUTDIR
-      if [[ $(System.JobName) == "tizen-arm-release" ]]; then
-        mkdir $OUTDIR/tizen-common
-        cp -r out/linux_$(mode)_$(arch)/{cpp_client_wrapper,icu,public} $OUTDIR/tizen-common
-        rm $OUTDIR/tizen-common/cpp_client_wrapper/engine_method_result.cc
-      fi
-    displayName: Copy artifacts
     workingDirectory: $(Pipeline.Workspace)/src
     failOnStderr: true
   - publish: $(Build.StagingDirectory)
     artifact: $(System.JobName)
-- job: release
-  dependsOn: build
-  pool:
-    name: Default
-    demands: agent.os -equals Linux
-  workspace:
-    clean: outputs
-  steps:
-  - download: current
-  - bash: |
-      mv $(Pipeline.Workspace)/tizen-arm-release/tizen-common .
-      mv $(Pipeline.Workspace)/tizen-* .
-      for x in $(ls -d1 tizen-*); do
-        echo "Archiving $x.zip..."
-        (cd $x; zip -rq $(Build.StagingDirectory)/$x.zip *)
-      done
-    displayName: Create releases
-    workingDirectory: $(Build.BinariesDirectory)
-    failOnStderr: true
-  - publish: $(Build.StagingDirectory)
-    artifact: release
