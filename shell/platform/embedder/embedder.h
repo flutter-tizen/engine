@@ -91,8 +91,10 @@ typedef enum {
   /// Request that text be rendered at a bold font weight.
   kFlutterAccessibilityFeatureBoldText = 1 << 3,
   /// Request that certain animations be simplified and parallax effects
-  // removed.
+  /// removed.
   kFlutterAccessibilityFeatureReduceMotion = 1 << 4,
+  /// Request that UI be rendered with darker colors.
+  kFlutterAccessibilityFeatureHighContrast = 1 << 5,
 } FlutterAccessibilityFeature;
 
 /// The set of possible actions that can be conveyed to a semantics node.
@@ -148,6 +150,8 @@ typedef enum {
   kFlutterSemanticsActionMoveCursorForwardByWord = 1 << 19,
   /// Move the cursor backward by one word.
   kFlutterSemanticsActionMoveCursorBackwardByWord = 1 << 20,
+  /// Replace the current text in the text field.
+  kFlutterSemanticsActionSetText = 1 << 21,
 } FlutterSemanticsAction;
 
 /// The set of properties that may be associated with a semantics node.
@@ -202,6 +206,12 @@ typedef enum {
   /// `PageView` widget does not have implicit scrolling, so that users don't
   /// navigate to the next page when reaching the end of the current one.
   kFlutterSemanticsFlagHasImplicitScrolling = 1 << 18,
+  /// Whether the value of the semantics node is coming from a multi-line text
+  /// field.
+  ///
+  /// This is used for text fields to distinguish single-line text fields from
+  /// multi-line ones.
+  kFlutterSemanticsFlagIsMultiline = 1 << 19,
   /// Whether the semantic node is read only.
   ///
   /// Only applicable when kFlutterSemanticsFlagIsTextField flag is on.
