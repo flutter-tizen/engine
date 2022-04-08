@@ -10,6 +10,7 @@
 #include "flutter/shell/platform/common/incoming_message_dispatcher.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
+#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 
@@ -52,18 +53,27 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
   }
   flutter::Logger::Start();
 
-  auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
+  auto flutter_tizen_engine =
+      std::make_unique<flutter::FlutterTizenEngine>(project);
+
+  // Temporarily statically used
+  static auto flutter_tizen_view_ =
+      std::make_unique<flutter::FlutterTizenView>();
+
+  flutter_tizen_view_->SetFlutterTizenEngine(std::move(flutter_tizen_engine));
+
   if (window_properties.headed) {
-    engine->InitializeRenderer(
+    flutter_tizen_view_->flutter_tizen_engine()->InitializeRenderer(
         window_properties.x, window_properties.y, window_properties.width,
         window_properties.height, window_properties.transparent,
         window_properties.focusable, window_properties.top_level);
   }
-  if (!engine->RunEngine(engine_properties.entrypoint)) {
+  if (!flutter_tizen_view_->flutter_tizen_engine()->RunEngine(
+          engine_properties.entrypoint)) {
     FT_LOG(Error) << "Failed to start the Flutter engine.";
     return nullptr;
   }
-  return HandleForEngine(engine.release());
+  return HandleForEngine(flutter_tizen_view_->flutter_tizen_engine());
 }
 
 void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
