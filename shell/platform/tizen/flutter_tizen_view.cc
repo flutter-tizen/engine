@@ -13,7 +13,30 @@ void FlutterTizenView::SetFlutterTizenEngine(
     std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine) {
   flutter_tizen_engine_ = std::move(flutter_tizen_engine);
 
-  // engine->setFlutterTizenView
+  flutter_tizen_engine_->SetFlutterTizenView(this);
+}
+
+bool FlutterTizenView::OnMakeCurrent() {
+  return flutter_tizen_engine_->renderer()->OnMakeCurrent();
+}
+
+bool FlutterTizenView::OnClearCurrent() {
+  return flutter_tizen_engine_->renderer()->OnClearCurrent();
+}
+
+bool FlutterTizenView::OnMakeResourceCurrent() {
+  return flutter_tizen_engine_->renderer()->OnMakeResourceCurrent();
+}
+
+bool FlutterTizenView::OnPresent() {
+  return flutter_tizen_engine_->renderer()->OnPresent();
+}
+uint32_t FlutterTizenView::OnGetFBO() {
+  return flutter_tizen_engine_->renderer()->OnGetFBO();
+}
+
+void* FlutterTizenView::OnProcResolver(const char* name) {
+  return flutter_tizen_engine_->renderer()->OnProcResolver(name);
 }
 
 }  // namespace flutter

@@ -13,6 +13,7 @@
 #include "flutter/shell/platform/tizen/accessibility_bridge_delegate_tizen.h"
 #include "flutter/shell/platform/tizen/flutter_platform_node_delegate_tizen.h"
 #endif
+#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
@@ -306,6 +307,10 @@ bool FlutterTizenEngine::StopEngine() {
   return false;
 }
 
+void FlutterTizenEngine::SetFlutterTizenView(FlutterTizenView* view) {
+  flutter_tizen_view_ = view;
+}
+
 void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
     FlutterDesktopOnPluginRegistrarDestroyed callback) {
   plugin_registrar_destruction_callback_ = callback;
@@ -512,24 +517,39 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     config.type = kOpenGL;
     config.open_gl.struct_size = sizeof(config.open_gl);
     config.open_gl.make_current = [](void* user_data) -> bool {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnMakeCurrent();
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return false;
+      }
+      return engine->flutter_tizen_view()->OnMakeCurrent();
     };
     config.open_gl.make_resource_current = [](void* user_data) -> bool {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnMakeResourceCurrent();
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return false;
+      }
+      return engine->flutter_tizen_view()->OnMakeResourceCurrent();
     };
     config.open_gl.clear_current = [](void* user_data) -> bool {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnClearCurrent();
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return false;
+      }
+      return engine->flutter_tizen_view()->OnClearCurrent();
     };
     config.open_gl.present = [](void* user_data) -> bool {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnPresent();
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return false;
+      }
+      return engine->flutter_tizen_view()->OnPresent();
     };
     config.open_gl.fbo_callback = [](void* user_data) -> uint32_t {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnGetFBO();
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return false;
+      }
+      return engine->flutter_tizen_view()->OnGetFBO();
     };
     config.open_gl.surface_transformation =
         [](void* user_data) -> FlutterTransformation {
@@ -537,8 +557,11 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     };
     config.open_gl.gl_proc_resolver = [](void* user_data,
                                          const char* name) -> void* {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->renderer_->OnProcResolver(name);
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return nullptr;
+      }
+      return engine->flutter_tizen_view()->OnProcResolver(name);
     };
     config.open_gl.gl_external_texture_frame_callback =
         [](void* user_data, int64_t texture_id, size_t width, size_t height,

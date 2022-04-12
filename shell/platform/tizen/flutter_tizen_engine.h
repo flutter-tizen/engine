@@ -53,6 +53,8 @@ struct FlutterDesktopMessenger {
 
 namespace flutter {
 
+class FlutterTizenView;
+
 // Manages state associated with the underlying FlutterEngine.
 class FlutterTizenEngine : public TizenRenderer::Delegate {
  public:
@@ -82,6 +84,13 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // Stops the engine.
   bool StopEngine();
+
+  // Sets the view that is displaying this engine's content.
+  void SetFlutterTizenView(FlutterTizenView* view);
+
+  // The view displaying this engine's content, if any. This will be null for
+  // headless engines.
+  FlutterTizenView* flutter_tizen_view() { return flutter_tizen_view_; }
 
   FlutterDesktopMessengerRef messenger() { return messenger_.get(); }
 
@@ -227,6 +236,9 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
 
   // AOT data for this engine instance, if applicable.
   UniqueAotDataPtr aot_data_;
+
+  // The view displaying the content running in this engine, if any.
+  FlutterTizenView* flutter_tizen_view_ = nullptr;
 
   // An event dispatcher for Ecore key events.
   std::unique_ptr<KeyEventHandler> key_event_handler_;

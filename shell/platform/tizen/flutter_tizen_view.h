@@ -26,6 +26,15 @@ class FlutterTizenView {
     return flutter_tizen_engine_.get();
   }
 
+  // Callbacks for clearing context, settings context and swapping buffers,
+  // these are typically called on an engine-controlled (non-platform) thread.
+  bool OnMakeCurrent();
+  bool OnClearCurrent();
+  bool OnMakeResourceCurrent();
+  bool OnPresent();
+  uint32_t OnGetFBO() ;
+  void* OnProcResolver(const char* name);
+
  private:
   // The engine associated with this view.
   std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine_;
