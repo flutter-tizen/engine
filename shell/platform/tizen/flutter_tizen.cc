@@ -40,7 +40,7 @@ FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
 
 }  // namespace
 
-FlutterDesktopEngineRef FlutterDesktopRunEngine(
+FlutterDesktopEngineRef FlutterDesktopEngineRun(
     const FlutterDesktopWindowProperties& window_properties,
     const FlutterDesktopEngineProperties& engine_properties) {
   flutter::FlutterProjectBundle project(engine_properties);
@@ -76,7 +76,7 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
   return HandleForEngine(flutter_tizen_view_->flutter_tizen_engine());
 }
 
-void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
+void FlutterDesktopEngineShutdown(FlutterDesktopEngineRef engine_ref) {
   flutter::Logger::Stop();
 
   flutter::FlutterTizenEngine* engine = EngineFromHandle(engine_ref);
@@ -84,7 +84,8 @@ void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
   delete engine;
 }
 
-void* FlutterDesktopGetWindow(FlutterDesktopPluginRegistrarRef registrar) {
+void* FlutterDesktopPluginRegistrarGetNativeWindow(
+    FlutterDesktopPluginRegistrarRef registrar) {
   return registrar->engine->renderer()->GetWindowHandle();
 }
 
@@ -95,7 +96,7 @@ void FlutterDesktopPluginRegistrarEnableInputBlocking(
       channel);
 }
 
-FlutterDesktopPluginRegistrarRef FlutterDesktopGetPluginRegistrar(
+FlutterDesktopPluginRegistrarRef FlutterDesktopEngineGetPluginRegistrar(
     FlutterDesktopEngineRef engine,
     const char* plugin_name) {
   // Currently, one registrar acts as the registrar for all plugins, so the
@@ -154,33 +155,34 @@ void FlutterDesktopMessengerSetCallback(FlutterDesktopMessengerRef messenger,
                                                               user_data);
 }
 
-void FlutterDesktopNotifyAppControl(FlutterDesktopEngineRef engine,
-                                    void* app_control) {
+void FlutterDesktopEngineNotifyAppControl(FlutterDesktopEngineRef engine,
+                                          void* app_control) {
   EngineFromHandle(engine)->app_control_channel()->NotifyAppControl(
       app_control);
 }
 
-void FlutterDesktopNotifyLocaleChange(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyLocaleChange(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->SetupLocales();
 }
 
-void FlutterDesktopNotifyLowMemoryWarning(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyLowMemoryWarning(
+    FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->NotifyLowMemoryWarning();
 }
 
-void FlutterDesktopNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyAppIsInactive(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsInactive();
 }
 
-void FlutterDesktopNotifyAppIsResumed(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyAppIsResumed(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsResumed();
 }
 
-void FlutterDesktopNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsPaused();
 }
 
-void FlutterDesktopNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
+void FlutterDesktopEngineNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsDetached();
 }
 

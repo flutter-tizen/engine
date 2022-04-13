@@ -32,7 +32,7 @@ class FlutterTizenView {
   bool OnClearCurrent();
   bool OnMakeResourceCurrent();
   bool OnPresent();
-  uint32_t OnGetFBO() ;
+  uint32_t OnGetFBO();
   void* OnProcResolver(const char* name);
 
  private:
