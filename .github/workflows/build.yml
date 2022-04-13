@@ -109,6 +109,13 @@ jobs:
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
+        if: github.event_name == 'push'
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_symbols
+          path: src/out/${{ env.OUTPUT_NAME }}/so.unstripped/libflutter_*.so
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
         if: matrix.arch == 'arm' && matrix.mode == 'release'
         with:
           name: tizen-common
