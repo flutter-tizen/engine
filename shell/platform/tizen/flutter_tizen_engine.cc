@@ -28,16 +28,6 @@ constexpr size_t kPlatformTaskRunnerIdentifier = 1;
 constexpr size_t kRenderTaskRunnerIdentifier = 2;
 #endif
 
-#if defined(MOBILE_PROFILE)
-constexpr double kProfileFactor = 0.7;
-#elif defined(WEARABLE_PROFILE)
-constexpr double kProfileFactor = 0.4;
-#elif defined(TV_PROFILE)
-constexpr double kProfileFactor = 2.0;
-#else
-constexpr double kProfileFactor = 1.0;
-#endif
-
 // Converts a LanguageInfo struct to a FlutterLocale struct. |info| must outlive
 // the returned value, since the returned FlutterLocale has pointers into it.
 FlutterLocale CovertToFlutterLocale(const LanguageInfo& info) {
@@ -61,6 +51,7 @@ FlutterLocale CovertToFlutterLocale(const LanguageInfo& info) {
 FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
     : project_(std::make_unique<FlutterProjectBundle>(project)),
       aot_data_(nullptr, nullptr) {
+  FT_LOG(Error) << "enter";
   embedder_api_.struct_size = sizeof(FlutterEngineProcTable);
   FlutterEngineGetProcAddresses(&embedder_api_);
 
@@ -75,33 +66,8 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
         }
       });
 
-  messenger_ = std::make_unique<FlutterDesktopMessenger>();
-  messenger_->engine = this;
-  message_dispatcher_ =
-      std::make_unique<IncomingMessageDispatcher>(messenger_.get());
-
-  plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
-  plugin_registrar_->engine = this;
-
-  transformation_ = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-}
-
-FlutterTizenEngine::~FlutterTizenEngine() {
-  renderer_ = nullptr;
-}
-
-void FlutterTizenEngine::InitializeRenderer(int32_t x,
-                                            int32_t y,
-                                            int32_t width,
-                                            int32_t height,
-                                            bool transparent,
-                                            bool focusable,
-                                            bool top_level) {
-  TizenRenderer::Geometry geometry = {x, y, width, height};
-
 #ifdef TIZEN_RENDERER_EVAS_GL
-  renderer_ = std::make_unique<TizenRendererEvasGL>(
-      geometry, transparent, focusable, top_level, *this);
+  renderer_ = std::make_unique<TizenRendererEvasGL>();
 
   render_loop_ = std::make_unique<TizenRenderEventLoop>(
       std::this_thread::get_id(),  // main thread
@@ -113,14 +79,26 @@ void FlutterTizenEngine::InitializeRenderer(int32_t x,
       },
       renderer_.get());
 #else
-  renderer_ = std::make_unique<TizenRendererEcoreWl2>(
-      geometry, transparent, focusable, top_level, *this);
-
+  renderer_ = std::make_unique<TizenRendererEcoreWl2>();
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
+
+  messenger_ = std::make_unique<FlutterDesktopMessenger>();
+  messenger_->engine = this;
+  message_dispatcher_ =
+      std::make_unique<IncomingMessageDispatcher>(messenger_.get());
+
+  plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
+  plugin_registrar_->engine = this;
+  FT_LOG(Error) << "done";
+}
+
+FlutterTizenEngine::~FlutterTizenEngine() {
+  renderer_ = nullptr;
 }
 
 bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
+  FT_LOG(Error) << "enter";
   if (engine_ != nullptr) {
     FT_LOG(Error) << "The engine has already started.";
     return false;
@@ -273,19 +251,21 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
     text_input_channel_ = std::make_unique<TextInputChannel>(
         internal_plugin_registrar_->messenger(),
         std::make_unique<TizenInputMethodContext>(this));
+    // TODO
     window_channel_ = std::make_unique<WindowChannel>(
-        internal_plugin_registrar_->messenger(), renderer_.get(), this);
+        internal_plugin_registrar_->messenger() /*, renderer_.get(), this*/);
 
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
     touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
 
-    SetWindowOrientation(0);
+    // SetWindowOrientation(0);
   }
 
   accessibility_settings_ = std::make_unique<AccessibilitySettings>(this);
 
   SetupLocales();
 
+  FT_LOG(Error) << "done";
   return true;
 }
 
@@ -372,78 +352,8 @@ void FlutterTizenEngine::SendWindowMetrics(int32_t x,
   event.top = static_cast<size_t>(y);
   event.width = static_cast<size_t>(width);
   event.height = static_cast<size_t>(height);
-  if (pixel_ratio == 0.0) {
-    // The scale factor is computed based on the display DPI and the current
-    // profile. A fixed DPI value (72) is used on TVs. See:
-    // https://docs.tizen.org/application/native/guides/ui/efl/multiple-screens
-#ifdef TV_PROFILE
-    double dpi = 72.0;
-#else
-    double dpi = static_cast<double>(renderer_->GetDpi());
-#endif
-    double scale_factor = dpi / 90.0 * kProfileFactor;
-    event.pixel_ratio = std::max(scale_factor, 1.0);
-  } else {
-    event.pixel_ratio = pixel_ratio;
-  }
+  event.pixel_ratio = pixel_ratio;
   embedder_api_.SendWindowMetricsEvent(engine_, &event);
-}
-
-// This must be called at least once in order to initialize the value of
-// transformation_.
-void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
-  if (!renderer_->IsValid()) {
-    return;
-  }
-
-  renderer_->SetRotate(degree);
-  // Compute renderer transformation based on the angle of rotation.
-  double rad = (360 - degree) * M_PI / 180;
-  TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
-  double width = geometry.w;
-  double height = geometry.h;
-
-  double trans_x = 0.0, trans_y = 0.0;
-  if (degree == 90) {
-    trans_y = height;
-  } else if (degree == 180) {
-    trans_x = width;
-    trans_y = height;
-  } else if (degree == 270) {
-    trans_x = width;
-  }
-  transformation_ = {
-      cos(rad), -sin(rad), trans_x,  // x
-      sin(rad), cos(rad),  trans_y,  // y
-      0.0,      0.0,       1.0       // perspective
-  };
-  touch_event_handler_->rotation = degree;
-  if (degree == 90 || degree == 270) {
-    std::swap(width, height);
-  }
-  renderer_->ResizeWithRotation(geometry.x, geometry.y, width, height, degree);
-  // Window position does not change on rotation regardless of its orientation.
-  SendWindowMetrics(geometry.x, geometry.y, width, height, 0.0);
-}
-
-void FlutterTizenEngine::OnOrientationChange(int32_t degree) {
-  SetWindowOrientation(degree);
-}
-
-void FlutterTizenEngine::OnGeometryChange(int32_t x,
-                                          int32_t y,
-                                          int32_t width,
-                                          int32_t height) {
-#ifdef TIZEN_RENDERER_EVAS_GL
-  FT_UNIMPLEMENTED();
-#else
-  if (!renderer_->IsValid()) {
-    return;
-  }
-  renderer_->SetGeometry(x, y, width, height);
-  renderer_->ResizeWithRotation(x, y, width, height, 0);
-  SendWindowMetrics(x, y, width, height, 0.0);
-#endif
 }
 
 void FlutterTizenEngine::OnVsync(intptr_t baton,
@@ -553,7 +463,11 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     };
     config.open_gl.surface_transformation =
         [](void* user_data) -> FlutterTransformation {
-      return reinterpret_cast<FlutterTizenEngine*>(user_data)->transformation_;
+      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      if (!engine->flutter_tizen_view()) {
+        return FlutterTransformation();
+      }
+      return engine->flutter_tizen_view()->GetFlutterTransformation();
     };
     config.open_gl.gl_proc_resolver = [](void* user_data,
                                          const char* name) -> void* {
@@ -639,8 +553,9 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
           bridge->GetFlutterPlatformNodeDelegateFromID(0);
       std::shared_ptr<FlutterPlatformWindowDelegateTizen> window =
           FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
-      TizenRenderer::Geometry geometry = engine->renderer_->GetWindowGeometry();
-      window->SetGeometry(geometry.x, geometry.y, geometry.w, geometry.h);
+      // TODO
+      // auto geometry = engine->renderer_->GetWindowGeometry();
+      // window->SetGeometry(geometry.x, geometry.y, geometry.w, geometry.h);
       window->SetRootNode(root);
       return;
     }

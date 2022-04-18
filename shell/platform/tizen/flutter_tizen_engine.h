@@ -56,7 +56,7 @@ namespace flutter {
 class FlutterTizenView;
 
 // Manages state associated with the underlying FlutterEngine.
-class FlutterTizenEngine : public TizenRenderer::Delegate {
+class FlutterTizenEngine {
  public:
   // Creates a new Flutter engine object configured to run |project|.
   explicit FlutterTizenEngine(const FlutterProjectBundle& project);
@@ -67,20 +67,14 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   FlutterTizenEngine(FlutterTizenEngine const&) = delete;
   FlutterTizenEngine& operator=(FlutterTizenEngine const&) = delete;
 
-  // Sets up an instance of TizenRenderer.
-  void InitializeRenderer(int32_t x,
-                          int32_t y,
-                          int32_t width,
-                          int32_t height,
-                          bool transparent,
-                          bool focusable,
-                          bool top_level);
-
   // Starts running the engine with the given entrypoint. If null, defaults to
   // main().
   //
   // Returns false if the engine couldn't be started.
   bool RunEngine(const char* entrypoint);
+
+  // Returns true if the engine is currently running.
+  bool IsRunning() { return engine_ != nullptr; }
 
   // Stops the engine.
   bool StopEngine();
@@ -159,12 +153,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
                          int32_t height,
                          double pixel_ratio);
 
-  void SetWindowOrientation(int32_t degree);
-  void OnOrientationChange(int32_t degree) override;
-  void OnGeometryChange(int32_t x,
-                        int32_t y,
-                        int32_t width,
-                        int32_t height) override;
   void OnVsync(intptr_t baton,
                uint64_t frame_start_time_nanos,
                uint64_t frame_target_time_nanos);
@@ -317,9 +305,6 @@ class FlutterTizenEngine : public TizenRenderer::Delegate {
   // The vsync waiter for the embedder.
   std::unique_ptr<TizenVsyncWaiter> tizen_vsync_waiter_;
 #endif
-
-  // The current renderer transformation.
-  FlutterTransformation transformation_;
 };
 
 }  // namespace flutter

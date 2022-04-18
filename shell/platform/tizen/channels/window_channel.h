@@ -17,9 +17,9 @@ namespace flutter {
 // Channel to get/set application's window size and device's screen size.
 class WindowChannel {
  public:
-  explicit WindowChannel(BinaryMessenger* messenger,
+  explicit WindowChannel(BinaryMessenger* messenger/*,
                          TizenRenderer* renderer,
-                         TizenRenderer::Delegate* delegate);
+                         TizenRenderer::Delegate* delegate*/);
   virtual ~WindowChannel();
 
  private:
@@ -30,9 +30,9 @@ class WindowChannel {
 
   // A reference to the renderer object managed by FlutterTizenEngine.
   // This can be nullptr if the engine is running in headless mode.
-  TizenRenderer* renderer_;
+  // TizenRenderer* renderer_;
 
-  [[maybe_unused]] TizenRenderer::Delegate* delegate_;
+  // [[maybe_unused]] TizenRenderer::Delegate* delegate_;
 };
 
 }  // namespace flutter

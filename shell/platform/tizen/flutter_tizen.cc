@@ -14,6 +14,8 @@
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/public/flutter_platform_view.h"
 
+#include "flutter/shell/platform/tizen/flutter_tizen_window_ecore_wl2.h"
+
 namespace {
 
 // Returns the engine corresponding to the given opaque API handle.
@@ -40,8 +42,7 @@ FlutterDesktopTextureRegistrarRef HandleForTextureRegistrar(
 
 }  // namespace
 
-FlutterDesktopEngineRef FlutterDesktopEngineRun(
-    const FlutterDesktopWindowProperties& window_properties,
+FlutterDesktopEngineRef FlutterDesktopEngineCreate(
     const FlutterDesktopEngineProperties& engine_properties) {
   flutter::FlutterProjectBundle project(engine_properties);
   if (project.HasArgument("--verbose-logging")) {
@@ -52,28 +53,14 @@ FlutterDesktopEngineRef FlutterDesktopEngineRun(
     flutter::Logger::SetLoggingPort(std::stoi(logging_port));
   }
   flutter::Logger::Start();
-
   auto flutter_tizen_engine =
       std::make_unique<flutter::FlutterTizenEngine>(project);
+  return HandleForEngine(flutter_tizen_engine.release());
+}
 
-  // Temporarily statically used
-  static auto flutter_tizen_view_ =
-      std::make_unique<flutter::FlutterTizenView>();
-
-  flutter_tizen_view_->SetFlutterTizenEngine(std::move(flutter_tizen_engine));
-
-  if (window_properties.headed) {
-    flutter_tizen_view_->flutter_tizen_engine()->InitializeRenderer(
-        window_properties.x, window_properties.y, window_properties.width,
-        window_properties.height, window_properties.transparent,
-        window_properties.focusable, window_properties.top_level);
-  }
-  if (!flutter_tizen_view_->flutter_tizen_engine()->RunEngine(
-          engine_properties.entrypoint)) {
-    FT_LOG(Error) << "Failed to start the Flutter engine.";
-    return nullptr;
-  }
-  return HandleForEngine(flutter_tizen_view_->flutter_tizen_engine());
+bool FlutterDesktopEngineRun(const FlutterDesktopEngineRef engine,
+                             const char* entry_point) {
+  return EngineFromHandle(engine)->RunEngine(entry_point);
 }
 
 void FlutterDesktopEngineShutdown(FlutterDesktopEngineRef engine_ref) {
@@ -86,7 +73,9 @@ void FlutterDesktopEngineShutdown(FlutterDesktopEngineRef engine_ref) {
 
 void* FlutterDesktopPluginRegistrarGetNativeWindow(
     FlutterDesktopPluginRegistrarRef registrar) {
-  return registrar->engine->renderer()->GetWindowHandle();
+  // TODO
+  // return registrar->engine->renderer()->GetWindowHandle();
+  return nullptr;
 }
 
 void FlutterDesktopPluginRegistrarEnableInputBlocking(

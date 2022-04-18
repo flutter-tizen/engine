@@ -124,9 +124,13 @@ TizenInputMethodContext::TizenInputMethodContext(FlutterTizenEngine* engine)
     return;
   }
 
-  ecore_imf_context_client_window_set(
-      imf_context_,
-      reinterpret_cast<void*>(engine_->renderer()->GetWindowId()));
+  // TODO
+  // ecore_imf_context_client_window_set(
+  //     imf_context_,
+  //     reinterpret_cast<void*>(engine_->renderer()->GetWindowId()));
+  if (engine_) {
+    //
+  }
   SetContextOptions();
   SetInputPanelOptions();
   RegisterEventCallbacks();

@@ -11,28 +11,12 @@
 
 namespace flutter {
 
-TizenRendererEcoreWl2::TizenRendererEcoreWl2(Geometry geometry,
-                                             bool transparent,
-                                             bool focusable,
-                                             bool top_level,
-                                             Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
-  if (!SetupEcoreWl2()) {
-    FT_LOG(Error) << "Could not set up Ecore Wl2.";
-    return;
-  }
-  if (!SetupEGL()) {
-    FT_LOG(Error) << "Could not set up EGL.";
-    return;
-  }
-  Show();
-
-  is_valid_ = true;
+TizenRendererEcoreWl2::TizenRendererEcoreWl2() {
+  FT_LOG(Error) << "enter";
 }
 
 TizenRendererEcoreWl2::~TizenRendererEcoreWl2() {
   DestroyEGL();
-  DestroyEcoreWl2();
 }
 
 bool TizenRendererEcoreWl2::OnMakeCurrent() {
@@ -77,11 +61,6 @@ bool TizenRendererEcoreWl2::OnMakeResourceCurrent() {
 bool TizenRendererEcoreWl2::OnPresent() {
   if (!IsValid()) {
     return false;
-  }
-
-  if (received_rotation_) {
-    SendRotationChangeDone();
-    received_rotation_ = false;
   }
 
   if (eglSwapBuffers(egl_display_, egl_surface_) != EGL_TRUE) {
@@ -221,113 +200,16 @@ void* TizenRendererEcoreWl2::OnProcResolver(const char* name) {
   return nullptr;
 }
 
-TizenRenderer::Geometry TizenRendererEcoreWl2::GetWindowGeometry() {
-  Geometry result;
-  ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.x, &result.y,
-                                &result.w, &result.h);
-  return result;
-}
+bool TizenRendererEcoreWl2::CreateSurface(void* render_target,
+                                          void* render_target_display,
+                                          int32_t width,
+                                          int32_t height) {
+  FT_LOG(Error) << "enter";
+  egl_display_ = eglGetDisplay(static_cast<wl_display*>(render_target_display));
 
-TizenRenderer::Geometry TizenRendererEcoreWl2::GetScreenGeometry() {
-  Geometry result = {};
-  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.w, &result.h);
-  return result;
-}
-
-int32_t TizenRendererEcoreWl2::GetDpi() {
-  Ecore_Wl2_Output* output = ecore_wl2_window_output_find(ecore_wl2_window_);
-  if (!output) {
-    FT_LOG(Error) << "Could not find an output associated with the window.";
-    return 0;
-  }
-  return ecore_wl2_output_dpi_get(output);
-}
-
-uintptr_t TizenRendererEcoreWl2::GetWindowId() {
-  return ecore_wl2_window_id_get(ecore_wl2_window_);
-}
-
-void TizenRendererEcoreWl2::Show() {
-  ecore_wl2_window_show(ecore_wl2_window_);
-}
-
-bool TizenRendererEcoreWl2::SetupEcoreWl2() {
-  if (!ecore_wl2_init()) {
-    FT_LOG(Error) << "Could not initialize Ecore Wl2.";
-    return false;
-  }
-
-  ecore_wl2_display_ = ecore_wl2_display_connect(nullptr);
-  if (!ecore_wl2_display_) {
-    FT_LOG(Error) << "Ecore Wl2 display not found.";
-    return false;
-  }
-  ecore_wl2_sync();
-
-  int32_t width, height;
-  ecore_wl2_display_screen_size_get(ecore_wl2_display_, &width, &height);
-  if (width == 0 || height == 0) {
-    FT_LOG(Error) << "Invalid screen size: " << width << " x " << height;
-    return false;
-  }
-
-  if (initial_geometry_.w == 0) {
-    initial_geometry_.w = width;
-  }
-  if (initial_geometry_.h == 0) {
-    initial_geometry_.h = height;
-  }
-
-  ecore_wl2_window_ = ecore_wl2_window_new(
-      ecore_wl2_display_, nullptr, initial_geometry_.x, initial_geometry_.y,
-      initial_geometry_.w, initial_geometry_.h);
-
-  // Change the window type to use the tizen policy for notification window
-  // according to top_level_.
-  // Note: ECORE_WL2_WINDOW_TYPE_TOPLEVEL is similar to "ELM_WIN_BASIC" and it
-  // does not mean that the window always will be overlaid on other apps :(
-  ecore_wl2_window_type_set(ecore_wl2_window_,
-                            top_level_ ? ECORE_WL2_WINDOW_TYPE_NOTIFICATION
-                                       : ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
-  if (top_level_) {
-    SetTizenPolicyNotificationLevel(TIZEN_POLICY_LEVEL_TOP);
-  }
-
-  ecore_wl2_window_position_set(ecore_wl2_window_, initial_geometry_.x,
-                                initial_geometry_.y);
-  ecore_wl2_window_aux_hint_add(ecore_wl2_window_, 0,
-                                "wm.policy.win.user.geometry", "1");
-
-  if (transparent_) {
-    ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_TRUE);
-  } else {
-    ecore_wl2_window_alpha_set(ecore_wl2_window_, EINA_FALSE);
-  }
-
-  if (!focusable_) {
-    ecore_wl2_window_focus_skip_set(ecore_wl2_window_, EINA_TRUE);
-  }
-
-  ecore_wl2_window_indicator_state_set(ecore_wl2_window_,
-                                       ECORE_WL2_INDICATOR_STATE_ON);
-  ecore_wl2_window_indicator_opacity_set(ecore_wl2_window_,
-                                         ECORE_WL2_INDICATOR_OPAQUE);
-  ecore_wl2_indicator_visible_type_set(ecore_wl2_window_,
-                                       ECORE_WL2_INDICATOR_VISIBLE_TYPE_SHOWN);
-
-  int rotations[4] = {0, 90, 180, 270};
-  ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations,
-                                           sizeof(rotations) / sizeof(int));
-  ecore_event_handler_add(ECORE_WL2_EVENT_WINDOW_ROTATE, RotationEventCb, this);
-
-  return true;
-}
-
-bool TizenRendererEcoreWl2::SetupEGL() {
-  ecore_wl2_egl_window_ = ecore_wl2_egl_window_create(
-      ecore_wl2_window_, initial_geometry_.w, initial_geometry_.h);
-  if (!ecore_wl2_egl_window_) {
-    FT_LOG(Error) << "Could not create an EGL window.";
+  if (EGL_NO_DISPLAY == egl_display_) {
+    PrintEGLError();
+    FT_LOG(Error) << "Could not get EGL display.";
     return false;
   }
 
@@ -361,8 +243,9 @@ bool TizenRendererEcoreWl2::SetupEGL() {
   {
     const EGLint attribs[] = {EGL_NONE};
 
-    auto* egl_window = static_cast<EGLNativeWindowType*>(
-        ecore_wl2_egl_window_native_get(ecore_wl2_egl_window_));
+    auto* egl_window =
+        static_cast<EGLNativeWindowType*>(ecore_wl2_egl_window_native_get(
+            static_cast<Ecore_Wl2_Egl_Window*>(render_target)));
     egl_surface_ =
         eglCreateWindowSurface(egl_display_, egl_config_, egl_window, attribs);
     if (egl_surface_ == EGL_NO_SURFACE) {
@@ -381,7 +264,8 @@ bool TizenRendererEcoreWl2::SetupEGL() {
       return false;
     }
   }
-
+  is_valid_ = true;
+  FT_LOG(Error) << "done";
   return true;
 }
 
@@ -399,13 +283,6 @@ bool TizenRendererEcoreWl2::ChooseEGLConfiguration() {
       EGL_NONE
       // clang-format on
   };
-
-  egl_display_ = eglGetDisplay(ecore_wl2_display_get(ecore_wl2_display_));
-  if (EGL_NO_DISPLAY == egl_display_) {
-    PrintEGLError();
-    FT_LOG(Error) << "Could not get EGL display.";
-    return false;
-  }
 
   if (!eglInitialize(egl_display_, nullptr, nullptr)) {
     PrintEGLError();
@@ -483,19 +360,6 @@ void TizenRendererEcoreWl2::PrintEGLError() {
   }
 }
 
-void TizenRendererEcoreWl2::DestroyEcoreWl2() {
-  if (ecore_wl2_window_) {
-    ecore_wl2_window_free(ecore_wl2_window_);
-    ecore_wl2_window_ = nullptr;
-  }
-
-  if (ecore_wl2_display_) {
-    ecore_wl2_display_disconnect(ecore_wl2_display_);
-    ecore_wl2_display_ = nullptr;
-  }
-  ecore_wl2_shutdown();
-}
-
 void TizenRendererEcoreWl2::DestroyEGL() {
   if (egl_display_) {
     eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
@@ -524,98 +388,10 @@ void TizenRendererEcoreWl2::DestroyEGL() {
     eglTerminate(egl_display_);
     egl_display_ = EGL_NO_DISPLAY;
   }
-
-  if (ecore_wl2_egl_window_) {
-    ecore_wl2_egl_window_destroy(ecore_wl2_egl_window_);
-    ecore_wl2_egl_window_ = nullptr;
-  }
-}
-
-Eina_Bool TizenRendererEcoreWl2::RotationEventCb(void* data,
-                                                 int type,
-                                                 void* event) {
-  auto* self = reinterpret_cast<TizenRendererEcoreWl2*>(data);
-  auto* rotation_event =
-      reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
-  self->delegate_.OnOrientationChange(rotation_event->angle);
-  return ECORE_CALLBACK_PASS_ON;
-}
-
-void TizenRendererEcoreWl2::SetRotate(int angle) {
-  ecore_wl2_window_rotation_set(ecore_wl2_window_, angle);
-  received_rotation_ = true;
-}
-
-void TizenRendererEcoreWl2::SetGeometry(int32_t x,
-                                        int32_t y,
-                                        int32_t width,
-                                        int32_t height) {
-  ecore_wl2_window_geometry_set(ecore_wl2_window_, x, y, width, height);
-  ecore_wl2_window_position_set(ecore_wl2_window_, x, y);
-}
-
-void TizenRendererEcoreWl2::ResizeWithRotation(int32_t x,
-                                               int32_t y,
-                                               int32_t width,
-                                               int32_t height,
-                                               int32_t angle) {
-  ecore_wl2_egl_window_resize_with_rotation(ecore_wl2_egl_window_, x, y, width,
-                                            height, angle);
-}
-
-void TizenRendererEcoreWl2::SendRotationChangeDone() {
-  int x, y, w, h;
-  ecore_wl2_window_geometry_get(ecore_wl2_window_, &x, &y, &w, &h);
-  ecore_wl2_window_rotation_change_done_send(
-      ecore_wl2_window_, ecore_wl2_window_rotation_get(ecore_wl2_window_), w,
-      h);
-}
-
-void TizenRendererEcoreWl2::SetPreferredOrientations(
-    const std::vector<int>& rotations) {
-  ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations.data(),
-                                           rotations.size());
 }
 
 bool TizenRendererEcoreWl2::IsSupportedExtension(const char* name) {
   return strstr(egl_extension_str_.c_str(), name);
-}
-
-void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
-  Eina_Iterator* iter = ecore_wl2_display_globals_get(ecore_wl2_display_);
-  struct wl_registry* registry =
-      ecore_wl2_display_registry_get(ecore_wl2_display_);
-
-  if (iter && registry) {
-    Ecore_Wl2_Global* global = nullptr;
-
-    // Retrieve global objects to bind tizen policy
-    EINA_ITERATOR_FOREACH(iter, global) {
-      if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
-        tizen_policy_ = static_cast<tizen_policy*>(
-            wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));
-        break;
-      }
-    }
-  }
-  eina_iterator_free(iter);
-
-  if (tizen_policy_ == nullptr) {
-    FT_LOG(Error)
-        << "Failed to initialize the tizen policy handle, the top_level "
-           "attribute is ignored.";
-    return;
-  }
-
-  tizen_policy_set_notification_level(
-      tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
-}
-
-void TizenRendererEcoreWl2::BindKeys(const std::vector<std::string>& keys) {
-  for (const std::string& key : keys) {
-    ecore_wl2_window_keygrab_set(ecore_wl2_window_, key.c_str(), 0, 0, 0,
-                                 ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
-  }
 }
 
 }  // namespace flutter

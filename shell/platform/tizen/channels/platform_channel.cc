@@ -170,7 +170,8 @@ void PlatformChannel::RestoreSystemUiOverlays() {
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(renderer_->GetWindowId());
+  // TODO
+  // shell.InitializeSoftkey(renderer_->GetWindowId());
 
   if (shell.IsSoftkeyShown()) {
     shell.ShowSoftkey();
@@ -188,7 +189,8 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(renderer_->GetWindowId());
+  // TODO
+  // shell.InitializeSoftkey(renderer_->GetWindowId());
 
   if (std::find(overlays.begin(), overlays.end(), kSystemUiOverlayBottom) !=
       overlays.end()) {
@@ -220,7 +222,8 @@ void PlatformChannel::SetPreferredOrientations(
     // default.
     rotations = {0, 90, 180, 270};
   }
-  renderer_->SetPreferredOrientations(rotations);
+  // TODO
+  // renderer_->SetPreferredOrientations(rotations);
 }
 
 }  // namespace flutter

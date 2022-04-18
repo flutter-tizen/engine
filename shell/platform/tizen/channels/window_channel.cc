@@ -16,10 +16,10 @@ constexpr char kChannelName[] = "tizen/internal/window";
 
 }  // namespace
 
-WindowChannel::WindowChannel(BinaryMessenger* messenger,
-                             TizenRenderer* renderer,
-                             TizenRenderer::Delegate* delegate)
-    : renderer_(renderer), delegate_(delegate) {
+// TODO
+WindowChannel::WindowChannel(BinaryMessenger* messenger) /*
+     : renderer_(renderer), delegate_(delegate)*/
+{
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler(
@@ -37,12 +37,13 @@ void WindowChannel::HandleMethodCall(
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
-    TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
+    // TODO
+    // TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
     EncodableMap map;
-    map[EncodableValue("x")] = EncodableValue(geometry.x);
-    map[EncodableValue("y")] = EncodableValue(geometry.y);
-    map[EncodableValue("width")] = EncodableValue(geometry.w);
-    map[EncodableValue("height")] = EncodableValue(geometry.h);
+    // map[EncodableValue("x")] = EncodableValue(geometry.x);
+    // map[EncodableValue("y")] = EncodableValue(geometry.y);
+    // map[EncodableValue("width")] = EncodableValue(geometry.w);
+    // map[EncodableValue("height")] = EncodableValue(geometry.h);
     result->Success(EncodableValue(map));
   } else if (method_name == "setWindowGeometry") {
 #ifdef TIZEN_RENDERER_EVAS_GL
@@ -59,18 +60,20 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> width(arguments, "width");
     EncodableValueHolder<int32_t> height(arguments, "height");
 
-    TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
+    // TODO
+    // TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
 
-    delegate_->OnGeometryChange(x ? *x : geometry.x, y ? *y : geometry.y,
-                                width ? *width : geometry.w,
-                                height ? *height : geometry.h);
+    // delegate_->OnGeometryChange(x ? *x : geometry.x, y ? *y : geometry.y,
+    //                             width ? *width : geometry.w,
+    //                             height ? *height : geometry.h);
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
-    TizenRenderer::Geometry geometry = renderer_->GetScreenGeometry();
+    // TODO
+    // TizenRenderer::Geometry geometry = renderer_->GetScreenGeometry();
     EncodableMap map;
-    map[EncodableValue("width")] = EncodableValue(geometry.w);
-    map[EncodableValue("height")] = EncodableValue(geometry.h);
+    // map[EncodableValue("width")] = EncodableValue(geometry.w);
+    // map[EncodableValue("height")] = EncodableValue(geometry.h);
     result->Success(EncodableValue(map));
   } else {
     result->NotImplemented();

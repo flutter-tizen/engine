@@ -21,6 +21,10 @@ extern "C" {
 struct FlutterDesktopEngine;
 typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;
 
+// Opaque reference to a Flutter view instance.
+struct FlutterDesktopView;
+typedef struct FlutterDesktopView* FlutterDesktopViewRef;
+
 // Properties for configuring the initial settings of a Flutter window.
 typedef struct {
   // Whether the app is headed or headless. Other properties are ignored if
@@ -69,12 +73,26 @@ typedef struct {
 
 // ========== Engine ==========
 
-// Runs an instance of a Flutter engine with the given properties.
+// Creates a Flutter engine with the given properties.
 //
-// If |headed| is false, the engine is run in headless mode.
-FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopEngineRun(
-    const FlutterDesktopWindowProperties& window_properties,
+// The caller owns the returned reference, and is responsible for calling
+// FlutterDesktopEngineDestroy. The lifetime of |engine_properties| is required
+// to extend only until the end of this call.
+FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopEngineCreate(
     const FlutterDesktopEngineProperties& engine_properties);
+
+// Starts running the given engine instance and optional entry point in the Dart
+// project. If the entry point is null, defaults to main().
+//
+// If provided, entry_point must be the name of a top-level function from the
+// same Dart library that contains the app's main() function, and must be
+// decorated with `@pragma(vm:entry-point)` to ensure the method is not
+// tree-shaken by the Dart compiler.
+//
+// Returns false if running the engine failed.
+FLUTTER_EXPORT bool FlutterDesktopEngineRun(
+    const FlutterDesktopEngineRef engine,
+    const char* entry_point);
 
 // Shuts down the given engine instance.
 //
@@ -122,6 +140,13 @@ FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsPaused(
 
 // Notifies the engine that the engine is detached from any host views.
 FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsDetached(
+    FlutterDesktopEngineRef engine);
+
+// ========== View ==========
+
+// Creates a view that hosts and displays the given engine instance.
+FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
+    const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine);
 
 // ========== Plugin Registrar (extensions) ==========

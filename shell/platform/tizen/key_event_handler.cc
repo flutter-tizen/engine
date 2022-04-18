@@ -38,7 +38,9 @@ KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
   if (!engine->renderer() || !engine->renderer()->IsValid()) {
     return;
   }
-  engine->renderer()->BindKeys(kBindableSystemKeys);
+
+  // TODO
+  // engine->renderer()->BindKeys(kBindableSystemKeys);
 
   key_event_handlers_.push_back(
       ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, OnKey, this));
@@ -59,9 +61,10 @@ Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* raw_event) {
   FlutterTizenEngine* engine = self->engine_;
   bool is_down = type == ECORE_EVENT_KEY_DOWN;
 
-  if (engine->renderer()->GetWindowId() != event->window) {
-    return ECORE_CALLBACK_PASS_ON;
-  }
+  // TODO
+  // if (engine->renderer()->GetWindowId() != event->window) {
+  //   return ECORE_CALLBACK_PASS_ON;
+  // }
 
   if (is_down) {
     FT_LOG(Info) << "Key symbol: " << event->key << ", code: 0x" << std::setw(8)

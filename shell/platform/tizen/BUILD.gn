@@ -186,7 +186,10 @@ template("embedder") {
     ]
 
     if (use_evas_gl_renderer) {
-      sources += [ "tizen_renderer_evas_gl.cc" ]
+      sources += [
+        "flutter_tizen_elementary.cc",
+        "tizen_renderer_evas_gl.cc"
+      ]
 
       libs += [
         "ecore_evas",
@@ -197,6 +200,8 @@ template("embedder") {
       public_configs += [ ":evas_gl_renderer" ]
     } else {
       sources += [
+        "flutter_tizen_ecore.cc",
+        "flutter_tizen_window_ecore_wl2.cc",
         "tizen_renderer_ecore_wl2.cc",
         "tizen_vsync_waiter.cc",
       ]
@@ -233,7 +238,7 @@ embedder("flutter_tizen_mobile") {
 
 embedder("flutter_tizen_wearable") {
   target_type = "shared_library"
-  use_evas_gl_renderer = true
+  use_evas_gl_renderer = false
 
   defines = [ "WEARABLE_PROFILE" ]
 }
