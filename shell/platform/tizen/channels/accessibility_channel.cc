@@ -39,7 +39,7 @@ AccessibilityChannel::AccessibilityChannel(BinaryMessenger* messenger)
         }
       }
     }
-    reply(flutter::EncodableValue());
+    reply(EncodableValue());
   });
 }
 

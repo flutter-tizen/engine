@@ -218,8 +218,7 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   // commit callback
   event_callbacks_[ECORE_IMF_CALLBACK_COMMIT] =
       [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
-        flutter::TizenInputMethodContext* self =
-            static_cast<flutter::TizenInputMethodContext*>(data);
+        auto* self = static_cast<TizenInputMethodContext*>(data);
         char* str = static_cast<char*>(event_info);
         if (self->on_commit_) {
           self->on_commit_(str);
@@ -232,8 +231,7 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   // pre-edit start callback
   event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_START] =
       [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
-        flutter::TizenInputMethodContext* self =
-            static_cast<flutter::TizenInputMethodContext*>(data);
+        auto* self = static_cast<TizenInputMethodContext*>(data);
         if (self->on_preedit_start_) {
           self->on_preedit_start_();
         }
@@ -245,8 +243,7 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   // pre-edit end callback
   event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_END] =
       [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
-        flutter::TizenInputMethodContext* self =
-            static_cast<flutter::TizenInputMethodContext*>(data);
+        auto* self = static_cast<TizenInputMethodContext*>(data);
         if (self->on_preedit_end_) {
           self->on_preedit_end_();
         }
@@ -258,8 +255,7 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   // pre-edit changed callback
   event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_CHANGED] =
       [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
-        flutter::TizenInputMethodContext* self =
-            static_cast<flutter::TizenInputMethodContext*>(data);
+        auto* self = static_cast<TizenInputMethodContext*>(data);
         if (self->on_preedit_changed_) {
           char* str = nullptr;
           int cursor_pos = 0;
@@ -278,8 +274,7 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   ecore_imf_context_input_panel_event_callback_add(
       imf_context_, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
       [](void* data, Ecore_IMF_Context* context, int value) {
-        flutter::TizenInputMethodContext* self =
-            static_cast<flutter::TizenInputMethodContext*>(data);
+        auto* self = static_cast<TizenInputMethodContext*>(data);
         if (self->on_input_panel_state_changed_) {
           self->on_input_panel_state_changed_(value);
         }
