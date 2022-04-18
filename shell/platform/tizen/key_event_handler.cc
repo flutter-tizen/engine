@@ -47,7 +47,7 @@ KeyEventHandler::KeyEventHandler(FlutterTizenEngine* engine) : engine_(engine) {
 }
 
 KeyEventHandler::~KeyEventHandler() {
-  for (auto handler : key_event_handlers_) {
+  for (Ecore_Event_Handler* handler : key_event_handlers_) {
     ecore_event_handler_del(handler);
   }
   key_event_handlers_.clear();
@@ -56,7 +56,7 @@ KeyEventHandler::~KeyEventHandler() {
 Eina_Bool KeyEventHandler::OnKey(void* data, int type, void* raw_event) {
   auto* self = reinterpret_cast<KeyEventHandler*>(data);
   auto* event = reinterpret_cast<Ecore_Event_Key*>(raw_event);
-  auto* engine = self->engine_;
+  FlutterTizenEngine* engine = self->engine_;
   bool is_down = type == ECORE_EVENT_KEY_DOWN;
 
   if (engine->renderer()->GetWindowId() != event->window) {

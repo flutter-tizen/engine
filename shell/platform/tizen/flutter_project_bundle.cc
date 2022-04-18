@@ -21,7 +21,7 @@ namespace {
 // Returns the path of the directory containing the app binary, or an empty
 // string if the directory cannot be found.
 std::filesystem::path GetBinDirectory() {
-  auto* res_path = app_get_resource_path();
+  char* res_path = app_get_resource_path();
   if (!res_path) {
     return GetExecutableDirectory();
   }
@@ -109,7 +109,7 @@ UniqueAotDataPtr FlutterProjectBundle::LoadAotData(
   source.type = kFlutterEngineAOTDataSourceTypeElfPath;
   source.elf_path = path_string.c_str();
   FlutterEngineAOTData data = nullptr;
-  auto result = engine_procs.CreateAOTData(&source, &data);
+  FlutterEngineResult result = engine_procs.CreateAOTData(&source, &data);
   if (result != kSuccess) {
     FT_LOG(Error) << "Failed to load AOT data from: " << path_string;
     return UniqueAotDataPtr(nullptr, nullptr);

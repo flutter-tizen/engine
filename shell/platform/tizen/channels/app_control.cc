@@ -232,13 +232,13 @@ AppControlResult AppControl::AddExtraData(std::string key,
 }
 
 AppControlResult AppControl::SetExtraData(const EncodableMap& map) {
-  for (const auto& v : map) {
-    if (!std::holds_alternative<std::string>(v.first)) {
+  for (const auto& element : map) {
+    if (!std::holds_alternative<std::string>(element.first)) {
       FT_LOG(Error) << "Invalid key. Omitting.";
       continue;
     }
-    const auto& key = std::get<std::string>(v.first);
-    AppControlResult ret = AddExtraData(key, v.second);
+    const auto& key = std::get<std::string>(element.first);
+    AppControlResult ret = AddExtraData(key, element.second);
     if (!ret) {
       FT_LOG(Error)
           << "The value for the key " << key

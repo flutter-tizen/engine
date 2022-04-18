@@ -39,7 +39,8 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
       return -1;
     }
   }
-  auto texture_gl = CreateExternalTexture(texture_info);
+  std::unique_ptr<ExternalTexture> texture_gl =
+      CreateExternalTexture(texture_info);
   int64_t texture_id = texture_gl->TextureId();
 
   {
@@ -54,11 +55,11 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
 bool FlutterTizenTextureRegistrar::UnregisterTexture(int64_t texture_id) {
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
-    auto it = textures_.find(texture_id);
-    if (it == textures_.end()) {
+    auto iter = textures_.find(texture_id);
+    if (iter == textures_.end()) {
       return false;
     }
-    textures_.erase(it);
+    textures_.erase(iter);
   }
   return engine_->UnregisterExternalTexture(texture_id);
 }
@@ -76,11 +77,11 @@ bool FlutterTizenTextureRegistrar::PopulateTexture(
   ExternalTexture* texture;
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
-    auto it = textures_.find(texture_id);
-    if (it == textures_.end()) {
+    auto iter = textures_.find(texture_id);
+    if (iter == textures_.end()) {
       return false;
     }
-    texture = it->second.get();
+    texture = iter->second.get();
   }
   return texture->PopulateTexture(width, height, opengl_texture);
 }

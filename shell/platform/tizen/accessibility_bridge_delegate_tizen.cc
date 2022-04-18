@@ -16,13 +16,14 @@ AccessibilityBridgeDelegateTizen::AccessibilityBridgeDelegateTizen(
 
 void AccessibilityBridgeDelegateTizen::OnAccessibilityEvent(
     ui::AXEventGenerator::TargetedEvent targeted_event) {
-  auto bridge = engine_->accessibility_bridge().lock();
+  std::shared_ptr<AccessibilityBridge> bridge =
+      engine_->accessibility_bridge().lock();
   if (!bridge) {
     FT_LOG(Error) << "Accessibility bridge is deallocated";
     return;
   }
 
-  auto platform_node_delegate =
+  std::shared_ptr<FlutterPlatformNodeDelegate> platform_node_delegate =
       bridge->GetFlutterPlatformNodeDelegateFromID(targeted_event.node->id())
           .lock();
   if (!platform_node_delegate) {

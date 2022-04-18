@@ -50,7 +50,7 @@ SettingsChannel::~SettingsChannel() {
 
 void SettingsChannel::SendSettingsEvent() {
   rapidjson::Document event(rapidjson::kObjectType);
-  auto& allocator = event.GetAllocator();
+  rapidjson::MemoryPoolAllocator<>& allocator = event.GetAllocator();
   event.AddMember(kTextScaleFactorKey, GetTextScaleFactor(), allocator);
   event.AddMember(kAlwaysUse24HourFormatKey, Prefer24HourTime(), allocator);
   event.AddMember(kPlatformBrightnessKey, "light", allocator);

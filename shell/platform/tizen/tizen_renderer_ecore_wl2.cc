@@ -235,7 +235,7 @@ TizenRenderer::Geometry TizenRendererEcoreWl2::GetScreenGeometry() {
 }
 
 int32_t TizenRendererEcoreWl2::GetDpi() {
-  auto* output = ecore_wl2_window_output_find(ecore_wl2_window_);
+  Ecore_Wl2_Output* output = ecore_wl2_window_output_find(ecore_wl2_window_);
   if (!output) {
     FT_LOG(Error) << "Could not find an output associated with the window.";
     return 0;
@@ -612,7 +612,7 @@ void TizenRendererEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
 }
 
 void TizenRendererEcoreWl2::BindKeys(const std::vector<std::string>& keys) {
-  for (const auto& key : keys) {
+  for (const std::string& key : keys) {
     ecore_wl2_window_keygrab_set(ecore_wl2_window_, key.c_str(), 0, 0, 0,
                                  ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
   }

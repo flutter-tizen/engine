@@ -38,12 +38,12 @@ bool TizenEventLoop::RunsTasksOnCurrentThread() const {
 }
 
 void TizenEventLoop::ExecuteTaskEvents() {
-  const auto now = TaskTimePoint::clock::now();
+  const TaskTimePoint now = TaskTimePoint::clock::now();
   {
     std::lock_guard<std::mutex> lock1(task_queue_mutex_);
     std::lock_guard<std::mutex> lock2(expired_tasks_mutex_);
     while (!task_queue_.empty()) {
-      const auto& top = task_queue_.top();
+      const Task& top = task_queue_.top();
 
       if (top.fire_time > now) {
         break;
@@ -58,8 +58,9 @@ void TizenEventLoop::ExecuteTaskEvents() {
 
 TizenEventLoop::TaskTimePoint TizenEventLoop::TimePointFromFlutterTime(
     uint64_t flutter_target_time_nanos) {
-  const auto now = TaskTimePoint::clock::now();
-  const auto flutter_duration = flutter_target_time_nanos - get_current_time_();
+  const TaskTimePoint now = TaskTimePoint::clock::now();
+  const uint64_t flutter_duration =
+      flutter_target_time_nanos - get_current_time_();
   return now + std::chrono::nanoseconds(flutter_duration);
 }
 
@@ -74,7 +75,7 @@ void TizenEventLoop::PostTask(FlutterTask flutter_task,
     task_queue_.push(task);
   }
 
-  const auto flutter_duration =
+  const double flutter_duration =
       static_cast<double>(flutter_target_time_nanos) - get_current_time_();
   if (flutter_duration > 0) {
     ecore_timer_add(
@@ -103,7 +104,7 @@ TizenPlatformEventLoop::TizenPlatformEventLoop(
 TizenPlatformEventLoop::~TizenPlatformEventLoop() {}
 
 void TizenPlatformEventLoop::OnTaskExpired() {
-  for (const auto& task : expired_tasks_) {
+  for (const Task& task : expired_tasks_) {
     on_task_expired_(&task.task);
   }
   expired_tasks_.clear();
@@ -119,10 +120,10 @@ TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
   evas_object_image_pixels_get_callback_set(
       static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
       [](void* data, Evas_Object* o) {  // Render callback
-        TizenRenderEventLoop* self = static_cast<TizenRenderEventLoop*>(data);
+        auto* self = static_cast<TizenRenderEventLoop*>(data);
         {
           std::lock_guard<std::mutex> lock(self->expired_tasks_mutex_);
-          for (const auto& task : self->expired_tasks_) {
+          for (const Task& task : self->expired_tasks_) {
             self->on_task_expired_(&task.task);
           }
           self->expired_tasks_.clear();

@@ -90,7 +90,7 @@ TEST_F(FlutterTizenTextureRegistrarTest, RegisterUnregisterTexture) {
                          return kSuccess;
                        }));
 
-  auto texture_id = registrar.RegisterTexture(&texture_info);
+  int64_t texture_id = registrar.RegisterTexture(&texture_info);
   EXPECT_TRUE(register_called);
   EXPECT_NE(texture_id, -1);
   EXPECT_EQ(texture_id, registered_texture_id);
@@ -110,7 +110,7 @@ TEST_F(FlutterTizenTextureRegistrarTest, RegisterUnknownTextureType) {
   FlutterDesktopTextureInfo texture_info = {};
   texture_info.type = static_cast<FlutterDesktopTextureType>(1234);
 
-  auto texture_id = registrar.RegisterTexture(&texture_info);
+  int64_t texture_id = registrar.RegisterTexture(&texture_info);
 
   EXPECT_EQ(texture_id, -1);
 }
@@ -118,7 +118,7 @@ TEST_F(FlutterTizenTextureRegistrarTest, RegisterUnknownTextureType) {
 TEST_F(FlutterTizenTextureRegistrarTest, PopulateInvalidTexture) {
   FlutterTizenTextureRegistrar registrar(engine_);
 
-  auto result = registrar.PopulateTexture(1, 640, 480, nullptr);
+  bool result = registrar.PopulateTexture(1, 640, 480, nullptr);
   EXPECT_FALSE(result);
 }
 

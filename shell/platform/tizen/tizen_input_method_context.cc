@@ -150,13 +150,13 @@ bool TizenInputMethodContext::FilterEvent(Ecore_Event_Key* event,
   FT_ASSERT(dev_name);
 
   if (is_down) {
-    auto imf_event =
+    Ecore_IMF_Event_Key_Down imf_event =
         EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event, dev_name);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
         reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
   } else {
-    auto imf_event =
+    Ecore_IMF_Event_Key_Up imf_event =
         EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event, dev_name);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_UP,
@@ -192,7 +192,8 @@ void TizenInputMethodContext::HideInputPanel() {
 void TizenInputMethodContext::SetInputPanelLayout(
     const std::string& input_type) {
   FT_ASSERT(imf_context_);
-  auto panel_layout = TextInputTypeToEcoreImfInputPanelLayout(input_type);
+  Ecore_IMF_Input_Panel_Layout panel_layout =
+      TextInputTypeToEcoreImfInputPanelLayout(input_type);
   ecore_imf_context_input_panel_layout_set(imf_context_, panel_layout);
 }
 

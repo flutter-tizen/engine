@@ -39,9 +39,9 @@ void PlatformViewChannel::Dispose() {
 }
 
 PlatformView* PlatformViewChannel::FindViewById(int view_id) {
-  auto it = views_.find(view_id);
-  if (it != views_.end()) {
-    return it->second;
+  auto iter = views_.find(view_id);
+  if (iter != views_.end()) {
+    return iter->second;
   }
   return nullptr;
 }
@@ -139,14 +139,14 @@ void PlatformViewChannel::OnCreate(
   if (params) {
     byte_message = *params;
   }
-  auto it = view_factories_.find(*view_type);
-  if (it != view_factories_.end()) {
+  auto iter = view_factories_.find(*view_type);
+  if (iter != view_factories_.end()) {
     PlatformView* focused_view = FindFocusedView();
     if (focused_view) {
       focused_view->SetFocus(false);
     }
     PlatformView* view =
-        it->second->Create(*view_id, *width, *height, byte_message);
+        iter->second->Create(*view_id, *width, *height, byte_message);
     if (view) {
       views_[*view_id] = view;
       result->Success(EncodableValue(view->GetTextureId()));

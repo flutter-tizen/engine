@@ -563,7 +563,7 @@ TizenRenderer::Geometry TizenRendererEvasGL::GetWindowGeometry() {
 
 TizenRenderer::Geometry TizenRendererEvasGL::GetScreenGeometry() {
   Geometry result = {};
-  auto* ecore_evas =
+  Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.w,
                                  &result.h);
@@ -571,7 +571,7 @@ TizenRenderer::Geometry TizenRendererEvasGL::GetScreenGeometry() {
 }
 
 int32_t TizenRendererEvasGL::GetDpi() {
-  auto* ecore_evas =
+  Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
   int32_t xdpi, ydpi;
   ecore_evas_screen_dpi_get(ecore_evas, &xdpi, &ydpi);
@@ -649,7 +649,7 @@ bool TizenRendererEvasGL::SetupEvasWindow() {
   // Tizen 5.5 or later was chosen as default.
   // elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
 
-  auto* ecore_evas =
+  Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
 
   int32_t width, height;
@@ -781,7 +781,7 @@ bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
 }
 
 void TizenRendererEvasGL::BindKeys(const std::vector<std::string>& keys) {
-  for (const auto& key : keys) {
+  for (const std::string& key : keys) {
     eext_win_keygrab_set(evas_window_, key.c_str());
   }
 }

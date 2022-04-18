@@ -27,7 +27,7 @@ TouchEventHandler::TouchEventHandler(FlutterTizenEngine* engine)
 }
 
 TouchEventHandler::~TouchEventHandler() {
-  for (auto handler : touch_event_handlers_) {
+  for (Ecore_Event_Handler* handler : touch_event_handlers_) {
     ecore_event_handler_del(handler);
   }
   touch_event_handlers_.clear();
@@ -41,7 +41,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
                                                 size_t timestamp,
                                                 int device_id = 0) {
   // Correct errors caused by window rotation.
-  auto geometry = engine_->renderer()->GetWindowGeometry();
+  TizenRenderer::Geometry geometry = engine_->renderer()->GetWindowGeometry();
   double new_x = x, new_y = y;
 
   if (rotation == 90) {
@@ -74,7 +74,7 @@ void TouchEventHandler::SendFlutterPointerEvent(FlutterPointerPhase phase,
 
 Eina_Bool TouchEventHandler::OnTouch(void* data, int type, void* event) {
   auto* self = reinterpret_cast<TouchEventHandler*>(data);
-  auto window_id = self->engine_->renderer()->GetWindowId();
+  uintptr_t window_id = self->engine_->renderer()->GetWindowId();
 
   if (type == ECORE_EVENT_MOUSE_BUTTON_DOWN) {
     auto* button_event = reinterpret_cast<Ecore_Event_Mouse_Button*>(event);

@@ -213,8 +213,9 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
                         << engine_message->struct_size;
           return;
         }
-        auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-        auto message = engine->ConvertToDesktopMessage(*engine_message);
+        auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+        FlutterDesktopMessage message =
+            engine->ConvertToDesktopMessage(*engine_message);
         engine->message_dispatcher_->HandleMessage(message);
       };
   args.custom_task_runners = &custom_task_runners;
@@ -239,8 +240,8 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
 
-  auto result = embedder_api_.Run(FLUTTER_ENGINE_VERSION, &renderer_config,
-                                  &args, this, &engine_);
+  FlutterEngineResult result = embedder_api_.Run(
+      FLUTTER_ENGINE_VERSION, &renderer_config, &args, this, &engine_);
   if (result != kSuccess || engine_ == nullptr) {
     FT_LOG(Error) << "Failed to start the Flutter engine with error: "
                   << result;
@@ -393,7 +394,7 @@ void FlutterTizenEngine::SetWindowOrientation(int32_t degree) {
   renderer_->SetRotate(degree);
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - degree) * M_PI / 180;
-  auto geometry = renderer_->GetWindowGeometry();
+  TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();
   double width = geometry.w;
   double height = geometry.h;
 
@@ -451,7 +452,7 @@ void FlutterTizenEngine::SetupLocales() {
   std::vector<LanguageInfo> languages = GetPreferredLanguageInfo();
   std::vector<FlutterLocale> flutter_locales;
   flutter_locales.reserve(languages.size());
-  for (const auto& info : languages) {
+  for (const LanguageInfo& info : languages) {
     flutter_locales.push_back(CovertToFlutterLocale(info));
   }
   // Convert the locale list to the locale pointer list that must be provided.
@@ -542,7 +543,7 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     config.open_gl.gl_external_texture_frame_callback =
         [](void* user_data, int64_t texture_id, size_t width, size_t height,
            FlutterOpenGLTexture* texture) -> bool {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->texture_registrar()) {
         return false;
       }
@@ -592,7 +593,7 @@ void FlutterTizenEngine::OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
   FT_LOG(Debug) << "Update semantics node [id=" << node->id
                 << ", label=" << node->label << ", hint=" << node->hint
                 << ", value=" << node->value << "]";
-  auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+  auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
   if (engine->accessibility_bridge_) {
     engine->accessibility_bridge_->AddFlutterSemanticsNodeUpdate(node);
   } else {
@@ -603,18 +604,19 @@ void FlutterTizenEngine::OnUpdateSemanticsNode(const FlutterSemanticsNode* node,
 void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
     const FlutterSemanticsCustomAction* action,
     void* user_data) {
-  auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
-  auto bridge = engine->accessibility_bridge_;
+  auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+  std::shared_ptr<AccessibilityBridge> bridge = engine->accessibility_bridge_;
   if (bridge) {
     if (action->id == kFlutterSemanticsCustomActionIdBatchEnd) {
       // Custom action with id = kFlutterSemanticsCustomActionIdBatchEnd
       // indicates this is the end of the update batch.
       bridge->CommitUpdates();
       // Attaches the accessibility root to the window delegate.
-      auto root = bridge->GetFlutterPlatformNodeDelegateFromID(0);
-      auto window =
+      std::weak_ptr<FlutterPlatformNodeDelegate> root =
+          bridge->GetFlutterPlatformNodeDelegateFromID(0);
+      std::shared_ptr<FlutterPlatformWindowDelegateTizen> window =
           FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
-      auto geometry = engine->renderer_->GetWindowGeometry();
+      TizenRenderer::Geometry geometry = engine->renderer_->GetWindowGeometry();
       window->SetGeometry(geometry.x, geometry.y, geometry.w, geometry.h);
       window->SetRootNode(root);
       return;

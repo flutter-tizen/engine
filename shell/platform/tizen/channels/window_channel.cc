@@ -34,7 +34,7 @@ WindowChannel::~WindowChannel() {}
 void WindowChannel::HandleMethodCall(
     const MethodCall<EncodableValue>& method_call,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  const auto& method_name = method_call.method_name();
+  const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
     TizenRenderer::Geometry geometry = renderer_->GetWindowGeometry();

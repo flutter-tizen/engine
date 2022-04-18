@@ -238,7 +238,7 @@ const std::map<int, int> kEcoreModifierToGtkModifier = {
 
 uint32_t Utf8ToUtf32CodePoint(const char* utf8) {
   std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-  for (auto wchar : converter.from_bytes(utf8)) {
+  for (wchar_t wchar : converter.from_bytes(utf8)) {
     return wchar;
   }
   return 0;
@@ -282,7 +282,7 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
   }
 
   rapidjson::Document event(rapidjson::kObjectType);
-  auto& allocator = event.GetAllocator();
+  rapidjson::MemoryPoolAllocator<>& allocator = event.GetAllocator();
   event.AddMember(kKeyMapKey, kLinuxKeyMap, allocator);
   event.AddMember(kToolkitKey, kGtkToolkit, allocator);
   event.AddMember(kUnicodeScalarValuesKey, unicode_scalar_values, allocator);
@@ -297,7 +297,7 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
   channel_->Send(event, [callback = std::move(callback)](const uint8_t* reply,
                                                          size_t reply_size) {
     if (reply != nullptr) {
-      auto decoded =
+      std::unique_ptr<rapidjson::Document> decoded =
           JsonMessageCodec::GetInstance().DecodeMessage(reply, reply_size);
       bool handled = (*decoded)[kHandledKey].GetBool();
       callback(handled);

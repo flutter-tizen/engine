@@ -248,8 +248,8 @@ void TextInputChannel::HandleMethodCall(
                     "Selection base/extent values invalid.");
       return;
     }
-    auto selection_base_value = selection_base->value.GetInt();
-    auto selection_extent_value = selection_extent->value.GetInt();
+    int selection_base_value = selection_base->value.GetInt();
+    int selection_extent_value = selection_extent->value.GetInt();
 
     active_model_->SetText(text->value.GetString());
     active_model_->SetSelection(
@@ -257,12 +257,12 @@ void TextInputChannel::HandleMethodCall(
 
     auto composing_base = args.FindMember(kComposingBaseKey);
     auto composing_extent = args.FindMember(kComposingBaseKey);
-    auto composing_base_value = composing_base != args.MemberEnd()
-                                    ? composing_base->value.GetInt()
-                                    : -1;
-    auto composing_extent_value = composing_extent != args.MemberEnd()
-                                      ? composing_extent->value.GetInt()
-                                      : -1;
+    int composing_base_value = composing_base != args.MemberEnd()
+                                   ? composing_base->value.GetInt()
+                                   : -1;
+    int composing_extent_value = composing_extent != args.MemberEnd()
+                                     ? composing_extent->value.GetInt()
+                                     : -1;
 
     if (composing_base_value == -1 && composing_extent_value == -1) {
       active_model_->EndComposing();
@@ -288,7 +288,7 @@ void TextInputChannel::HandleMethodCall(
 
 void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
-  auto& allocator = args->GetAllocator();
+  rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
 
   TextRange selection = model.selection();
@@ -326,7 +326,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
     FT_LOG(Debug) << "Entering select mode.";
   }
 #else
-  auto device_name = ecore_device_name_get(event->dev);
+  const char* device_name = ecore_device_name_get(event->dev);
   bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
 #endif
 
@@ -422,7 +422,7 @@ void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
     SendStateUpdate(*model);
   }
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
-  auto& allocator = args->GetAllocator();
+  rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
   args->PushBack(rapidjson::Value(input_action_, allocator).Move(), allocator);
 

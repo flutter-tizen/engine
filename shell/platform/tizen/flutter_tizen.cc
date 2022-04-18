@@ -69,7 +69,7 @@ FlutterDesktopEngineRef FlutterDesktopRunEngine(
 void FlutterDesktopShutdownEngine(FlutterDesktopEngineRef engine_ref) {
   flutter::Logger::Stop();
 
-  auto* engine = EngineFromHandle(engine_ref);
+  flutter::FlutterTizenEngine* engine = EngineFromHandle(engine_ref);
   engine->StopEngine();
   delete engine;
 }

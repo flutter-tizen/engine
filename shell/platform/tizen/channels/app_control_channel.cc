@@ -65,7 +65,7 @@ void AppControlChannel::NotifyAppControl(void* handle) {
 void AppControlChannel::HandleMethodCall(
     const MethodCall<EncodableValue>& method_call,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
-  const auto& method_name = method_call.method_name();
+  const std::string& method_name = method_call.method_name();
 
   const auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
   if (!arguments) {

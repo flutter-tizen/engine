@@ -74,8 +74,8 @@ PlatformChannel::~PlatformChannel() {}
 void PlatformChannel::HandleMethodCall(
     const MethodCall<rapidjson::Document>& method_call,
     std::unique_ptr<MethodResult<rapidjson::Document>> result) {
-  const auto& method = method_call.method_name();
-  const auto* arguments = method_call.arguments();
+  const std::string& method = method_call.method_name();
+  const rapidjson::Document* arguments = method_call.arguments();
 
   if (method == kSystemNavigatorPopMethod) {
     SystemNavigatorPop();
@@ -125,7 +125,7 @@ void PlatformChannel::HandleMethodCall(
     RestoreSystemUiOverlays();
     result->Success();
   } else if (method == kSetEnabledSystemUiOverlaysMethod) {
-    const auto& list = arguments[0];
+    const rapidjson::Document& list = arguments[0];
     std::vector<std::string> overlays;
     for (auto iter = list.Begin(); iter != list.End(); ++iter) {
       overlays.push_back(iter->GetString());
@@ -134,7 +134,7 @@ void PlatformChannel::HandleMethodCall(
     result->Success();
 #endif
   } else if (method == kSetPreferredOrientationsMethod) {
-    const auto& list = arguments[0];
+    const rapidjson::Document& list = arguments[0];
     std::vector<std::string> orientations;
     for (auto iter = list.Begin(); iter != list.End(); ++iter) {
       orientations.push_back(iter->GetString());
