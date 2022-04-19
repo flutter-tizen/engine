@@ -37,7 +37,6 @@
 #include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl2.h"
 #include "flutter/shell/platform/tizen/tizen_vsync_waiter.h"
 #endif
-#include "flutter/shell/platform/tizen/touch_event_handler.h"
 
 // State associated with the plugin registrar.
 struct FlutterDesktopPluginRegistrar {
@@ -230,9 +229,6 @@ class FlutterTizenEngine {
 
   // An event dispatcher for Ecore key events.
   std::unique_ptr<KeyEventHandler> key_event_handler_;
-
-  // An event dispatcher for Ecore mouse events.
-  std::unique_ptr<TouchEventHandler> touch_event_handler_;
 
   // The plugin messenger handle given to API clients.
   std::unique_ptr<FlutterDesktopMessenger> messenger_;

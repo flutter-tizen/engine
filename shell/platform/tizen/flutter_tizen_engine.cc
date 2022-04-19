@@ -256,9 +256,6 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
         internal_plugin_registrar_->messenger() /*, renderer_.get(), this*/);
 
     key_event_handler_ = std::make_unique<KeyEventHandler>(this);
-    touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
-
-    // SetWindowOrientation(0);
   }
 
   accessibility_settings_ = std::make_unique<AccessibilitySettings>(this);

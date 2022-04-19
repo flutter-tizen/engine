@@ -43,6 +43,7 @@ void FlutterTizenView::SetFlutterTizenEngine(
   // keyboard?
   // platform handler?
   // corsor handler?
+  // touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
   FT_LOG(Info) << "done";
 }
 
@@ -80,19 +81,20 @@ void* FlutterTizenView::OnProcResolver(const char* name) {
 }
 
 void FlutterTizenView::OnRotate(int32_t degree) {
+  rotation_degree_ = degree;
   // Compute renderer transformation based on the angle of rotation.
-  double rad = (360 - degree) * M_PI / 180;
+  double rad = (360 - rotation_degree_) * M_PI / 180;
   auto geometry = flutter_tizen_window_->GetWindowGeometry();
   int32_t width = geometry.width;
   int32_t height = geometry.height;
 
   double trans_x = 0.0, trans_y = 0.0;
-  if (degree == 90) {
+  if (rotation_degree_ == 90) {
     trans_y = height;
-  } else if (degree == 180) {
+  } else if (rotation_degree_ == 180) {
     trans_x = width;
     trans_y = height;
-  } else if (degree == 270) {
+  } else if (rotation_degree_ == 270) {
     trans_x = width;
   }
 
@@ -105,15 +107,57 @@ void FlutterTizenView::OnRotate(int32_t degree) {
 
   // touch_event_handler_->rotation = degree;
 
-  if (degree == 90 || degree == 270) {
+  if (rotation_degree_ == 90 || rotation_degree_ == 270) {
     std::swap(width, height);
   }
 
   flutter_tizen_window_->ResizeWithRotation(
-      {geometry.left, geometry.top, width, height}, degree);
+      {geometry.left, geometry.top, width, height}, rotation_degree_);
 
   // Window position does not change on rotation regardless of its orientation.
   SendWindowMetrics(geometry.left, geometry.top, width, height, 0.0);
+}
+
+void FlutterTizenView::OnPointerMove(double x,
+                                     double y,
+                                     size_t timestamp,
+                                     FlutterPointerDeviceKind device_kind,
+                                     int32_t device_id) {
+  if (pointer_state_) {
+    SendFlutterPointerEvent(kMove, x, y, 0, 0, timestamp, device_kind,
+                            device_id);
+  }
+}
+
+void FlutterTizenView::OnPointerDown(double x,
+                                     double y,
+                                     size_t timestamp,
+                                     FlutterPointerDeviceKind device_kind,
+                                     int32_t device_id) {
+  pointer_state_ = true;
+  SendFlutterPointerEvent(kDown, x, y, 0, 0, timestamp, device_kind, device_id);
+}
+
+void FlutterTizenView::OnPointerUp(double x,
+                                   double y,
+                                   size_t timestamp,
+                                   FlutterPointerDeviceKind device_kind,
+                                   int32_t device_id) {
+  pointer_state_ = false;
+  SendFlutterPointerEvent(kUp, x, y, 0, 0, timestamp, device_kind, device_id);
+}
+
+void FlutterTizenView::OnScroll(double x,
+                                double y,
+                                double delta_x,
+                                double delta_y,
+                                int scroll_offset_multiplier,
+                                size_t timestamp,
+                                FlutterPointerDeviceKind device_kind,
+                                int32_t device_id) {
+  SendFlutterPointerEvent(
+      pointer_state_ ? kMove : kHover, x, y, delta_x * scroll_offset_multiplier,
+      delta_y * scroll_offset_multiplier, timestamp, device_kind, device_id);
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,
@@ -139,6 +183,46 @@ void FlutterTizenView::SendWindowMetrics(int32_t left,
 
   flutter_tizen_engine_->SendWindowMetrics(left, top, width, height,
                                            computed_pixel_ratio);
+}
+
+void FlutterTizenView::SendFlutterPointerEvent(
+    FlutterPointerPhase phase,
+    double x,
+    double y,
+    double delta_x,
+    double delta_y,
+    size_t timestamp,
+    FlutterPointerDeviceKind device_kind,
+    int device_id) {
+  auto geometry = flutter_tizen_window_->GetWindowGeometry();
+  double new_x = x, new_y = y;
+
+  if (rotation_degree_ == 90) {
+    new_x = geometry.height - y;
+    new_y = x;
+  } else if (rotation_degree_ == 180) {
+    new_x = geometry.width - x;
+    new_y = geometry.height - y;
+  } else if (rotation_degree_ == 270) {
+    new_x = y;
+    new_y = geometry.width - x;
+  }
+
+  FlutterPointerEvent event = {};
+  event.struct_size = sizeof(event);
+  event.phase = phase;
+  event.x = new_x;
+  event.y = new_y;
+  if (delta_x != 0 || delta_y != 0) {
+    event.signal_kind = kFlutterPointerSignalKindScroll;
+  }
+  event.scroll_delta_x = delta_x;
+  event.scroll_delta_y = delta_y;
+  event.timestamp = timestamp * 1000;
+  event.device = device_id;
+  event.device_kind = kFlutterPointerDeviceKindTouch;
+
+  flutter_tizen_engine_->SendPointerEvent(event);
 }
 
 }  // namespace flutter

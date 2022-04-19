@@ -51,7 +51,35 @@ class FlutterTizenView {
 
   void* OnProcResolver(const char* name);
 
+  // ========== Window Event Delegate ==========
   void OnRotate(int32_t degree);
+
+  void OnPointerMove(double x,
+                     double y,
+                     size_t timestamp,
+                     FlutterPointerDeviceKind device_kind,
+                     int32_t device_id);
+
+  void OnPointerDown(double x,
+                     double y,
+                     size_t timestamp,
+                     FlutterPointerDeviceKind device_kind,
+                     int32_t device_id);
+
+  void OnPointerUp(double x,
+                   double y,
+                   size_t timestamp,
+                   FlutterPointerDeviceKind device_kind,
+                   int32_t device_id);
+
+  void OnScroll(double x,
+                double y,
+                double delta_x,
+                double delta_y,
+                int scroll_offset_multiplier,
+                size_t timestamp,
+                FlutterPointerDeviceKind device_kind,
+                int32_t device_id);
 
   FlutterTransformation GetFlutterTransformation() {
     return flutter_trans_formation_;
@@ -66,15 +94,30 @@ class FlutterTizenView {
                          int32_t height,
                          double pixel_ratio);
 
+  // Reports pointer event to Flutter engine
+  void SendFlutterPointerEvent(FlutterPointerPhase phase,
+                               double x,
+                               double y,
+                               double delta_x,
+                               double delta_y,
+                               size_t timestamp,
+                               FlutterPointerDeviceKind device_kind,
+                               int device_id);
+
   // The engine associated with this view.
   std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine_;
 
   // TODO
- public:
   std::unique_ptr<FlutterTizenWindow> flutter_tizen_window_;
 
  private:
-  // The current renderer transformation.
+  // The current view rotation degree.
+  int32_t rotation_degree_ = 0;
+
+  // The current pointer state to distinguish move or hover event.
+  bool pointer_state_ = false;
+
+  // The current view transformation.
   FlutterTransformation flutter_trans_formation_ = {1.0, 0.0, 0.0, 0.0, 1.0,
                                                     0.0, 0.0, 0.0, 1.0};
 };

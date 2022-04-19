@@ -8,6 +8,14 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
+namespace {
+
+static const int kScrollDirectionVertical = 0;
+static const int kScrollDirectionHorizontal = 1;
+static const int kScrollOffsetMultiplier = 20;
+
+}  // namespace
+
 namespace flutter {
 
 FlutterTizenWindowEcoreWl2::FlutterTizenWindowEcoreWl2(Geometry geometry,
@@ -15,7 +23,6 @@ FlutterTizenWindowEcoreWl2::FlutterTizenWindowEcoreWl2(Geometry geometry,
                                                        bool focusable,
                                                        bool top_level)
     : FlutterTizenWindow(geometry, transparent, focusable, top_level) {
-  FT_LOG(Error) << "enter";
   if (!CreateWindow()) {
     FT_LOG(Error) << "Failed to create platform window";
     return;
@@ -24,11 +31,9 @@ FlutterTizenWindowEcoreWl2::FlutterTizenWindowEcoreWl2(Geometry geometry,
   SetWindowOptions();
   RegisterEventHandlers();
   Show();
-  FT_LOG(Error) << "done";
 }
 
 FlutterTizenWindowEcoreWl2::~FlutterTizenWindowEcoreWl2() {
-  FT_LOG(Info) << "enter";
   DestroyEcoreWl2();
 }
 
@@ -62,10 +67,6 @@ bool FlutterTizenWindowEcoreWl2::CreateWindow() {
     initial_geometry_.height = height;
   }
 
-  FT_LOG(Error) << "left" << initial_geometry_.left;
-  FT_LOG(Error) << "top" << initial_geometry_.top;
-  FT_LOG(Error) << "width " << initial_geometry_.width;
-  FT_LOG(Error) << "height " << initial_geometry_.height;
   ecore_wl2_window_ = ecore_wl2_window_new(
       ecore_wl2_display_, nullptr, initial_geometry_.left,
       initial_geometry_.top, initial_geometry_.width, initial_geometry_.height);
@@ -116,9 +117,99 @@ void FlutterTizenWindowEcoreWl2::SetWindowOptions() {
 }
 
 void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
-  ecore_event_handlers_.push_back(
-      ecore_event_handler_add(ECORE_WL2_EVENT_WINDOW_ROTATE,
-                              FlutterTizenWindowEcoreWl2::OnRotate, this));
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_WL2_EVENT_WINDOW_ROTATE,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* rotation_event =
+              reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
+          int32_t degree = rotation_event->angle;
+          self->flutter_tizen_view_->OnRotate(degree);
+          auto geometry = self->GetWindowGeometry();
+          ecore_wl2_window_rotation_change_done_send(
+              self->ecore_wl2_window_, rotation_event->rotation, geometry.width,
+              geometry.height);
+        }
+        return ECORE_CALLBACK_PASS_ON;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_MOUSE_BUTTON_DOWN,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* button_event =
+              reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
+          if (button_event->window == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnPointerDown(
+                button_event->x, button_event->y, button_event->timestamp,
+                kFlutterPointerDeviceKindTouch, button_event->multi.device);
+          }
+        }
+        return ECORE_CALLBACK_DONE;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_MOUSE_BUTTON_UP,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* button_event =
+              reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
+          if (button_event->window == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnPointerUp(
+                button_event->x, button_event->y, button_event->timestamp,
+                kFlutterPointerDeviceKindTouch, button_event->multi.device);
+          }
+        }
+        return ECORE_CALLBACK_DONE;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_MOUSE_MOVE,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
+          if (move_event->window == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnPointerMove(
+                move_event->x, move_event->y, move_event->timestamp,
+                kFlutterPointerDeviceKindTouch, move_event->multi.device);
+          }
+        }
+        return ECORE_CALLBACK_DONE;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_MOUSE_WHEEL,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
+          if (wheel_event->window == self->GetWindowId()) {
+            double delta_x = 0.0;
+            double delta_y = 0.0;
+
+            if (wheel_event->direction == kScrollDirectionVertical) {
+              delta_y += wheel_event->z;
+            } else if (wheel_event->direction == kScrollDirectionHorizontal) {
+              delta_x += wheel_event->z;
+            }
+
+            self->flutter_tizen_view_->OnScroll(
+                wheel_event->x, wheel_event->y, delta_x, delta_y,
+                kScrollOffsetMultiplier, wheel_event->timestamp,
+                kFlutterPointerDeviceKindTouch, 0);
+          }
+        }
+        return ECORE_CALLBACK_DONE;
+      },
+      this));
 }
 
 void FlutterTizenWindowEcoreWl2::DestroyEcoreWl2() {
@@ -143,10 +234,6 @@ FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetWindowGeometry() {
   Geometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.left, &result.top,
                                 &result.width, &result.height);
-  FT_LOG(Error) << "left" << result.left;
-  FT_LOG(Error) << "top" << result.top;
-  FT_LOG(Error) << "width " << result.width;
-  FT_LOG(Error) << "height" << result.height;
   return result;
 }
 
