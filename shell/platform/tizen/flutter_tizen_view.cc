@@ -44,7 +44,8 @@ void FlutterTizenView::SetFlutterTizenEngine(
   // platform handler?
   // corsor handler?
   // touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
-  FT_LOG(Info) << "done";
+
+  OnRotate(flutter_tizen_window_->GetRotatoin());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
@@ -158,6 +159,10 @@ void FlutterTizenView::OnScroll(double x,
   SendFlutterPointerEvent(
       pointer_state_ ? kMove : kHover, x, y, delta_x * scroll_offset_multiplier,
       delta_y * scroll_offset_multiplier, timestamp, device_kind, device_id);
+}
+
+void FlutterTizenView::SendInitialGeometry() {
+  OnRotate(flutter_tizen_window_->GetRotatoin());
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,

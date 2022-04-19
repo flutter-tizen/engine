@@ -244,6 +244,10 @@ FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetScreenGeometry() {
   return result;
 }
 
+int32_t FlutterTizenWindowEcoreWl2::GetRotatoin() {
+  return ecore_wl2_window_rotation_get(ecore_wl2_window_);
+}
+
 int32_t FlutterTizenWindowEcoreWl2::GetDpi() {
   auto* output = ecore_wl2_window_output_find(ecore_wl2_window_);
   if (!output) {

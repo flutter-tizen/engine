@@ -52,7 +52,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
     flutter_tizen_view->flutter_tizen_engine()->RunEngine(nullptr);
   }
 
-  flutter_tizen_view->OnRotate(0);
+  flutter_tizen_view->SendInitialGeometry();
 
   return HandleForView(flutter_tizen_view.release());
 }

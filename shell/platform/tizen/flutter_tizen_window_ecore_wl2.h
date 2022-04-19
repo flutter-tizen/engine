@@ -31,6 +31,8 @@ class FlutterTizenWindowEcoreWl2 : public FlutterTizenWindow {
 
   void* GetRenderTargetDisplay() override { return wl2_display_; }
 
+  int32_t GetRotatoin() override;
+
   int32_t GetDpi() override;
 
   uintptr_t GetWindowId() override;

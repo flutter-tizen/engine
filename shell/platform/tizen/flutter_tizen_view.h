@@ -85,6 +85,8 @@ class FlutterTizenView {
     return flutter_trans_formation_;
   }
 
+  void SendInitialGeometry();
+
  private:
   // Sends a window metrics update to the Flutter engine using current window
   // dimensions in physical
