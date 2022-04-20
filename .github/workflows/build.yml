@@ -21,11 +21,11 @@ jobs:
         mode: [debug, release, profile]
         include:
           - arch: arm
-            triple: armv7l-tizen-linux-gnueabi
+            triple: arm-linux-gnueabi
           - arch: arm64
-            triple: aarch64-tizen-linux-gnu
+            triple: aarch64-linux-gnu
           - arch: x86
-            triple: i586-tizen-linux-gnueabi
+            triple: i686-linux-gnu
         exclude:
           - arch: x86
             mode: release
@@ -63,12 +63,6 @@ jobs:
       - name: build
         run: |
           src/flutter/ci/tizen/cache-checksum.sh restore src/out/$OUTPUT_NAME
-
-          # FIXME: Disable compile options unsupported by the Tizen toolchain.
-          sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' src/build/config/compiler/BUILD.gn
-          sed -i 's/"-Wno-psabi",//g' src/build/config/compiler/BUILD.gn
-          sed -i 's/"-Wno-unused-but-set-parameter",//g' src/build/config/compiler/BUILD.gn
-          sed -i 's/"-Wno-unused-but-set-variable",//g' src/build/config/compiler/BUILD.gn
 
           src/flutter/tools/gn \
             --target-os linux --linux-cpu ${{ matrix.arch }} \

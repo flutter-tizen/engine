@@ -14,31 +14,31 @@ jobs:
       tizen-arm-release:
         arch: arm
         mode: release
-        targetTriple: armv7l-tizen-linux-gnueabi
+        targetTriple: arm-linux-gnueabi
       tizen-arm-profile:
         arch: arm
         mode: profile
-        targetTriple: armv7l-tizen-linux-gnueabi
+        targetTriple: arm-linux-gnueabi
       tizen-arm-debug:
         arch: arm
         mode: debug
-        targetTriple: armv7l-tizen-linux-gnueabi
+        targetTriple: arm-linux-gnueabi
       tizen-arm64-release:
         arch: arm64
         mode: release
-        targetTriple: aarch64-tizen-linux-gnu
+        targetTriple: aarch64-linux-gnu
       tizen-arm64-profile:
         arch: arm64
         mode: profile
-        targetTriple: aarch64-tizen-linux-gnu
+        targetTriple: aarch64-linux-gnu
       tizen-arm64-debug:
         arch: arm64
         mode: debug
-        targetTriple: aarch64-tizen-linux-gnu
+        targetTriple: aarch64-linux-gnu
       tizen-x86-debug:
         arch: x86
         mode: debug
-        targetTriple: i586-tizen-linux-gnueabi
+        targetTriple: i686-linux-gnu
   pool:
     name: Default
     demands: agent.os -equals Linux
@@ -49,13 +49,6 @@ jobs:
     path: src/flutter
   - bash: |
       gclient sync -f -D
-      sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' build/config/compiler/BUILD.gn
-      sed -i 's/"-Wno-psabi",//g' build/config/compiler/BUILD.gn
-      sed -i 's/"-Wno-unused-but-set-parameter",//g' build/config/compiler/BUILD.gn
-      sed -i 's/"-Wno-unused-but-set-variable",//g' build/config/compiler/BUILD.gn
-    displayName: Disable build flags
-    workingDirectory: $(Pipeline.Workspace)/src
-  - bash: |
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
