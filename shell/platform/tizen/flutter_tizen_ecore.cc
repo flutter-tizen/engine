@@ -26,8 +26,6 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
-  // Todo : Use view and window imple;
-
   std::unique_ptr<flutter::FlutterTizenWindow> flutter_tizen_window =
       std::make_unique<flutter::FlutterTizenWindowEcoreWl2>(
           flutter::FlutterTizenWindow::Geometry(

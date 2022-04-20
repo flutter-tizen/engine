@@ -203,7 +203,6 @@ void FlutterTizenView::OnScroll(double x,
 }
 
 void FlutterTizenView::OnKey(Ecore_Event_Key* event, bool is_down) {
-  FT_LOG(Error) << "enter";
   if (is_down) {
     FT_LOG(Info) << "Key symbol: " << event->key << ", code: 0x" << std::setw(8)
                  << std::setfill('0') << std::right << std::hex
