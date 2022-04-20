@@ -68,7 +68,6 @@ void WindowChannel::HandleMethodCall(
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
-    // TODO
     FlutterTizenWindow::Geometry geometry =
         flutter_tizen_window_->GetScreenGeometry();
     EncodableMap map;

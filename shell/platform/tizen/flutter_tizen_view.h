@@ -8,7 +8,11 @@
 
 #include <memory>
 
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
+#include "flutter/shell/platform/tizen/channels/platform_channel.h"
+#include "flutter/shell/platform/tizen/channels/text_input_channel.h"
+#include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 
 namespace flutter {
@@ -83,6 +87,8 @@ class FlutterTizenView {
                 FlutterPointerDeviceKind device_kind,
                 int32_t device_id);
 
+  void OnKey(Ecore_Event_Key* event, bool is_down);
+
   FlutterTransformation GetFlutterTransformation() {
     return flutter_trans_formation_;
   }
@@ -122,6 +128,9 @@ class FlutterTizenView {
 
   // A plugin that implements the Flutter platform channel.
   std::unique_ptr<PlatformChannel> platform_channel_;
+
+  // A plugin that implements the Flutter textinput channel.
+  std::unique_ptr<TextInputChannel> text_input_channel_;
 
   // The current view rotation degree.
   int32_t rotation_degree_ = 0;

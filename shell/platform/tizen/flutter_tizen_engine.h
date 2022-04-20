@@ -20,14 +20,10 @@
 #include "flutter/shell/platform/tizen/channels/key_event_channel.h"
 #include "flutter/shell/platform/tizen/channels/lifecycle_channel.h"
 #include "flutter/shell/platform/tizen/channels/navigation_channel.h"
-#include "flutter/shell/platform/tizen/channels/platform_channel.h"
 #include "flutter/shell/platform/tizen/channels/platform_view_channel.h"
 #include "flutter/shell/platform/tizen/channels/settings_channel.h"
-#include "flutter/shell/platform/tizen/channels/text_input_channel.h"
-#include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_project_bundle.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_texture_registrar.h"
-#include "flutter/shell/platform/tizen/key_event_handler.h"
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
@@ -114,8 +110,6 @@ class FlutterTizenEngine {
   PlatformViewChannel* platform_view_channel() {
     return platform_view_channel_.get();
   }
-
-  TextInputChannel* text_input_channel() { return text_input_channel_.get(); }
 
 #ifndef WEARABLE_PROFILE
   std::weak_ptr<flutter::AccessibilityBridge> accessibility_bridge() {
@@ -227,9 +221,6 @@ class FlutterTizenEngine {
   // The view displaying the content running in this engine, if any.
   FlutterTizenView* flutter_tizen_view_ = nullptr;
 
-  // An event dispatcher for Ecore key events.
-  std::unique_ptr<KeyEventHandler> key_event_handler_;
-
   // The plugin messenger handle given to API clients.
   std::unique_ptr<FlutterDesktopMessenger> messenger_;
 
@@ -277,9 +268,6 @@ class FlutterTizenEngine {
 
   // A plugin that implements the Flutter settings channel.
   std::unique_ptr<SettingsChannel> settings_channel_;
-
-  // A plugin that implements the Flutter textinput channel.
-  std::unique_ptr<TextInputChannel> text_input_channel_;
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;

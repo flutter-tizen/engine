@@ -131,6 +131,7 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
             ecore_wl2_window_rotation_change_done_send(
                 self->ecore_wl2_window_, rotation_event->rotation,
                 geometry.width, geometry.height);
+            return ECORE_CALLBACK_DONE;
           }
         }
         return ECORE_CALLBACK_PASS_ON;
@@ -144,11 +145,13 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
         if (self->flutter_tizen_view_) {
           auto* configure_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Configure*>(event);
-
-          self->flutter_tizen_view_->OnResize(
-              configure_event->x, configure_event->y, configure_event->w,
-              configure_event->h);
-          ecore_wl2_window_commit(self->ecore_wl2_window_, EINA_FALSE);
+          if (configure_event->win == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnResize(
+                configure_event->x, configure_event->y, configure_event->w,
+                configure_event->h);
+            ecore_wl2_window_commit(self->ecore_wl2_window_, EINA_FALSE);
+            return ECORE_CALLBACK_DONE;
+          }
         }
         return ECORE_CALLBACK_PASS_ON;
       },
@@ -165,9 +168,10 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
             self->flutter_tizen_view_->OnPointerDown(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
+            return ECORE_CALLBACK_DONE;
           }
         }
-        return ECORE_CALLBACK_DONE;
+        return ECORE_CALLBACK_PASS_ON;
       },
       this));
 
@@ -182,9 +186,10 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
             self->flutter_tizen_view_->OnPointerUp(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
+            return ECORE_CALLBACK_DONE;
           }
         }
-        return ECORE_CALLBACK_DONE;
+        return ECORE_CALLBACK_PASS_ON;
       },
       this));
 
@@ -198,9 +203,10 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
             self->flutter_tizen_view_->OnPointerMove(
                 move_event->x, move_event->y, move_event->timestamp,
                 kFlutterPointerDeviceKindTouch, move_event->multi.device);
+            return ECORE_CALLBACK_DONE;
           }
         }
-        return ECORE_CALLBACK_DONE;
+        return ECORE_CALLBACK_PASS_ON;
       },
       this));
 
@@ -224,9 +230,40 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
                 wheel_event->x, wheel_event->y, delta_x, delta_y,
                 kScrollOffsetMultiplier, wheel_event->timestamp,
                 kFlutterPointerDeviceKindTouch, 0);
+            return ECORE_CALLBACK_DONE;
           }
         }
-        return ECORE_CALLBACK_DONE;
+        return ECORE_CALLBACK_PASS_ON;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_KEY_DOWN,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
+          if (key_event->window == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnKey(key_event, true);
+            return ECORE_CALLBACK_DONE;
+          }
+        }
+        return ECORE_CALLBACK_PASS_ON;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_EVENT_KEY_UP,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
+          if (key_event->window == self->GetWindowId()) {
+            self->flutter_tizen_view_->OnKey(key_event, false);
+            return ECORE_CALLBACK_DONE;
+          }
+        }
+        return ECORE_CALLBACK_PASS_ON;
       },
       this));
 }

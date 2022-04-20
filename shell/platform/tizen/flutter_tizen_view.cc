@@ -20,6 +20,22 @@ constexpr double kProfileFactor = 2.0;
 constexpr double kProfileFactor = 1.0;
 #endif
 
+constexpr char kBackKey[] = "XF86Back";
+constexpr char kExitKey[] = "XF86Exit";
+
+// Keys that should always be handled by the app first but not by the system.
+const std::vector<std::string> kBindableSystemKeys = {
+    "XF86Menu",           "XF86Back",        "XF86AudioPlay",
+    "XF86AudioPause",     "XF86AudioStop",   "XF86AudioNext",
+    "XF86AudioPrev",      "XF86AudioRewind", "XF86AudioForward",
+    "XF86AudioPlayPause", "XF86AudioRecord", "XF86LowerChannel",
+    "XF86RaiseChannel",   "XF86ChannelList", "XF86PreviousChannel",
+    "XF86SysMenu",        "XF86SimpleMenu",  "XF86History",
+    "XF86Favorites",      "XF86Info",        "XF86Red",
+    "XF86Green",          "XF86Yellow",      "XF86Blue",
+    "XF86Subtitle",       "XF86PlayBack",    "XF86ChannelGuide",
+    "XF86Caption",        "XF86Exit",
+};
 }  // namespace
 
 namespace flutter {
@@ -48,7 +64,9 @@ void FlutterTizenView::SetFlutterTizenEngine(
       std::make_unique<PlatformChannel>(messenger, flutter_tizen_window_.get());
   window_channel_ =
       std::make_unique<WindowChannel>(messenger, flutter_tizen_window_.get());
-
+  text_input_channel_ = std::make_unique<TextInputChannel>(
+      internal_plugin_registrar_->messenger(),
+      std::make_unique<TizenInputMethodContext>(flutter_tizen_window_.get()));
   OnRotate(flutter_tizen_window_->GetRotatoin());
 }
 
@@ -182,6 +200,44 @@ void FlutterTizenView::OnScroll(double x,
   SendFlutterPointerEvent(
       pointer_state_ ? kMove : kHover, x, y, delta_x * scroll_offset_multiplier,
       delta_y * scroll_offset_multiplier, timestamp, device_kind, device_id);
+}
+
+void FlutterTizenView::OnKey(Ecore_Event_Key* event, bool is_down) {
+  FT_LOG(Error) << "enter";
+  if (is_down) {
+    FT_LOG(Info) << "Key symbol: " << event->key << ", code: 0x" << std::setw(8)
+                 << std::setfill('0') << std::right << std::hex
+                 << event->keycode;
+  }
+
+  if (text_input_channel_) {
+    if (text_input_channel_->SendKeyEvent(event, is_down)) {
+      return;
+    }
+  }
+
+  if (flutter_tizen_engine_->platform_view_channel()) {
+    flutter_tizen_engine_->platform_view_channel()->SendKeyEvent(event,
+                                                                 is_down);
+  }
+
+  if (flutter_tizen_engine_->key_event_channel()) {
+    flutter_tizen_engine_->key_event_channel()->SendKeyEvent(
+        event, is_down,
+        [engine = flutter_tizen_engine_.get(), symbol = std::string(event->key),
+         is_down](bool handled) {
+          if (handled) {
+            return;
+          }
+          if (symbol == kBackKey && !is_down) {
+            if (engine->navigation_channel()) {
+              engine->navigation_channel()->PopRoute();
+            }
+          } else if (symbol == kExitKey && !is_down) {
+            ui_app_exit();
+          }
+        });
+  }
 }
 
 void FlutterTizenView::SendInitialGeometry() {

@@ -21,7 +21,7 @@ using OnPreeditStart = std::function<void()>;
 using OnPreeditEnd = std::function<void()>;
 using OnInputPanelStateChanged = std::function<void(int value)>;
 
-class FlutterTizenEngine;
+class FlutterTizenWindow;
 
 struct InputPanelGeometry {
   int32_t x = 0, y = 0, w = 0, h = 0;
@@ -29,7 +29,7 @@ struct InputPanelGeometry {
 
 class TizenInputMethodContext {
  public:
-  TizenInputMethodContext(FlutterTizenEngine* engine);
+  TizenInputMethodContext(FlutterTizenWindow* flutter_tizen_window);
   ~TizenInputMethodContext();
 
   bool FilterEvent(Ecore_Event_Key* event, const char* dev_name, bool is_down);
@@ -69,8 +69,8 @@ class TizenInputMethodContext {
   void SetContextOptions();
   void SetInputPanelOptions();
 
-  FlutterTizenEngine* engine_{nullptr};
-  Ecore_IMF_Context* imf_context_{nullptr};
+  FlutterTizenWindow* flutter_tizen_window_ = nullptr;
+  Ecore_IMF_Context* imf_context_ = nullptr;
   OnCommit on_commit_;
   OnPreeditChanged on_preedit_changed_;
   OnPreeditStart on_preedit_start_;

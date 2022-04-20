@@ -246,11 +246,6 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
         internal_plugin_registrar_->messenger());
     platform_view_channel_ = std::make_unique<PlatformViewChannel>(
         internal_plugin_registrar_->messenger());
-    text_input_channel_ = std::make_unique<TextInputChannel>(
-        internal_plugin_registrar_->messenger(),
-        std::make_unique<TizenInputMethodContext>(this));
-
-    key_event_handler_ = std::make_unique<KeyEventHandler>(this);
   }
 
   accessibility_settings_ = std::make_unique<AccessibilitySettings>(this);
