@@ -58,12 +58,12 @@ std::string text_clipboard = "";
 }  // namespace
 
 PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
-                                 TizenRenderer* renderer)
+                                 FlutterTizenWindow* flutter_tizen_window)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
           &JsonMethodCodec::GetInstance())),
-      renderer_(renderer) {
+      flutter_tizen_window_(flutter_tizen_window) {
   channel_->SetMethodCallHandler(
       [this](const MethodCall<rapidjson::Document>& call,
              std::unique_ptr<MethodResult<rapidjson::Document>> result) {
@@ -164,14 +164,13 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
 }
 
 void PlatformChannel::RestoreSystemUiOverlays() {
-  if (!renderer_) {
+  if (!flutter_tizen_window_) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  // TODO
-  // shell.InitializeSoftkey(renderer_->GetWindowId());
+  shell.InitializeSoftkey(flutter_tizen_window_->GetWindowId());
 
   if (shell.IsSoftkeyShown()) {
     shell.ShowSoftkey();
@@ -183,14 +182,13 @@ void PlatformChannel::RestoreSystemUiOverlays() {
 
 void PlatformChannel::SetEnabledSystemUiOverlays(
     const std::vector<std::string>& overlays) {
-  if (!renderer_) {
+  if (!flutter_tizen_window_) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  // TODO
-  // shell.InitializeSoftkey(renderer_->GetWindowId());
+  shell.InitializeSoftkey(flutter_tizen_window_->GetWindowId());
 
   if (std::find(overlays.begin(), overlays.end(), kSystemUiOverlayBottom) !=
       overlays.end()) {
@@ -203,7 +201,7 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
 
 void PlatformChannel::SetPreferredOrientations(
     const std::vector<std::string>& orientations) {
-  if (!renderer_) {
+  if (!flutter_tizen_window_) {
     return;
   }
 
@@ -222,8 +220,7 @@ void PlatformChannel::SetPreferredOrientations(
     // default.
     rotations = {0, 90, 180, 270};
   }
-  // TODO
-  // renderer_->SetPreferredOrientations(rotations);
+  flutter_tizen_window_->SetPreferredOrientations(rotations);
 }
 
 }  // namespace flutter

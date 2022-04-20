@@ -39,11 +39,15 @@ void FlutterTizenView::SetFlutterTizenEngine(
   flutter_tizen_engine_ = std::move(flutter_tizen_engine);
   flutter_tizen_engine_->SetFlutterTizenView(this);
 
-  // registrar
-  // keyboard?
-  // platform handler?
-  // corsor handler?
-  // touch_event_handler_ = std::make_unique<TouchEventHandler>(this);
+  internal_plugin_registrar_ = std::make_unique<PluginRegistrar>(
+      flutter_tizen_engine_->plugin_registrar());
+
+  // Setup window dependent channels.
+  BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
+  platform_channel_ =
+      std::make_unique<PlatformChannel>(messenger, flutter_tizen_window_.get());
+  window_channel_ =
+      std::make_unique<WindowChannel>(messenger, flutter_tizen_window_.get());
 
   OnRotate(flutter_tizen_window_->GetRotatoin());
 }
@@ -55,6 +59,12 @@ void FlutterTizenView::CreateRenderSurface() {
         flutter_tizen_window_->GetRenderTarget(),
         flutter_tizen_window_->GetRenderTargetDisplay(), geometry.width,
         geometry.height);
+  }
+}
+
+void FlutterTizenView::DestroyRenderSurface() {
+  if (flutter_tizen_engine_ && flutter_tizen_engine_->renderer()) {
+    flutter_tizen_engine_->renderer()->DestroySurface();
   }
 }
 
@@ -79,6 +89,19 @@ uint32_t FlutterTizenView::OnGetFBO() {
 
 void* FlutterTizenView::OnProcResolver(const char* name) {
   return flutter_tizen_engine_->renderer()->OnProcResolver(name);
+}
+
+void FlutterTizenView::OnResize(int32_t left,
+                                int32_t top,
+                                int32_t width,
+                                int32_t height) {
+  if (rotation_degree_ == 90 || rotation_degree_ == 270) {
+    std::swap(width, height);
+  }
+
+  flutter_tizen_window_->ResizeRenderTargetWithRotation(
+      {left, top, width, height}, rotation_degree_);
+  SendWindowMetrics(left, top, width, height, 0.0);
 }
 
 void FlutterTizenView::OnRotate(int32_t degree) {
@@ -112,7 +135,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
     std::swap(width, height);
   }
 
-  flutter_tizen_window_->ResizeWithRotation(
+  flutter_tizen_window_->ResizeRenderTargetWithRotation(
       {geometry.left, geometry.top, width, height}, rotation_degree_);
 
   // Window position does not change on rotation regardless of its orientation.

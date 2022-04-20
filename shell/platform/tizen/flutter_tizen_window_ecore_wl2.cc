@@ -124,12 +124,31 @@ void FlutterTizenWindowEcoreWl2::RegisterEventHandlers() {
         if (self->flutter_tizen_view_) {
           auto* rotation_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
-          int32_t degree = rotation_event->angle;
-          self->flutter_tizen_view_->OnRotate(degree);
-          auto geometry = self->GetWindowGeometry();
-          ecore_wl2_window_rotation_change_done_send(
-              self->ecore_wl2_window_, rotation_event->rotation, geometry.width,
-              geometry.height);
+          if (rotation_event->win == self->GetWindowId()) {
+            int32_t degree = rotation_event->angle;
+            self->flutter_tizen_view_->OnRotate(degree);
+            auto geometry = self->GetWindowGeometry();
+            ecore_wl2_window_rotation_change_done_send(
+                self->ecore_wl2_window_, rotation_event->rotation,
+                geometry.width, geometry.height);
+          }
+        }
+        return ECORE_CALLBACK_PASS_ON;
+      },
+      this));
+
+  ecore_event_handlers_.push_back(ecore_event_handler_add(
+      ECORE_WL2_EVENT_WINDOW_CONFIGURE,
+      [](void* data, int type, void* event) -> Eina_Bool {
+        auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
+        if (self->flutter_tizen_view_) {
+          auto* configure_event =
+              reinterpret_cast<Ecore_Wl2_Event_Window_Configure*>(event);
+
+          self->flutter_tizen_view_->OnResize(
+              configure_event->x, configure_event->y, configure_event->w,
+              configure_event->h);
+          ecore_wl2_window_commit(self->ecore_wl2_window_, EINA_FALSE);
         }
         return ECORE_CALLBACK_PASS_ON;
       },
@@ -237,6 +256,11 @@ FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetWindowGeometry() {
   return result;
 }
 
+void FlutterTizenWindowEcoreWl2::SetWindowGeometry(Geometry geometry) {
+  ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left, geometry.top,
+                                geometry.width, geometry.height);
+}
+
 FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetScreenGeometry() {
   Geometry result = {};
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.width,
@@ -261,16 +285,9 @@ uintptr_t FlutterTizenWindowEcoreWl2::GetWindowId() {
   return ecore_wl2_window_id_get(ecore_wl2_window_);
 }
 
-// void FlutterTizenWindowEcoreWl2::SetGeometry(Geometry geometry) {
-//   ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left,
-//   geometry.top,
-//                                 geometry.width, geometry.height);
-//   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left,
-//   geometry.top);
-// }
-
-void FlutterTizenWindowEcoreWl2::ResizeWithRotation(Geometry geometry,
-                                                    int32_t angle) {
+void FlutterTizenWindowEcoreWl2::ResizeRenderTargetWithRotation(
+    Geometry geometry,
+    int32_t angle) {
   ecore_wl2_egl_window_resize_with_rotation(
       ecore_wl2_egl_window_, geometry.left, geometry.top, geometry.width,
       geometry.height, angle);

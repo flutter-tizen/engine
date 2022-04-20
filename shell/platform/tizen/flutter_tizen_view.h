@@ -52,6 +52,8 @@ class FlutterTizenView {
   void* OnProcResolver(const char* name);
 
   // ========== Window Event Delegate ==========
+  void OnResize(int32_t left, int32_t top, int32_t width, int32_t height);
+
   void OnRotate(int32_t degree);
 
   void OnPointerMove(double x,
@@ -112,7 +114,15 @@ class FlutterTizenView {
   // TODO
   std::unique_ptr<FlutterTizenWindow> flutter_tizen_window_;
 
- private:
+  // The plugin registrar managing internal plugins.
+  std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;
+
+  // A plugin that implements the Tizen window channel.
+  std::unique_ptr<WindowChannel> window_channel_;
+
+  // A plugin that implements the Flutter platform channel.
+  std::unique_ptr<PlatformChannel> platform_channel_;
+
   // The current view rotation degree.
   int32_t rotation_degree_ = 0;
 

@@ -33,6 +33,9 @@ class FlutterTizenWindow {
   // Returns the geometry of the current window.
   virtual Geometry GetWindowGeometry() = 0;
 
+  // Set the geometry of the current window.
+  virtual void SetWindowGeometry(Geometry geometry) = 0;
+
   // Returns the geometry of the display screen.
   virtual Geometry GetScreenGeometry() = 0;
 
@@ -51,7 +54,8 @@ class FlutterTizenWindow {
 
   virtual void* GetWindowHandle() = 0;
 
-  virtual void ResizeWithRotation(Geometry geometry, int32_t degree) = 0;
+  virtual void ResizeRenderTargetWithRotation(Geometry geometry,
+                                              int32_t degree) = 0;
 
   virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 

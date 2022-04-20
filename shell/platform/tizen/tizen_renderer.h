@@ -21,6 +21,8 @@ class TizenRenderer {
                              int32_t width,
                              int32_t height) = 0;
 
+  virtual void DestroySurface() = 0;
+
   bool IsValid() { return is_valid_; }
 
   virtual bool OnMakeCurrent() = 0;

@@ -27,6 +27,8 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
                      int32_t width,
                      int32_t height) override;
 
+  void DestroySurface() override;
+
   bool OnMakeCurrent() override;
 
   bool OnClearCurrent() override;
@@ -45,8 +47,6 @@ class TizenRendererEcoreWl2 : public TizenRenderer {
   bool ChooseEGLConfiguration();
 
   void PrintEGLError();
-
-  void DestroyEGL();
 
   EGLConfig egl_config_ = nullptr;
   EGLDisplay egl_display_ = EGL_NO_DISPLAY;

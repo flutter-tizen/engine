@@ -25,6 +25,8 @@ class FlutterTizenWindowEcoreWl2 : public FlutterTizenWindow {
 
   Geometry GetWindowGeometry() override;
 
+  void SetWindowGeometry(Geometry geometry) override;
+
   Geometry GetScreenGeometry() override;
 
   void* GetRenderTarget() override { return ecore_wl2_egl_window_; }
@@ -39,7 +41,8 @@ class FlutterTizenWindowEcoreWl2 : public FlutterTizenWindow {
 
   void* GetWindowHandle() override { return ecore_wl2_window_; }
 
-  void ResizeWithRotation(Geometry geometry, int32_t angle) override;
+  void ResizeRenderTargetWithRotation(Geometry geometry,
+                                      int32_t angle) override;
 
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
 

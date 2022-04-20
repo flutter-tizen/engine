@@ -272,9 +272,6 @@ class FlutterTizenEngine {
   // A plugin that implements the Flutter navigation channel.
   std::unique_ptr<NavigationChannel> navigation_channel_;
 
-  // A plugin that implements the Flutter platform channel.
-  std::unique_ptr<PlatformChannel> platform_channel_;
-
   // A plugin that implements the Flutter platform_views channel.
   std::unique_ptr<PlatformViewChannel> platform_view_channel_;
 
@@ -283,9 +280,6 @@ class FlutterTizenEngine {
 
   // A plugin that implements the Flutter textinput channel.
   std::unique_ptr<TextInputChannel> text_input_channel_;
-
-  // A plugin that implements the Tizen window channel.
-  std::unique_ptr<WindowChannel> window_channel_;
 
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;

@@ -16,7 +16,7 @@ TizenRendererEcoreWl2::TizenRendererEcoreWl2() {
 }
 
 TizenRendererEcoreWl2::~TizenRendererEcoreWl2() {
-  DestroyEGL();
+  DestroySurface();
 }
 
 bool TizenRendererEcoreWl2::OnMakeCurrent() {
@@ -360,7 +360,7 @@ void TizenRendererEcoreWl2::PrintEGLError() {
   }
 }
 
-void TizenRendererEcoreWl2::DestroyEGL() {
+void TizenRendererEcoreWl2::DestroySurface() {
   if (egl_display_) {
     eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE,
                    EGL_NO_CONTEXT);
