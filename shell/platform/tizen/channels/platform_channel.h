@@ -11,7 +11,7 @@
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_window.h"
+#include "flutter/shell/platform/tizen/tizen_window.h"
 #include "rapidjson/document.h"
 
 namespace flutter {
@@ -19,7 +19,7 @@ namespace flutter {
 class PlatformChannel {
  public:
   explicit PlatformChannel(BinaryMessenger* messenger,
-                           FlutterTizenWindow* flutter_tizen_window);
+                           TizenWindow* flutter_tizen_window);
   virtual ~PlatformChannel();
 
  private:
@@ -38,7 +38,7 @@ class PlatformChannel {
 
   // A reference to the window object managed by FlutterTizenView.
   // This can be nullptr if the engine is running in headless mode.
-  FlutterTizenWindow* flutter_tizen_window_;
+  TizenWindow* flutter_tizen_window_;
 };
 
 }  // namespace flutter

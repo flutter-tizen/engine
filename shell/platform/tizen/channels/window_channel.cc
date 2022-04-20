@@ -17,7 +17,7 @@ constexpr char kChannelName[] = "tizen/internal/window";
 }  // namespace
 
 WindowChannel::WindowChannel(BinaryMessenger* messenger,
-                             FlutterTizenWindow* flutter_tizen_window)
+                             TizenWindow* flutter_tizen_window)
     : flutter_tizen_window_(flutter_tizen_window) {
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
@@ -36,8 +36,7 @@ void WindowChannel::HandleMethodCall(
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
-    FlutterTizenWindow::Geometry geometry =
-        flutter_tizen_window_->GetWindowGeometry();
+    TizenWindow::Geometry geometry = flutter_tizen_window_->GetWindowGeometry();
     EncodableMap map;
     map[EncodableValue("x")] = EncodableValue(geometry.left);
     map[EncodableValue("y")] = EncodableValue(geometry.top);
@@ -59,8 +58,7 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> width(arguments, "width");
     EncodableValueHolder<int32_t> height(arguments, "height");
 
-    FlutterTizenWindow::Geometry geometry =
-        flutter_tizen_window_->GetWindowGeometry();
+    TizenWindow::Geometry geometry = flutter_tizen_window_->GetWindowGeometry();
     // FIXME: Use SetWindowGeometry() instead of OnGeometryChanged()
     // After the SetWindowGeometry was successfully executed, I expected a
     // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
@@ -70,8 +68,7 @@ void WindowChannel::HandleMethodCall(
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
-    FlutterTizenWindow::Geometry geometry =
-        flutter_tizen_window_->GetScreenGeometry();
+    TizenWindow::Geometry geometry = flutter_tizen_window_->GetScreenGeometry();
     EncodableMap map;
     map[EncodableValue("width")] = EncodableValue(geometry.width);
     map[EncodableValue("height")] = EncodableValue(geometry.height);

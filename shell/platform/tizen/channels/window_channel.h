@@ -10,7 +10,7 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_window.h"
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace flutter {
 
@@ -18,7 +18,7 @@ namespace flutter {
 class WindowChannel {
  public:
   explicit WindowChannel(BinaryMessenger* messenger,
-                         FlutterTizenWindow* flutter_tizen_window);
+                         TizenWindow* flutter_tizen_window);
   virtual ~WindowChannel();
 
  private:
@@ -28,7 +28,7 @@ class WindowChannel {
   std::unique_ptr<MethodChannel<EncodableValue>> channel_;
 
   // A reference to the renderer object managed by FlutterTizenView.
-  FlutterTizenWindow* flutter_tizen_window_;
+  TizenWindow* flutter_tizen_window_;
 };
 
 }  // namespace flutter

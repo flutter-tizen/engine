@@ -14,15 +14,15 @@ namespace flutter {
 
 class FlutterTizenView;
 
-class FlutterTizenWindow {
+class TizenWindow {
  public:
   struct Geometry {
     int32_t left = 0, top = 0, width = 0, height = 0;
   };
 
-  FlutterTizenWindow();
+  TizenWindow();
 
-  virtual ~FlutterTizenWindow() = default;
+  virtual ~TizenWindow() = default;
 
   // Sets the delegate used to communicate state changes from window to view
   // such as key presses, mouse position updates etc.
@@ -68,10 +68,10 @@ class FlutterTizenWindow {
   virtual void OnGeometryChanged(Geometry geometry) = 0;
 
  protected:
-  explicit FlutterTizenWindow(Geometry geometry,
-                              bool transparent,
-                              bool focusable,
-                              bool top_level)
+  explicit TizenWindow(Geometry geometry,
+                       bool transparent,
+                       bool focusable,
+                       bool top_level)
       : initial_geometry_(geometry),
         transparent_(transparent),
         focusable_(focusable),

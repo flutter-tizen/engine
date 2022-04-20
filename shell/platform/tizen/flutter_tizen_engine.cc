@@ -540,7 +540,7 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
           bridge->GetFlutterPlatformNodeDelegateFromID(0);
       std::shared_ptr<FlutterPlatformWindowDelegateTizen> window =
           FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
-      FlutterTizenWindow::Geometry geometry =
+      TizenWindow::Geometry geometry =
           engine->flutter_tizen_view_->flutter_tizen_window()
               ->GetWindowGeometry();
       window->SetGeometry(geometry.left, geometry.top, geometry.width,

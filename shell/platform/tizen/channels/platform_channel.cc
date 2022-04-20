@@ -58,7 +58,7 @@ std::string text_clipboard = "";
 }  // namespace
 
 PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
-                                 FlutterTizenWindow* flutter_tizen_window)
+                                 TizenWindow* flutter_tizen_window)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,

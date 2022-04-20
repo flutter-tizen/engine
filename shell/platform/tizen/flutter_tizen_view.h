@@ -14,13 +14,13 @@
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
 #include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/flutter_tizen_window.h"
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace flutter {
 
 class FlutterTizenView {
  public:
-  FlutterTizenView(std::unique_ptr<FlutterTizenWindow> flutter_tizen_window);
+  FlutterTizenView(std::unique_ptr<TizenWindow> flutter_tizen_window);
 
   ~FlutterTizenView();
 
@@ -33,9 +33,7 @@ class FlutterTizenView {
     return flutter_tizen_engine_.get();
   }
 
-  FlutterTizenWindow* flutter_tizen_window() {
-    return flutter_tizen_window_.get();
-  }
+  TizenWindow* flutter_tizen_window() { return flutter_tizen_window_.get(); }
 
   // Creates rendering surface for Flutter engine to draw into.
   // Should be called before calling FlutterEngineRun using this view.
@@ -121,7 +119,7 @@ class FlutterTizenView {
   std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine_;
 
   // The window associated with this view.
-  std::unique_ptr<FlutterTizenWindow> flutter_tizen_window_;
+  std::unique_ptr<TizenWindow> flutter_tizen_window_;
 
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;

@@ -5,8 +5,8 @@
 
 #include "flutter_tizen_view.h"
 
-#include "flutter/shell/platform/tizen/flutter_tizen_window.h"
 #include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace {
 
@@ -41,7 +41,7 @@ const std::vector<std::string> kBindableSystemKeys = {
 namespace flutter {
 
 FlutterTizenView::FlutterTizenView(
-    std::unique_ptr<FlutterTizenWindow> flutter_tizen_window)
+    std::unique_ptr<TizenWindow> flutter_tizen_window)
     : flutter_tizen_window_(std::move(flutter_tizen_window)) {
   flutter_tizen_window_->SetFlutterTizenView(this);
 }

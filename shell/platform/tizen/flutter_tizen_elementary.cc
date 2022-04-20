@@ -33,7 +33,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
   //     window_properties.focusable, window_properties.top_level);
   // auto flutter_tizen_view_ = std::make_unique<flutter::FlutterTizenView>();
 
-  // flutter::FlutterTizenWindowEcoreWl2 window;
+  // flutter::TizenWindowEcoreWl2 window;
 
   flutter_tizen_view_->SetFlutterTizenEngine(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));

@@ -199,9 +199,9 @@ template("embedder") {
     } else {
       sources += [
         "flutter_tizen_ecore.cc",
-        "flutter_tizen_window_ecore_wl2.cc",
         "tizen_renderer_ecore_wl2.cc",
         "tizen_vsync_waiter.cc",
+        "tizen_window_ecore_wl2.cc",
       ]
 
       libs += [
