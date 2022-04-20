@@ -36,6 +36,7 @@ const std::vector<std::string> kBindableSystemKeys = {
     "XF86Subtitle",       "XF86PlayBack",    "XF86ChannelGuide",
     "XF86Caption",        "XF86Exit",
 };
+
 }  // namespace
 
 namespace flutter {
@@ -46,9 +47,7 @@ FlutterTizenView::FlutterTizenView(
   flutter_tizen_window_->SetFlutterTizenView(this);
 }
 
-FlutterTizenView::~FlutterTizenView() {
-  FT_LOG(Info) << "enter";
-}
+FlutterTizenView::~FlutterTizenView() {}
 
 void FlutterTizenView::SetFlutterTizenEngine(
     std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine) {
@@ -146,8 +145,6 @@ void FlutterTizenView::OnRotate(int32_t degree) {
       sin(rad), cos(rad),  trans_y,  // y
       0.0,      0.0,       1.0       // perspective
   };
-
-  // touch_event_handler_->rotation = degree;
 
   if (rotation_degree_ == 90 || rotation_degree_ == 270) {
     std::swap(width, height);
