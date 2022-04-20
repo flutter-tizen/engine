@@ -50,6 +50,8 @@ class FlutterTizenWindowEcoreWl2 : public FlutterTizenWindow {
 
   void Show() override;
 
+  void OnGeometryChanged(Geometry geometry) override;
+
  private:
   bool CreateWindow();
 
@@ -60,8 +62,6 @@ class FlutterTizenWindowEcoreWl2 : public FlutterTizenWindow {
   void DestroyEcoreWl2();
 
   void SetTizenPolicyNotificationLevel(int level);
-
-  static Eina_Bool OnRotate(void* data, int type, void* event);
 
   Ecore_Wl2_Display* ecore_wl2_display_ = nullptr;
   Ecore_Wl2_Window* ecore_wl2_window_ = nullptr;

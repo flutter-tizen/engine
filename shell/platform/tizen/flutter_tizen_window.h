@@ -63,6 +63,10 @@ class FlutterTizenWindow {
 
   virtual void Show() = 0;
 
+  // FIXME
+  // This is a temporary implementation that is only used by the window channel.
+  virtual void OnGeometryChanged(Geometry geometry) = 0;
+
  protected:
   explicit FlutterTizenWindow(Geometry geometry,
                               bool transparent,

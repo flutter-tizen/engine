@@ -296,6 +296,10 @@ FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetWindowGeometry() {
 void FlutterTizenWindowEcoreWl2::SetWindowGeometry(Geometry geometry) {
   ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left, geometry.top,
                                 geometry.width, geometry.height);
+  // FIXME : I refer to https://github.com/flutter-tizen/engine/pull/201,
+  // but I don't know why it doesn't work properly without calling
+  // ecore_wl2_window_position_set().
+  ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
 }
 
 FlutterTizenWindow::Geometry FlutterTizenWindowEcoreWl2::GetScreenGeometry() {
@@ -348,22 +352,12 @@ void FlutterTizenWindowEcoreWl2::Show() {
   ecore_wl2_window_show(ecore_wl2_window_);
 }
 
-Eina_Bool FlutterTizenWindowEcoreWl2::OnRotate(void* data,
-                                               int type,
-                                               void* event) {
-  auto* self = reinterpret_cast<FlutterTizenWindowEcoreWl2*>(data);
-  auto* rotation_event =
-      reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
-  if (self->flutter_tizen_view_) {
-    int32_t degree = rotation_event->angle;
-    self->flutter_tizen_view_->OnRotate(degree);
-    auto geometry = self->GetWindowGeometry();
-    ecore_wl2_window_rotation_change_done_send(self->ecore_wl2_window_,
-                                               rotation_event->rotation,
-                                               geometry.width, geometry.height);
-  }
-  FT_LOG(Error) << "done";
-  return ECORE_CALLBACK_PASS_ON;
+void FlutterTizenWindowEcoreWl2::OnGeometryChanged(Geometry geometry) {
+  // This implementation mimics the situation in which the handler of
+  // ECORE_WL2_EVENT_WINDOW_CONFIGURE is called.
+  SetWindowGeometry(geometry);
+  flutter_tizen_view_->OnResize(geometry.left, geometry.top, geometry.width,
+                                geometry.height);
 }
 
 void FlutterTizenWindowEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
