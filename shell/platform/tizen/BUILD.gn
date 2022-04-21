@@ -186,7 +186,8 @@ template("embedder") {
     if (use_evas_gl_renderer) {
       sources += [
         "flutter_tizen_elementary.cc",
-        "tizen_renderer_evas_gl.cc"
+        "tizen_renderer_evas_gl.cc",
+        "tizen_window_elementary.cc"
       ]
 
       libs += [
@@ -199,7 +200,7 @@ template("embedder") {
     } else {
       sources += [
         "flutter_tizen_ecore.cc",
-        "tizen_renderer_ecore_wl2.cc",
+        "tizen_renderer_egl.cc",
         "tizen_vsync_waiter.cc",
         "tizen_window_ecore_wl2.cc",
       ]
@@ -236,7 +237,7 @@ embedder("flutter_tizen_mobile") {
 
 embedder("flutter_tizen_wearable") {
   target_type = "shared_library"
-  use_evas_gl_renderer = false
+  use_evas_gl_renderer = true
 
   defines = [ "WEARABLE_PROFILE" ]
 }

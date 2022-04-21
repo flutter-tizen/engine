@@ -79,7 +79,7 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
       },
       renderer_.get());
 #else
-  renderer_ = std::make_unique<TizenRendererEcoreWl2>();
+  renderer_ = std::make_unique<TizenRendererEgl>();
   tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
 

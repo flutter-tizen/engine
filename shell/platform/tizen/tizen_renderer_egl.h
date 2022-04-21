@@ -7,8 +7,6 @@
 
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
-#include <Ecore_Wl2.h>
-#include <tizen-extension-client-protocol.h>
 
 #include <string>
 
@@ -16,11 +14,11 @@
 
 namespace flutter {
 
-class TizenRendererEcoreWl2 : public TizenRenderer {
+class TizenRendererEgl : public TizenRenderer {
  public:
-  explicit TizenRendererEcoreWl2();
+  explicit TizenRendererEgl();
 
-  virtual ~TizenRendererEcoreWl2();
+  virtual ~TizenRendererEgl();
 
   bool CreateSurface(void* render_target,
                      void* render_target_display,

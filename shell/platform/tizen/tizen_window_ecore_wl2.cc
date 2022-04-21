@@ -34,6 +34,7 @@ TizenWindowEcoreWl2::TizenWindowEcoreWl2(Geometry geometry,
 }
 
 TizenWindowEcoreWl2::~TizenWindowEcoreWl2() {
+  UnregisterEventCallbacks();
   DestroyEcoreWl2();
 }
 
@@ -268,6 +269,13 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       this));
 }
 
+void TizenWindowEcoreWl2::UnregisterEventCallbacks() {
+  for (auto handler : ecore_event_handlers_) {
+    ecore_event_handler_del(handler);
+  }
+  ecore_event_handlers_.clear();
+}
+
 void TizenWindowEcoreWl2::DestroyEcoreWl2() {
   if (ecore_wl2_egl_window_) {
     ecore_wl2_egl_window_destroy(ecore_wl2_egl_window_);
@@ -309,7 +317,7 @@ TizenWindow::Geometry TizenWindowEcoreWl2::GetScreenGeometry() {
   return result;
 }
 
-int32_t TizenWindowEcoreWl2::GetRotatoin() {
+int32_t TizenWindowEcoreWl2::GetRotation() {
   return ecore_wl2_window_rotation_get(ecore_wl2_window_);
 }
 

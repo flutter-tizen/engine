@@ -30,7 +30,7 @@
 #ifdef TIZEN_RENDERER_EVAS_GL
 #include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
 #else
-#include "flutter/shell/platform/tizen/tizen_renderer_ecore_wl2.h"
+#include "flutter/shell/platform/tizen/tizen_renderer_egl.h"
 #include "flutter/shell/platform/tizen/tizen_vsync_waiter.h"
 #endif
 

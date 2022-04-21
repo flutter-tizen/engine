@@ -22,8 +22,6 @@ namespace flutter {
 
 typedef uint64_t (*CurrentTimeProc)();
 
-class TizenRenderer;
-
 class TizenEventLoop {
  public:
   using TaskExpiredCallback = std::function<void(const FlutterTask*)>;
@@ -91,6 +89,8 @@ class TizenPlatformEventLoop : public TizenEventLoop {
 };
 
 #ifdef TIZEN_RENDERER_EVAS_GL
+class TizenRenderer;
+
 class TizenRenderEventLoop : public TizenEventLoop {
  public:
   TizenRenderEventLoop(std::thread::id main_thread_id,

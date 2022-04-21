@@ -4,32 +4,79 @@
 
 #include "tizen_renderer_evas_gl.h"
 
-#include <efl_extension.h>
-#include <ui/efl_util.h>
-
 #include "tizen_evas_gl_helper.h"
+
+// g_evas_gl is shared with ExternalTexturePixelGL and ExternalTextureSurfaceGL
 Evas_GL* g_evas_gl = nullptr;
+
 EVAS_GL_GLOBAL_GLES3_DEFINE();
 
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
-TizenRendererEvasGL::TizenRendererEvasGL(Geometry geometry,
-                                         bool transparent,
-                                         bool focusable,
-                                         bool top_level,
-                                         Delegate& delegate)
-    : TizenRenderer(geometry, transparent, focusable, top_level, delegate) {
-  if (!SetupEvasWindow()) {
-    FT_LOG(Error) << "Could not set up Evas window.";
-    return;
+TizenRendererEvasGL::TizenRendererEvasGL() {}
+
+TizenRendererEvasGL::~TizenRendererEvasGL() {
+  DestroySurface();
+}
+
+bool TizenRendererEvasGL::CreateSurface(void* render_target,
+                                        void* render_target_display,
+                                        int32_t width,
+                                        int32_t height) {
+  evas_gl_ = evas_gl_new(
+      evas_object_evas_get(static_cast<Evas_Object*>(render_target)));
+  if (!evas_gl_) {
+    FT_LOG(Error) << "Could not create an Evas GL object.";
+    return false;
   }
-  if (!SetupEvasGL()) {
-    FT_LOG(Error) << "Could not set up Evas GL.";
-    return;
+
+  g_evas_gl = evas_gl_;
+
+  gl_config_ = evas_gl_config_new();
+  gl_config_->color_format = EVAS_GL_RGBA_8888;
+  gl_config_->depth_bits = EVAS_GL_DEPTH_NONE;
+  gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
+
+  gl_context_ =
+      evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_3_X);
+  gl_resource_context_ =
+      evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
+  if (!gl_context_) {
+    FT_LOG(Error) << "Failed to create an Evas GL context with "
+                     "EVAS_GL_GLES_3_X; trying with EVAS_GL_GLES_2_X.";
+    gl_context_ =
+        evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_2_X);
+    gl_resource_context_ =
+        evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_2_X);
   }
-  Show();
+  if (!gl_context_) {
+    FT_LOG(Fatal) << "Failed to create an Evas GL context.";
+    return false;
+  }
+
+  EVAS_GL_GLOBAL_GLES3_USE(evas_gl_, gl_context_);
+
+  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
+  gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
+                                                        width, height, nullptr);
+
+  Evas_Native_Surface native_surface;
+  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
+
+  image_ = static_cast<Evas_Object*>(render_target_display);
+  evas_object_image_native_surface_set(image_, &native_surface);
+
+  evas_object_image_pixels_get_callback_set(
+      image_,
+      [](void* data, Evas_Object* o) {
+        TizenRendererEvasGL* self = static_cast<TizenRendererEvasGL*>(data);
+        if (self->on_pixels_dirty_) {
+          self->on_pixels_dirty_();
+        }
+      },
+      this);
 
   is_valid_ = true;
 
@@ -38,11 +85,18 @@ TizenRendererEvasGL::TizenRendererEvasGL(Geometry geometry,
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT);
   OnPresent();
+  return true;
 }
 
-TizenRendererEvasGL::~TizenRendererEvasGL() {
-  DestroyEvasGL();
-  DestroyEvasWindow();
+void TizenRendererEvasGL::DestroySurface() {
+  evas_gl_surface_destroy(evas_gl_, gl_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
+
+  evas_gl_context_destroy(evas_gl_, gl_context_);
+  evas_gl_context_destroy(evas_gl_, gl_resource_context_);
+
+  evas_gl_config_free(gl_config_);
+  evas_gl_free(evas_gl_);
 }
 
 bool TizenRendererEvasGL::OnMakeCurrent() {
@@ -84,11 +138,6 @@ bool TizenRendererEvasGL::OnPresent() {
     return false;
   }
 
-  if (received_rotation_) {
-    SendRotationChangeDone();
-    received_rotation_ = false;
-  }
-
   return true;
 }
 
@@ -97,6 +146,29 @@ uint32_t TizenRendererEvasGL::OnGetFBO() {
     return 999;
   }
   return 0;
+}
+
+bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
+  return strcmp(name, "EGL_TIZEN_image_native_surface") == 0;
+}
+
+void TizenRendererEvasGL::MarkPixelsDirty() {
+  evas_object_image_pixels_dirty_set(image_, EINA_TRUE);
+}
+
+void TizenRendererEvasGL::ResizeSurface(int32_t width, int32_t height) {
+  evas_gl_surface_destroy(evas_gl_, gl_surface_);
+  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
+
+  evas_object_image_native_surface_set(image_, nullptr);
+  evas_object_image_size_set(image_, width, height);
+  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
+  gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
+                                                        width, height, nullptr);
+
+  Evas_Native_Surface native_surface;
+  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
+  evas_object_image_native_surface_set(image_, &native_surface);
 }
 
 void* TizenRendererEvasGL::OnProcResolver(const char* name) {
@@ -552,238 +624,6 @@ void* TizenRendererEvasGL::OnProcResolver(const char* name) {
 
   FT_LOG(Warn) << "Could not resolve: " << name;
   return nullptr;
-}
-
-TizenRenderer::Geometry TizenRendererEvasGL::GetWindowGeometry() {
-  Geometry result;
-  evas_object_geometry_get(evas_window_, &result.x, &result.y, &result.w,
-                           &result.h);
-  return result;
-}
-
-TizenRenderer::Geometry TizenRendererEvasGL::GetScreenGeometry() {
-  Geometry result = {};
-  Ecore_Evas* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-  ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.w,
-                                 &result.h);
-  return result;
-}
-
-int32_t TizenRendererEvasGL::GetDpi() {
-  Ecore_Evas* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-  int32_t xdpi, ydpi;
-  ecore_evas_screen_dpi_get(ecore_evas, &xdpi, &ydpi);
-  return xdpi;
-}
-
-uintptr_t TizenRendererEvasGL::GetWindowId() {
-  return ecore_evas_window_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_)));
-}
-
-void TizenRendererEvasGL::Show() {
-  evas_object_show(graphics_adapter_);
-  evas_object_show(evas_window_);
-}
-
-bool TizenRendererEvasGL::SetupEvasGL() {
-  evas_gl_ = evas_gl_new(evas_object_evas_get(evas_window_));
-  if (!evas_gl_) {
-    FT_LOG(Error) << "Could not create an Evas GL object.";
-    return false;
-  }
-  g_evas_gl = evas_gl_;
-
-  gl_config_ = evas_gl_config_new();
-  gl_config_->color_format = EVAS_GL_RGBA_8888;
-  gl_config_->depth_bits = EVAS_GL_DEPTH_NONE;
-  gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
-
-  gl_context_ =
-      evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_3_X);
-  gl_resource_context_ =
-      evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
-  if (!gl_context_) {
-    FT_LOG(Error) << "Failed to create an Evas GL context with "
-                     "EVAS_GL_GLES_3_X; trying with EVAS_GL_GLES_2_X.";
-    gl_context_ =
-        evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_2_X);
-    gl_resource_context_ =
-        evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_2_X);
-  }
-  if (!gl_context_) {
-    FT_LOG(Fatal) << "Failed to create an Evas GL context.";
-    return false;
-  }
-
-  EVAS_GL_GLOBAL_GLES3_USE(g_evas_gl, gl_context_);
-
-  gl_surface_ = evas_gl_surface_create(
-      evas_gl_, gl_config_, initial_geometry_.w, initial_geometry_.h);
-  gl_resource_surface_ = evas_gl_pbuffer_surface_create(
-      evas_gl_, gl_config_, initial_geometry_.w, initial_geometry_.h, nullptr);
-
-  Evas_Native_Surface native_surface;
-  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
-  evas_object_image_native_surface_set(graphics_adapter_, &native_surface);
-
-  return true;
-}
-
-bool TizenRendererEvasGL::SetupEvasWindow() {
-  elm_config_accel_preference_set("hw:opengl");
-
-  evas_window_ = elm_win_add(nullptr, nullptr,
-                             top_level_ ? ELM_WIN_NOTIFICATION : ELM_WIN_BASIC);
-  if (!evas_window_) {
-    FT_LOG(Error) << "Could not create an Evas window.";
-    return false;
-  }
-  if (top_level_) {
-    efl_util_set_notification_window_level(evas_window_,
-                                           EFL_UTIL_NOTIFICATION_LEVEL_TOP);
-  }
-  // Please uncomment below and enable setWindowGeometry of window channel when
-  // Tizen 5.5 or later was chosen as default.
-  // elm_win_aux_hint_add(evas_window_, "wm.policy.win.user.geometry", "1");
-
-  Ecore_Evas* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(evas_window_));
-
-  int32_t width, height;
-  ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &width, &height);
-  if (width == 0 || height == 0) {
-    FT_LOG(Error) << "Invalid screen size: " << width << " x " << height;
-    return false;
-  }
-
-  if (initial_geometry_.w == 0) {
-    initial_geometry_.w = width;
-  }
-  if (initial_geometry_.h == 0) {
-    initial_geometry_.h = height;
-  }
-
-  evas_object_move(evas_window_, initial_geometry_.x, initial_geometry_.y);
-  evas_object_resize(evas_window_, initial_geometry_.w, initial_geometry_.h);
-  evas_object_raise(evas_window_);
-
-  elm_win_indicator_mode_set(evas_window_, ELM_WIN_INDICATOR_SHOW);
-  elm_win_indicator_opacity_set(evas_window_, ELM_WIN_INDICATOR_OPAQUE);
-
-  if (transparent_) {
-    elm_win_alpha_set(evas_window_, EINA_TRUE);
-  } else {
-    elm_win_alpha_set(evas_window_, EINA_FALSE);
-
-    Evas_Object* bg = elm_bg_add(evas_window_);
-    evas_object_color_set(bg, 0, 0, 0, 0);
-
-    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(evas_window_, bg);
-  }
-
-  graphics_adapter_ =
-      evas_object_image_filled_add(evas_object_evas_get(evas_window_));
-  evas_object_resize(graphics_adapter_, initial_geometry_.w,
-                     initial_geometry_.h);
-  evas_object_move(graphics_adapter_, initial_geometry_.x, initial_geometry_.y);
-  evas_object_image_size_set(graphics_adapter_, initial_geometry_.w,
-                             initial_geometry_.h);
-  evas_object_image_alpha_set(graphics_adapter_, EINA_TRUE);
-  elm_win_resize_object_add(evas_window_, graphics_adapter_);
-
-  const int rotations[4] = {0, 90, 180, 270};
-  elm_win_wm_rotation_available_rotations_set(evas_window_, &rotations[0], 4);
-  evas_object_smart_callback_add(evas_window_, "rotation,changed",
-                                 RotationEventCb, this);
-
-  return true;
-}
-
-void TizenRendererEvasGL::DestroyEvasWindow() {
-  evas_object_del(evas_window_);
-  evas_object_del(graphics_adapter_);
-}
-
-void TizenRendererEvasGL::DestroyEvasGL() {
-  evas_gl_surface_destroy(evas_gl_, gl_surface_);
-  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
-
-  evas_gl_context_destroy(evas_gl_, gl_context_);
-  evas_gl_context_destroy(evas_gl_, gl_resource_context_);
-
-  evas_gl_config_free(gl_config_);
-  evas_gl_free(evas_gl_);
-}
-
-void TizenRendererEvasGL::RotationEventCb(void* data,
-                                          Evas_Object* obj,
-                                          void* event_info) {
-  auto* self = reinterpret_cast<TizenRendererEvasGL*>(data);
-  FT_UNIMPLEMENTED();
-  self->delegate_.OnOrientationChange(0);
-}
-
-void TizenRendererEvasGL::SetRotate(int angle) {
-  elm_win_rotation_set(evas_window_, angle);
-  received_rotation_ = true;
-}
-
-void TizenRendererEvasGL::SetGeometry(int32_t x,
-                                      int32_t y,
-                                      int32_t width,
-                                      int32_t height) {
-  evas_object_move(evas_window_, x, y);
-  evas_object_resize(evas_window_, width, height);
-
-  evas_object_resize(graphics_adapter_, width, height);
-  evas_object_image_native_surface_set(graphics_adapter_, nullptr);
-
-  evas_gl_surface_destroy(evas_gl_, gl_surface_);
-  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
-
-  evas_object_image_size_set(graphics_adapter_, width, height);
-  gl_surface_ = evas_gl_surface_create(evas_gl_, gl_config_, width, height);
-  gl_resource_surface_ = evas_gl_pbuffer_surface_create(evas_gl_, gl_config_,
-                                                        width, height, nullptr);
-
-  Evas_Native_Surface native_surface;
-  evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
-  evas_object_image_native_surface_set(graphics_adapter_, &native_surface);
-}
-
-void TizenRendererEvasGL::ResizeWithRotation(int32_t x,
-                                             int32_t y,
-                                             int32_t width,
-                                             int32_t height,
-                                             int32_t angle) {
-  evas_object_move(evas_window_, x, y);
-  evas_object_resize(evas_window_, width, height);
-  SetRotate(angle);
-}
-
-void TizenRendererEvasGL::SendRotationChangeDone() {
-  elm_win_wm_rotation_manual_rotation_done(evas_window_);
-}
-
-void TizenRendererEvasGL::SetPreferredOrientations(
-    const std::vector<int>& rotations) {
-  elm_win_wm_rotation_available_rotations_set(
-      evas_window_, static_cast<const int*>(rotations.data()),
-      rotations.size());
-}
-
-bool TizenRendererEvasGL::IsSupportedExtension(const char* name) {
-  return strcmp(name, "EGL_TIZEN_image_native_surface") == 0;
-}
-
-void TizenRendererEvasGL::BindKeys(const std::vector<std::string>& keys) {
-  for (const std::string& key : keys) {
-    eext_win_keygrab_set(evas_window_, key.c_str());
-  }
 }
 
 }  // namespace flutter

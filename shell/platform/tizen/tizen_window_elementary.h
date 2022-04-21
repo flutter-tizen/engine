@@ -9,19 +9,21 @@
 #include "flutter/shell/platform/tizen/tizen_window.h"
 
 #define EFL_BETA_API_SUPPORT
-#include <Ecore_Wl2.h>
-#include <tizen-extension-client-protocol.h>
+#include <Ecore.h>
+#include <Elementary.h>
+
+#include <unordered_map>
 
 namespace flutter {
 
-class TizenWindowEcoreWl2 : public TizenWindow {
+class TizenWindowElementary : public TizenWindow {
  public:
-  TizenWindowEcoreWl2(Geometry geometry,
-                      bool transparent,
-                      bool focusable,
-                      bool top_level);
+  TizenWindowElementary(Geometry geometry,
+                        bool transparent,
+                        bool focusable,
+                        bool top_level);
 
-  ~TizenWindowEcoreWl2();
+  ~TizenWindowElementary();
 
   Geometry GetWindowGeometry() override;
 
@@ -29,9 +31,9 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   Geometry GetScreenGeometry() override;
 
-  void* GetRenderTarget() override { return ecore_wl2_egl_window_; }
+  void* GetRenderTarget() override { return elm_win_; }
 
-  void* GetRenderTargetDisplay() override { return wl2_display_; }
+  void* GetRenderTargetDisplay() override { return image_; }
 
   int32_t GetRotation() override;
 
@@ -39,7 +41,7 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   uintptr_t GetWindowId() override;
 
-  void* GetWindowHandle() override { return ecore_wl2_window_; }
+  void* GetWindowHandle() override { return elm_win_; }
 
   void ResizeRenderTargetWithRotation(Geometry geometry,
                                       int32_t angle) override;
@@ -55,7 +57,7 @@ class TizenWindowEcoreWl2 : public TizenWindow {
  private:
   bool CreateWindow();
 
-  void DestroyEcoreWl2();
+  void DestroyWindow();
 
   void SetWindowOptions();
 
@@ -63,16 +65,13 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void UnregisterEventCallbacks();
 
-  void SetTizenPolicyNotificationLevel(int level);
+  Evas_Object* elm_win_ = nullptr;
+  Evas_Object* image_ = nullptr;
 
-  Ecore_Wl2_Display* ecore_wl2_display_ = nullptr;
-  Ecore_Wl2_Window* ecore_wl2_window_ = nullptr;
-
-  Ecore_Wl2_Egl_Window* ecore_wl2_egl_window_ = nullptr;
-  wl_display* wl2_display_ = nullptr;
-  std::vector<Ecore_Event_Handler*> ecore_event_handlers_;
-
-  tizen_policy* tizen_policy_ = nullptr;
+  Evas_Smart_Cb rotatoin_changed_callback_;
+  std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
+      evas_object_callbacks_;
+  std::vector<Ecore_Event_Handler*> ecore_event_key_handlers_;
 };
 
 }  // namespace flutter

@@ -117,20 +117,16 @@ TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
                                            TizenRenderer* renderer)
     : TizenEventLoop(main_thread_id, get_current_time, on_task_expired),
       renderer_(renderer) {
-  evas_object_image_pixels_get_callback_set(
-      static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
-      [](void* data, Evas_Object* o) {  // Render callback
-        auto* self = static_cast<TizenRenderEventLoop*>(data);
-        {
-          std::lock_guard<std::mutex> lock(self->expired_tasks_mutex_);
-          for (const Task& task : self->expired_tasks_) {
-            self->on_task_expired_(&task.task);
-          }
-          self->expired_tasks_.clear();
-        }
-        self->has_pending_renderer_callback_ = false;
-      },
-      this);
+  static_cast<TizenRendererEvasGL*>(renderer_)->SetOnPixelsDirty([this]() {
+    {
+      std::lock_guard<std::mutex> lock(expired_tasks_mutex_);
+      for (const auto& task : expired_tasks_) {
+        on_task_expired_(&task.task);
+      }
+      expired_tasks_.clear();
+    }
+    has_pending_renderer_callback_ = false;
+  });
 }
 
 TizenRenderEventLoop::~TizenRenderEventLoop() {}
@@ -138,9 +134,7 @@ TizenRenderEventLoop::~TizenRenderEventLoop() {}
 void TizenRenderEventLoop::OnTaskExpired() {
   std::lock_guard<std::mutex> lock(expired_tasks_mutex_);
   if (!has_pending_renderer_callback_ && !expired_tasks_.empty()) {
-    evas_object_image_pixels_dirty_set(
-        static_cast<TizenRendererEvasGL*>(renderer_)->GetImageHandle(),
-        EINA_TRUE);
+    static_cast<TizenRendererEvasGL*>(renderer_)->MarkPixelsDirty();
     has_pending_renderer_callback_ = true;
   }
 }

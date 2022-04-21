@@ -66,7 +66,7 @@ void FlutterTizenView::SetFlutterTizenEngine(
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
       std::make_unique<TizenInputMethodContext>(flutter_tizen_window_.get()));
-  OnRotate(flutter_tizen_window_->GetRotatoin());
+  OnRotate(flutter_tizen_window_->GetRotation());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
@@ -237,7 +237,7 @@ void FlutterTizenView::OnKey(Ecore_Event_Key* event, bool is_down) {
 }
 
 void FlutterTizenView::SendInitialGeometry() {
-  OnRotate(flutter_tizen_window_->GetRotatoin());
+  OnRotate(flutter_tizen_window_->GetRotation());
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,
