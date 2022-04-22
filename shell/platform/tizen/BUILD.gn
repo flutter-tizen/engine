@@ -187,7 +187,7 @@ template("embedder") {
       sources += [
         "flutter_tizen_elementary.cc",
         "tizen_renderer_evas_gl.cc",
-        "tizen_window_elementary.cc"
+        "tizen_window_elementary.cc",
       ]
 
       libs += [
