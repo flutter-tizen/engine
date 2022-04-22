@@ -27,9 +27,6 @@ typedef struct FlutterDesktopView* FlutterDesktopViewRef;
 
 // Properties for configuring the initial settings of a Flutter window.
 typedef struct {
-  // Whether the app is headed or headless. Other properties are ignored if
-  // this value is set to false.
-  bool headed;
   // The x-coordinate of the top left corner of the window.
   int32_t x;
   // The y-coordinate of the top left corner of the window.
@@ -79,7 +76,7 @@ FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopEngineCreate(
 
 // Runs an instance of a Flutter engine with the given properties.
 //
-// If |headed| is false, the engine is run in headless mode.
+// If view is not specified, the engine is run in headless mode.
 FLUTTER_EXPORT bool FlutterDesktopEngineRun(
     const FlutterDesktopEngineRef engine);
 
