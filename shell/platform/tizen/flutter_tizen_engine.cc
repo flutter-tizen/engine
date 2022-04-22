@@ -51,7 +51,6 @@ FlutterLocale CovertToFlutterLocale(const LanguageInfo& info) {
 FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
     : project_(std::make_unique<FlutterProjectBundle>(project)),
       aot_data_(nullptr, nullptr) {
-  FT_LOG(Error) << "enter";
   embedder_api_.struct_size = sizeof(FlutterEngineProcTable);
   FlutterEngineGetProcAddresses(&embedder_api_);
 
@@ -98,7 +97,6 @@ FlutterTizenEngine::~FlutterTizenEngine() {
 }
 
 bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
-  FT_LOG(Error) << "enter";
   if (engine_ != nullptr) {
     FT_LOG(Error) << "The engine has already started.";
     return false;

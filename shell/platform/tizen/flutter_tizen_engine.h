@@ -183,7 +183,7 @@ class FlutterTizenEngine {
   friend class EngineModifier;
 
   // Whether the engine is running in headed or headless mode.
-  bool IsHeaded() { return renderer_ != nullptr; }
+  bool IsHeaded() { return flutter_tizen_view_ != nullptr; }
 
   // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
   FlutterDesktopMessage ConvertToDesktopMessage(
