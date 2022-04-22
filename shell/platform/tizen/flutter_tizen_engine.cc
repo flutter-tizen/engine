@@ -79,7 +79,6 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
       renderer_.get());
 #else
   renderer_ = std::make_unique<TizenRendererEgl>();
-  tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
 #endif
 
   messenger_ = std::make_unique<FlutterDesktopMessenger>();
@@ -201,6 +200,7 @@ bool FlutterTizenEngine::RunEngine() {
 #endif
 #ifndef TIZEN_RENDERER_EVAS_GL
   if (IsHeaded()) {
+    tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
     args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
       reinterpret_cast<FlutterTizenEngine*>(user_data)
           ->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
