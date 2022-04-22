@@ -56,6 +56,11 @@ class FlutterProjectBundle {
   // Logs and returns nullptr on failure.
   UniqueAotDataPtr LoadAotData(const FlutterEngineProcTable& engine_procs);
 
+  // Returns custom entrypoint in the Dart project
+  const std::string& custom_dart_entrypoint() {
+    return custom_dart_entrypoint_;
+  }
+
   // Returns the command line arguments to be passed through to the Dart
   // entrypoint.
   const std::vector<std::string>& dart_entrypoint_arguments() const {
@@ -69,6 +74,9 @@ class FlutterProjectBundle {
 
   // Path to the AOT library file, if any.
   std::filesystem::path aot_library_path_;
+
+  // Custom entrypoint in the Dart project
+  std::string custom_dart_entrypoint_;
 
   // Dart entrypoint arguments.
   std::vector<std::string> dart_entrypoint_arguments_;

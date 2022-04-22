@@ -82,7 +82,6 @@ bool TizenRendererEgl::CreateSurface(void* render_target,
     }
   }
   is_valid_ = true;
-  FT_LOG(Error) << "done";
   return true;
 }
 

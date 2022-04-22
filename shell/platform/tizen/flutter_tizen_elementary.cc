@@ -43,7 +43,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
   flutter_tizen_view->CreateRenderSurface();
 
   if (!flutter_tizen_view->flutter_tizen_engine()->IsRunning()) {
-    flutter_tizen_view->flutter_tizen_engine()->RunEngine(nullptr);
+    flutter_tizen_view->flutter_tizen_engine()->RunEngine();
   }
 
   flutter_tizen_view->SendInitialGeometry();

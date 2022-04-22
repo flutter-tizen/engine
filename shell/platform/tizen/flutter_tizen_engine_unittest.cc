@@ -94,7 +94,7 @@ TEST_F(FlutterTizenEngineTest, RunDoesExpectedInitialization) {
         return kSuccess;
       }));
 
-  engine_->RunEngine(nullptr);
+  engine_->RunEngine();
 
   EXPECT_TRUE(run_called);
   EXPECT_TRUE(update_locales_called);

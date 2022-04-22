@@ -57,9 +57,8 @@ FlutterDesktopEngineRef FlutterDesktopEngineCreate(
   return HandleForEngine(flutter_tizen_engine.release());
 }
 
-bool FlutterDesktopEngineRun(const FlutterDesktopEngineRef engine,
-                             const char* entry_point) {
-  return EngineFromHandle(engine)->RunEngine(entry_point);
+bool FlutterDesktopEngineRun(const FlutterDesktopEngineRef engine) {
+  return EngineFromHandle(engine)->RunEngine();
 }
 
 void FlutterDesktopEngineShutdown(FlutterDesktopEngineRef engine_ref) {

@@ -89,14 +89,13 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
 
   plugin_registrar_ = std::make_unique<FlutterDesktopPluginRegistrar>();
   plugin_registrar_->engine = this;
-  FT_LOG(Error) << "done";
 }
 
 FlutterTizenEngine::~FlutterTizenEngine() {
   renderer_ = nullptr;
 }
 
-bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
+bool FlutterTizenEngine::RunEngine() {
   if (engine_ != nullptr) {
     FT_LOG(Error) << "The engine has already started.";
     return false;
@@ -211,8 +210,8 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
   if (aot_data_) {
     args.aot_data = aot_data_.get();
   }
-  if (entrypoint) {
-    args.custom_dart_entrypoint = entrypoint;
+  if (!project_->custom_dart_entrypoint().empty()) {
+    args.custom_dart_entrypoint = project_->custom_dart_entrypoint().c_str();
   }
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
@@ -250,7 +249,6 @@ bool FlutterTizenEngine::RunEngine(const char* entrypoint) {
 
   SetupLocales();
 
-  FT_LOG(Error) << "done";
   return true;
 }
 

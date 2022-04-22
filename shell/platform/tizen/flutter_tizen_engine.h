@@ -66,7 +66,7 @@ class FlutterTizenEngine {
   // main().
   //
   // Returns false if the engine couldn't be started.
-  bool RunEngine(const char* entrypoint);
+  bool RunEngine();
 
   // Returns true if the engine is currently running.
   bool IsRunning() { return engine_ != nullptr; }

@@ -74,25 +74,14 @@ typedef struct {
 // ========== Engine ==========
 
 // Creates a Flutter engine with the given properties.
-//
-// The caller owns the returned reference, and is responsible for calling
-// FlutterDesktopEngineDestroy. The lifetime of |engine_properties| is required
-// to extend only until the end of this call.
 FLUTTER_EXPORT FlutterDesktopEngineRef FlutterDesktopEngineCreate(
     const FlutterDesktopEngineProperties& engine_properties);
 
-// Starts running the given engine instance and optional entry point in the Dart
-// project. If the entry point is null, defaults to main().
+// Runs an instance of a Flutter engine with the given properties.
 //
-// If provided, entry_point must be the name of a top-level function from the
-// same Dart library that contains the app's main() function, and must be
-// decorated with `@pragma(vm:entry-point)` to ensure the method is not
-// tree-shaken by the Dart compiler.
-//
-// Returns false if running the engine failed.
+// If |headed| is false, the engine is run in headless mode.
 FLUTTER_EXPORT bool FlutterDesktopEngineRun(
-    const FlutterDesktopEngineRef engine,
-    const char* entry_point);
+    const FlutterDesktopEngineRef engine);
 
 // Shuts down the given engine instance.
 //
