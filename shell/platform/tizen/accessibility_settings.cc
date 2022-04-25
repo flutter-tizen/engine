@@ -32,16 +32,6 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
 #endif
 
 #ifdef TV_PROFILE
-  bool nagative_color = false;
-  ret = system_settings_get_value_bool(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR, &nagative_color);
-  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
-    FT_LOG(Error) << "Failed to get value of accessibility negative color.";
-  }
-  system_settings_set_changed_cb(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR,
-      OnAccessibilityFeatureStateChanged, this);
-
   int high_contrast = 0;
   ret = system_settings_get_value_int(
       SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST, &high_contrast);
@@ -49,9 +39,9 @@ AccessibilitySettings::AccessibilitySettings(FlutterTizenEngine* engine)
     FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
   }
   system_settings_set_changed_cb(SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST,
-                                 OnAccessibilityFeatureStateChanged, this);
+                                 OnHighContrastStateChanged, this);
 
-  engine_->UpdateAccessibilityFeatures(nagative_color, high_contrast);
+  engine_->UpdateAccessibilityFeatures(false, high_contrast);
 #endif
 }
 
@@ -61,33 +51,25 @@ AccessibilitySettings::~AccessibilitySettings() {
 #endif
 #ifdef TV_PROFILE
   system_settings_unset_changed_cb(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR);
-  system_settings_unset_changed_cb(
       SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST);
 #endif
 }
 
-void AccessibilitySettings::OnAccessibilityFeatureStateChanged(
+void AccessibilitySettings::OnHighContrastStateChanged(
     system_settings_key_e key,
     void* user_data) {
 #ifdef TV_PROFILE
   auto* self = reinterpret_cast<AccessibilitySettings*>(user_data);
 
-  bool nagative_color = false;
-  int ret = system_settings_get_value_bool(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_NEGATIVE_COLOR, &nagative_color);
-  if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
-    FT_LOG(Error) << "Failed to get value of accessibility negative color.";
-  }
-
-  int high_contrast = 0;
-  ret = system_settings_get_value_int(
-      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST, &high_contrast);
+  int enabled = 0;
+  int ret = system_settings_get_value_int(
+      SYSTEM_SETTINGS_KEY_ACCESSIBILITY_HIGHCONTRAST, &enabled);
   if (ret != SYSTEM_SETTINGS_ERROR_NONE) {
     FT_LOG(Error) << "Failed to get value of accessibility high contrast.";
+    return;
   }
 
-  self->engine_->UpdateAccessibilityFeatures(nagative_color, high_contrast);
+  self->engine_->UpdateAccessibilityFeatures(false, enabled);
 #endif
 }
 
