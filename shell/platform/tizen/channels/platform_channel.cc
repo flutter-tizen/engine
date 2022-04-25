@@ -10,7 +10,9 @@
 
 #include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/feedback_manager.h"
+#ifdef COMMON_PROFILE
 #include "flutter/shell/platform/tizen/channels/tizen_shell.h"
+#endif
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
@@ -25,12 +27,10 @@ constexpr char kClipboardHasStringsMethod[] = "Clipboard.hasStrings";
 constexpr char kPlaySoundMethod[] = "SystemSound.play";
 constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
-#ifdef COMMON_PROFILE
 constexpr char kRestoreSystemUiOverlaysMethod[] =
     "SystemChrome.restoreSystemUIOverlays";
 constexpr char kSetEnabledSystemUiOverlaysMethod[] =
     "SystemChrome.setEnabledSystemUIOverlays";
-#endif
 constexpr char kSetPreferredOrientationsMethod[] =
     "SystemChrome.setPreferredOrientations";
 
@@ -43,7 +43,9 @@ constexpr char kUnknownClipboardError[] =
     "Unknown error during clipboard data retrieval";
 
 constexpr char kSoundTypeClick[] = "SystemSoundType.click";
+#ifdef COMMON_PROFILE
 constexpr char kSystemUiOverlayBottom[] = "SystemUiOverlay.bottom";
+#endif
 constexpr char kPortraitUp[] = "DeviceOrientation.portraitUp";
 constexpr char kPortraitDown[] = "DeviceOrientation.portraitDown";
 constexpr char kLandscapeLeft[] = "DeviceOrientation.landscapeLeft";
@@ -120,7 +122,6 @@ void PlatformChannel::HandleMethodCall(
     document.AddMember(rapidjson::Value(kValueKey, allocator),
                        rapidjson::Value(!text_clipboard.empty()), allocator);
     result->Success(document);
-#ifdef COMMON_PROFILE
   } else if (method == kRestoreSystemUiOverlaysMethod) {
     RestoreSystemUiOverlays();
     result->Success();
@@ -132,7 +133,6 @@ void PlatformChannel::HandleMethodCall(
     }
     SetEnabledSystemUiOverlays(overlays);
     result->Success();
-#endif
   } else if (method == kSetPreferredOrientationsMethod) {
     const rapidjson::Document& list = arguments[0];
     std::vector<std::string> orientations;
@@ -167,6 +167,8 @@ void PlatformChannel::RestoreSystemUiOverlays() {
   if (!renderer_) {
     return;
   }
+
+#ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
   shell.InitializeSoftkey(renderer_->GetWindowId());
 
@@ -175,6 +177,7 @@ void PlatformChannel::RestoreSystemUiOverlays() {
   } else {
     shell.HideSoftkey();
   }
+#endif
 }
 
 void PlatformChannel::SetEnabledSystemUiOverlays(
@@ -182,6 +185,8 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
   if (!renderer_) {
     return;
   }
+
+#ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
   shell.InitializeSoftkey(renderer_->GetWindowId());
 
@@ -191,6 +196,7 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
   } else {
     shell.HideSoftkey();
   }
+#endif
 }
 
 void PlatformChannel::SetPreferredOrientations(
@@ -198,6 +204,7 @@ void PlatformChannel::SetPreferredOrientations(
   if (!renderer_) {
     return;
   }
+
   static const std::map<std::string, int> orientation_mapping = {
       {kPortraitUp, 0},
       {kLandscapeLeft, 90},
