@@ -19,7 +19,7 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 
 }  // namespace
 
-FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
+FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
   flutter::TizenWindow::Geometry window_geometry = {

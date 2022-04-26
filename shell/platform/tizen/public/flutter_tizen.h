@@ -131,7 +131,7 @@ FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsDetached(
 // ========== View ==========
 
 // Creates a view that hosts and displays the given engine instance.
-FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
+FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine);
 
