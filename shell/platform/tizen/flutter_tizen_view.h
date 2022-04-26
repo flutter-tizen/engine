@@ -20,20 +20,17 @@ namespace flutter {
 
 class FlutterTizenView {
  public:
-  FlutterTizenView(std::unique_ptr<TizenWindow> flutter_tizen_window);
+  FlutterTizenView(std::unique_ptr<TizenWindow> window);
 
   ~FlutterTizenView();
 
   // Configures the window instance with an instance of a running Flutter
   // engine.
-  void SetFlutterTizenEngine(
-      std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine);
+  void SetEngine(std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine);
 
-  FlutterTizenEngine* flutter_tizen_engine() {
-    return flutter_tizen_engine_.get();
-  }
+  FlutterTizenEngine* engine() { return engine_.get(); }
 
-  TizenWindow* flutter_tizen_window() { return flutter_tizen_window_.get(); }
+  TizenWindow* window() { return window_.get(); }
 
   // Creates rendering surface for Flutter engine to draw into.
   // Should be called before calling FlutterEngineRun using this view.
@@ -116,10 +113,10 @@ class FlutterTizenView {
                                int device_id);
 
   // The engine associated with this view.
-  std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine_;
+  std::unique_ptr<FlutterTizenEngine> engine_;
 
   // The window associated with this view.
-  std::unique_ptr<TizenWindow> flutter_tizen_window_;
+  std::unique_ptr<TizenWindow> window_;
 
   // The plugin registrar managing internal plugins.
   std::unique_ptr<PluginRegistrar> internal_plugin_registrar_;

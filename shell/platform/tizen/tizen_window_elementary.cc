@@ -124,11 +124,11 @@ void TizenWindowElementary::RegisterEventHandlers() {
   rotatoin_changed_callback_ = [](void* data, Evas_Object* object,
                                   void* event_info) {
     auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-    if (self->flutter_tizen_view_) {
+    if (self->view_) {
       if (self->elm_win_ == object) {
         // FIXME
         FT_UNIMPLEMENTED();
-        self->flutter_tizen_view_->OnRotate(self->GetRotation());
+        self->view_->OnRotate(self->GetRotation());
         elm_win_wm_rotation_manual_rotation_done(self->elm_win_);
       }
     }
@@ -139,11 +139,11 @@ void TizenWindowElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           if (self->elm_win_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Down*>(event_info);
-            self->flutter_tizen_view_->OnPointerDown(
+            self->view_->OnPointerDown(
                 mouse_event->canvas.x, mouse_event->canvas.y,
                 mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
                 mouse_event->button);
@@ -158,13 +158,13 @@ void TizenWindowElementary::RegisterEventHandlers() {
                                                       Evas_Object* object,
                                                       void* event_info) {
     auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-    if (self->flutter_tizen_view_) {
+    if (self->view_) {
       if (self->elm_win_ == object) {
         auto* mouse_event = reinterpret_cast<Evas_Event_Mouse_Up*>(event_info);
-        self->flutter_tizen_view_->OnPointerUp(
-            mouse_event->canvas.x, mouse_event->canvas.y,
-            mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
-            mouse_event->button);
+        self->view_->OnPointerUp(mouse_event->canvas.x, mouse_event->canvas.y,
+                                 mouse_event->timestamp,
+                                 kFlutterPointerDeviceKindTouch,
+                                 mouse_event->button);
       }
     }
   };
@@ -175,11 +175,11 @@ void TizenWindowElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           if (self->elm_win_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
-            self->flutter_tizen_view_->OnPointerMove(
+            self->view_->OnPointerMove(
                 mouse_event->cur.canvas.x, mouse_event->cur.canvas.y,
                 mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
                 mouse_event->buttons);
@@ -190,29 +190,29 @@ void TizenWindowElementary::RegisterEventHandlers() {
       elm_win_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE], this);
 
-  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL] =
-      [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
-        auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-        if (self->flutter_tizen_view_) {
-          if (self->elm_win_ == object) {
-            auto* wheel_event =
-                reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event_info);
-            double delta_x = 0.0;
-            double delta_y = 0.0;
+  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL] = [](void* data, Evas* evas,
+                                                         Evas_Object* object,
+                                                         void* event_info) {
+    auto* self = reinterpret_cast<TizenWindowElementary*>(data);
+    if (self->view_) {
+      if (self->elm_win_ == object) {
+        auto* wheel_event =
+            reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event_info);
+        double delta_x = 0.0;
+        double delta_y = 0.0;
 
-            if (wheel_event->direction == kScrollDirectionVertical) {
-              delta_y += wheel_event->z;
-            } else if (wheel_event->direction == kScrollDirectionHorizontal) {
-              delta_x += wheel_event->z;
-            }
-
-            self->flutter_tizen_view_->OnScroll(
-                wheel_event->x, wheel_event->y, delta_x, delta_y,
-                kScrollOffsetMultiplier, wheel_event->timestamp,
-                kFlutterPointerDeviceKindTouch, 0);
-          }
+        if (wheel_event->direction == kScrollDirectionVertical) {
+          delta_y += wheel_event->z;
+        } else if (wheel_event->direction == kScrollDirectionHorizontal) {
+          delta_x += wheel_event->z;
         }
-      };
+
+        self->view_->OnScroll(wheel_event->x, wheel_event->y, delta_x, delta_y,
+                              kScrollOffsetMultiplier, wheel_event->timestamp,
+                              kFlutterPointerDeviceKindTouch, 0);
+      }
+    }
+  };
   evas_object_event_callback_add(
       elm_win_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL], this);
@@ -222,10 +222,10 @@ void TizenWindowElementary::RegisterEventHandlers() {
       ECORE_EVENT_KEY_DOWN,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnKey(key_event, false);
+            self->view_->OnKey(key_event, false);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -237,10 +237,10 @@ void TizenWindowElementary::RegisterEventHandlers() {
       ECORE_EVENT_KEY_UP,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnKey(key_event, true);
+            self->view_->OnKey(key_event, true);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -316,8 +316,7 @@ uintptr_t TizenWindowElementary::GetWindowId() {
 void TizenWindowElementary::ResizeRenderTargetWithRotation(Geometry geometry,
                                                            int32_t angle) {
   TizenRendererEvasGL* renderer_evas_gl =
-      reinterpret_cast<TizenRendererEvasGL*>(
-          flutter_tizen_view_->flutter_tizen_engine()->renderer());
+      reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
   renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
 }
 
@@ -341,8 +340,7 @@ void TizenWindowElementary::Show() {
 
 void TizenWindowElementary::OnGeometryChanged(Geometry geometry) {
   SetWindowGeometry(geometry);
-  flutter_tizen_view_->OnResize(geometry.left, geometry.top, geometry.width,
-                                geometry.height);
+  view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }
 
 }  // namespace flutter

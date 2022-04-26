@@ -41,71 +41,68 @@ const std::vector<std::string> kBindableSystemKeys = {
 
 namespace flutter {
 
-FlutterTizenView::FlutterTizenView(
-    std::unique_ptr<TizenWindow> flutter_tizen_window)
-    : flutter_tizen_window_(std::move(flutter_tizen_window)) {
-  flutter_tizen_window_->SetFlutterTizenView(this);
+FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenWindow> window)
+    : window_(std::move(window)) {
+  window_->SetView(this);
 }
 
 FlutterTizenView::~FlutterTizenView() {}
 
-void FlutterTizenView::SetFlutterTizenEngine(
+void FlutterTizenView::SetEngine(
     std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine) {
-  flutter_tizen_engine_ = std::move(flutter_tizen_engine);
-  flutter_tizen_engine_->SetFlutterTizenView(this);
+  engine_ = std::move(flutter_tizen_engine);
+  engine_->SetView(this);
 
-  internal_plugin_registrar_ = std::make_unique<PluginRegistrar>(
-      flutter_tizen_engine_->plugin_registrar());
+  internal_plugin_registrar_ =
+      std::make_unique<PluginRegistrar>(engine_->plugin_registrar());
 
   // Setup window dependent channels.
   BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
   platform_channel_ =
-      std::make_unique<PlatformChannel>(messenger, flutter_tizen_window_.get());
-  window_channel_ =
-      std::make_unique<WindowChannel>(messenger, flutter_tizen_window_.get());
+      std::make_unique<PlatformChannel>(messenger, window_.get());
+  window_channel_ = std::make_unique<WindowChannel>(messenger, window_.get());
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
-      std::make_unique<TizenInputMethodContext>(flutter_tizen_window_.get()));
-  OnRotate(flutter_tizen_window_->GetRotation());
+      std::make_unique<TizenInputMethodContext>(window_.get()));
+  OnRotate(window_->GetRotation());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
-  if (flutter_tizen_engine_ && flutter_tizen_engine_->renderer()) {
-    auto geometry = flutter_tizen_window_->GetWindowGeometry();
-    flutter_tizen_engine_->renderer()->CreateSurface(
-        flutter_tizen_window_->GetRenderTarget(),
-        flutter_tizen_window_->GetRenderTargetDisplay(), geometry.width,
-        geometry.height);
+  if (engine_ && engine_->renderer()) {
+    auto geometry = window_->GetWindowGeometry();
+    engine_->renderer()->CreateSurface(window_->GetRenderTarget(),
+                                       window_->GetRenderTargetDisplay(),
+                                       geometry.width, geometry.height);
   }
 }
 
 void FlutterTizenView::DestroyRenderSurface() {
-  if (flutter_tizen_engine_ && flutter_tizen_engine_->renderer()) {
-    flutter_tizen_engine_->renderer()->DestroySurface();
+  if (engine_ && engine_->renderer()) {
+    engine_->renderer()->DestroySurface();
   }
 }
 
 bool FlutterTizenView::OnMakeCurrent() {
-  return flutter_tizen_engine_->renderer()->OnMakeCurrent();
+  return engine_->renderer()->OnMakeCurrent();
 }
 
 bool FlutterTizenView::OnClearCurrent() {
-  return flutter_tizen_engine_->renderer()->OnClearCurrent();
+  return engine_->renderer()->OnClearCurrent();
 }
 
 bool FlutterTizenView::OnMakeResourceCurrent() {
-  return flutter_tizen_engine_->renderer()->OnMakeResourceCurrent();
+  return engine_->renderer()->OnMakeResourceCurrent();
 }
 
 bool FlutterTizenView::OnPresent() {
-  return flutter_tizen_engine_->renderer()->OnPresent();
+  return engine_->renderer()->OnPresent();
 }
 uint32_t FlutterTizenView::OnGetFBO() {
-  return flutter_tizen_engine_->renderer()->OnGetFBO();
+  return engine_->renderer()->OnGetFBO();
 }
 
 void* FlutterTizenView::OnProcResolver(const char* name) {
-  return flutter_tizen_engine_->renderer()->OnProcResolver(name);
+  return engine_->renderer()->OnProcResolver(name);
 }
 
 void FlutterTizenView::OnResize(int32_t left,
@@ -116,8 +113,8 @@ void FlutterTizenView::OnResize(int32_t left,
     std::swap(width, height);
   }
 
-  flutter_tizen_window_->ResizeRenderTargetWithRotation(
-      {left, top, width, height}, rotation_degree_);
+  window_->ResizeRenderTargetWithRotation({left, top, width, height},
+                                          rotation_degree_);
   SendWindowMetrics(left, top, width, height, 0.0);
 }
 
@@ -125,7 +122,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
   rotation_degree_ = degree;
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - rotation_degree_) * M_PI / 180;
-  auto geometry = flutter_tizen_window_->GetWindowGeometry();
+  auto geometry = window_->GetWindowGeometry();
   int32_t width = geometry.width;
   int32_t height = geometry.height;
 
@@ -150,7 +147,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
     std::swap(width, height);
   }
 
-  flutter_tizen_window_->ResizeRenderTargetWithRotation(
+  window_->ResizeRenderTargetWithRotation(
       {geometry.left, geometry.top, width, height}, rotation_degree_);
 
   // Window position does not change on rotation regardless of its orientation.
@@ -212,15 +209,14 @@ void FlutterTizenView::OnKey(Ecore_Event_Key* event, bool is_down) {
     }
   }
 
-  if (flutter_tizen_engine_->platform_view_channel()) {
-    flutter_tizen_engine_->platform_view_channel()->SendKeyEvent(event,
-                                                                 is_down);
+  if (engine_->platform_view_channel()) {
+    engine_->platform_view_channel()->SendKeyEvent(event, is_down);
   }
 
-  if (flutter_tizen_engine_->key_event_channel()) {
-    flutter_tizen_engine_->key_event_channel()->SendKeyEvent(
+  if (engine_->key_event_channel()) {
+    engine_->key_event_channel()->SendKeyEvent(
         event, is_down,
-        [engine = flutter_tizen_engine_.get(), symbol = std::string(event->key),
+        [engine = engine_.get(), symbol = std::string(event->key),
          is_down](bool handled) {
           if (handled) {
             return;
@@ -237,7 +233,7 @@ void FlutterTizenView::OnKey(Ecore_Event_Key* event, bool is_down) {
 }
 
 void FlutterTizenView::SendInitialGeometry() {
-  OnRotate(flutter_tizen_window_->GetRotation());
+  OnRotate(window_->GetRotation());
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,
@@ -253,7 +249,7 @@ void FlutterTizenView::SendWindowMetrics(int32_t left,
 #ifdef TV_PROFILE
     double dpi = 72.0;
 #else
-    double dpi = static_cast<double>(flutter_tizen_window_->GetDpi());
+    double dpi = static_cast<double>(window_->GetDpi());
 #endif
     double scale_factor = dpi / 90.0 * kProfileFactor;
     computed_pixel_ratio = std::max(scale_factor, 1.0);
@@ -261,8 +257,7 @@ void FlutterTizenView::SendWindowMetrics(int32_t left,
     computed_pixel_ratio = pixel_ratio;
   }
 
-  flutter_tizen_engine_->SendWindowMetrics(left, top, width, height,
-                                           computed_pixel_ratio);
+  engine_->SendWindowMetrics(left, top, width, height, computed_pixel_ratio);
 }
 
 void FlutterTizenView::SendFlutterPointerEvent(
@@ -274,7 +269,7 @@ void FlutterTizenView::SendFlutterPointerEvent(
     size_t timestamp,
     FlutterPointerDeviceKind device_kind,
     int device_id) {
-  auto geometry = flutter_tizen_window_->GetWindowGeometry();
+  auto geometry = window_->GetWindowGeometry();
   double new_x = x, new_y = y;
 
   if (rotation_degree_ == 90) {
@@ -302,7 +297,7 @@ void FlutterTizenView::SendFlutterPointerEvent(
   event.device = device_id;
   event.device_kind = kFlutterPointerDeviceKindTouch;
 
-  flutter_tizen_engine_->SendPointerEvent(event);
+  engine_->SendPointerEvent(event);
 }
 
 }  // namespace flutter

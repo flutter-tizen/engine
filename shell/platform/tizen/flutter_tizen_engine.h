@@ -75,11 +75,11 @@ class FlutterTizenEngine {
   bool StopEngine();
 
   // Sets the view that is displaying this engine's content.
-  void SetFlutterTizenView(FlutterTizenView* view);
+  void SetView(FlutterTizenView* view);
 
   // The view displaying this engine's content, if any. This will be null for
   // headless engines.
-  FlutterTizenView* flutter_tizen_view() { return flutter_tizen_view_; }
+  FlutterTizenView* view() { return view_; }
 
   FlutterDesktopMessengerRef messenger() { return messenger_.get(); }
 
@@ -183,7 +183,7 @@ class FlutterTizenEngine {
   friend class EngineModifier;
 
   // Whether the engine is running in headed or headless mode.
-  bool IsHeaded() { return flutter_tizen_view_ != nullptr; }
+  bool IsHeaded() { return view_ != nullptr; }
 
   // Converts a FlutterPlatformMessage to an equivalent FlutterDesktopMessage.
   FlutterDesktopMessage ConvertToDesktopMessage(
@@ -219,7 +219,7 @@ class FlutterTizenEngine {
   UniqueAotDataPtr aot_data_;
 
   // The view displaying the content running in this engine, if any.
-  FlutterTizenView* flutter_tizen_view_ = nullptr;
+  FlutterTizenView* view_ = nullptr;
 
   // The plugin messenger handle given to API clients.
   std::unique_ptr<FlutterDesktopMessenger> messenger_;

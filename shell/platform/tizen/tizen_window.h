@@ -26,9 +26,7 @@ class TizenWindow {
 
   // Sets the delegate used to communicate state changes from window to view
   // such as key presses, mouse position updates etc.
-  void SetFlutterTizenView(FlutterTizenView* view) {
-    flutter_tizen_view_ = view;
-  }
+  void SetView(FlutterTizenView* view) { view_ = view; }
 
   // Returns the geometry of the current window.
   virtual Geometry GetWindowGeometry() = 0;
@@ -82,7 +80,7 @@ class TizenWindow {
   bool focusable_ = false;
   bool top_level_ = false;
 
-  FlutterTizenView* flutter_tizen_view_ = nullptr;
+  FlutterTizenView* view_ = nullptr;
 };
 
 }  // namespace flutter

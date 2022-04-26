@@ -29,7 +29,7 @@ struct InputPanelGeometry {
 
 class TizenInputMethodContext {
  public:
-  TizenInputMethodContext(TizenWindow* flutter_tizen_window);
+  TizenInputMethodContext(TizenWindow* window);
   ~TizenInputMethodContext();
 
   bool FilterEvent(Ecore_Event_Key* event, const char* dev_name, bool is_down);
@@ -69,7 +69,7 @@ class TizenInputMethodContext {
   void SetContextOptions();
   void SetInputPanelOptions();
 
-  TizenWindow* flutter_tizen_window_ = nullptr;
+  TizenWindow* window_ = nullptr;
   Ecore_IMF_Context* imf_context_ = nullptr;
   OnCommit on_commit_;
   OnPreeditChanged on_preedit_changed_;

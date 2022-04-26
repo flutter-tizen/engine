@@ -16,9 +16,8 @@ constexpr char kChannelName[] = "tizen/internal/window";
 
 }  // namespace
 
-WindowChannel::WindowChannel(BinaryMessenger* messenger,
-                             TizenWindow* flutter_tizen_window)
-    : flutter_tizen_window_(flutter_tizen_window) {
+WindowChannel::WindowChannel(BinaryMessenger* messenger, TizenWindow* window)
+    : window_(window) {
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler(
@@ -36,7 +35,7 @@ void WindowChannel::HandleMethodCall(
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
-    TizenWindow::Geometry geometry = flutter_tizen_window_->GetWindowGeometry();
+    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
     EncodableMap map;
     map[EncodableValue("x")] = EncodableValue(geometry.left);
     map[EncodableValue("y")] = EncodableValue(geometry.top);
@@ -58,17 +57,17 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> width(arguments, "width");
     EncodableValueHolder<int32_t> height(arguments, "height");
 
-    TizenWindow::Geometry geometry = flutter_tizen_window_->GetWindowGeometry();
+    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
     // FIXME: Use SetWindowGeometry() instead of OnGeometryChanged()
     // After the SetWindowGeometry was successfully executed, I expected a
     // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
-    flutter_tizen_window_->OnGeometryChanged(
-        {x ? *x : geometry.left, y ? *y : geometry.top,
-         width ? *width : geometry.width, height ? *height : geometry.height});
+    window_->OnGeometryChanged({x ? *x : geometry.left, y ? *y : geometry.top,
+                                width ? *width : geometry.width,
+                                height ? *height : geometry.height});
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
-    TizenWindow::Geometry geometry = flutter_tizen_window_->GetScreenGeometry();
+    TizenWindow::Geometry geometry = window_->GetScreenGeometry();
     EncodableMap map;
     map[EncodableValue("width")] = EncodableValue(geometry.width);
     map[EncodableValue("height")] = EncodableValue(geometry.height);

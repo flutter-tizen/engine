@@ -122,12 +122,12 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_WL2_EVENT_WINDOW_ROTATE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* rotation_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
           if (rotation_event->win == self->GetWindowId()) {
             int32_t degree = rotation_event->angle;
-            self->flutter_tizen_view_->OnRotate(degree);
+            self->view_->OnRotate(degree);
             auto geometry = self->GetWindowGeometry();
             ecore_wl2_window_rotation_change_done_send(
                 self->ecore_wl2_window_, rotation_event->rotation,
@@ -143,13 +143,12 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_WL2_EVENT_WINDOW_CONFIGURE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* configure_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Configure*>(event);
           if (configure_event->win == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnResize(
-                configure_event->x, configure_event->y, configure_event->w,
-                configure_event->h);
+            self->view_->OnResize(configure_event->x, configure_event->y,
+                                  configure_event->w, configure_event->h);
             ecore_wl2_window_commit(self->ecore_wl2_window_, EINA_FALSE);
             return ECORE_CALLBACK_DONE;
           }
@@ -162,11 +161,11 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_BUTTON_DOWN,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* button_event =
               reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
           if (button_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnPointerDown(
+            self->view_->OnPointerDown(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -180,11 +179,11 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_BUTTON_UP,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* button_event =
               reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
           if (button_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnPointerUp(
+            self->view_->OnPointerUp(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -198,10 +197,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_MOVE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
           if (move_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnPointerMove(
+            self->view_->OnPointerMove(
                 move_event->x, move_event->y, move_event->timestamp,
                 kFlutterPointerDeviceKindTouch, move_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -215,7 +214,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_WHEEL,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
           if (wheel_event->window == self->GetWindowId()) {
             double delta_x = 0.0;
@@ -227,10 +226,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
               delta_x += wheel_event->z;
             }
 
-            self->flutter_tizen_view_->OnScroll(
-                wheel_event->x, wheel_event->y, delta_x, delta_y,
-                kScrollOffsetMultiplier, wheel_event->timestamp,
-                kFlutterPointerDeviceKindTouch, 0);
+            self->view_->OnScroll(wheel_event->x, wheel_event->y, delta_x,
+                                  delta_y, kScrollOffsetMultiplier,
+                                  wheel_event->timestamp,
+                                  kFlutterPointerDeviceKindTouch, 0);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -242,10 +241,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_KEY_DOWN,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnKey(key_event, true);
+            self->view_->OnKey(key_event, true);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -257,10 +256,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_KEY_UP,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->flutter_tizen_view_) {
+        if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->flutter_tizen_view_->OnKey(key_event, false);
+            self->view_->OnKey(key_event, false);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -362,8 +361,7 @@ void TizenWindowEcoreWl2::OnGeometryChanged(Geometry geometry) {
   // This implementation mimics the situation in which the handler of
   // ECORE_WL2_EVENT_WINDOW_CONFIGURE is called.
   SetWindowGeometry(geometry);
-  flutter_tizen_view_->OnResize(geometry.left, geometry.top, geometry.width,
-                                geometry.height);
+  view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }
 
 void TizenWindowEcoreWl2::SetTizenPolicyNotificationLevel(int level) {

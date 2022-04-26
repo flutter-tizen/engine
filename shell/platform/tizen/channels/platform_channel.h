@@ -18,8 +18,7 @@ namespace flutter {
 
 class PlatformChannel {
  public:
-  explicit PlatformChannel(BinaryMessenger* messenger,
-                           TizenWindow* flutter_tizen_window);
+  explicit PlatformChannel(BinaryMessenger* messenger, TizenWindow* window);
   virtual ~PlatformChannel();
 
  private:
@@ -38,7 +37,7 @@ class PlatformChannel {
 
   // A reference to the window object managed by FlutterTizenView.
   // This can be nullptr if the engine is running in headless mode.
-  TizenWindow* flutter_tizen_window_;
+  TizenWindow* window_;
 };
 
 }  // namespace flutter

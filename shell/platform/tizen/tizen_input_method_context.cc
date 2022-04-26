@@ -103,10 +103,9 @@ T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
 
 namespace flutter {
 
-TizenInputMethodContext::TizenInputMethodContext(
-    TizenWindow* flutter_tizen_window)
-    : flutter_tizen_window_(flutter_tizen_window) {
-  FT_ASSERT(flutter_tizen_window_);
+TizenInputMethodContext::TizenInputMethodContext(TizenWindow* window)
+    : window_(window) {
+  FT_ASSERT(window_);
   ecore_imf_init();
 
   const char* imf_id = ecore_imf_context_default_id_get();
@@ -126,8 +125,7 @@ TizenInputMethodContext::TizenInputMethodContext(
   }
 
   ecore_imf_context_client_window_set(
-      imf_context_,
-      reinterpret_cast<void*>(flutter_tizen_window_->GetWindowId()));
+      imf_context_, reinterpret_cast<void*>(window_->GetWindowId()));
   SetContextOptions();
   SetInputPanelOptions();
   RegisterEventCallbacks();

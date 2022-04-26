@@ -25,7 +25,7 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
-  std::unique_ptr<flutter::TizenWindow> flutter_tizen_window =
+  std::unique_ptr<flutter::TizenWindow> window =
       std::make_unique<flutter::TizenWindowEcoreWl2>(
           flutter::TizenWindow::Geometry(
               {window_properties.x, window_properties.y,
@@ -34,19 +34,18 @@ FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
           window_properties.top_level);
 
   // Take ownership of the engine, starting it if necessary.
-  auto flutter_tizen_view = std::make_unique<flutter::FlutterTizenView>(
-      std::move(flutter_tizen_window));
+  auto view = std::make_unique<flutter::FlutterTizenView>(std::move(window));
 
-  flutter_tizen_view->SetFlutterTizenEngine(
+  view->SetEngine(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
 
-  flutter_tizen_view->CreateRenderSurface();
+  view->CreateRenderSurface();
 
-  if (!flutter_tizen_view->flutter_tizen_engine()->IsRunning()) {
-    flutter_tizen_view->flutter_tizen_engine()->RunEngine();
+  if (!view->engine()->IsRunning()) {
+    view->engine()->RunEngine();
   }
 
-  flutter_tizen_view->SendInitialGeometry();
+  view->SendInitialGeometry();
 
-  return HandleForView(flutter_tizen_view.release());
+  return HandleForView(view.release());
 }
