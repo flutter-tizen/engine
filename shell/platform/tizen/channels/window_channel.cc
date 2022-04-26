@@ -61,9 +61,12 @@ void WindowChannel::HandleMethodCall(
     // FIXME: Use SetWindowGeometry() instead of OnGeometryChanged()
     // After the SetWindowGeometry was successfully executed, I expected a
     // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
-    window_->OnGeometryChanged({x ? *x : geometry.left, y ? *y : geometry.top,
-                                width ? *width : geometry.width,
-                                height ? *height : geometry.height});
+    window_->OnGeometryChanged({
+        x ? *x : geometry.left,
+        y ? *y : geometry.top,
+        width ? *width : geometry.width,
+        height ? *height : geometry.height,
+    });
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
