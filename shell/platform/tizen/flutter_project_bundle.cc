@@ -35,10 +35,13 @@ std::filesystem::path GetBinDirectory() {
 FlutterProjectBundle::FlutterProjectBundle(
     const FlutterDesktopEngineProperties& properties)
     : assets_path_(properties.assets_path),
-      icu_path_(properties.icu_data_path),
-      custom_dart_entrypoint_(properties.entrypoint) {
+      icu_path_(properties.icu_data_path) {
   if (properties.aot_library_path != nullptr) {
     aot_library_path_ = std::filesystem::path(properties.aot_library_path);
+  }
+
+  if (properties.entrypoint != nullptr) {
+    custom_dart_entrypoint_ = std::string(properties.entrypoint);
   }
 
   for (int i = 0; i < properties.dart_entrypoint_argc; i++) {

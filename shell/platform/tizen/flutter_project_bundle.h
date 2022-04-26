@@ -56,7 +56,7 @@ class FlutterProjectBundle {
   // Logs and returns nullptr on failure.
   UniqueAotDataPtr LoadAotData(const FlutterEngineProcTable& engine_procs);
 
-  // Returns custom entrypoint in the Dart project
+  // Returns custom entrypoint in the Dart project.
   const std::string& custom_dart_entrypoint() {
     return custom_dart_entrypoint_;
   }
