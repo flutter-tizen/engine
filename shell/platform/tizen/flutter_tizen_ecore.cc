@@ -1,7 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
 
 #include "public/flutter_tizen.h"
 
@@ -25,17 +22,21 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateUsingNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
+  flutter::TizenWindow::Geometry window_geometry = {
+      window_properties.x,
+      window_properties.y,
+      window_properties.width,
+      window_properties.height,
+  };
+
   std::unique_ptr<flutter::TizenWindow> window =
       std::make_unique<flutter::TizenWindowEcoreWl2>(
-          flutter::TizenWindow::Geometry(
-              {window_properties.x, window_properties.y,
-               window_properties.width, window_properties.height}),
-          window_properties.transparent, window_properties.focusable,
-          window_properties.top_level);
+          window_geometry, window_properties.transparent,
+          window_properties.focusable, window_properties.top_level);
 
-  // Take ownership of the engine, starting it if necessary.
   auto view = std::make_unique<flutter::FlutterTizenView>(std::move(window));
 
+  // Take ownership of the engine, starting it if necessary.
   view->SetEngine(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
 

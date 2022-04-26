@@ -42,11 +42,8 @@ class FlutterTizenView {
   // Callbacks for clearing context, settings context and swapping buffers,
   // these are typically called on an engine-controlled (non-platform) thread.
   bool OnMakeCurrent();
-
   bool OnClearCurrent();
-
   bool OnMakeResourceCurrent();
-
   bool OnPresent();
 
   uint32_t OnGetFBO();
@@ -88,21 +85,21 @@ class FlutterTizenView {
   void OnKey(Ecore_Event_Key* event, bool is_down);
 
   FlutterTransformation GetFlutterTransformation() {
-    return flutter_trans_formation_;
+    return flutter_transformation_;
   }
 
   void SendInitialGeometry();
 
  private:
   // Sends a window metrics update to the Flutter engine using current window
-  // dimensions in physical
+  // dimensions in physical.
   void SendWindowMetrics(int32_t left,
                          int32_t top,
                          int32_t width,
                          int32_t height,
                          double pixel_ratio);
 
-  // Reports pointer event to Flutter engine
+  // Reports pointer event to Flutter engine.
   void SendFlutterPointerEvent(FlutterPointerPhase phase,
                                double x,
                                double y,
@@ -137,9 +134,10 @@ class FlutterTizenView {
   bool pointer_state_ = false;
 
   // The current view transformation.
-  FlutterTransformation flutter_trans_formation_ = {1.0, 0.0, 0.0, 0.0, 1.0,
-                                                    0.0, 0.0, 0.0, 1.0};
+  FlutterTransformation flutter_transformation_ = {1.0, 0.0, 0.0, 0.0, 1.0,
+                                                   0.0, 0.0, 0.0, 1.0};
 };
 
 }  // namespace flutter
-#endif
+
+#endif  // EMBEDDER_FLUTTER_TIZEN_VIEW_H_

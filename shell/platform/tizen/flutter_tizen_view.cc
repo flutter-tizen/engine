@@ -56,7 +56,7 @@ void FlutterTizenView::SetEngine(
   internal_plugin_registrar_ =
       std::make_unique<PluginRegistrar>(engine_->plugin_registrar());
 
-  // Setup window dependent channels.
+  // Set up window dependent channels.
   BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
   platform_channel_ =
       std::make_unique<PlatformChannel>(messenger, window_.get());
@@ -64,12 +64,13 @@ void FlutterTizenView::SetEngine(
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
       std::make_unique<TizenInputMethodContext>(window_.get()));
+
   OnRotate(window_->GetRotation());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
   if (engine_ && engine_->renderer()) {
-    auto geometry = window_->GetWindowGeometry();
+    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
     engine_->renderer()->CreateSurface(window_->GetRenderTarget(),
                                        window_->GetRenderTargetDisplay(),
                                        geometry.width, geometry.height);
@@ -137,7 +138,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
   }
 
   // view settransform
-  flutter_trans_formation_ = {
+  flutter_transformation_ = {
       cos(rad), -sin(rad), trans_x,  // x
       sin(rad), cos(rad),  trans_y,  // y
       0.0,      0.0,       1.0       // perspective

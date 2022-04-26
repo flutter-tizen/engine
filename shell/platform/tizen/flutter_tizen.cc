@@ -52,6 +52,7 @@ FlutterDesktopEngineRef FlutterDesktopEngineCreate(
     flutter::Logger::SetLoggingPort(std::stoi(logging_port));
   }
   flutter::Logger::Start();
+
   auto flutter_tizen_engine =
       std::make_unique<flutter::FlutterTizenEngine>(project);
   return HandleForEngine(flutter_tizen_engine.release());

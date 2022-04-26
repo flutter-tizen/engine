@@ -410,35 +410,35 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     config.type = kOpenGL;
     config.open_gl.struct_size = sizeof(config.open_gl);
     config.open_gl.make_current = [](void* user_data) -> bool {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return false;
       }
       return engine->view()->OnMakeCurrent();
     };
     config.open_gl.make_resource_current = [](void* user_data) -> bool {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return false;
       }
       return engine->view()->OnMakeResourceCurrent();
     };
     config.open_gl.clear_current = [](void* user_data) -> bool {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return false;
       }
       return engine->view()->OnClearCurrent();
     };
     config.open_gl.present = [](void* user_data) -> bool {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return false;
       }
       return engine->view()->OnPresent();
     };
     config.open_gl.fbo_callback = [](void* user_data) -> uint32_t {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return false;
       }
@@ -446,7 +446,7 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     };
     config.open_gl.surface_transformation =
         [](void* user_data) -> FlutterTransformation {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return FlutterTransformation();
       }
@@ -454,7 +454,7 @@ FlutterRendererConfig FlutterTizenEngine::GetRendererConfig() {
     };
     config.open_gl.gl_proc_resolver = [](void* user_data,
                                          const char* name) -> void* {
-      auto engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
       if (!engine->view()) {
         return nullptr;
       }
