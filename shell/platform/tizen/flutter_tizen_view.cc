@@ -97,6 +97,7 @@ bool FlutterTizenView::OnMakeResourceCurrent() {
 bool FlutterTizenView::OnPresent() {
   return engine_->renderer()->OnPresent();
 }
+
 uint32_t FlutterTizenView::OnGetFBO() {
   return engine_->renderer()->OnGetFBO();
 }

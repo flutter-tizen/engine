@@ -26,7 +26,7 @@ class FlutterTizenTextureRegistrarTest : public ::testing::Test {
     engine_prop.assets_path = "/foo/flutter_assets";
     engine_prop.icu_data_path = "/foo/icudtl.dat";
     engine_prop.aot_library_path = "/foo/libapp.so";
-    engine_prop.entrypoint = "";
+
     FlutterProjectBundle project(engine_prop);
     auto engine = std::make_unique<FlutterTizenEngine>(project);
     engine_ = engine.release();
