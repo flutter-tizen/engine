@@ -26,7 +26,7 @@ class FlutterTizenView {
 
   // Configures the window instance with an instance of a running Flutter
   // engine.
-  void SetEngine(std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine);
+  void SetEngine(std::unique_ptr<FlutterTizenEngine> engine);
 
   FlutterTizenEngine* engine() { return engine_.get(); }
 

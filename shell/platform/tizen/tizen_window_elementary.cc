@@ -266,7 +266,7 @@ void TizenWindowElementary::UnregisterEventCallbacks() {
       elm_win_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL]);
 
-  for (auto handler : ecore_event_key_handlers_) {
+  for (auto* handler : ecore_event_key_handlers_) {
     ecore_event_handler_del(handler);
   }
   ecore_event_key_handlers_.clear();

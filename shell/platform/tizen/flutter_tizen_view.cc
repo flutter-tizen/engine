@@ -48,9 +48,8 @@ FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenWindow> window)
 
 FlutterTizenView::~FlutterTizenView() {}
 
-void FlutterTizenView::SetEngine(
-    std::unique_ptr<FlutterTizenEngine> flutter_tizen_engine) {
-  engine_ = std::move(flutter_tizen_engine);
+void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
+  engine_ = std::move(engine);
   engine_->SetView(this);
 
   internal_plugin_registrar_ =
@@ -123,7 +122,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
   rotation_degree_ = degree;
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - rotation_degree_) * M_PI / 180;
-  auto geometry = window_->GetWindowGeometry();
+  TizenWindow::Geometry geometry = window_->GetWindowGeometry();
   int32_t width = geometry.width;
   int32_t height = geometry.height;
 
@@ -270,7 +269,7 @@ void FlutterTizenView::SendFlutterPointerEvent(
     size_t timestamp,
     FlutterPointerDeviceKind device_kind,
     int device_id) {
-  auto geometry = window_->GetWindowGeometry();
+  TizenWindow::Geometry geometry = window_->GetWindowGeometry();
   double new_x = x, new_y = y;
 
   if (rotation_degree_ == 90) {

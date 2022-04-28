@@ -128,7 +128,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           if (rotation_event->win == self->GetWindowId()) {
             int32_t degree = rotation_event->angle;
             self->view_->OnRotate(degree);
-            auto geometry = self->GetWindowGeometry();
+            Geometry geometry = self->GetWindowGeometry();
             ecore_wl2_window_rotation_change_done_send(
                 self->ecore_wl2_window_, rotation_event->rotation,
                 geometry.width, geometry.height);
@@ -269,7 +269,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
 }
 
 void TizenWindowEcoreWl2::UnregisterEventCallbacks() {
-  for (auto handler : ecore_event_handlers_) {
+  for (auto* handler : ecore_event_handlers_) {
     ecore_event_handler_del(handler);
   }
   ecore_event_handlers_.clear();

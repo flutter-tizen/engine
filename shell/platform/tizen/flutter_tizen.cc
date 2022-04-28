@@ -53,9 +53,8 @@ FlutterDesktopEngineRef FlutterDesktopEngineCreate(
   }
   flutter::Logger::Start();
 
-  auto flutter_tizen_engine =
-      std::make_unique<flutter::FlutterTizenEngine>(project);
-  return HandleForEngine(flutter_tizen_engine.release());
+  auto engine = std::make_unique<flutter::FlutterTizenEngine>(project);
+  return HandleForEngine(engine.release());
 }
 
 bool FlutterDesktopEngineRun(const FlutterDesktopEngineRef engine) {

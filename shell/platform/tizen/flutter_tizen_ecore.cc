@@ -1,4 +1,6 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #include "public/flutter_tizen.h"
 
@@ -39,9 +41,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
   // Take ownership of the engine, starting it if necessary.
   view->SetEngine(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
-
   view->CreateRenderSurface();
-
   if (!view->engine()->IsRunning()) {
     view->engine()->RunEngine();
   }
