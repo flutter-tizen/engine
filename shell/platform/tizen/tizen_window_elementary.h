@@ -63,7 +63,7 @@ class TizenWindowElementary : public TizenWindow {
 
   void RegisterEventHandlers();
 
-  void UnregisterEventCallbacks();
+  void UnregisterEventHandlers();
 
   Evas_Object* elm_win_ = nullptr;
   Evas_Object* image_ = nullptr;

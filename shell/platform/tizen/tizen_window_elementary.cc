@@ -27,7 +27,7 @@ TizenWindowElementary::TizenWindowElementary(Geometry geometry,
                                              bool top_level)
     : TizenWindow(geometry, transparent, focusable, top_level) {
   if (!CreateWindow()) {
-    FT_LOG(Error) << "Failed to create platform window";
+    FT_LOG(Error) << "Failed to create a platform window.";
     return;
   }
 
@@ -37,7 +37,7 @@ TizenWindowElementary::TizenWindowElementary(Geometry geometry,
 }
 
 TizenWindowElementary::~TizenWindowElementary() {
-  UnregisterEventCallbacks();
+  UnregisterEventHandlers();
   DestroyWindow();
 }
 
@@ -76,9 +76,6 @@ bool TizenWindowElementary::CreateWindow() {
                      initial_geometry_.height);
   evas_object_raise(elm_win_);
 
-  elm_win_indicator_mode_set(elm_win_, ELM_WIN_INDICATOR_SHOW);
-  elm_win_indicator_opacity_set(elm_win_, ELM_WIN_INDICATOR_OPAQUE);
-
   image_ = evas_object_image_filled_add(evas_object_evas_get(elm_win_));
   evas_object_resize(image_, initial_geometry_.width, initial_geometry_.height);
   evas_object_move(image_, initial_geometry_.left, initial_geometry_.top);
@@ -113,8 +110,10 @@ void TizenWindowElementary::SetWindowOptions() {
     elm_win_resize_object_add(elm_win_, bg);
   }
 
+  elm_win_indicator_mode_set(elm_win_, ELM_WIN_INDICATOR_SHOW);
+  elm_win_indicator_opacity_set(elm_win_, ELM_WIN_INDICATOR_OPAQUE);
+
   // TODO: focusable_
-  // TOOD: indicator
 
   const int rotations[4] = {0, 90, 180, 270};
   elm_win_wm_rotation_available_rotations_set(elm_win_, &rotations[0], 4);
@@ -249,7 +248,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
       this));
 }
 
-void TizenWindowElementary::UnregisterEventCallbacks() {
+void TizenWindowElementary::UnregisterEventHandlers() {
   evas_object_smart_callback_del(elm_win_, "rotation,changed",
                                  rotatoin_changed_callback_);
 

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_
-#define EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_
+#ifndef EMBEDDER_TIZEN_RENDERER_EGL_H_
+#define EMBEDDER_TIZEN_RENDERER_EGL_H_
 
 #define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
@@ -58,4 +58,4 @@ class TizenRendererEgl : public TizenRenderer {
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_TIZEN_RENDERER_ECORE_WL2_H_
+#endif  // EMBEDDER_TIZEN_RENDERER_EGL_H_

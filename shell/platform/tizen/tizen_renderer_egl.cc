@@ -81,6 +81,7 @@ bool TizenRendererEgl::CreateSurface(void* render_target,
       return false;
     }
   }
+
   is_valid_ = true;
   return true;
 }

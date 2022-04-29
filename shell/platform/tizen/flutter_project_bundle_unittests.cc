@@ -12,6 +12,7 @@ TEST(FlutterProjectBundle, BasicPropertiesAbsolutePaths) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "/foo/flutter_assets";
   properties.icu_data_path = "/foo/icudtl.dat";
+
   FlutterProjectBundle project(properties);
 
   EXPECT_TRUE(project.HasValidPaths());
@@ -23,6 +24,7 @@ TEST(FlutterProjectBundle, BasicPropertiesRelativePaths) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "foo/flutter_assets";
   properties.icu_data_path = "foo/icudtl.dat";
+
   FlutterProjectBundle project(properties);
 
   EXPECT_TRUE(project.HasValidPaths());
@@ -36,6 +38,7 @@ TEST(FlutterProjectBundle, EmptyEngineArguments) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "foo/flutter_assets";
   properties.icu_data_path = "foo/icudtl.dat";
+
   std::vector<const char*> switches;
   properties.switches = switches.data();
   properties.switches_count = switches.size();
@@ -49,6 +52,7 @@ TEST(FlutterProjectBundle, HasEngineArguments) {
   FlutterDesktopEngineProperties properties = {};
   properties.assets_path = "foo/flutter_assets";
   properties.icu_data_path = "foo/icudtl.dat";
+
   std::vector<const char*> switches;
   switches.push_back("--abc");
   switches.push_back("--foo=\"bar, baz\"");

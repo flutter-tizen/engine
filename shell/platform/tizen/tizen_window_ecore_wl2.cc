@@ -24,7 +24,7 @@ TizenWindowEcoreWl2::TizenWindowEcoreWl2(Geometry geometry,
                                          bool top_level)
     : TizenWindow(geometry, transparent, focusable, top_level) {
   if (!CreateWindow()) {
-    FT_LOG(Error) << "Failed to create platform window";
+    FT_LOG(Error) << "Failed to create a platform window.";
     return;
   }
 
@@ -34,8 +34,8 @@ TizenWindowEcoreWl2::TizenWindowEcoreWl2(Geometry geometry,
 }
 
 TizenWindowEcoreWl2::~TizenWindowEcoreWl2() {
-  UnregisterEventCallbacks();
-  DestroyEcoreWl2();
+  UnregisterEventHandlers();
+  DestroyWindow();
 }
 
 bool TizenWindowEcoreWl2::CreateWindow() {
@@ -63,7 +63,6 @@ bool TizenWindowEcoreWl2::CreateWindow() {
   if (initial_geometry_.width == 0) {
     initial_geometry_.width = width;
   }
-
   if (initial_geometry_.height == 0) {
     initial_geometry_.height = height;
   }
@@ -268,14 +267,14 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       this));
 }
 
-void TizenWindowEcoreWl2::UnregisterEventCallbacks() {
+void TizenWindowEcoreWl2::UnregisterEventHandlers() {
   for (auto* handler : ecore_event_handlers_) {
     ecore_event_handler_del(handler);
   }
   ecore_event_handlers_.clear();
 }
 
-void TizenWindowEcoreWl2::DestroyEcoreWl2() {
+void TizenWindowEcoreWl2::DestroyWindow() {
   if (ecore_wl2_egl_window_) {
     ecore_wl2_egl_window_destroy(ecore_wl2_egl_window_);
     ecore_wl2_egl_window_ = nullptr;
@@ -347,7 +346,7 @@ void TizenWindowEcoreWl2::SetPreferredOrientations(
 }
 
 void TizenWindowEcoreWl2::BindKeys(const std::vector<std::string>& keys) {
-  for (const auto& key : keys) {
+  for (const std::string& key : keys) {
     ecore_wl2_window_keygrab_set(ecore_wl2_window_, key.c_str(), 0, 0, 0,
                                  ECORE_WL2_WINDOW_KEYGRAB_TOPMOST);
   }

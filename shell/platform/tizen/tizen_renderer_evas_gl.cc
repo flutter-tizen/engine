@@ -6,7 +6,7 @@
 
 #include "tizen_evas_gl_helper.h"
 
-// g_evas_gl is shared with ExternalTexturePixelGL and ExternalTextureSurfaceGL
+// g_evas_gl is shared with ExternalTexturePixelGL and ExternalTextureSurfaceGL.
 Evas_GL* g_evas_gl = nullptr;
 
 EVAS_GL_GLOBAL_GLES3_DEFINE();

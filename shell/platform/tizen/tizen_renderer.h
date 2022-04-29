@@ -6,7 +6,6 @@
 #define EMBEDDER_TIZEN_RENDERER_H_
 
 #include <cstdint>
-#include <vector>
 
 namespace flutter {
 

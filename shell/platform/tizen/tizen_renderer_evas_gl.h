@@ -5,6 +5,8 @@
 #ifndef EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_
 #define EMBEDDER_TIZEN_RENDERER_EVAS_GL_H_
 
+#include <functional>
+
 #undef EFL_BETA_API_SUPPORT
 #include <Ecore.h>
 #include <Elementary.h>

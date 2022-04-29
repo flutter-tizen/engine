@@ -137,7 +137,6 @@ void FlutterTizenView::OnRotate(int32_t degree) {
     trans_x = width;
   }
 
-  // view settransform
   flutter_transformation_ = {
       cos(rad), -sin(rad), trans_x,  // x
       sin(rad), cos(rad),  trans_y,  // y

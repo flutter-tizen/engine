@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_FLUTTER_TIZEN_WINDOW_ECORE_WL2_H_
-#define EMBEDDER_FLUTTER_TIZEN_WINDOW_ECORE_WL2_H_
+#ifndef EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
+#define EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
 
 #include "flutter/shell/platform/tizen/tizen_window.h"
 
@@ -55,13 +55,13 @@ class TizenWindowEcoreWl2 : public TizenWindow {
  private:
   bool CreateWindow();
 
-  void DestroyEcoreWl2();
+  void DestroyWindow();
 
   void SetWindowOptions();
 
   void RegisterEventHandlers();
 
-  void UnregisterEventCallbacks();
+  void UnregisterEventHandlers();
 
   void SetTizenPolicyNotificationLevel(int level);
 
@@ -76,4 +76,5 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 };
 
 }  // namespace flutter
-#endif
+
+#endif  // EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_

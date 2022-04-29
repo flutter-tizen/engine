@@ -45,7 +45,7 @@ class TizenWindow {
 
   virtual int32_t GetRotation() = 0;
 
-  // Returns the scale factor for the backing window.
+  // Returns the dpi of the screen.
   virtual int32_t GetDpi() = 0;
 
   virtual uintptr_t GetWindowId() = 0;

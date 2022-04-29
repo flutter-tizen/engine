@@ -50,7 +50,6 @@ class FlutterTizenView {
 
   void* OnProcResolver(const char* name);
 
-  // ========== Window Event Delegate ==========
   void OnResize(int32_t left, int32_t top, int32_t width, int32_t height);
 
   void OnRotate(int32_t degree);
