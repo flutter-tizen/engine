@@ -55,7 +55,8 @@ bool TizenWindowElementary::CreateWindow() {
   // Tizen 5.5 or later was chosen as default.
   // elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
 
-  auto* ecore_evas = ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
+  Ecore_Evas* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
 
   int32_t width, height;
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &width, &height);
@@ -265,7 +266,7 @@ void TizenWindowElementary::UnregisterEventHandlers() {
       elm_win_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL]);
 
-  for (auto* handler : ecore_event_key_handlers_) {
+  for (Ecore_Event_Handler* handler : ecore_event_key_handlers_) {
     ecore_event_handler_del(handler);
   }
   ecore_event_key_handlers_.clear();
@@ -290,7 +291,8 @@ void TizenWindowElementary::SetWindowGeometry(Geometry geometry) {
 
 TizenWindow::Geometry TizenWindowElementary::GetScreenGeometry() {
   Geometry result;
-  auto* ecore_evas = ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
+  Ecore_Evas* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.width,
                                  &result.height);
   return result;
@@ -301,7 +303,8 @@ int32_t TizenWindowElementary::GetRotation() {
 }
 
 int32_t TizenWindowElementary::GetDpi() {
-  auto* ecore_evas = ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
+  Ecore_Evas* ecore_evas =
+      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
   int32_t xdpi, ydpi;
   ecore_evas_screen_dpi_get(ecore_evas, &xdpi, &ydpi);
   return xdpi;
@@ -327,7 +330,7 @@ void TizenWindowElementary::SetPreferredOrientations(
 }
 
 void TizenWindowElementary::BindKeys(const std::vector<std::string>& keys) {
-  for (const auto& key : keys) {
+  for (const std::string& key : keys) {
     eext_win_keygrab_set(elm_win_, key.c_str());
   }
 }

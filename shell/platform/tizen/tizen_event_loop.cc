@@ -120,7 +120,7 @@ TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
   static_cast<TizenRendererEvasGL*>(renderer_)->SetOnPixelsDirty([this]() {
     {
       std::lock_guard<std::mutex> lock(expired_tasks_mutex_);
-      for (const auto& task : expired_tasks_) {
+      for (const Task& task : expired_tasks_) {
         on_task_expired_(&task.task);
       }
       expired_tasks_.clear();

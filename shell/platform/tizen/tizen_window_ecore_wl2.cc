@@ -268,7 +268,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
 }
 
 void TizenWindowEcoreWl2::UnregisterEventHandlers() {
-  for (auto* handler : ecore_event_handlers_) {
+  for (Ecore_Event_Handler* handler : ecore_event_handlers_) {
     ecore_event_handler_del(handler);
   }
   ecore_event_handlers_.clear();
@@ -320,7 +320,7 @@ int32_t TizenWindowEcoreWl2::GetRotation() {
 }
 
 int32_t TizenWindowEcoreWl2::GetDpi() {
-  auto* output = ecore_wl2_window_output_find(ecore_wl2_window_);
+  Ecore_Wl2_Output* output = ecore_wl2_window_output_find(ecore_wl2_window_);
   if (!output) {
     FT_LOG(Error) << "Could not find an output associated with the window.";
     return 0;
