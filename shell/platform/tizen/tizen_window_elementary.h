@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
-#define EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
+#ifndef EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
+#define EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
 
 #include "flutter/shell/platform/tizen/tizen_window.h"
 
@@ -76,4 +76,4 @@ class TizenWindowElementary : public TizenWindow {
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
+#endif  // EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
