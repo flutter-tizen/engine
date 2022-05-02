@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_FLUTTER_TIZEN_WINDOW_H_
-#define EMBEDDER_FLUTTER_TIZEN_WINDOW_H_
+#ifndef EMBEDDER_TIZEN_WINDOW_H_
+#define EMBEDDER_TIZEN_WINDOW_H_
 
 #include <cstdint>
 #include <string>
@@ -84,4 +84,5 @@ class TizenWindow {
 };
 
 }  // namespace flutter
-#endif
+
+#endif  // EMBEDDER_TIZEN_WINDOW_H_
