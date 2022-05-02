@@ -49,6 +49,9 @@ jobs:
     path: src/flutter
   - bash: |
       gclient sync -f -D
+    displayName: Run gclient sync
+    workingDirectory: $(Pipeline.Workspace)/src
+  - bash: |
       flutter/tools/gn \
         --target-os linux \
         --linux-cpu $(arch) \
