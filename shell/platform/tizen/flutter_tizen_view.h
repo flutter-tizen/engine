@@ -8,6 +8,8 @@
 
 #include <memory>
 
+#include <Ecore_Input.h>
+
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/channels/platform_channel.h"

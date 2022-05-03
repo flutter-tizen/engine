@@ -8,7 +8,6 @@
 #include <functional>
 
 #undef EFL_BETA_API_SUPPORT
-#include <Ecore.h>
 #include <Elementary.h>
 #include <Evas_GL.h>
 
