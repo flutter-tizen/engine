@@ -302,9 +302,9 @@ TizenWindow::Geometry TizenWindowEcoreWl2::GetWindowGeometry() {
 void TizenWindowEcoreWl2::SetWindowGeometry(Geometry geometry) {
   ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left, geometry.top,
                                 geometry.width, geometry.height);
-  // FIXME : I refer to https://github.com/flutter-tizen/engine/pull/201,
-  // but I don't know why it doesn't work properly without calling
-  // ecore_wl2_window_position_set().
+  // FIXME: The changes set in `ecore_wl2_window_geometry_set` seems to apply
+  // only after calling `ecore_wl2_window_position_set`. Call a more appropriate
+  // API that flushes geometry settings to the compositor.
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
 }
 
