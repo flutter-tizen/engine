@@ -43,7 +43,7 @@ namespace flutter {
 FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenWindow> window)
     : window_(std::move(window)) {
   window_->SetView(this);
-  window->BindKeys(kBindableSystemKeys);
+  window_->BindKeys(kBindableSystemKeys);
 }
 
 FlutterTizenView::~FlutterTizenView() {}
