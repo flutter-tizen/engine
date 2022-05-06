@@ -63,61 +63,76 @@ TextInputChannel::TextInputChannel(
       });
 
   // Set input method callbacks.
-  input_method_context_->SetOnPreeditStart([this]() {
-    FT_LOG(Debug) << "onPreeditStart";
-    active_model_->BeginComposing();
-  });
+  input_method_context_->SetOnPreeditStart([this]() { OnComposeBegin(); });
 
   input_method_context_->SetOnPreeditChanged(
       [this](std::string str, int cursor_pos) -> void {
-        FT_LOG(Debug) << "onPreedit: str[" << str << "] cursor_pos["
-                      << cursor_pos << "]";
-        if (str == "") {
-          // Enter pre-edit end stage.
-          return;
-        }
-        active_model_->UpdateComposingText(str);
-        SendStateUpdate(*active_model_);
+        OnComposeChanged(str, cursor_pos);
       });
 
-  input_method_context_->SetOnPreeditEnd([this]() {
-    FT_LOG(Debug) << "onPreeditEnd";
+  input_method_context_->SetOnPreeditEnd([this]() { OnComposeEnd(); });
 
-    // Delete preedit-string, it will be committed.
-    int count = active_model_->composing_range().extent() -
-                active_model_->composing_range().base();
+  input_method_context_->SetOnCommit(
+      [this](std::string str) -> void { OnCommit(str); });
 
-    active_model_->CommitComposing();
-    active_model_->EndComposing();
-
-    active_model_->DeleteSurrounding(-count, count);
-
-    SendStateUpdate(*active_model_);
-  });
-
-  input_method_context_->SetOnCommit([this](std::string str) -> void {
-    FT_LOG(Debug) << "OnCommit: str[" << str << "]";
-    active_model_->AddText(str);
-    if (active_model_->composing()) {
-      active_model_->CommitComposing();
-      active_model_->EndComposing();
-    }
-    SendStateUpdate(*active_model_);
-  });
-
-  input_method_context_->SetOnInputPanelStateChanged([this](int state) {
-    if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
-      // Fallback for HW back-key.
-      input_method_context_->HideInputPanel();
-      Reset();
-      is_software_keyboard_showing_ = false;
-    } else {
-      is_software_keyboard_showing_ = true;
-    }
-  });
+  input_method_context_->SetOnInputPanelStateChanged(
+      [this](int state) { OnInputPanelStateChanged(state); });
 }
 
 TextInputChannel::~TextInputChannel() {}
+
+void TextInputChannel::OnComposeBegin() {
+  FT_LOG(Error) << "onPreeditStart";
+  active_model_->BeginComposing();
+}
+
+void TextInputChannel::OnComposeChanged(std::string str, int cursor_pos) {
+  FT_LOG(Error) << "onPreedit: str[" << str << "] cursor_pos[" << cursor_pos
+                << "]";
+  if (str == "") {
+    // Enter pre-edit end stage.
+    return;
+  }
+  active_model_->UpdateComposingText(str);
+
+  SendStateUpdate(*active_model_);
+}
+
+void TextInputChannel::OnComposeEnd() {
+  FT_LOG(Error) << "onPreeditEnd";
+  // Delete preedit-string, it will be committed.
+  int count = active_model_->composing_range().extent() -
+              active_model_->composing_range().base();
+
+  active_model_->CommitComposing();
+  active_model_->EndComposing();
+  active_model_->DeleteSurrounding(-count, count);
+
+  SendStateUpdate(*active_model_);
+}
+
+void TextInputChannel::OnCommit(std::string str) {
+  FT_LOG(Error) << "OnCommit: str[" << str << "]";
+  active_model_->AddText(str);
+  if (active_model_->composing()) {
+    active_model_->CommitComposing();
+    active_model_->EndComposing();
+  }
+
+  SendStateUpdate(*active_model_);
+}
+
+void TextInputChannel::OnInputPanelStateChanged(int state) {
+  if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
+    // Fallback for HW back-key.
+    input_method_context_->HideInputPanel();
+    input_method_context_->ResetInputMethodContext();
+    Reset();
+    is_software_keyboard_showing_ = false;
+  } else {
+    is_software_keyboard_showing_ = true;
+  }
+}
 
 bool TextInputChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
   if (!active_model_) {
