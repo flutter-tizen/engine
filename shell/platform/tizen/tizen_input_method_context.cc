@@ -5,7 +5,6 @@
 #include "tizen_input_method_context.h"
 
 #include "flutter/shell/platform/tizen/logger.h"
-#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace {
 
@@ -15,7 +14,9 @@ const char* GetEcoreImfContextAvailableId() {
   modules = ecore_imf_context_available_ids_get();
   if (modules) {
     void* module;
-    EINA_LIST_FREE(modules, module) { return static_cast<const char*>(module); }
+    EINA_LIST_FREE(modules, module) {
+      return static_cast<const char*>(module);
+    }
   }
   return nullptr;
 }
@@ -103,8 +104,7 @@ T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
 
 namespace flutter {
 
-TizenInputMethodContext::TizenInputMethodContext(TizenWindow* window)
-    : window_(window) {
+TizenInputMethodContext::TizenInputMethodContext(uintptr_t window_id) {
   FT_ASSERT(window_);
   ecore_imf_init();
 
@@ -124,8 +124,8 @@ TizenInputMethodContext::TizenInputMethodContext(TizenWindow* window)
     return;
   }
 
-  ecore_imf_context_client_window_set(
-      imf_context_, reinterpret_cast<void*>(window_->GetWindowId()));
+  ecore_imf_context_client_window_set(imf_context_,
+                                      reinterpret_cast<void*>(window_id));
   SetContextOptions();
   SetInputPanelOptions();
   RegisterEventCallbacks();

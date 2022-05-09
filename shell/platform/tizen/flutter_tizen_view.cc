@@ -62,7 +62,7 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   window_channel_ = std::make_unique<WindowChannel>(messenger, window_.get());
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
-      std::make_unique<TizenInputMethodContext>(window_.get()));
+      std::make_unique<TizenInputMethodContext>(window_->GetWindowId()));
 }
 
 void FlutterTizenView::CreateRenderSurface() {
