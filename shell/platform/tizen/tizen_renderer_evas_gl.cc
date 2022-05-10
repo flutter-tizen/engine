@@ -26,7 +26,7 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
                                         int32_t width,
                                         int32_t height) {
   evas_gl_ = evas_gl_new(
-      evas_object_evas_get(static_cast<Evas_Object*>(render_target)));
+      evas_object_evas_get(static_cast<Evas_Object*>(render_target_display)));
   if (!evas_gl_) {
     FT_LOG(Error) << "Could not create an Evas GL object.";
     return false;

@@ -43,6 +43,16 @@ typedef struct {
   bool top_level;
 } FlutterDesktopWindowProperties;
 
+// Properties for configuring the initial settings of a Flutter view.
+typedef struct {
+  // The width of the view, or the maximum width if the value is zero.
+  int32_t width;
+  // The height of the view, or the maximum height if the value is zero.
+  int32_t height;
+  // The evas image's parent instance handle.
+  void* elm_parent;
+} FlutterDesktopViewProperties;
+
 // Properties for configuring a Flutter engine instance.
 typedef struct {
   // The path to the flutter_assets folder for the application to be run.
@@ -134,6 +144,21 @@ FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsDetached(
 FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine);
+
+// Creates a view that hosts and displays the given engine instance.
+FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewView(
+    const FlutterDesktopViewProperties& view_properties,
+    FlutterDesktopEngineRef engine,
+    void* elm_parent);
+
+// Returns a handle to evas object that the FlutterView is drawn to.
+FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
+    FlutterDesktopEngineRef engine);
+
+// Resize the FlutterView.
+FLUTTER_EXPORT void FlutterDesktopViewResizeView(FlutterDesktopEngineRef engine,
+                                                 int32_t width,
+                                                 int32_t height);
 
 // ========== Plugin Registrar (extensions) ==========
 

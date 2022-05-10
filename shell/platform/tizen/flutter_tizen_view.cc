@@ -40,10 +40,10 @@ const std::vector<std::string> kBindableSystemKeys = {
 
 namespace flutter {
 
-FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenWindow> window)
-    : window_(std::move(window)) {
-  window_->SetView(this);
-  window_->BindKeys(kBindableSystemKeys);
+FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenBaseHandle> handle)
+    : handle_(std::move(handle)) {
+  handle_->SetView(this);
+  handle_->BindKeys(kBindableSystemKeys);
 }
 
 FlutterTizenView::~FlutterTizenView() {}
@@ -58,17 +58,17 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   // Set up window dependent channels.
   BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
   platform_channel_ =
-      std::make_unique<PlatformChannel>(messenger, window_.get());
-  window_channel_ = std::make_unique<WindowChannel>(messenger, window_.get());
+      std::make_unique<PlatformChannel>(messenger, handle_.get());
+  window_channel_ = std::make_unique<WindowChannel>(messenger, handle_.get());
   text_input_channel_ = std::make_unique<TextInputChannel>(
-      internal_plugin_registrar_->messenger(), window_->input_method_context());
+      internal_plugin_registrar_->messenger(), handle_->input_method_context());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
   if (engine_ && engine_->renderer()) {
-    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
-    engine_->renderer()->CreateSurface(window_->GetRenderTarget(),
-                                       window_->GetRenderTargetDisplay(),
+    TizenBaseHandle::Geometry geometry = handle_->GetRenderTargetGeometry();
+    engine_->renderer()->CreateSurface(handle_->GetRenderTarget(),
+                                       handle_->GetRenderTargetDisplay(),
                                        geometry.width, geometry.height);
   }
 }
@@ -111,7 +111,7 @@ void FlutterTizenView::OnResize(int32_t left,
     std::swap(width, height);
   }
 
-  window_->ResizeRenderTargetWithRotation({left, top, width, height},
+  handle_->ResizeRenderTargetWithRotation({left, top, width, height},
                                           rotation_degree_);
   SendWindowMetrics(left, top, width, height, 0.0);
 }
@@ -120,7 +120,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
   rotation_degree_ = degree;
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - rotation_degree_) * M_PI / 180;
-  TizenWindow::Geometry geometry = window_->GetWindowGeometry();
+  TizenBaseHandle::Geometry geometry = handle_->GetRenderTargetGeometry();
   int32_t width = geometry.width;
   int32_t height = geometry.height;
 
@@ -144,7 +144,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
     std::swap(width, height);
   }
 
-  window_->ResizeRenderTargetWithRotation(
+  handle_->ResizeRenderTargetWithRotation(
       {geometry.left, geometry.top, width, height}, rotation_degree_);
 
   // Window position does not change on rotation regardless of its orientation.
@@ -252,7 +252,7 @@ void FlutterTizenView::OnCommit(const std::string& str) {
 }
 
 void FlutterTizenView::SendInitialGeometry() {
-  OnRotate(window_->GetRotation());
+  OnRotate(handle_->GetRotation());
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,
@@ -268,7 +268,7 @@ void FlutterTizenView::SendWindowMetrics(int32_t left,
 #ifdef TV_PROFILE
     double dpi = 72.0;
 #else
-    double dpi = static_cast<double>(window_->GetDpi());
+    double dpi = static_cast<double>(handle_->GetDpi());
 #endif
     double scale_factor = dpi / 90.0 * kProfileFactor;
     computed_pixel_ratio = std::max(scale_factor, 1.0);
@@ -288,7 +288,7 @@ void FlutterTizenView::SendFlutterPointerEvent(
     size_t timestamp,
     FlutterPointerDeviceKind device_kind,
     int device_id) {
-  TizenWindow::Geometry geometry = window_->GetWindowGeometry();
+  TizenBaseHandle::Geometry geometry = handle_->GetRenderTargetGeometry();
   double new_x = x, new_y = y;
 
   if (rotation_degree_ == 90) {
@@ -305,8 +305,8 @@ void FlutterTizenView::SendFlutterPointerEvent(
   FlutterPointerEvent event = {};
   event.struct_size = sizeof(event);
   event.phase = phase;
-  event.x = new_x;
-  event.y = new_y;
+  event.x = new_x - geometry.left;
+  event.y = new_y - geometry.top;
   if (delta_x != 0 || delta_y != 0) {
     event.signal_kind = kFlutterPointerSignalKindScroll;
   }

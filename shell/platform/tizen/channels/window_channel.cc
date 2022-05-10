@@ -16,8 +16,9 @@ constexpr char kChannelName[] = "tizen/internal/window";
 
 }  // namespace
 
-WindowChannel::WindowChannel(BinaryMessenger* messenger, TizenWindow* window)
-    : window_(window) {
+WindowChannel::WindowChannel(BinaryMessenger* messenger,
+                             TizenBaseHandle* handle)
+    : handle_(handle) {
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler(
@@ -35,7 +36,7 @@ void WindowChannel::HandleMethodCall(
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
-    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
+    TizenBaseHandle::Geometry geometry = handle_->GetRenderTargetGeometry();
     EncodableMap map;
     map[EncodableValue("x")] = EncodableValue(geometry.left);
     map[EncodableValue("y")] = EncodableValue(geometry.top);
@@ -57,11 +58,11 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> width(arguments, "width");
     EncodableValueHolder<int32_t> height(arguments, "height");
 
-    TizenWindow::Geometry geometry = window_->GetWindowGeometry();
+    TizenBaseHandle::Geometry geometry = handle_->GetRenderTargetGeometry();
     // FIXME: Use SetWindowGeometry() instead of OnGeometryChanged()
     // After the SetWindowGeometry was successfully executed, I expected a
     // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
-    window_->OnGeometryChanged({
+    handle_->OnGeometryChanged({
         x ? *x : geometry.left,
         y ? *y : geometry.top,
         width ? *width : geometry.width,
@@ -70,7 +71,7 @@ void WindowChannel::HandleMethodCall(
     result->Success();
 #endif
   } else if (method_name == "getScreenGeometry") {
-    TizenWindow::Geometry geometry = window_->GetScreenGeometry();
+    TizenBaseHandle::Geometry geometry = handle_->GetScreenGeometry();
     EncodableMap map;
     map[EncodableValue("width")] = EncodableValue(geometry.width);
     map[EncodableValue("height")] = EncodableValue(geometry.height);

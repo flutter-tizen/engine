@@ -58,12 +58,12 @@ std::string text_clipboard = "";
 }  // namespace
 
 PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
-                                 TizenWindow* window)
+                                 TizenBaseHandle* handle)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
           &JsonMethodCodec::GetInstance())),
-      window_(window) {
+      handle_(handle) {
   channel_->SetMethodCallHandler(
       [this](const MethodCall<rapidjson::Document>& call,
              std::unique_ptr<MethodResult<rapidjson::Document>> result) {
@@ -164,13 +164,13 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
 }
 
 void PlatformChannel::RestoreSystemUiOverlays() {
-  if (!window_) {
+  if (!handle_) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(window_->GetWindowId());
+  shell.InitializeSoftkey(handle_->GetWindowId());
 
   if (shell.IsSoftkeyShown()) {
     shell.ShowSoftkey();
@@ -182,13 +182,13 @@ void PlatformChannel::RestoreSystemUiOverlays() {
 
 void PlatformChannel::SetEnabledSystemUiOverlays(
     const std::vector<std::string>& overlays) {
-  if (!window_) {
+  if (!handle_) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(window_->GetWindowId());
+  shell.InitializeSoftkey(handle_->GetWindowId());
 
   if (std::find(overlays.begin(), overlays.end(), kSystemUiOverlayBottom) !=
       overlays.end()) {
@@ -201,7 +201,7 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
 
 void PlatformChannel::SetPreferredOrientations(
     const std::vector<std::string>& orientations) {
-  if (!window_) {
+  if (!handle_) {
     return;
   }
 
@@ -220,7 +220,7 @@ void PlatformChannel::SetPreferredOrientations(
     // default.
     rotations = {0, 90, 180, 270};
   }
-  window_->SetPreferredOrientations(rotations);
+  handle_->SetPreferredOrientations(rotations);
 }
 
 }  // namespace flutter

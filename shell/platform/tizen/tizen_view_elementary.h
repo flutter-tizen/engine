@@ -3,25 +3,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
-#define EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
+#ifndef EMBEDDER_TIZEN_VIEW_ELEMENTARY_H_
+#define EMBEDDER_TIZEN_VIEW_ELEMENTARY_H_
 
-#include "flutter/shell/platform/tizen/tizen_window.h"
+#include "flutter/shell/platform/tizen/tizen_view.h"
 
+#define EFL_BETA_API_SUPPORT
+#include <Ecore.h>
 #include <Elementary.h>
 
 #include <unordered_map>
 
 namespace flutter {
 
-class TizenWindowElementary : public TizenWindow {
+class TizenViewElementary : public TizenView {
  public:
-  TizenWindowElementary(TizenBaseHandle::Geometry geometry,
-                        bool transparent,
-                        bool focusable,
-                        bool top_level);
+  TizenViewElementary(TizenBaseHandle::Geometry geometry,
+                      Evas_Object* elm_parent);
 
-  ~TizenWindowElementary();
+  ~TizenViewElementary();
 
   Geometry GetRenderTargetGeometry() override;
 
@@ -29,22 +29,16 @@ class TizenWindowElementary : public TizenWindow {
 
   Geometry GetScreenGeometry() override;
 
-  void* GetRenderTarget() override { return elm_win_; }
-
   void* GetRenderTargetDisplay() override { return image_; }
 
-  int32_t GetRotation() override;
+  void* GetEvasContainer() { return container_; }
 
   int32_t GetDpi() override;
 
   uintptr_t GetWindowId() override;
 
-  void* GetWindowHandle() override { return elm_win_; }
-
   void ResizeRenderTargetWithRotation(Geometry geometry,
                                       int32_t angle) override;
-
-  void SetPreferredOrientations(const std::vector<int>& rotations) override;
 
   void BindKeys(const std::vector<std::string>& keys) override;
 
@@ -57,11 +51,7 @@ class TizenWindowElementary : public TizenWindow {
   }
 
  private:
-  bool CreateWindow();
-
-  void DestroyWindow();
-
-  void SetWindowOptions();
+  bool CreateView();
 
   void RegisterEventHandlers();
 
@@ -69,12 +59,14 @@ class TizenWindowElementary : public TizenWindow {
 
   void PrepareInputMethod();
 
-  Evas_Object* elm_win_ = nullptr;
+  Evas_Object* elm_parent_ = nullptr;
   Evas_Object* image_ = nullptr;
+  Evas_Object* event_layer_ = nullptr;
+  Evas_Object* container_ = nullptr;
 
-  Evas_Smart_Cb rotation_changed_callback_;
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;
+  std::vector<Ecore_Event_Handler*> ecore_event_key_handlers_;
 
   // The Tizen input method context. nullptr if not set.
   std::unique_ptr<TizenInputMethodContext> input_method_context_;
@@ -82,4 +74,4 @@ class TizenWindowElementary : public TizenWindow {
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
+#endif  // EMBEDDER_TIZEN_VIEW_ELEMENTARY_H_

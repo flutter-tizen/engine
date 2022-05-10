@@ -10,14 +10,14 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/binary_messenger.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/method_channel.h"
-#include "flutter/shell/platform/tizen/tizen_window.h"
+#include "flutter/shell/platform/tizen/tizen_base_handle.h"
 
 namespace flutter {
 
 // Channel to get/set application's window size and device's screen size.
 class WindowChannel {
  public:
-  explicit WindowChannel(BinaryMessenger* messenger, TizenWindow* window);
+  explicit WindowChannel(BinaryMessenger* messenger, TizenBaseHandle* window);
   virtual ~WindowChannel();
 
  private:
@@ -27,7 +27,7 @@ class WindowChannel {
   std::unique_ptr<MethodChannel<EncodableValue>> channel_;
 
   // A reference to the renderer object managed by FlutterTizenView.
-  TizenWindow* window_;
+  TizenBaseHandle* handle_;
 };
 
 }  // namespace flutter

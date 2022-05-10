@@ -24,7 +24,7 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
-  flutter::TizenWindow::Geometry window_geometry = {
+  flutter::TizenBaseHandle::Geometry window_geometry = {
       window_properties.x,
       window_properties.y,
       window_properties.width,
@@ -51,4 +51,24 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
   view->SendInitialGeometry();
 
   return HandleForView(view.release());
+}
+
+FlutterDesktopViewRef FlutterDesktopViewCreateFromNewView(
+    const FlutterDesktopViewProperties& view_properties,
+    FlutterDesktopEngineRef engine,
+    void* elm_parent) {
+  // Not supported.
+
+  return nullptr;
+}
+
+void* FlutterDesktopViewGetEvasObject(FlutterDesktopEngineRef engine) {
+  // Not supported.
+  return nullptr;
+}
+
+void FlutterDesktopViewResizeView(FlutterDesktopEngineRef engine,
+                                  int32_t width,
+                                  int32_t height) {
+  // Not supported.
 }

@@ -190,6 +190,7 @@ template("embedder") {
       sources += [
         "flutter_tizen_elementary.cc",
         "tizen_renderer_evas_gl.cc",
+        "tizen_view_elementary.cc",
         "tizen_window_elementary.cc",
       ]
 
@@ -233,7 +234,7 @@ template("embedder") {
 
 embedder("flutter_tizen_mobile") {
   target_type = "shared_library"
-  use_evas_gl_renderer = false
+  use_evas_gl_renderer = true
 
   defines = [ "MOBILE_PROFILE" ]
 }

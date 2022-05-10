@@ -198,7 +198,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           if (rotation_event->win == self->GetWindowId()) {
             int32_t degree = rotation_event->angle;
             self->view_->OnRotate(degree);
-            Geometry geometry = self->GetWindowGeometry();
+            Geometry geometry = self->GetRenderTargetGeometry();
             ecore_wl2_window_rotation_change_done_send(
                 self->ecore_wl2_window_, rotation_event->rotation,
                 geometry.width, geometry.height);
@@ -381,14 +381,14 @@ void TizenWindowEcoreWl2::DestroyWindow() {
   ecore_wl2_shutdown();
 }
 
-TizenWindow::Geometry TizenWindowEcoreWl2::GetWindowGeometry() {
+TizenBaseHandle::Geometry TizenWindowEcoreWl2::GetRenderTargetGeometry() {
   Geometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.left, &result.top,
                                 &result.width, &result.height);
   return result;
 }
 
-void TizenWindowEcoreWl2::SetWindowGeometry(Geometry geometry) {
+void TizenWindowEcoreWl2::SetRenderTargetGeometry(Geometry geometry) {
   ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left, geometry.top,
                                 geometry.width, geometry.height);
   // FIXME: The changes set in `ecore_wl2_window_geometry_set` seems to apply
@@ -397,7 +397,7 @@ void TizenWindowEcoreWl2::SetWindowGeometry(Geometry geometry) {
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
 }
 
-TizenWindow::Geometry TizenWindowEcoreWl2::GetScreenGeometry() {
+TizenBaseHandle::Geometry TizenWindowEcoreWl2::GetScreenGeometry() {
   Geometry result = {};
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.width,
                                     &result.height);
@@ -448,7 +448,7 @@ void TizenWindowEcoreWl2::Show() {
 void TizenWindowEcoreWl2::OnGeometryChanged(Geometry geometry) {
   // This implementation mimics the situation in which the handler of
   // ECORE_WL2_EVENT_WINDOW_CONFIGURE is called.
-  SetWindowGeometry(geometry);
+  SetRenderTargetGeometry(geometry);
   view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }
 
