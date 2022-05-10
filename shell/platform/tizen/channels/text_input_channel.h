@@ -20,13 +20,6 @@
 
 namespace flutter {
 
-enum class EditStatus { kNone, kPreeditStart, kPreeditEnd, kCommit };
-
-struct TextEditingContext {
-  EditStatus edit_status_ = EditStatus::kNone;
-  bool is_in_select_mode_ = false;
-};
-
 class TextInputChannel {
  public:
   explicit TextInputChannel(
@@ -46,9 +39,7 @@ class TextInputChannel {
   bool FilterEvent(Ecore_Event_Key* event, bool is_down);
   void HandleUnfilteredEvent(Ecore_Event_Key* event);
   void EnterPressed(TextInputModel* model, bool select);
-  void ResetTextEditingContext() {
-    text_editing_context_ = TextEditingContext();
-  }
+  void Reset();
   bool ShouldNotFilterEvent(std::string key, bool is_ime);
 
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
@@ -59,7 +50,7 @@ class TextInputChannel {
   bool is_software_keyboard_showing_ = false;
   std::string input_action_;
   std::string input_type_;
-  TextEditingContext text_editing_context_;
+  bool is_in_select_mode_ = false;
 };
 
 }  // namespace flutter
