@@ -63,8 +63,6 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
       std::make_unique<TizenInputMethodContext>(window_.get()));
-
-  OnRotate(window_->GetRotation());
 }
 
 void FlutterTizenView::CreateRenderSurface() {
