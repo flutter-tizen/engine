@@ -43,7 +43,9 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
   view->CreateRenderSurface();
   if (!view->engine()->IsRunning()) {
-    view->engine()->RunEngine();
+    if (!view->engine()->RunEngine()) {
+      return nullptr;
+    }
   }
 
   view->SendInitialGeometry();
