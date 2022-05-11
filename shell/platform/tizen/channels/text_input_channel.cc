@@ -65,7 +65,6 @@ TextInputChannel::TextInputChannel(
   // Set input method callbacks.
   input_method_context_->SetOnPreeditStart([this]() {
     FT_LOG(Debug) << "onPreeditStart";
-    text_editing_context_.edit_status_ = EditStatus::kPreeditStart;
     active_model_->BeginComposing();
   });
 
@@ -82,7 +81,6 @@ TextInputChannel::TextInputChannel(
       });
 
   input_method_context_->SetOnPreeditEnd([this]() {
-    text_editing_context_.edit_status_ = EditStatus::kPreeditEnd;
     FT_LOG(Debug) << "onPreeditEnd";
 
     // Delete preedit-string, it will be committed.
@@ -99,7 +97,6 @@ TextInputChannel::TextInputChannel(
 
   input_method_context_->SetOnCommit([this](std::string str) -> void {
     FT_LOG(Debug) << "OnCommit: str[" << str << "]";
-    text_editing_context_.edit_status_ = EditStatus::kCommit;
     active_model_->AddText(str);
     if (active_model_->composing()) {
       active_model_->CommitComposing();
@@ -112,8 +109,7 @@ TextInputChannel::TextInputChannel(
     if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
       // Fallback for HW back-key.
       input_method_context_->HideInputPanel();
-      input_method_context_->ResetInputMethodContext();
-      ResetTextEditingContext();
+      Reset();
       is_software_keyboard_showing_ = false;
     } else {
       is_software_keyboard_showing_ = true;
@@ -145,8 +141,7 @@ void TextInputChannel::HandleMethodCall(
     input_method_context_->ShowInputPanel();
   } else if (method.compare(kHideMethod) == 0) {
     input_method_context_->HideInputPanel();
-    input_method_context_->ResetInputMethodContext();
-    ResetTextEditingContext();
+    Reset();
   } else if (method.compare(kSetPlatformViewClient) == 0) {
     result->NotImplemented();
     return;
@@ -215,9 +210,7 @@ void TextInputChannel::HandleMethodCall(
 
     active_model_ = std::make_unique<TextInputModel>();
   } else if (method.compare(kSetEditingStateMethod) == 0) {
-    input_method_context_->ResetInputMethodContext();
-    ResetTextEditingContext();
-
+    Reset();
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
       result->Error(kBadArgumentError, "Method invoked without args.");
       return;
@@ -322,7 +315,7 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
   bool is_ime = true;
   // FIXME: Only for wearable.
   if (is_ime && strcmp(event->key, "Select") == 0) {
-    text_editing_context_.is_in_select_mode_ = true;
+    is_in_select_mode_ = true;
     FT_LOG(Debug) << "Entering select mode.";
   }
 #else
@@ -331,9 +324,8 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
 #endif
 
   if (ShouldNotFilterEvent(event->key, is_ime)) {
-    ResetTextEditingContext();
-    input_method_context_->ResetInputMethodContext();
     FT_LOG(Info) << "Force redirect an IME key event: " << event->keyname;
+    Reset();
     return false;
   }
 
@@ -341,9 +333,8 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
       input_method_context_->FilterEvent(event, is_ime ? "ime" : "", is_down);
 
 #ifdef WEARABLE_PROFILE
-  if (!handled && !strcmp(event->key, "Return") &&
-      text_editing_context_.is_in_select_mode_) {
-    text_editing_context_.is_in_select_mode_ = false;
+  if (!handled && !strcmp(event->key, "Return") && is_in_select_mode_) {
+    is_in_select_mode_ = false;
     handled = true;
     FT_LOG(Debug) << "Leaving select mode.";
   }
@@ -353,15 +344,6 @@ bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
 }
 
 void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
-  text_editing_context_.edit_status_ = EditStatus::kNone;
-#ifdef MOBILE_PROFILE
-  // FIXME: Only for mobile.
-  if (text_editing_context_.edit_status_ == EditStatus::kPreeditEnd) {
-    FT_LOG(Debug) << "Ignore a key event: " << event->keyname;
-    ResetTextEditingContext();
-    return;
-  }
-#endif
   bool select = !strcmp(event->key, "Select");
   bool shift = event->modifiers & ECORE_SHIFT;
   bool needs_update = false;
@@ -403,8 +385,7 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
              IsAsciiPrintableKey(event->string[0])) {
     active_model_->AddCodePoint(event->string[0]);
     needs_update = true;
-  } else if (key == "Return" ||
-             (select && !text_editing_context_.is_in_select_mode_)) {
+  } else if (key == "Return" || (select && !is_in_select_mode_)) {
     EnterPressed(active_model_.get(), select);
     return;
   } else {
@@ -429,13 +410,18 @@ void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
   channel_->InvokeMethod(kPerformActionMethod, std::move(args));
 }
 
+void TextInputChannel::Reset() {
+  is_in_select_mode_ = false;
+  input_method_context_->ResetInputMethodContext();
+}
+
 bool TextInputChannel::ShouldNotFilterEvent(std::string key, bool is_ime) {
   // Force redirect to HandleUnfilteredEvent(especially on TV)
   // If you don't do this, it will affects the input panel.
   // For example, when the left key of the input panel is pressed, the focus
   // of the input panel is shifted to left!
   // What we want is to move only the cursor on the text editor.
-  if (is_ime && !text_editing_context_.is_in_select_mode_ &&
+  if (is_ime && !is_in_select_mode_ &&
       (key == "Left" || key == "Right" || key == "Up" || key == "Down" ||
        key == "End" || key == "Home" || key == "BackSpace" || key == "Delete" ||
        key == "Select")) {
