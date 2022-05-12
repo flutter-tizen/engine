@@ -239,7 +239,8 @@ jobs:
             --target-toolchain _ \
             --target-sysroot _ \
             --target-triple _ \
-            --runtime-mode=${{ matrix.mode }}
+            --runtime-mode=${{ matrix.mode }} \
+            --disable-desktop-embeddings
           ninja -C src/out/$OUTPUT_NAME clang_x64/gen_snapshot
 
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
