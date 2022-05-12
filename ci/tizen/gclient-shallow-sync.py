@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import platform
 import sys
 import subprocess
 import concurrent.futures
@@ -10,7 +11,7 @@ import gclient_utils
 
 def run_git(args, cwd):
     if not args:
-        raise Exception('Please provide a git command to run')
+        raise Exception('Please provide a git command to run.')
     return subprocess.call(['git'] + args, cwd=cwd) == 0
 
 
@@ -42,12 +43,21 @@ def checkout_deps(deps):
 
 def main(argv):
     if (len(argv) < 1):
-        raise Exception('Please provide a DEPS file to update')
+        raise Exception('Please provide a DEPS file to update.')
     deps_file = argv[0]
     if not os.path.exists(deps_file):
-        raise Exception('DEPS file does not exist')
+        raise Exception('The DEPS file does not exist.')
+
+    host_os = 'linux'
+    if platform.system() == 'Windows':
+        host_os = 'win'
+    if platform.system() == 'Darwin':
+        host_os = 'mac'
+
     deps_contents = gclient_utils.FileRead(deps_file)
-    local_scope = gclient_eval.Parse(deps_contents, deps_file)
+    local_scope = gclient_eval.Parse(
+        deps_contents, deps_file, builtin_vars={'host_os': host_os})
+
     checkout_deps(local_scope['deps'])
 
 
