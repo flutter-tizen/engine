@@ -207,7 +207,7 @@ jobs:
           path: src/out/${{ env.OUTPUT_NAME }}
           key: out-macos-build-${{ env.OUTPUT_NAME }}-${{ github.sha }}
           restore-keys: |
-            out-macos-build-${{ env.OUTPUT_NAME }}-
+            cache-miss
 
       - name: install depot_tools
         run: |
