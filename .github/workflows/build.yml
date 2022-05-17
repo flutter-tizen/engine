@@ -300,13 +300,13 @@ jobs:
 
       - name: set variables
         run: |
-          echo "TAG_NAME=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
+          echo "SHORT_SHA=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
           echo "VERSION=$(echo "${{ github.ref_name }}" | cut -d'-' -f2)" >> $GITHUB_ENV
 
       - uses: softprops/action-gh-release@v1
         with:
-          name: ${{ env.VERSION }} (${{ env.TAG_NAME }})
-          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.VERSION }} (${{ env.SHORT_SHA }})
+          tag_name: ${{ env.VERSION }}-${{ env.SHORT_SHA }}
           target_commitish: ${{ github.sha }}
           files: tizen-*.zip
           body: |
