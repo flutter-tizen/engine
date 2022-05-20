@@ -40,17 +40,10 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
   gl_config_->stencil_bits = EVAS_GL_STENCIL_NONE;
 
   gl_context_ =
-      evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_3_X);
+      evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_2_X);
   gl_resource_context_ =
-      evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_3_X);
-  if (!gl_context_) {
-    FT_LOG(Error) << "Failed to create an Evas GL context with "
-                     "EVAS_GL_GLES_3_X; trying with EVAS_GL_GLES_2_X.";
-    gl_context_ =
-        evas_gl_context_version_create(evas_gl_, nullptr, EVAS_GL_GLES_2_X);
-    gl_resource_context_ =
-        evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_2_X);
-  }
+      evas_gl_context_version_create(evas_gl_, gl_context_, EVAS_GL_GLES_2_X);
+
   if (!gl_context_) {
     FT_LOG(Fatal) << "Failed to create an Evas GL context.";
     return false;
