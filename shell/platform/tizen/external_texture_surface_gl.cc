@@ -10,7 +10,7 @@
 #undef EFL_BETA_API_SUPPORT
 #include "tizen_evas_gl_helper.h"
 extern Evas_GL* g_evas_gl;
-EVAS_GL_GLOBAL_GLES3_DECLARE();
+EVAS_GL_GLOBAL_GLES2_DECLARE();
 #else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
