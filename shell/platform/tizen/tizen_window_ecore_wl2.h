@@ -59,6 +59,8 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void SetWindowOptions();
 
+  void EnableCursor();
+
   void RegisterEventHandlers();
 
   void UnregisterEventHandlers();

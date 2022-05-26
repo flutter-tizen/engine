@@ -5,6 +5,10 @@
 
 #include "tizen_window_ecore_wl2.h"
 
+#ifdef TV_PROFILE
+#include <dlfcn.h>
+#endif
+
 #include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
@@ -114,6 +118,62 @@ void TizenWindowEcoreWl2::SetWindowOptions() {
   int rotations[4] = {0, 90, 180, 270};
   ecore_wl2_window_available_rotations_set(ecore_wl2_window_, rotations,
                                            sizeof(rotations) / sizeof(int));
+
+  EnableCursor();
+}
+
+void TizenWindowEcoreWl2::EnableCursor() {
+#ifdef TV_PROFILE
+  // dlopen is used here because the TV-specific library libvd-win-util.so
+  // and the relevant headers are not present in the rootstrap.
+  void* handle = dlopen("libvd-win-util.so", RTLD_LAZY);
+  if (!handle) {
+    FT_LOG(Error) << "Could not open a shared library libvd-win-util.so.";
+    return;
+  }
+
+  // These functions are defined in vd-win-util's cursor_module.h.
+  int (*CursorModule_Initialize)(wl_display * display, wl_registry * registry,
+                                 wl_seat * seat, unsigned int id);
+  int (*Cursor_Set_Config)(wl_surface * surface, uint32_t config_type,
+                           void* data);
+  *(void**)(&CursorModule_Initialize) =
+      dlsym(handle, "CursorModule_Initialize");
+  *(void**)(&Cursor_Set_Config) = dlsym(handle, "Cursor_Set_Config");
+
+  if (!CursorModule_Initialize || !Cursor_Set_Config) {
+    FT_LOG(Error) << "Could not load a symbol from the library.";
+    return;
+  }
+
+  wl_registry* registry = ecore_wl2_display_registry_get(ecore_wl2_display_);
+  wl_seat* seat = ecore_wl2_input_seat_get(
+      ecore_wl2_input_default_input_get(ecore_wl2_display_));
+  if (!registry || !seat) {
+    FT_LOG(Error)
+        << "Could not retreive wl_registry or wl_seat from the display.";
+    return;
+  }
+
+  Eina_Iterator* iter = ecore_wl2_display_globals_get(ecore_wl2_display_);
+  Ecore_Wl2_Global* global = nullptr;
+
+  EINA_ITERATOR_FOREACH(iter, global) {
+    if (strcmp(global->interface, "tizen_cursor") == 0) {
+      if (!CursorModule_Initialize(wl2_display_, registry, seat, global->id)) {
+        FT_LOG(Error) << "Failed to initialize the cursor module.";
+      }
+    }
+  }
+  eina_iterator_free(iter);
+
+  wl_surface* surface = ecore_wl2_window_surface_get(ecore_wl2_window_);
+  // The config_type 1 refers to TIZEN_CURSOR_CONFIG_CURSOR_AVAILABLE
+  // defined in the TV extension protocol tizen-extension-tv.xml.
+  if (!Cursor_Set_Config(surface, 1, nullptr)) {
+    FT_LOG(Error) << "Failed to set a cursor configuration.";
+  }
+#endif
 }
 
 void TizenWindowEcoreWl2::RegisterEventHandlers() {
@@ -364,25 +424,26 @@ void TizenWindowEcoreWl2::OnGeometryChanged(Geometry geometry) {
 }
 
 void TizenWindowEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
+  wl_registry* registry = ecore_wl2_display_registry_get(ecore_wl2_display_);
+  if (!registry) {
+    FT_LOG(Error) << "Could not retreive wl_registry from the display.";
+    return;
+  }
+
   Eina_Iterator* iter = ecore_wl2_display_globals_get(ecore_wl2_display_);
-  struct wl_registry* registry =
-      ecore_wl2_display_registry_get(ecore_wl2_display_);
+  Ecore_Wl2_Global* global = nullptr;
 
-  if (iter && registry) {
-    Ecore_Wl2_Global* global = nullptr;
-
-    // Retrieve global objects to bind tizen policy
-    EINA_ITERATOR_FOREACH(iter, global) {
-      if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
-        tizen_policy_ = static_cast<tizen_policy*>(
-            wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));
-        break;
-      }
+  // Retrieve global objects to bind a tizen policy.
+  EINA_ITERATOR_FOREACH(iter, global) {
+    if (strcmp(global->interface, tizen_policy_interface.name) == 0) {
+      tizen_policy_ = static_cast<tizen_policy*>(
+          wl_registry_bind(registry, global->id, &tizen_policy_interface, 1));
+      break;
     }
   }
   eina_iterator_free(iter);
 
-  if (tizen_policy_ == nullptr) {
+  if (!tizen_policy_) {
     FT_LOG(Error)
         << "Failed to initialize the tizen policy handle, the top_level "
            "attribute is ignored.";
