@@ -143,6 +143,7 @@ void TizenWindowEcoreWl2::EnableCursor() {
 
   if (!CursorModule_Initialize || !Cursor_Set_Config) {
     FT_LOG(Error) << "Could not load a symbol from the library.";
+    dlclose(handle);
     return;
   }
 
@@ -152,6 +153,7 @@ void TizenWindowEcoreWl2::EnableCursor() {
   if (!registry || !seat) {
     FT_LOG(Error)
         << "Could not retreive wl_registry or wl_seat from the display.";
+    dlclose(handle);
     return;
   }
 
@@ -171,8 +173,10 @@ void TizenWindowEcoreWl2::EnableCursor() {
   // The config_type 1 refers to TIZEN_CURSOR_CONFIG_CURSOR_AVAILABLE
   // defined in the TV extension protocol tizen-extension-tv.xml.
   if (!Cursor_Set_Config(surface, 1, nullptr)) {
-    FT_LOG(Error) << "Failed to set a cursor configuration.";
+    FT_LOG(Error) << "Failed to set a cursor config value.";
   }
+
+  dlclose(handle);
 #endif
 }
 
