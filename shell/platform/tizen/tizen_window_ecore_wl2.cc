@@ -137,12 +137,15 @@ void TizenWindowEcoreWl2::EnableCursor() {
                                  wl_seat * seat, unsigned int id);
   int (*Cursor_Set_Config)(wl_surface * surface, uint32_t config_type,
                            void* data);
+  void (*CursorModule_Finalize)(void);
   *(void**)(&CursorModule_Initialize) =
       dlsym(handle, "CursorModule_Initialize");
   *(void**)(&Cursor_Set_Config) = dlsym(handle, "Cursor_Set_Config");
+  *(void**)(&CursorModule_Finalize) = dlsym(handle, "CursorModule_Finalize");
 
-  if (!CursorModule_Initialize || !Cursor_Set_Config) {
-    FT_LOG(Error) << "Could not load a symbol from the library.";
+  if (!CursorModule_Initialize || !Cursor_Set_Config ||
+      !CursorModule_Finalize) {
+    FT_LOG(Error) << "Could not load symbols from the library.";
     dlclose(handle);
     return;
   }
@@ -169,6 +172,8 @@ void TizenWindowEcoreWl2::EnableCursor() {
   }
   eina_iterator_free(iter);
 
+  ecore_wl2_sync();
+
   wl_surface* surface = ecore_wl2_window_surface_get(ecore_wl2_window_);
   // The config_type 1 refers to TIZEN_CURSOR_CONFIG_CURSOR_AVAILABLE
   // defined in the TV extension protocol tizen-extension-tv.xml.
@@ -176,6 +181,7 @@ void TizenWindowEcoreWl2::EnableCursor() {
     FT_LOG(Error) << "Failed to set a cursor config value.";
   }
 
+  CursorModule_Finalize();
   dlclose(handle);
 #endif
 }
