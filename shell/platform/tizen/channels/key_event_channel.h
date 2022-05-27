@@ -5,8 +5,6 @@
 #ifndef EMBEDDER_KEY_EVENT_CHANNEL_H_
 #define EMBEDDER_KEY_EVENT_CHANNEL_H_
 
-#include <Ecore_Input.h>
-
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"
@@ -20,7 +18,11 @@ class KeyEventChannel {
   explicit KeyEventChannel(BinaryMessenger* messenger);
   virtual ~KeyEventChannel();
 
-  void SendKeyEvent(Ecore_Event_Key* event,
+  void SendKeyEvent(const char* key,
+                    const char* string,
+                    const char* compose,
+                    uint32_t modifiers,
+                    uint32_t keycode,
                     bool is_down,
                     std::function<void(bool)> callback);
 

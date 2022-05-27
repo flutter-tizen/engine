@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "flutter/shell/platform/tizen/tizen_input_method_context.h"
+
 namespace flutter {
 
 class FlutterTizenView;
@@ -19,8 +21,6 @@ class TizenWindow {
   struct Geometry {
     int32_t left = 0, top = 0, width = 0, height = 0;
   };
-
-  TizenWindow();
 
   virtual ~TizenWindow() = default;
 
@@ -65,6 +65,10 @@ class TizenWindow {
   // This is a temporary implementation that is only used by the window channel.
   virtual void OnGeometryChanged(Geometry geometry) = 0;
 
+  TizenInputMethodContext* input_method_context() {
+    return input_method_context_.get();
+  }
+
  protected:
   explicit TizenWindow(Geometry geometry,
                        bool transparent,
@@ -81,6 +85,9 @@ class TizenWindow {
   bool top_level_ = false;
 
   FlutterTizenView* view_ = nullptr;
+
+  // The Tizen input method context. nullptr if not set.
+  std::unique_ptr<TizenInputMethodContext> input_method_context_;
 };
 
 }  // namespace flutter

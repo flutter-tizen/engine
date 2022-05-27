@@ -14,9 +14,7 @@ const char* GetEcoreImfContextAvailableId() {
   modules = ecore_imf_context_available_ids_get();
   if (modules) {
     void* module;
-    EINA_LIST_FREE(modules, module) {
-      return static_cast<const char*>(module);
-    }
+    EINA_LIST_FREE(modules, module) { return static_cast<const char*>(module); }
   }
   return nullptr;
 }
@@ -141,26 +139,60 @@ TizenInputMethodContext::~TizenInputMethodContext() {
   ecore_imf_shutdown();
 }
 
-bool TizenInputMethodContext::FilterEvent(Ecore_Event_Key* event,
-                                          const char* dev_name,
-                                          bool is_down) {
+bool TizenInputMethodContext::FilterEcoreEventKey(Ecore_Event_Key* event,
+                                                  bool is_down) {
   FT_ASSERT(imf_context_);
   FT_ASSERT(event);
-  FT_ASSERT(dev_name);
+
+  const char* device_name = ecore_device_name_get(event->dev);
+  bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
+
+  if (ShouldNotFilterEvent(event->key, is_ime)) {
+    return false;
+  }
 
   if (is_down) {
     Ecore_IMF_Event_Key_Down imf_event =
-        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event, dev_name);
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event,
+                                                               device_name);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
         reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
   } else {
     Ecore_IMF_Event_Key_Up imf_event =
-        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event, dev_name);
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event,
+                                                             device_name);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_UP,
         reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
   }
+}
+
+bool TizenInputMethodContext::FilterEvasEventKeyDown(
+    Evas_Event_Key_Down* event) {
+  if (ShouldNotFilterEvent(event->key, true)) {
+    return false;
+  }
+
+  Ecore_IMF_Event_Key_Down imf_event;
+  ecore_imf_evas_event_key_down_wrap(event, &imf_event);
+
+  return ecore_imf_context_filter_event(
+      imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
+      reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
+}
+
+bool TizenInputMethodContext::FilterEvasEventKeyUp(Evas_Event_Key_Up* event) {
+  if (ShouldNotFilterEvent(event->key, true)) {
+    return false;
+  }
+
+  Ecore_IMF_Event_Key_Up imf_event;
+  ecore_imf_evas_event_key_up_wrap(event, &imf_event);
+
+  return ecore_imf_context_filter_event(
+      imf_context_, ECORE_IMF_EVENT_KEY_UP,
+      reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
 }
 
 InputPanelGeometry TizenInputMethodContext::GetInputPanelGeometry() {
@@ -186,6 +218,12 @@ void TizenInputMethodContext::HideInputPanel() {
   FT_ASSERT(imf_context_);
   ecore_imf_context_focus_out(imf_context_);
   ecore_imf_context_input_panel_hide(imf_context_);
+}
+
+bool TizenInputMethodContext::IsInputPanelShown() {
+  Ecore_IMF_Input_Panel_State state =
+      ecore_imf_context_input_panel_state_get(imf_context_);
+  return state == ECORE_IMF_INPUT_PANEL_STATE_SHOW;
 }
 
 void TizenInputMethodContext::SetInputPanelLayout(
@@ -314,6 +352,28 @@ void TizenInputMethodContext::SetInputPanelOptions() {
       imf_context_, ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DEFAULT);
   ecore_imf_context_input_panel_language_set(
       imf_context_, ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC);
+}
+
+bool TizenInputMethodContext::ShouldNotFilterEvent(std::string key,
+                                                   bool is_ime) {
+  // Force redirect to HandleUnfilteredEvent(especially on TV)
+  // If you don't do this, it will affects the input panel.
+  // For example, when the left key of the input panel is pressed, the focus
+  // of the input panel is shifted to left!
+  // What we want is to move only the cursor on the text editor.
+
+  if (is_ime && (key == "Left" || key == "Right" || key == "Up" ||
+                 key == "Down" || key == "End" || key == "Home" ||
+                 key == "BackSpace" || key == "Delete")) {
+    return true;
+  }
+#ifdef TV_PROFILE
+  if (is_ime && key == "Select") {
+    return true;
+  }
+#endif
+
+  return false;
 }
 
 }  // namespace flutter

@@ -4,8 +4,6 @@
 
 #include "text_input_channel.h"
 
-#include <Ecore.h>
-
 #include "flutter/shell/platform/common/json_method_codec.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
@@ -50,56 +48,45 @@ bool IsAsciiPrintableKey(char ch) {
 
 TextInputChannel::TextInputChannel(
     BinaryMessenger* messenger,
-    std::unique_ptr<TizenInputMethodContext> input_method_context)
+    TizenInputMethodContext* input_method_context)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
           &JsonMethodCodec::GetInstance())),
-      input_method_context_(std::move(input_method_context)) {
+      input_method_context_(input_method_context) {
   channel_->SetMethodCallHandler(
       [this](const MethodCall<rapidjson::Document>& call,
              std::unique_ptr<MethodResult<rapidjson::Document>> result) {
         HandleMethodCall(call, std::move(result));
       });
-
-  // Set input method callbacks.
-  input_method_context_->SetOnPreeditStart([this]() { OnComposeBegin(); });
-
-  input_method_context_->SetOnPreeditChanged(
-      [this](std::string str, int cursor_pos) -> void {
-        OnComposeChanged(str, cursor_pos);
-      });
-
-  input_method_context_->SetOnPreeditEnd([this]() { OnComposeEnd(); });
-
-  input_method_context_->SetOnCommit(
-      [this](std::string str) -> void { OnCommit(str); });
-
-  input_method_context_->SetOnInputPanelStateChanged(
-      [this](int state) { OnInputPanelStateChanged(state); });
 }
 
 TextInputChannel::~TextInputChannel() {}
 
 void TextInputChannel::OnComposeBegin() {
-  FT_LOG(Error) << "onPreeditStart";
+  if (active_model_ == nullptr) {
+    return;
+  }
   active_model_->BeginComposing();
 }
 
-void TextInputChannel::OnComposeChanged(std::string str, int cursor_pos) {
-  FT_LOG(Error) << "onPreedit: str[" << str << "] cursor_pos[" << cursor_pos
-                << "]";
+void TextInputChannel::OnComposeChanged(const std::string& str,
+                                        int cursor_pos) {
+  if (active_model_ == nullptr) {
+    return;
+  }
   if (str == "") {
     // Enter pre-edit end stage.
     return;
   }
   active_model_->UpdateComposingText(str);
-
   SendStateUpdate(*active_model_);
 }
 
 void TextInputChannel::OnComposeEnd() {
-  FT_LOG(Error) << "onPreeditEnd";
+  if (active_model_ == nullptr) {
+    return;
+  }
   // Delete preedit-string, it will be committed.
   int count = active_model_->composing_range().extent() -
               active_model_->composing_range().base();
@@ -107,18 +94,18 @@ void TextInputChannel::OnComposeEnd() {
   active_model_->CommitComposing();
   active_model_->EndComposing();
   active_model_->DeleteSurrounding(-count, count);
-
   SendStateUpdate(*active_model_);
 }
 
-void TextInputChannel::OnCommit(std::string str) {
-  FT_LOG(Error) << "OnCommit: str[" << str << "]";
+void TextInputChannel::OnCommit(const std::string& str) {
+  if (active_model_ == nullptr) {
+    return;
+  }
   active_model_->AddText(str);
   if (active_model_->composing()) {
     active_model_->CommitComposing();
     active_model_->EndComposing();
   }
-
   SendStateUpdate(*active_model_);
 }
 
@@ -126,21 +113,24 @@ void TextInputChannel::OnInputPanelStateChanged(int state) {
   if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
     // Fallback for HW back-key.
     input_method_context_->HideInputPanel();
-    input_method_context_->ResetInputMethodContext();
-    Reset();
     is_software_keyboard_showing_ = false;
   } else {
     is_software_keyboard_showing_ = true;
   }
 }
 
-bool TextInputChannel::SendKeyEvent(Ecore_Event_Key* key, bool is_down) {
-  if (!active_model_) {
+bool TextInputChannel::SendKeyEvent(const char* key,
+                                    const char* string,
+                                    const char* compose,
+                                    uint32_t modifiers,
+                                    uint32_t keycode,
+                                    bool is_down) {
+  if (active_model_ == nullptr) {
     return false;
   }
 
-  if (!FilterEvent(key, is_down) && is_down) {
-    HandleUnfilteredEvent(key);
+  if (is_down) {
+    HandleUnfilteredEvent(key, string, modifiers);
   }
 
   return true;
@@ -150,13 +140,12 @@ void TextInputChannel::HandleMethodCall(
     const MethodCall<rapidjson::Document>& method_call,
     std::unique_ptr<MethodResult<rapidjson::Document>> result) {
   const std::string& method = method_call.method_name();
-  FT_LOG(Debug) << "method: " << method;
 
   if (method.compare(kShowMethod) == 0) {
     input_method_context_->ShowInputPanel();
   } else if (method.compare(kHideMethod) == 0) {
     input_method_context_->HideInputPanel();
-    Reset();
+    input_method_context_->ResetInputMethodContext();
   } else if (method.compare(kSetPlatformViewClient) == 0) {
     result->NotImplemented();
     return;
@@ -225,7 +214,7 @@ void TextInputChannel::HandleMethodCall(
 
     active_model_ = std::make_unique<TextInputModel>();
   } else if (method.compare(kSetEditingStateMethod) == 0) {
-    Reset();
+    input_method_context_->ResetInputMethodContext();
     if (!method_call.arguments() || method_call.arguments()->IsNull()) {
       result->Error(kBadArgumentError, "Method invoked without args.");
       return;
@@ -318,53 +307,17 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
       kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
   args->PushBack(editing_state, allocator);
 
-  FT_LOG(Debug) << "Send text:[" << model.GetText() << "]";
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
-bool TextInputChannel::FilterEvent(Ecore_Event_Key* event, bool is_down) {
-  bool handled = false;
-
-#ifdef WEARABLE_PROFILE
-  // Hardware keyboard is not supported on watch devices.
-  bool is_ime = true;
-  // FIXME: Only for wearable.
-  if (is_ime && strcmp(event->key, "Select") == 0) {
-    is_in_select_mode_ = true;
-    FT_LOG(Debug) << "Entering select mode.";
-  }
-#else
-  const char* device_name = ecore_device_name_get(event->dev);
-  bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
-#endif
-
-  if (ShouldNotFilterEvent(event->key, is_ime)) {
-    FT_LOG(Info) << "Force redirect an IME key event: " << event->keyname;
-    Reset();
-    return false;
-  }
-
-  handled =
-      input_method_context_->FilterEvent(event, is_ime ? "ime" : "", is_down);
-
-#ifdef WEARABLE_PROFILE
-  if (!handled && !strcmp(event->key, "Return") && is_in_select_mode_) {
-    is_in_select_mode_ = false;
-    handled = true;
-    FT_LOG(Debug) << "Leaving select mode.";
-  }
-#endif
-
-  return handled;
-}
-
-void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
-  bool select = !strcmp(event->key, "Select");
-  bool shift = event->modifiers & ECORE_SHIFT;
+void TextInputChannel::HandleUnfilteredEvent(const char* key,
+                                             const char* string,
+                                             uint32_t modifires) {
+  bool shift = modifires & ECORE_SHIFT;
   bool needs_update = false;
-  std::string key = event->key;
+  std::string key_str = key;
 
-  if (key == "Left") {
+  if (key_str == "Left") {
     if (shift) {
       TextRange selection = active_model_->selection();
       needs_update = active_model_->SetSelection(
@@ -372,7 +325,7 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
     } else {
       needs_update = active_model_->MoveCursorBack();
     }
-  } else if (key == "Right") {
+  } else if (key_str == "Right") {
     if (shift) {
       TextRange selection = active_model_->selection();
       needs_update = active_model_->SetSelection(
@@ -380,30 +333,36 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
     } else {
       needs_update = active_model_->MoveCursorForward();
     }
-  } else if (key == "End") {
+  } else if (key_str == "End") {
     if (shift) {
       needs_update = active_model_->SelectToEnd();
     } else {
       needs_update = active_model_->MoveCursorToEnd();
     }
-  } else if (key == "Home") {
+  } else if (key_str == "Home") {
     if (shift) {
       needs_update = active_model_->SelectToBeginning();
     } else {
       needs_update = active_model_->MoveCursorToBeginning();
     }
-  } else if (key == "BackSpace") {
+  } else if (key_str == "BackSpace") {
     needs_update = active_model_->Backspace();
-  } else if (key == "Delete") {
+  } else if (key_str == "Delete") {
     needs_update = active_model_->Delete();
-  } else if (event->string && strlen(event->string) == 1 &&
-             IsAsciiPrintableKey(event->string[0])) {
-    active_model_->AddCodePoint(event->string[0]);
+  } else if (string && strlen(string) == 1 && IsAsciiPrintableKey(string[0])) {
+    active_model_->AddCodePoint(string[0]);
     needs_update = true;
-  } else if (key == "Return" || (select && !is_in_select_mode_)) {
-    EnterPressed(active_model_.get(), select);
+  } else if (key_str == "Return") {
+    EnterPressed(active_model_.get());
     return;
-  } else {
+  }
+#ifdef TV_PROFILE
+  else if (key_str == "Select") {
+    SelectPressed(active_model_.get());
+    return;
+  }
+#endif
+  else {
     FT_LOG(Warn) << "Key[" << key << "] is unhandled.";
   }
 
@@ -412,8 +371,8 @@ void TextInputChannel::HandleUnfilteredEvent(Ecore_Event_Key* event) {
   }
 }
 
-void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
-  if (!select && input_type_ == kMultilineInputType) {
+void TextInputChannel::EnterPressed(TextInputModel* model) {
+  if (input_type_ == kMultilineInputType) {
     model->AddCodePoint('\n');
     SendStateUpdate(*model);
   }
@@ -425,24 +384,15 @@ void TextInputChannel::EnterPressed(TextInputModel* model, bool select) {
   channel_->InvokeMethod(kPerformActionMethod, std::move(args));
 }
 
-void TextInputChannel::Reset() {
-  is_in_select_mode_ = false;
-  input_method_context_->ResetInputMethodContext();
-}
+#ifdef TV_PROFILE
+void TextInputChannel::SelectPressed(TextInputModel* model) {
+  auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
+  rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
+  args->PushBack(client_id_, allocator);
+  args->PushBack(rapidjson::Value(input_action_, allocator).Move(), allocator);
 
-bool TextInputChannel::ShouldNotFilterEvent(std::string key, bool is_ime) {
-  // Force redirect to HandleUnfilteredEvent(especially on TV)
-  // If you don't do this, it will affects the input panel.
-  // For example, when the left key of the input panel is pressed, the focus
-  // of the input panel is shifted to left!
-  // What we want is to move only the cursor on the text editor.
-  if (is_ime && !is_in_select_mode_ &&
-      (key == "Left" || key == "Right" || key == "Up" || key == "Down" ||
-       key == "End" || key == "Home" || key == "BackSpace" || key == "Delete" ||
-       key == "Select")) {
-    return true;
-  }
-  return false;
+  channel_->InvokeMethod(kPerformActionMethod, std::move(args));
 }
+#endif
 
 }  // namespace flutter

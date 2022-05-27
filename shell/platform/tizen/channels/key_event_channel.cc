@@ -254,11 +254,15 @@ KeyEventChannel::KeyEventChannel(BinaryMessenger* messenger)
 
 KeyEventChannel::~KeyEventChannel() {}
 
-void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
+void KeyEventChannel::SendKeyEvent(const char* key,
+                                   const char* string,
+                                   const char* compose,
+                                   uint32_t modifiers,
+                                   uint32_t keycode,
                                    bool is_down,
                                    std::function<void(bool)> callback) {
-  uint32_t scan_code = key->keycode;
-  auto iter1 = kSymbolToScanCode.find(key->key);
+  uint32_t scan_code = keycode;
+  auto iter1 = kSymbolToScanCode.find(key);
   if (iter1 != kSymbolToScanCode.end()) {
     scan_code = iter1->second;
   }
@@ -269,16 +273,16 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
     key_code = iter2->second;
   }
 
-  int modifiers = 0;
+  int modifiers_key = 0;
   for (auto element : kEcoreModifierToGtkModifier) {
-    if (element.first & key->modifiers) {
-      modifiers |= element.second;
+    if (element.first & modifiers) {
+      modifiers_key |= element.second;
     }
   }
 
   uint32_t unicode_scalar_values = 0;
-  if (key->compose) {
-    unicode_scalar_values = Utf8ToUtf32CodePoint(key->compose);
+  if (compose) {
+    unicode_scalar_values = Utf8ToUtf32CodePoint(compose);
   }
 
   rapidjson::Document event(rapidjson::kObjectType);
@@ -288,7 +292,7 @@ void KeyEventChannel::SendKeyEvent(Ecore_Event_Key* key,
   event.AddMember(kUnicodeScalarValuesKey, unicode_scalar_values, allocator);
   event.AddMember(kKeyCodeKey, key_code, allocator);
   event.AddMember(kScanCodeKey, scan_code, allocator);
-  event.AddMember(kModifiersKey, modifiers, allocator);
+  event.AddMember(kModifiersKey, modifiers_key, allocator);
   if (is_down) {
     event.AddMember(kTypeKey, kKeyDown, allocator);
   } else {

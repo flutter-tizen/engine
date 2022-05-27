@@ -65,6 +65,8 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void SetTizenPolicyNotificationLevel(int level);
 
+  void PrepareInputMethod();
+
   Ecore_Wl2_Display* ecore_wl2_display_ = nullptr;
   Ecore_Wl2_Window* ecore_wl2_window_ = nullptr;
 

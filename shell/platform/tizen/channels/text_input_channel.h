@@ -5,10 +5,6 @@
 #ifndef EMBEDDER_TEXT_INPUT_CHANNEL_H_
 #define EMBEDDER_TEXT_INPUT_CHANNEL_H_
 
-#define EFL_BETA_API_SUPPORT
-#include <Ecore_IMF.h>
-#include <Ecore_Input.h>
-
 #include <memory>
 #include <string>
 
@@ -22,24 +18,28 @@ namespace flutter {
 
 class TextInputChannel {
  public:
-  explicit TextInputChannel(
-      BinaryMessenger* messenger,
-      std::unique_ptr<TizenInputMethodContext> input_method_context);
+  explicit TextInputChannel(BinaryMessenger* messenger,
+                            TizenInputMethodContext* input_method_context);
   virtual ~TextInputChannel();
 
   bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
 
   void OnComposeBegin();
 
-  void OnComposeChanged(std::string str, int cursor_pos);
+  void OnComposeChanged(const std::string& str, int cursor_pos);
 
   void OnComposeEnd();
 
-  void OnCommit(std::string str);
+  void OnCommit(const std::string& str);
 
   void OnInputPanelStateChanged(int state);
 
-  bool SendKeyEvent(Ecore_Event_Key* key, bool is_down);
+  bool SendKeyEvent(const char* key,
+                    const char* string,
+                    const char* compose,
+                    uint32_t modifiers,
+                    uint32_t keycode,
+                    bool is_down);
 
  private:
   // Called when a method is called on |channel_|;
@@ -50,17 +50,17 @@ class TextInputChannel {
   // Sends the current state of the given model to the Flutter engine.
   void SendStateUpdate(const TextInputModel& model);
 
-  bool FilterEvent(Ecore_Event_Key* event, bool is_down);
-
-  void HandleUnfilteredEvent(Ecore_Event_Key* event);
+  void HandleUnfilteredEvent(const char* key,
+                             const char* string,
+                             uint32_t modifires);
 
   // Sends an action triggered by the Enter key to the Flutter engine.
-  void EnterPressed(TextInputModel* model, bool select);
+  void EnterPressed(TextInputModel* model);
 
-  void Reset();
-
-  bool ShouldNotFilterEvent(std::string key, bool is_ime);
-
+#ifdef TV_PROFILE
+  // Sends an action triggered by the Select key to the Flutter engine.
+  void SelectPressed(TextInputModel* model);
+#endif
   // The MethodChannel used for communication with the Flutter engine.
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
 
@@ -68,7 +68,7 @@ class TextInputChannel {
   std::unique_ptr<TextInputModel> active_model_;
 
   // The Tizen input method context. nullptr if not set.
-  std::unique_ptr<TizenInputMethodContext> input_method_context_;
+  TizenInputMethodContext* input_method_context_ = nullptr;
 
   // The active client id.
   int client_id_ = 0;
@@ -83,8 +83,6 @@ class TextInputChannel {
   // Keyboard type of the client. See available options:
   // https://api.flutter.dev/flutter/services/TextInputType-class.html
   std::string input_type_;
-
-  bool is_in_select_mode_ = false;
 };
 
 }  // namespace flutter

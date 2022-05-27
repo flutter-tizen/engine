@@ -12,7 +12,6 @@
 #include "flutter/shell/platform/embedder/embedder.h"
 
 #ifdef TIZEN_RENDERER_EVAS_GL
-#undef EFL_BETA_API_SUPPORT
 #include <Evas_GL.h>
 #else
 #include <GLES2/gl2.h>

@@ -5,8 +5,8 @@
 #ifndef EMBEDDER_TIZEN_INPUT_METHOD_CONTEXT_H_
 #define EMBEDDER_TIZEN_INPUT_METHOD_CONTEXT_H_
 
-#define EFL_BETA_API_SUPPORT
 #include <Ecore_IMF.h>
+#include <Ecore_IMF_Evas.h>
 #include <Ecore_Input.h>
 
 #include <functional>
@@ -30,7 +30,11 @@ class TizenInputMethodContext {
   TizenInputMethodContext(uintptr_t window_id);
   ~TizenInputMethodContext();
 
-  bool FilterEvent(Ecore_Event_Key* event, const char* dev_name, bool is_down);
+  bool FilterEcoreEventKey(Ecore_Event_Key* event, bool is_down);
+
+  bool FilterEvasEventKeyDown(Evas_Event_Key_Down* event);
+
+  bool FilterEvasEventKeyUp(Evas_Event_Key_Up* event);
 
   InputPanelGeometry GetInputPanelGeometry();
 
@@ -39,6 +43,8 @@ class TizenInputMethodContext {
   void ShowInputPanel();
 
   void HideInputPanel();
+
+  bool IsInputPanelShown();
 
   void SetInputPanelLayout(const std::string& layout);
 
@@ -66,6 +72,8 @@ class TizenInputMethodContext {
 
   void SetContextOptions();
   void SetInputPanelOptions();
+
+  bool ShouldNotFilterEvent(std::string key, bool is_ime);
 
   Ecore_IMF_Context* imf_context_ = nullptr;
   OnCommit on_commit_;

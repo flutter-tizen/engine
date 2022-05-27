@@ -4,6 +4,7 @@
 
 #include "tizen_renderer_egl.h"
 
+#define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>

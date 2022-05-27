@@ -8,8 +8,6 @@
 
 #include <memory>
 
-#include <Ecore_Input.h>
-
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 #include "flutter/shell/platform/tizen/channels/platform_channel.h"
@@ -83,13 +81,30 @@ class FlutterTizenView {
                 FlutterPointerDeviceKind device_kind,
                 int32_t device_id);
 
-  void OnKey(Ecore_Event_Key* event, bool is_down);
+  void OnKey(const char* key,
+             const char* string,
+             const char* compose,
+             uint32_t modifiers,
+             uint32_t keycode,
+             bool is_down);
+
+  void OnComposeBegin();
+
+  void OnComposeChanged(const std::string& str, int cursor_pos);
+
+  void OnComposeEnd();
+
+  void OnCommit(const std::string& str);
+
+  void OnInputPanelStateChanged(int state);
 
   FlutterTransformation GetFlutterTransformation() {
     return flutter_transformation_;
   }
 
   void SendInitialGeometry();
+
+  TextInputChannel* text_input_channel() { return text_input_channel_.get(); }
 
  private:
   // Sends a window metrics update to the Flutter engine using current window

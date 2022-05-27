@@ -30,6 +30,7 @@ TizenWindowEcoreWl2::TizenWindowEcoreWl2(Geometry geometry,
 
   SetWindowOptions();
   RegisterEventHandlers();
+  PrepareInputMethod();
   Show();
 }
 
@@ -243,7 +244,16 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
         if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->view_->OnKey(key_event, true);
+            int handled = false;
+            if (self->input_method_context_->IsInputPanelShown()) {
+              handled = self->input_method_context_->FilterEcoreEventKey(
+                  key_event, true);
+            }
+            if (!handled) {
+              self->view_->OnKey(key_event->key, key_event->string,
+                                 key_event->compose, key_event->modifiers,
+                                 key_event->keycode, true);
+            }
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -258,7 +268,16 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
         if (self->view_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
-            self->view_->OnKey(key_event, false);
+            int handled = false;
+            if (self->input_method_context_->IsInputPanelShown()) {
+              handled = self->input_method_context_->FilterEcoreEventKey(
+                  key_event, false);
+            }
+            if (!handled) {
+              self->view_->OnKey(key_event->key, key_event->string,
+                                 key_event->compose, key_event->modifiers,
+                                 key_event->keycode, false);
+            }
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -391,6 +410,24 @@ void TizenWindowEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
 
   tizen_policy_set_notification_level(
       tizen_policy_, ecore_wl2_window_surface_get(ecore_wl2_window_), level);
+}
+
+void TizenWindowEcoreWl2::PrepareInputMethod() {
+  input_method_context_ =
+      std::make_unique<TizenInputMethodContext>(GetWindowId());
+
+  // Set input method callbacks.
+  input_method_context_->SetOnPreeditStart(
+      [this]() { view_->OnComposeBegin(); });
+  input_method_context_->SetOnPreeditChanged(
+      [this](std::string str, int cursor_pos) {
+        view_->OnComposeChanged(str, cursor_pos);
+      });
+  input_method_context_->SetOnPreeditEnd([this]() { view_->OnComposeEnd(); });
+  input_method_context_->SetOnCommit(
+      [this](std::string str) { view_->OnCommit(str); });
+  input_method_context_->SetOnInputPanelStateChanged(
+      [this](int state) { view_->OnInputPanelStateChanged(state); });
 }
 
 }  // namespace flutter

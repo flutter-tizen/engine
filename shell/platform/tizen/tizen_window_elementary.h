@@ -8,8 +8,6 @@
 
 #include "flutter/shell/platform/tizen/tizen_window.h"
 
-#define EFL_BETA_API_SUPPORT
-#include <Ecore.h>
 #include <Elementary.h>
 
 #include <unordered_map>
@@ -65,13 +63,14 @@ class TizenWindowElementary : public TizenWindow {
 
   void UnregisterEventHandlers();
 
+  void PrepareInputMethod();
+
   Evas_Object* elm_win_ = nullptr;
   Evas_Object* image_ = nullptr;
 
   Evas_Smart_Cb rotatoin_changed_callback_;
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;
-  std::vector<Ecore_Event_Handler*> ecore_event_key_handlers_;
 };
 
 }  // namespace flutter

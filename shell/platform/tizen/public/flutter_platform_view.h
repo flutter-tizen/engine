@@ -5,7 +5,6 @@
 #ifndef FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_PLATFORM_VIEW_H_
 #define FLUTTER_SHELL_PLATFORM_TIZEN_PUBLIC_FLUTTER_PLATFORM_VIEW_H_
 
-#include <Ecore_Input.h>
 #include <flutter/plugin_registrar.h>
 #include <flutter/standard_message_codec.h>
 #include <stdint.h>
@@ -46,8 +45,17 @@ class PlatformView {
 
   bool IsFocused() { return is_focused_; }
 
-  virtual void DispatchKeyDownEvent(Ecore_Event_Key* event) = 0;
-  virtual void DispatchKeyUpEvent(Ecore_Event_Key* event) = 0;
+  virtual void DispatchKeyDownEvent(const char* key,
+                                    const char* string,
+                                    const char* compose,
+                                    uint32_t modifiers,
+                                    uint32_t keycode) = 0;
+
+  virtual void DispatchKeyUpEvent(const char* key,
+                                  const char* string,
+                                  const char* compose,
+                                  uint32_t modifiers,
+                                  uint32_t keycode) = 0;
 
  private:
   flutter::PluginRegistrar* registrar_;

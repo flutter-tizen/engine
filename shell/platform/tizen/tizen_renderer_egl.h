@@ -5,7 +5,6 @@
 #ifndef EMBEDDER_TIZEN_RENDERER_EGL_H_
 #define EMBEDDER_TIZEN_RENDERER_EGL_H_
 
-#define EFL_BETA_API_SUPPORT
 #include <EGL/egl.h>
 
 #include <string>
