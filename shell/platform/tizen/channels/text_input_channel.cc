@@ -108,16 +108,6 @@ void TextInputChannel::OnCommit(const std::string& str) {
   SendStateUpdate();
 }
 
-void TextInputChannel::OnInputPanelStateChanged(int state) {
-  if (state == ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
-    // Fallback for HW back-key.
-    input_method_context_->HideInputPanel();
-    is_software_keyboard_showing_ = false;
-  } else {
-    is_software_keyboard_showing_ = true;
-  }
-}
-
 bool TextInputChannel::SendKeyEvent(const char* key,
                                     const char* string,
                                     const char* compose,

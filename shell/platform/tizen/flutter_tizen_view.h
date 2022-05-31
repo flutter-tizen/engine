@@ -96,8 +96,6 @@ class FlutterTizenView {
 
   void OnCommit(const std::string& str);
 
-  void OnInputPanelStateChanged(int state);
-
   FlutterTransformation GetFlutterTransformation() {
     return flutter_transformation_;
   }

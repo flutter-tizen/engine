@@ -251,10 +251,6 @@ void FlutterTizenView::OnCommit(const std::string& str) {
   text_input_channel_->OnCommit(str);
 }
 
-void FlutterTizenView::OnInputPanelStateChanged(int state) {
-  text_input_channel_->OnInputPanelStateChanged(state);
-}
-
 void FlutterTizenView::SendInitialGeometry() {
   OnRotate(window_->GetRotation());
 }

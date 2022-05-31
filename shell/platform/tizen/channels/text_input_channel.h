@@ -22,8 +22,6 @@ class TextInputChannel {
                             TizenInputMethodContext* input_method_context);
   virtual ~TextInputChannel();
 
-  bool IsSoftwareKeyboardShowing() { return is_software_keyboard_showing_; }
-
   void OnComposeBegin();
 
   void OnComposeChange(const std::string& str, int cursor_pos);
@@ -31,8 +29,6 @@ class TextInputChannel {
   void OnComposeEnd();
 
   void OnCommit(const std::string& str);
-
-  void OnInputPanelStateChanged(int state);
 
   bool SendKeyEvent(const char* key,
                     const char* string,
@@ -73,9 +69,6 @@ class TextInputChannel {
 
   // The active client id.
   int client_id_ = 0;
-
-  // A flag indicating whether the software keyboard is being shown
-  bool is_software_keyboard_showing_ = false;
 
   // An action requested by the user on the input client. See available options:
   // https://api.flutter.dev/flutter/services/TextInputAction-class.html

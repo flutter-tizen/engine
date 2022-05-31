@@ -312,17 +312,6 @@ void TizenInputMethodContext::RegisterEventCallbacks() {
   ecore_imf_context_event_callback_add(
       imf_context_, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
       event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_CHANGED], this);
-
-  // input panel state callback
-  ecore_imf_context_input_panel_event_callback_add(
-      imf_context_, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
-      [](void* data, Ecore_IMF_Context* context, int value) {
-        auto* self = static_cast<TizenInputMethodContext*>(data);
-        if (self->on_input_panel_state_changed_) {
-          self->on_input_panel_state_changed_(value);
-        }
-      },
-      this);
 }
 
 void TizenInputMethodContext::UnregisterEventCallbacks() {
@@ -339,7 +328,6 @@ void TizenInputMethodContext::UnregisterEventCallbacks() {
   ecore_imf_context_event_callback_del(
       imf_context_, ECORE_IMF_CALLBACK_PREEDIT_END,
       event_callbacks_[ECORE_IMF_CALLBACK_PREEDIT_END]);
-  ecore_imf_context_input_panel_event_callback_clear(imf_context_);
 }
 
 void TizenInputMethodContext::SetContextOptions() {

@@ -19,7 +19,6 @@ using OnCommit = std::function<void(std::string str)>;
 using OnPreeditChanged = std::function<void(std::string str, int cursor_pos)>;
 using OnPreeditStart = std::function<void()>;
 using OnPreeditEnd = std::function<void()>;
-using OnInputPanelStateChanged = std::function<void(int value)>;
 
 struct InputPanelGeometry {
   int32_t x = 0, y = 0, w = 0, h = 0;
@@ -62,10 +61,6 @@ class TizenInputMethodContext {
 
   void SetOnPreeditEnd(OnPreeditEnd callback) { on_preedit_end_ = callback; }
 
-  void SetOnInputPanelStateChanged(OnInputPanelStateChanged callback) {
-    on_input_panel_state_changed_ = callback;
-  }
-
  private:
   void RegisterEventCallbacks();
   void UnregisterEventCallbacks();
@@ -80,7 +75,6 @@ class TizenInputMethodContext {
   OnPreeditChanged on_preedit_changed_;
   OnPreeditStart on_preedit_start_;
   OnPreeditEnd on_preedit_end_;
-  OnInputPanelStateChanged on_input_panel_state_changed_;
   std::unordered_map<Ecore_IMF_Callback_Type, Ecore_IMF_Event_Cb>
       event_callbacks_;
 };

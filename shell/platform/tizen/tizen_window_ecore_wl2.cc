@@ -426,8 +426,6 @@ void TizenWindowEcoreWl2::PrepareInputMethod() {
   input_method_context_->SetOnPreeditEnd([this]() { view_->OnComposeEnd(); });
   input_method_context_->SetOnCommit(
       [this](std::string str) { view_->OnCommit(str); });
-  input_method_context_->SetOnInputPanelStateChanged(
-      [this](int state) { view_->OnInputPanelStateChanged(state); });
 }
 
 }  // namespace flutter

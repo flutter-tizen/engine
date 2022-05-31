@@ -273,10 +273,10 @@ void KeyEventChannel::SendKeyEvent(const char* key,
     key_code = iter2->second;
   }
 
-  int modifiers_key = 0;
+  int gtk_modifiers = 0;
   for (auto element : kEcoreModifierToGtkModifier) {
     if (element.first & modifiers) {
-      modifiers_key |= element.second;
+      gtk_modifiers |= element.second;
     }
   }
 
@@ -292,7 +292,7 @@ void KeyEventChannel::SendKeyEvent(const char* key,
   event.AddMember(kUnicodeScalarValuesKey, unicode_scalar_values, allocator);
   event.AddMember(kKeyCodeKey, key_code, allocator);
   event.AddMember(kScanCodeKey, scan_code, allocator);
-  event.AddMember(kModifiersKey, modifiers_key, allocator);
+  event.AddMember(kModifiersKey, gtk_modifiers, allocator);
   if (is_down) {
     event.AddMember(kTypeKey, kKeyDown, allocator);
   } else {
