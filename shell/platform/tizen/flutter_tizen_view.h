@@ -90,7 +90,7 @@ class FlutterTizenView {
 
   void OnComposeBegin();
 
-  void OnComposeChanged(const std::string& str, int cursor_pos);
+  void OnComposeChange(const std::string& str, int cursor_pos);
 
   void OnComposeEnd();
 

@@ -70,8 +70,7 @@ void TextInputChannel::OnComposeBegin() {
   active_model_->BeginComposing();
 }
 
-void TextInputChannel::OnComposeChanged(const std::string& str,
-                                        int cursor_pos) {
+void TextInputChannel::OnComposeChange(const std::string& str, int cursor_pos) {
   if (active_model_ == nullptr) {
     return;
   }
@@ -80,7 +79,7 @@ void TextInputChannel::OnComposeChanged(const std::string& str,
     return;
   }
   active_model_->UpdateComposingText(str);
-  SendStateUpdate(*active_model_);
+  SendStateUpdate();
 }
 
 void TextInputChannel::OnComposeEnd() {
@@ -94,7 +93,7 @@ void TextInputChannel::OnComposeEnd() {
   active_model_->CommitComposing();
   active_model_->EndComposing();
   active_model_->DeleteSurrounding(-count, count);
-  SendStateUpdate(*active_model_);
+  SendStateUpdate();
 }
 
 void TextInputChannel::OnCommit(const std::string& str) {
@@ -106,7 +105,7 @@ void TextInputChannel::OnCommit(const std::string& str) {
     active_model_->CommitComposing();
     active_model_->EndComposing();
   }
-  SendStateUpdate(*active_model_);
+  SendStateUpdate();
 }
 
 void TextInputChannel::OnInputPanelStateChanged(int state) {
@@ -273,7 +272,7 @@ void TextInputChannel::HandleMethodCall(
                     static_cast<size_t>(composing_extent_value)),
           cursor_offset);
     }
-    SendStateUpdate(*active_model_);
+    SendStateUpdate();
   } else {
     result->NotImplemented();
     return;
@@ -283,12 +282,12 @@ void TextInputChannel::HandleMethodCall(
   result->Success();
 }
 
-void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
+void TextInputChannel::SendStateUpdate() {
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
   rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);
 
-  TextRange selection = model.selection();
+  TextRange selection = active_model_->selection();
   rapidjson::Value editing_state(rapidjson::kObjectType);
   int composing_base =
       active_model_->composing() ? active_model_->composing_range().base() : -1;
@@ -304,7 +303,8 @@ void TextInputChannel::SendStateUpdate(const TextInputModel& model) {
   editing_state.AddMember(kSelectionExtentKey, selection.extent(), allocator);
   editing_state.AddMember(kSelectionIsDirectionalKey, false, allocator);
   editing_state.AddMember(
-      kTextKey, rapidjson::Value(model.GetText(), allocator).Move(), allocator);
+      kTextKey, rapidjson::Value(active_model_->GetText(), allocator).Move(),
+      allocator);
   args->PushBack(editing_state, allocator);
 
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
@@ -353,12 +353,12 @@ void TextInputChannel::HandleUnfilteredEvent(const char* key,
     active_model_->AddCodePoint(string[0]);
     needs_update = true;
   } else if (key_str == "Return") {
-    EnterPressed(active_model_.get());
+    EnterPressed();
     return;
   }
 #ifdef TV_PROFILE
   else if (key_str == "Select") {
-    SelectPressed(active_model_.get());
+    SelectPressed();
     return;
   }
 #endif
@@ -367,14 +367,14 @@ void TextInputChannel::HandleUnfilteredEvent(const char* key,
   }
 
   if (needs_update) {
-    SendStateUpdate(*active_model_);
+    SendStateUpdate();
   }
 }
 
-void TextInputChannel::EnterPressed(TextInputModel* model) {
+void TextInputChannel::EnterPressed() {
   if (input_type_ == kMultilineInputType) {
-    model->AddCodePoint('\n');
-    SendStateUpdate(*model);
+    active_model_->AddCodePoint('\n');
+    SendStateUpdate();
   }
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
   rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
@@ -385,7 +385,7 @@ void TextInputChannel::EnterPressed(TextInputModel* model) {
 }
 
 #ifdef TV_PROFILE
-void TextInputChannel::SelectPressed(TextInputModel* model) {
+void TextInputChannel::SelectPressed() {
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
   rapidjson::MemoryPoolAllocator<>& allocator = args->GetAllocator();
   args->PushBack(client_id_, allocator);

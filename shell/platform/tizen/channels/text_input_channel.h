@@ -26,7 +26,7 @@ class TextInputChannel {
 
   void OnComposeBegin();
 
-  void OnComposeChanged(const std::string& str, int cursor_pos);
+  void OnComposeChange(const std::string& str, int cursor_pos);
 
   void OnComposeEnd();
 
@@ -47,20 +47,21 @@ class TextInputChannel {
       const MethodCall<rapidjson::Document>& method_call,
       std::unique_ptr<MethodResult<rapidjson::Document>> result);
 
-  // Sends the current state of the given model to the Flutter engine.
-  void SendStateUpdate(const TextInputModel& model);
+  // Sends the current state of |active_model_| to the Flutter engine.
+  void SendStateUpdate();
 
   void HandleUnfilteredEvent(const char* key,
                              const char* string,
                              uint32_t modifires);
 
   // Sends an action triggered by the Enter key to the Flutter engine.
-  void EnterPressed(TextInputModel* model);
+  void EnterPressed();
 
 #ifdef TV_PROFILE
   // Sends an action triggered by the Select key to the Flutter engine.
-  void SelectPressed(TextInputModel* model);
+  void SelectPressed();
 #endif
+
   // The MethodChannel used for communication with the Flutter engine.
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
 

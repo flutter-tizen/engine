@@ -239,9 +239,8 @@ void FlutterTizenView::OnComposeBegin() {
   text_input_channel_->OnComposeBegin();
 }
 
-void FlutterTizenView::OnComposeChanged(const std::string& str,
-                                        int cursor_pos) {
-  text_input_channel_->OnComposeChanged(str, cursor_pos);
+void FlutterTizenView::OnComposeChange(const std::string& str, int cursor_pos) {
+  text_input_channel_->OnComposeChange(str, cursor_pos);
 }
 
 void FlutterTizenView::OnComposeEnd() {

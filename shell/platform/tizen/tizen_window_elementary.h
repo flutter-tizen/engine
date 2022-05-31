@@ -68,7 +68,7 @@ class TizenWindowElementary : public TizenWindow {
   Evas_Object* elm_win_ = nullptr;
   Evas_Object* image_ = nullptr;
 
-  Evas_Smart_Cb rotatoin_changed_callback_;
+  Evas_Smart_Cb rotation_changed_callback_;
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;
 };

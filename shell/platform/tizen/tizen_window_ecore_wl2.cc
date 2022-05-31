@@ -421,7 +421,7 @@ void TizenWindowEcoreWl2::PrepareInputMethod() {
       [this]() { view_->OnComposeBegin(); });
   input_method_context_->SetOnPreeditChanged(
       [this](std::string str, int cursor_pos) {
-        view_->OnComposeChanged(str, cursor_pos);
+        view_->OnComposeChange(str, cursor_pos);
       });
   input_method_context_->SetOnPreeditEnd([this]() { view_->OnComposeEnd(); });
   input_method_context_->SetOnCommit(

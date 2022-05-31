@@ -143,11 +143,16 @@ bool TizenInputMethodContext::FilterEcoreEventKey(Ecore_Event_Key* event,
                                                   bool is_down) {
   FT_ASSERT(imf_context_);
   FT_ASSERT(event);
-
+#ifdef WEARABLE_PROFILE
+  // Hardware keyboard is not supported on watch devices.
+  const char* device_name = "ime";
+  bool is_ime = true;
+#else
   const char* device_name = ecore_device_name_get(event->dev);
   bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
+#endif
 
-  if (ShouldNotFilterEvent(event->key, is_ime)) {
+  if (ShouldIgnoreKey(event->key, is_ime)) {
     return false;
   }
 
@@ -170,7 +175,7 @@ bool TizenInputMethodContext::FilterEcoreEventKey(Ecore_Event_Key* event,
 
 bool TizenInputMethodContext::FilterEvasEventKeyDown(
     Evas_Event_Key_Down* event) {
-  if (ShouldNotFilterEvent(event->key, true)) {
+  if (ShouldIgnoreKey(event->key, true)) {
     return false;
   }
 
@@ -183,7 +188,7 @@ bool TizenInputMethodContext::FilterEvasEventKeyDown(
 }
 
 bool TizenInputMethodContext::FilterEvasEventKeyUp(Evas_Event_Key_Up* event) {
-  if (ShouldNotFilterEvent(event->key, true)) {
+  if (ShouldIgnoreKey(event->key, true)) {
     return false;
   }
 
@@ -354,14 +359,8 @@ void TizenInputMethodContext::SetInputPanelOptions() {
       imf_context_, ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC);
 }
 
-bool TizenInputMethodContext::ShouldNotFilterEvent(std::string key,
-                                                   bool is_ime) {
-  // Force redirect to HandleUnfilteredEvent(especially on TV)
-  // If you don't do this, it will affects the input panel.
-  // For example, when the left key of the input panel is pressed, the focus
-  // of the input panel is shifted to left!
-  // What we want is to move only the cursor on the text editor.
-
+bool TizenInputMethodContext::ShouldIgnoreKey(std::string key, bool is_ime) {
+  // The keys below should be handled in the text_input_channel.
   if (is_ime && (key == "Left" || key == "Right" || key == "Up" ||
                  key == "Down" || key == "End" || key == "Home" ||
                  key == "BackSpace" || key == "Delete")) {
