@@ -103,7 +103,6 @@ T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
 namespace flutter {
 
 TizenInputMethodContext::TizenInputMethodContext(uintptr_t window_id) {
-  FT_ASSERT(window_);
   ecore_imf_init();
 
   const char* imf_id = ecore_imf_context_default_id_get();
