@@ -30,12 +30,12 @@ class TextInputChannel {
 
   void OnCommit(const std::string& str);
 
-  bool SendKeyEvent(const char* key,
-                    const char* string,
-                    const char* compose,
-                    uint32_t modifiers,
-                    uint32_t keycode,
-                    bool is_down);
+  bool SendKey(const char* key,
+               const char* string,
+               const char* compose,
+               uint32_t modifiers,
+               uint32_t keycode,
+               bool is_down);
 
  private:
   // Called when a method is called on |channel_|;

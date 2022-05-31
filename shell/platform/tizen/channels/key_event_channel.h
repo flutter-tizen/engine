@@ -18,13 +18,13 @@ class KeyEventChannel {
   explicit KeyEventChannel(BinaryMessenger* messenger);
   virtual ~KeyEventChannel();
 
-  void SendKeyEvent(const char* key,
-                    const char* string,
-                    const char* compose,
-                    uint32_t modifiers,
-                    uint32_t keycode,
-                    bool is_down,
-                    std::function<void(bool)> callback);
+  void SendKey(const char* key,
+               const char* string,
+               const char* compose,
+               uint32_t modifiers,
+               uint32_t keycode,
+               bool is_down,
+               std::function<void(bool)> callback);
 
  private:
   std::unique_ptr<BasicMessageChannel<rapidjson::Document>> channel_;

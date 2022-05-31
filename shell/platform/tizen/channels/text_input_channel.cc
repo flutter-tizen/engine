@@ -108,12 +108,12 @@ void TextInputChannel::OnCommit(const std::string& str) {
   SendStateUpdate();
 }
 
-bool TextInputChannel::SendKeyEvent(const char* key,
-                                    const char* string,
-                                    const char* compose,
-                                    uint32_t modifiers,
-                                    uint32_t keycode,
-                                    bool is_down) {
+bool TextInputChannel::SendKey(const char* key,
+                               const char* string,
+                               const char* compose,
+                               uint32_t modifiers,
+                               uint32_t keycode,
+                               bool is_down) {
   if (active_model_ == nullptr) {
     return false;
   }

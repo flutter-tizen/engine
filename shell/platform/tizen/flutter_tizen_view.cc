@@ -205,19 +205,19 @@ void FlutterTizenView::OnKey(const char* key,
   }
 
   if (text_input_channel_) {
-    if (text_input_channel_->SendKeyEvent(key, string, compose, modifiers,
-                                          keycode, is_down)) {
+    if (text_input_channel_->SendKey(key, string, compose, modifiers, keycode,
+                                     is_down)) {
       return;
     }
   }
 
   if (engine_->platform_view_channel()) {
-    engine_->platform_view_channel()->SendKeyEvent(key, string, compose,
-                                                   modifiers, keycode, is_down);
+    engine_->platform_view_channel()->SendKey(key, string, compose, modifiers,
+                                              keycode, is_down);
   }
 
   if (engine_->key_event_channel()) {
-    engine_->key_event_channel()->SendKeyEvent(
+    engine_->key_event_channel()->SendKey(
         key, string, compose, modifiers, keycode, is_down,
         [engine = engine_.get(), symbol = std::string(key),
          is_down](bool handled) {

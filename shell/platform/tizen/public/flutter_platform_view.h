@@ -45,17 +45,12 @@ class PlatformView {
 
   bool IsFocused() { return is_focused_; }
 
-  virtual void DispatchKeyDownEvent(const char* key,
-                                    const char* string,
-                                    const char* compose,
-                                    uint32_t modifiers,
-                                    uint32_t keycode) = 0;
-
-  virtual void DispatchKeyUpEvent(const char* key,
-                                  const char* string,
-                                  const char* compose,
-                                  uint32_t modifiers,
-                                  uint32_t keycode) = 0;
+  virtual void SendKey(const char* key,
+                       const char* string,
+                       const char* compose,
+                       uint32_t modifiers,
+                       uint32_t keycode,
+                       bool is_down) = 0;
 
  private:
   flutter::PluginRegistrar* registrar_;
