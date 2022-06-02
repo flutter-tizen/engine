@@ -41,13 +41,6 @@ jobs:
           path: src/flutter
           fetch-depth: 0
 
-      - uses: actions/cache@v2
-        with:
-          path: src/out/${{ env.OUTPUT_NAME }}
-          key: out-build-${{ env.OUTPUT_NAME }}-${{ github.sha }}
-          restore-keys: |
-            out-build-${{ env.OUTPUT_NAME }}-
-
       - name: gclient sync
         run: |
           src/flutter/ci/tizen/gclient-prepare-sync.sh --reduce-deps --shallow-sync
@@ -201,13 +194,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: src/flutter
-
-      - uses: actions/cache@v2
-        with:
-          path: src/out/${{ env.OUTPUT_NAME }}
-          key: out-macos-build-${{ env.OUTPUT_NAME }}-${{ github.sha }}
-          restore-keys: |
-            out-macos-build-${{ env.OUTPUT_NAME }}-
 
       - name: install depot_tools
         run: |
