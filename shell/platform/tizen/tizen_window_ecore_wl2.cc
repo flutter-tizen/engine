@@ -246,7 +246,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           if (key_event->window == self->GetWindowId()) {
             int handled = false;
             if (self->input_method_context_->IsInputPanelShown()) {
-              handled = self->input_method_context_->FilterEcoreEventKey(
+              handled = self->input_method_context_->HandleEcoreEventKey(
                   key_event, true);
             }
             if (!handled) {
@@ -270,7 +270,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           if (key_event->window == self->GetWindowId()) {
             int handled = false;
             if (self->input_method_context_->IsInputPanelShown()) {
-              handled = self->input_method_context_->FilterEcoreEventKey(
+              handled = self->input_method_context_->HandleEcoreEventKey(
                   key_event, false);
             }
             if (!handled) {

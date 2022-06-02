@@ -345,14 +345,12 @@ void TextInputChannel::HandleUnfilteredEvent(const char* key,
   } else if (key_str == "Return") {
     EnterPressed();
     return;
-  }
 #ifdef TV_PROFILE
-  else if (key_str == "Select") {
+  } else if (key_str == "Select") {
     SelectPressed();
     return;
-  }
+  } else {
 #endif
-  else {
     FT_LOG(Warn) << "Key[" << key << "] is unhandled.";
   }
 

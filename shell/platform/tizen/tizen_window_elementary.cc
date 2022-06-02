@@ -242,7 +242,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
         int handled = false;
         if (self->input_method_context_->IsInputPanelShown()) {
           handled =
-              self->input_method_context_->FilterEvasEventKeyDown(key_event);
+              self->input_method_context_->HandleEvasEventKeyDown(key_event);
         }
         if (!handled) {
           self->view_->OnKey(
@@ -266,7 +266,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
             int handled = false;
             if (self->input_method_context_->IsInputPanelShown()) {
               handled =
-                  self->input_method_context_->FilterEvasEventKeyUp(key_event);
+                  self->input_method_context_->HandleEvasEventKeyUp(key_event);
             }
             if (!handled) {
               self->view_->OnKey(

@@ -138,7 +138,7 @@ TizenInputMethodContext::~TizenInputMethodContext() {
   ecore_imf_shutdown();
 }
 
-bool TizenInputMethodContext::FilterEcoreEventKey(Ecore_Event_Key* event,
+bool TizenInputMethodContext::HandleEcoreEventKey(Ecore_Event_Key* event,
                                                   bool is_down) {
   FT_ASSERT(imf_context_);
   FT_ASSERT(event);
@@ -172,7 +172,7 @@ bool TizenInputMethodContext::FilterEcoreEventKey(Ecore_Event_Key* event,
   }
 }
 
-bool TizenInputMethodContext::FilterEvasEventKeyDown(
+bool TizenInputMethodContext::HandleEvasEventKeyDown(
     Evas_Event_Key_Down* event) {
   if (ShouldIgnoreKey(event->key, true)) {
     return false;
@@ -186,7 +186,7 @@ bool TizenInputMethodContext::FilterEvasEventKeyDown(
       reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
 }
 
-bool TizenInputMethodContext::FilterEvasEventKeyUp(Evas_Event_Key_Up* event) {
+bool TizenInputMethodContext::HandleEvasEventKeyUp(Evas_Event_Key_Up* event) {
   if (ShouldIgnoreKey(event->key, true)) {
     return false;
   }

@@ -29,11 +29,11 @@ class TizenInputMethodContext {
   TizenInputMethodContext(uintptr_t window_id);
   ~TizenInputMethodContext();
 
-  bool FilterEcoreEventKey(Ecore_Event_Key* event, bool is_down);
+  bool HandleEcoreEventKey(Ecore_Event_Key* event, bool is_down);
 
-  bool FilterEvasEventKeyDown(Evas_Event_Key_Down* event);
+  bool HandleEvasEventKeyDown(Evas_Event_Key_Down* event);
 
-  bool FilterEvasEventKeyUp(Evas_Event_Key_Up* event);
+  bool HandleEvasEventKeyUp(Evas_Event_Key_Up* event);
 
   InputPanelGeometry GetInputPanelGeometry();
 
