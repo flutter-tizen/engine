@@ -258,10 +258,9 @@ void KeyEventChannel::SendKey(const char* key,
                               const char* string,
                               const char* compose,
                               uint32_t modifiers,
-                              uint32_t keycode,
+                              uint32_t scan_code,
                               bool is_down,
                               std::function<void(bool)> callback) {
-  uint32_t scan_code = keycode;
   auto iter1 = kSymbolToScanCode.find(key);
   if (iter1 != kSymbolToScanCode.end()) {
     scan_code = iter1->second;

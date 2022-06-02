@@ -83,11 +83,11 @@ void PlatformViewChannel::SendKey(const char* key,
                                   const char* string,
                                   const char* compose,
                                   uint32_t modifiers,
-                                  uint32_t keycode,
+                                  uint32_t scan_code,
                                   bool is_down) {
   PlatformView* view = FindFocusedView();
   if (view) {
-    view->SendKey(key, string, compose, modifiers, keycode, is_down);
+    view->SendKey(key, string, compose, modifiers, scan_code, is_down);
   }
 }
 

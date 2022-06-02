@@ -22,7 +22,7 @@ class KeyEventChannel {
                const char* string,
                const char* compose,
                uint32_t modifiers,
-               uint32_t keycode,
+               uint32_t scan_code,
                bool is_down,
                std::function<void(bool)> callback);
 

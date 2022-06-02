@@ -197,15 +197,15 @@ void FlutterTizenView::OnKey(const char* key,
                              const char* string,
                              const char* compose,
                              uint32_t modifiers,
-                             uint32_t keycode,
+                             uint32_t scan_code,
                              bool is_down) {
   if (is_down) {
     FT_LOG(Info) << "Key symbol: " << key << ", code: 0x" << std::setw(8)
-                 << std::setfill('0') << std::right << std::hex << keycode;
+                 << std::setfill('0') << std::right << std::hex << scan_code;
   }
 
   if (text_input_channel_) {
-    if (text_input_channel_->SendKey(key, string, compose, modifiers, keycode,
+    if (text_input_channel_->SendKey(key, string, compose, modifiers, scan_code,
                                      is_down)) {
       return;
     }
@@ -213,12 +213,12 @@ void FlutterTizenView::OnKey(const char* key,
 
   if (engine_->platform_view_channel()) {
     engine_->platform_view_channel()->SendKey(key, string, compose, modifiers,
-                                              keycode, is_down);
+                                              scan_code, is_down);
   }
 
   if (engine_->key_event_channel()) {
     engine_->key_event_channel()->SendKey(
-        key, string, compose, modifiers, keycode, is_down,
+        key, string, compose, modifiers, scan_code, is_down,
         [engine = engine_.get(), symbol = std::string(key),
          is_down](bool handled) {
           if (handled) {

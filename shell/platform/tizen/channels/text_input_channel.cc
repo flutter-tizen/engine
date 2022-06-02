@@ -112,7 +112,7 @@ bool TextInputChannel::SendKey(const char* key,
                                const char* string,
                                const char* compose,
                                uint32_t modifiers,
-                               uint32_t keycode,
+                               uint32_t scan_code,
                                bool is_down) {
   if (active_model_ == nullptr) {
     return false;
