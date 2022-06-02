@@ -46,9 +46,7 @@ class TextInputChannel {
   // Sends the current state of |active_model_| to the Flutter engine.
   void SendStateUpdate();
 
-  void HandleUnfilteredEvent(const char* key,
-                             const char* string,
-                             uint32_t modifires);
+  void HandleKey(const char* key, const char* string, uint32_t modifires);
 
   // Sends an action triggered by the Enter key to the Flutter engine.
   void EnterPressed();

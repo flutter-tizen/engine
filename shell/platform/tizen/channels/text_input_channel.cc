@@ -119,7 +119,7 @@ bool TextInputChannel::SendKey(const char* key,
   }
 
   if (is_down) {
-    HandleUnfilteredEvent(key, string, modifiers);
+    HandleKey(key, string, modifiers);
   }
 
   return true;
@@ -300,9 +300,9 @@ void TextInputChannel::SendStateUpdate() {
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
-void TextInputChannel::HandleUnfilteredEvent(const char* key,
-                                             const char* string,
-                                             uint32_t modifires) {
+void TextInputChannel::HandleKey(const char* key,
+                                 const char* string,
+                                 uint32_t modifires) {
   bool shift = modifires & ECORE_SHIFT;
   bool needs_update = false;
   std::string key_str = key;
