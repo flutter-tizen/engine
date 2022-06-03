@@ -49,8 +49,6 @@ typedef struct {
   int32_t width;
   // The height of the view, or the maximum height if the value is zero.
   int32_t height;
-  // The evas object's parent instance handle.
-  void* parent;
 } FlutterDesktopViewProperties;
 
 // Properties for configuring a Flutter engine instance.
