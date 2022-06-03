@@ -331,6 +331,7 @@ void* TizenRendererEgl::OnProcResolver(const char* name) {
   GL_FUNC(glGenTextures)
   GL_FUNC(glGetBufferParameteriv)
   GL_FUNC(glGetError)
+  GL_FUNC(glGetFloatv)
   GL_FUNC(glGetFramebufferAttachmentParameteriv)
   GL_FUNC(glGetIntegerv)
   GL_FUNC(glGetProgramInfoLog)
