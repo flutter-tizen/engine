@@ -45,7 +45,7 @@ class PlatformView {
 
   bool IsFocused() { return is_focused_; }
 
-  virtual void SendKey(const char* key,
+  virtual bool SendKey(const char* key,
                        const char* string,
                        const char* compose,
                        uint32_t modifiers,

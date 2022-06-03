@@ -212,8 +212,10 @@ void FlutterTizenView::OnKey(const char* key,
   }
 
   if (engine_->platform_view_channel()) {
-    engine_->platform_view_channel()->SendKey(key, string, compose, modifiers,
-                                              scan_code, is_down);
+    if (engine_->platform_view_channel()->SendKey(
+            key, string, compose, modifiers, scan_code, is_down)) {
+      return;
+    }
   }
 
   if (engine_->key_event_channel()) {

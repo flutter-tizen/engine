@@ -79,7 +79,7 @@ void PlatformViewChannel::ClearViewFactories() {
   view_factories_.clear();
 }
 
-void PlatformViewChannel::SendKey(const char* key,
+bool PlatformViewChannel::SendKey(const char* key,
                                   const char* string,
                                   const char* compose,
                                   uint32_t modifiers,
@@ -87,8 +87,9 @@ void PlatformViewChannel::SendKey(const char* key,
                                   bool is_down) {
   PlatformView* view = FindFocusedView();
   if (view) {
-    view->SendKey(key, string, compose, modifiers, scan_code, is_down);
+    return view->SendKey(key, string, compose, modifiers, scan_code, is_down);
   }
+  return false;
 }
 
 void PlatformViewChannel::HandleMethodCall(

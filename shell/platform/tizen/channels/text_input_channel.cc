@@ -119,10 +119,10 @@ bool TextInputChannel::SendKey(const char* key,
   }
 
   if (is_down) {
-    HandleKey(key, string, modifiers);
+    return HandleKey(key, string, modifiers);
   }
 
-  return true;
+  return false;
 }
 
 void TextInputChannel::HandleMethodCall(
@@ -300,7 +300,7 @@ void TextInputChannel::SendStateUpdate() {
   channel_->InvokeMethod(kUpdateEditingStateMethod, std::move(args));
 }
 
-void TextInputChannel::HandleKey(const char* key,
+bool TextInputChannel::HandleKey(const char* key,
                                  const char* string,
                                  uint32_t modifires) {
   bool shift = modifires & ECORE_SHIFT;
@@ -344,19 +344,21 @@ void TextInputChannel::HandleKey(const char* key,
     needs_update = true;
   } else if (key_str == "Return") {
     EnterPressed();
-    return;
+    return true;
 #ifdef TV_PROFILE
   } else if (key_str == "Select") {
     SelectPressed();
-    return;
-  } else {
+    return true;
 #endif
-    FT_LOG(Warn) << "Key[" << key << "] is unhandled.";
+  } else {
+    FT_LOG(Info) << "Key[" << key << "] is unhandled.";
+    return false;
   }
 
   if (needs_update) {
     SendStateUpdate();
   }
+  return true;
 }
 
 void TextInputChannel::EnterPressed() {

@@ -28,7 +28,7 @@ class PlatformViewChannel {
     return view_factories_;
   }
 
-  void SendKey(const char* key,
+  bool SendKey(const char* key,
                const char* string,
                const char* compose,
                uint32_t modifiers,
