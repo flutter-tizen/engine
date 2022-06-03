@@ -35,7 +35,7 @@ uint32_t EvasModifierToEcoreEventModifiers(const Evas_Modifier* evas_modifier) {
 
 namespace flutter {
 
-TizenWindowElementary::TizenWindowElementary(TizenBaseHandle::Geometry geometry,
+TizenWindowElementary::TizenWindowElementary(TizenViewBase::Geometry geometry,
                                              bool transparent,
                                              bool focusable,
                                              bool top_level)
@@ -305,7 +305,7 @@ void TizenWindowElementary::UnregisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
-TizenBaseHandle::Geometry TizenWindowElementary::GetRenderTargetGeometry() {
+TizenViewBase::Geometry TizenWindowElementary::GetRenderTargetGeometry() {
   // FIXME : evas_object_geometry_get() and ecore_wl2_window_geometry_get() are
   // not equivalent.
   Geometry result;
@@ -322,7 +322,7 @@ void TizenWindowElementary::SetRenderTargetGeometry(Geometry geometry) {
   evas_object_move(image_, geometry.left, geometry.top);
 }
 
-TizenBaseHandle::Geometry TizenWindowElementary::GetScreenGeometry() {
+TizenViewBase::Geometry TizenWindowElementary::GetScreenGeometry() {
   Geometry result;
   Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));

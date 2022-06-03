@@ -16,15 +16,15 @@ namespace flutter {
 
 class FlutterTizenView;
 
-class TizenBaseHandle {
+class TizenViewBase {
  public:
   struct Geometry {
     int32_t left = 0, top = 0, width = 0, height = 0;
   };
 
-  TizenBaseHandle(){};
+  TizenViewBase(){};
 
-  virtual ~TizenBaseHandle() = default;
+  virtual ~TizenViewBase() = default;
 
   // Returns a valid pointer the platform object that rendering can be bound to
   // by rendering backend.
@@ -32,11 +32,9 @@ class TizenBaseHandle {
 
   virtual void* GetRenderTargetDisplay();
 
-  virtual void SetPreferredOrientations(const std::vector<int>& rotations);
 
   virtual uintptr_t GetWindowId();
 
-  virtual void* GetWindowHandle();
 
   // Returns the geometry of the current render target.
   virtual Geometry GetRenderTargetGeometry() = 0;
@@ -46,8 +44,6 @@ class TizenBaseHandle {
 
   // Returns the geometry of the display screen.
   virtual Geometry GetScreenGeometry() = 0;
-
-  virtual int32_t GetRotation() = 0;
 
   // Returns the dpi of the screen.
   virtual int32_t GetDpi() = 0;
@@ -68,6 +64,8 @@ class TizenBaseHandle {
   virtual void Show() = 0;
 
   virtual TizenInputMethodContext* input_method_context() = 0;
+
+  virtual std::string GetType() = 0;
 
  protected:
   FlutterTizenView* view_ = nullptr;

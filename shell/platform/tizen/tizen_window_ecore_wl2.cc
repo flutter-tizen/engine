@@ -381,7 +381,7 @@ void TizenWindowEcoreWl2::DestroyWindow() {
   ecore_wl2_shutdown();
 }
 
-TizenBaseHandle::Geometry TizenWindowEcoreWl2::GetRenderTargetGeometry() {
+TizenViewBase::Geometry TizenWindowEcoreWl2::GetRenderTargetGeometry() {
   Geometry result;
   ecore_wl2_window_geometry_get(ecore_wl2_window_, &result.left, &result.top,
                                 &result.width, &result.height);
@@ -397,7 +397,7 @@ void TizenWindowEcoreWl2::SetRenderTargetGeometry(Geometry geometry) {
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
 }
 
-TizenBaseHandle::Geometry TizenWindowEcoreWl2::GetScreenGeometry() {
+TizenViewBase::Geometry TizenWindowEcoreWl2::GetScreenGeometry() {
   Geometry result = {};
   ecore_wl2_display_screen_size_get(ecore_wl2_display_, &result.width,
                                     &result.height);

@@ -25,7 +25,7 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
-  flutter::TizenBaseHandle::Geometry window_geometry = {
+  flutter::TizenViewBase::Geometry window_geometry = {
       window_properties.x,
       window_properties.y,
       window_properties.width,
@@ -54,20 +54,20 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
   return HandleForView(view.release());
 }
 
-FlutterDesktopViewRef FlutterDesktopViewCreateFromNewView(
+FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
-    void* elm_parent) {
-  flutter::TizenBaseHandle::Geometry view_geometry = {
+    void* parent) {
+  flutter::TizenViewBase::Geometry view_geometry = {
       0,
       0,
       view_properties.width,
       view_properties.height,
   };
 
-  std::unique_ptr<flutter::TizenBaseHandle> view =
+  std::unique_ptr<flutter::TizenViewBase> view =
       std::make_unique<flutter::TizenViewElementary>(
-          view_geometry, (Evas_Object*)(view_properties.elm_parent));
+          view_geometry, (Evas_Object*)(view_properties.parent));
 
   auto flutter_view =
       std::make_unique<flutter::FlutterTizenView>(std::move(view));
@@ -87,18 +87,16 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromNewView(
   return HandleForView(flutter_view.release());
 }
 
-void* FlutterDesktopViewGetEvasObject(FlutterDesktopEngineRef engine) {
-  flutter::TizenViewElementary* tizenView =
-      (flutter::TizenViewElementary*)EngineFromHandle(engine)->view()->handle();
-  return tizenView->GetEvasContainer();
+void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view) {
+  auto tizenView = reinterpret_cast<flutter::TizenViewElementary*>(view);
+  return tizenView->GetRenderTarget();
 }
 
-void FlutterDesktopViewResizeView(FlutterDesktopEngineRef engine,
+void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
                                   int32_t width,
                                   int32_t height) {
-  flutter::TizenViewElementary* tizenView =
-      (flutter::TizenViewElementary*)EngineFromHandle(engine)->view()->handle();
-  flutter::TizenBaseHandle::Geometry view_geometry = {
+  auto tizenView = reinterpret_cast<flutter::TizenViewElementary*>(view);
+  flutter::TizenViewBase::Geometry view_geometry = {
       0,
       0,
       width,

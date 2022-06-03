@@ -49,8 +49,8 @@ typedef struct {
   int32_t width;
   // The height of the view, or the maximum height if the value is zero.
   int32_t height;
-  // The evas image's parent instance handle.
-  void* elm_parent;
+  // The evas object's parent instance handle.
+  void* parent;
 } FlutterDesktopViewProperties;
 
 // Properties for configuring a Flutter engine instance.
@@ -146,17 +146,17 @@ FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     FlutterDesktopEngineRef engine);
 
 // Creates a view that hosts and displays the given engine instance.
-FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewView(
+FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
-    void* elm_parent);
+    void* parent);
 
 // Returns a handle to evas object that the FlutterView is drawn to.
 FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
-    FlutterDesktopEngineRef engine);
+    FlutterDesktopViewRef view);
 
 // Resize the FlutterView.
-FLUTTER_EXPORT void FlutterDesktopViewResizeView(FlutterDesktopEngineRef engine,
+FLUTTER_EXPORT void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
                                                  int32_t width,
                                                  int32_t height);
 

@@ -8,31 +8,25 @@
 
 #include <cstdint>
 
-#include "flutter/shell/platform/tizen/tizen_base_handle.h"
+#include "flutter/shell/platform/tizen/tizen_view_base.h"
 
 namespace flutter {
 
 class FlutterTizenView;
 
-class TizenView : public TizenBaseHandle {
+class TizenView : public TizenViewBase {
  public:
   TizenView();
 
-  void* GetWindowHandle() override { return nullptr; }
-
-  void* GetRenderTarget() override { return nullptr; }
-
-  int32_t GetRotation() override { return 0; };
-
-  void SetPreferredOrientations(const std::vector<int>& rotations) override{};
-
   virtual ~TizenView() = default;
 
+  std::string GetType() override { return "view"; };
+
  protected:
-  explicit TizenView(TizenBaseHandle::Geometry geometry)
+  explicit TizenView(TizenViewBase::Geometry geometry)
       : initial_geometry_(geometry) {}
 
-  TizenBaseHandle::Geometry initial_geometry_ = {0, 0, 0, 0};
+  TizenViewBase::Geometry initial_geometry_ = {0, 0, 0, 0};
 };
 
 }  // namespace flutter

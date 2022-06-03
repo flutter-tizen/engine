@@ -10,19 +10,27 @@
 #include <string>
 #include <vector>
 
-#include "flutter/shell/platform/tizen/tizen_base_handle.h"
+#include "flutter/shell/platform/tizen/tizen_view_base.h"
 
 namespace flutter {
 
 class FlutterTizenView;
 
-class TizenWindow : public TizenBaseHandle {
+class TizenWindow : public TizenViewBase {
  public:
   TizenWindow();
   virtual ~TizenWindow() = default;
 
+  virtual void* GetWindowHandle();
+
+  virtual int32_t GetRotation() = 0;
+
+  virtual void SetPreferredOrientations(const std::vector<int>& rotations);
+
+  std::string GetType() override { return "window"; };
+
  protected:
-  explicit TizenWindow(TizenBaseHandle::Geometry geometry,
+  explicit TizenWindow(TizenViewBase::Geometry geometry,
                        bool transparent,
                        bool focusable,
                        bool top_level)
@@ -31,7 +39,7 @@ class TizenWindow : public TizenBaseHandle {
         focusable_(focusable),
         top_level_(top_level) {}
 
-  TizenBaseHandle::Geometry initial_geometry_ = {0, 0, 0, 0};
+  TizenViewBase::Geometry initial_geometry_ = {0, 0, 0, 0};
   bool transparent_ = false;
   bool focusable_ = false;
   bool top_level_ = false;

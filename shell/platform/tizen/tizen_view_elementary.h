@@ -18,8 +18,7 @@ namespace flutter {
 
 class TizenViewElementary : public TizenView {
  public:
-  TizenViewElementary(TizenBaseHandle::Geometry geometry,
-                      Evas_Object* elm_parent);
+  TizenViewElementary(TizenViewBase::Geometry geometry, Evas_Object* parent);
 
   ~TizenViewElementary();
 
@@ -29,9 +28,9 @@ class TizenViewElementary : public TizenView {
 
   Geometry GetScreenGeometry() override;
 
-  void* GetRenderTargetDisplay() override { return image_; }
+  void* GetRenderTarget() override { return container_; }
 
-  void* GetEvasContainer() { return container_; }
+  void* GetRenderTargetDisplay() override { return image_; }
 
   int32_t GetDpi() override;
 
@@ -59,10 +58,10 @@ class TizenViewElementary : public TizenView {
 
   void PrepareInputMethod();
 
-  Evas_Object* elm_parent_ = nullptr;
+  Evas_Object* parent_ = nullptr;
+  Evas_Object* container_ = nullptr;
   Evas_Object* image_ = nullptr;
   Evas_Object* event_layer_ = nullptr;
-  Evas_Object* container_ = nullptr;
 
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;

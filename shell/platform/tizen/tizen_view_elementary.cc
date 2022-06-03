@@ -41,9 +41,9 @@ void EvasObjectResize(Evas_Object* object, uint32_t width, uint32_t height) {
 
 namespace flutter {
 
-TizenViewElementary::TizenViewElementary(TizenBaseHandle::Geometry geometry,
-                                         Evas_Object* elm_parent)
-    : TizenView(geometry), elm_parent_(elm_parent) {
+TizenViewElementary::TizenViewElementary(TizenViewBase::Geometry geometry,
+                                         Evas_Object* parent)
+    : TizenView(geometry), parent_(parent) {
   if (!CreateView()) {
     FT_LOG(Error) << "Failed to create a platform view.";
     return;
@@ -61,37 +61,23 @@ TizenViewElementary::~TizenViewElementary() {
 bool TizenViewElementary::CreateView() {
   elm_config_accel_preference_set("hw:opengl");
 
-  Ecore_Evas* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_parent_));
-
-  int32_t elm_parent_width, elm_parent_height;
-  evas_object_geometry_get(elm_parent_, nullptr, nullptr, &elm_parent_width,
-                           &elm_parent_height);
+  int32_t parent_width, parent_height;
+  evas_object_geometry_get(parent_, nullptr, nullptr, &parent_width,
+                           &parent_height);
 
   if (initial_geometry_.width == 0) {
-    initial_geometry_.width = elm_parent_width;
+    initial_geometry_.width = parent_width;
   }
   if (initial_geometry_.height == 0) {
-    initial_geometry_.height = elm_parent_height;
+    initial_geometry_.height = parent_height;
   }
 
-  int32_t ecore_evas_width, ecore_evas_height;
-  ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr,
-                                 &ecore_evas_width, &ecore_evas_height);
-  if (ecore_evas_width == 0 || ecore_evas_height == 0) {
-    FT_LOG(Error) << "Invalid screen size: " << ecore_evas_width << " x "
-                  << ecore_evas_height;
+  container_ = elm_table_add(parent_);
+  if (!container_) {
+    FT_LOG(Error) << "Failed to create a evas object container.";
     return false;
   }
 
-  if (initial_geometry_.width == 0) {
-    initial_geometry_.width = ecore_evas_width;
-  }
-  if (initial_geometry_.height == 0) {
-    initial_geometry_.height = ecore_evas_height;
-  }
-
-  container_ = elm_table_add(elm_parent_);
   EvasObjectResize(container_, initial_geometry_.width,
                    initial_geometry_.height);
   evas_object_size_hint_weight_set(container_, EVAS_HINT_EXPAND,
@@ -99,6 +85,11 @@ bool TizenViewElementary::CreateView() {
   evas_object_size_hint_align_set(container_, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
   image_ = evas_object_image_filled_add(evas_object_evas_get(container_));
+  if (!image_) {
+    FT_LOG(Error) << "Failed to create a evas object image.";
+    return false;
+  }
+
   EvasObjectResize(image_, initial_geometry_.width, initial_geometry_.height);
   evas_object_image_size_set(image_, initial_geometry_.width,
                              initial_geometry_.height);
@@ -109,15 +100,16 @@ bool TizenViewElementary::CreateView() {
   // button widget is temporary. It should be changed to the appropriate object
   // that can be used as event layer.
   event_layer_ = elm_button_add(container_);
+  if (!event_layer_) {
+    FT_LOG(Error) << "Failed to create a event layer";
+    return false;
+  }
+
   elm_object_style_set(event_layer_, "transparent");
   evas_object_color_set(event_layer_, 0, 0, 0, 0);
   EvasObjectResize(event_layer_, initial_geometry_.width,
                    initial_geometry_.height);
   elm_table_pack(container_, event_layer_, 0, 0, 1, 1);
-
-  if (!image_) {
-    return false;
-  }
 
   return true;
 }
@@ -278,7 +270,7 @@ void TizenViewElementary::UnregisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
-TizenBaseHandle::Geometry TizenViewElementary::GetRenderTargetGeometry() {
+TizenViewBase::Geometry TizenViewElementary::GetRenderTargetGeometry() {
   Geometry result;
   evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
                            &result.height);
@@ -292,7 +284,7 @@ void TizenViewElementary::SetRenderTargetGeometry(Geometry geometry) {
   evas_object_move(image_, geometry.left, geometry.top);
 }
 
-TizenBaseHandle::Geometry TizenViewElementary::GetScreenGeometry() {
+TizenViewBase::Geometry TizenViewElementary::GetScreenGeometry() {
   Geometry result;
   evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
                            &result.height);
