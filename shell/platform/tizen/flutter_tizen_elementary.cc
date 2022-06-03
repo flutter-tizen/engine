@@ -66,8 +66,8 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
   };
 
   std::unique_ptr<flutter::TizenViewBase> view =
-      std::make_unique<flutter::TizenViewElementary>(
-          view_geometry, (Evas_Object*)(parent));
+      std::make_unique<flutter::TizenViewElementary>(view_geometry,
+                                                     (Evas_Object*)(parent));
 
   auto flutter_view =
       std::make_unique<flutter::FlutterTizenView>(std::move(view));

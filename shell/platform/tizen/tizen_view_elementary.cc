@@ -150,23 +150,23 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_event_callback_add(event_layer_, EVAS_CALLBACK_MOUSE_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP],
                                  this);
-
-  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] =
-      [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
-        auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_) {
-          if (self->event_layer_ == object) {
-            auto* mouse_event =
-                reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
-            mouse_event->event_flags = (Evas_Event_Flags)(
-                mouse_event->event_flags & EVAS_EVENT_FLAG_ON_HOLD);
-            self->view_->OnPointerMove(
-                mouse_event->cur.canvas.x, mouse_event->cur.canvas.y,
-                mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
-                mouse_event->buttons);
-          }
-        }
-      };
+  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] = [](void* data, Evas* evas,
+                                                        Evas_Object* object,
+                                                        void* event_info) {
+    auto* self = reinterpret_cast<TizenViewElementary*>(data);
+    if (self->view_) {
+      if (self->event_layer_ == object) {
+        auto* mouse_event =
+            reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
+        mouse_event->event_flags = (Evas_Event_Flags)(mouse_event->event_flags &
+                                                      EVAS_EVENT_FLAG_ON_HOLD);
+        self->view_->OnPointerMove(
+            mouse_event->cur.canvas.x, mouse_event->cur.canvas.y,
+            mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
+            mouse_event->buttons);
+      }
+    }
+  };
   evas_object_event_callback_add(
       event_layer_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE], this);

@@ -32,9 +32,7 @@ class TizenViewBase {
 
   virtual void* GetRenderTargetDisplay();
 
-
   virtual uintptr_t GetWindowId();
-
 
   // Returns the geometry of the current render target.
   virtual Geometry GetRenderTargetGeometry() = 0;

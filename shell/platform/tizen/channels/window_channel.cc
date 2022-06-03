@@ -16,8 +16,7 @@ constexpr char kChannelName[] = "tizen/internal/window";
 
 }  // namespace
 
-WindowChannel::WindowChannel(BinaryMessenger* messenger,
-                             TizenWindow* window)
+WindowChannel::WindowChannel(BinaryMessenger* messenger, TizenWindow* window)
     : window_(window) {
   channel_ = std::make_unique<MethodChannel<EncodableValue>>(
       messenger, kChannelName, &StandardMethodCodec::GetInstance());

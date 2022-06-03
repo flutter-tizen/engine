@@ -56,10 +56,10 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
       std::make_unique<PluginRegistrar>(engine_->plugin_registrar());
 
   // Set up window dependent channels.
-BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
+  BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
 
   if (tizen_view_->GetType() == "window") {
-    auto window = reinterpret_cast<TizenWindow*>(tizen_view_.get());    
+    auto window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
     platform_channel_ = std::make_unique<PlatformChannel>(messenger, window);
     window_channel_ = std::make_unique<WindowChannel>(messenger, window);
   } else {
@@ -263,11 +263,9 @@ void FlutterTizenView::SendInitialGeometry() {
   if (tizen_view_->GetType() == "window") {
     auto window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
     OnRotate(window->GetRotation());
-  }
-  else {
+  } else {
     OnRotate(0);
   }
-  
 }
 
 void FlutterTizenView::SendWindowMetrics(int32_t left,
