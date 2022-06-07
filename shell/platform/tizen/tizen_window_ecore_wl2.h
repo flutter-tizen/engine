@@ -6,7 +6,6 @@
 #ifndef EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
 #define EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
 
-#include "flutter/shell/platform/tizen/tizen_view_base.h"
 #include "flutter/shell/platform/tizen/tizen_window.h"
 
 #define EFL_BETA_API_SUPPORT
@@ -53,10 +52,6 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void OnGeometryChanged(Geometry geometry) override;
 
-  TizenInputMethodContext* input_method_context() override {
-    return input_method_context_.get();
-  }
-
  private:
   bool CreateWindow();
 
@@ -82,9 +77,6 @@ class TizenWindowEcoreWl2 : public TizenWindow {
   std::vector<Ecore_Event_Handler*> ecore_event_handlers_;
 
   tizen_policy* tizen_policy_ = nullptr;
-
-  // The Tizen input method context. nullptr if not set.
-  std::unique_ptr<TizenInputMethodContext> input_method_context_;
 };
 
 }  // namespace flutter

@@ -234,7 +234,7 @@ template("embedder") {
 
 embedder("flutter_tizen_mobile") {
   target_type = "shared_library"
-  use_evas_gl_renderer = true
+  use_evas_gl_renderer = false
 
   defines = [ "MOBILE_PROFILE" ]
 }

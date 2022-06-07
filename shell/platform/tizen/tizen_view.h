@@ -16,8 +16,7 @@ class FlutterTizenView;
 
 class TizenView : public TizenViewBase {
  public:
-  TizenView();
-
+  TizenView() = default;
   virtual ~TizenView() = default;
 
   std::string GetType() override { return "view"; };

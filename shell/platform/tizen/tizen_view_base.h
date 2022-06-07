@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_TIZEN_BASE_HANDLE_H_
-#define EMBEDDER_TIZEN_BASE_HANDLE_H_
+#ifndef EMBEDDER_TIZEN_VIEW_BASE_H_
+#define EMBEDDER_TIZEN_VIEW_BASE_H_
 
 #include <cstdint>
 #include <string>
@@ -22,17 +22,16 @@ class TizenViewBase {
     int32_t left = 0, top = 0, width = 0, height = 0;
   };
 
-  TizenViewBase(){};
-
+  TizenViewBase() = default;
   virtual ~TizenViewBase() = default;
 
   // Returns a valid pointer the platform object that rendering can be bound to
   // by rendering backend.
-  virtual void* GetRenderTarget();
+  virtual void* GetRenderTarget() = 0;
 
-  virtual void* GetRenderTargetDisplay();
+  virtual void* GetRenderTargetDisplay() = 0;
 
-  virtual uintptr_t GetWindowId();
+  virtual uintptr_t GetWindowId() = 0;
 
   // Returns the geometry of the current render target.
   virtual Geometry GetRenderTargetGeometry() = 0;
@@ -61,14 +60,19 @@ class TizenViewBase {
 
   virtual void Show() = 0;
 
-  virtual TizenInputMethodContext* input_method_context() = 0;
-
   virtual std::string GetType() = 0;
+
+  TizenInputMethodContext* input_method_context() {
+    return input_method_context_.get();
+  }
 
  protected:
   FlutterTizenView* view_ = nullptr;
+
+  // The Tizen input method context. nullptr if not set.
+  std::unique_ptr<TizenInputMethodContext> input_method_context_;
 };
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_TIZEN_BASE_HANDLE_H_
+#endif  // EMBEDDER_TIZEN_VIEW_BASE_H_

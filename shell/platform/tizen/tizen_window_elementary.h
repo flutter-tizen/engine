@@ -52,10 +52,6 @@ class TizenWindowElementary : public TizenWindow {
 
   void OnGeometryChanged(Geometry geometry) override;
 
-  TizenInputMethodContext* input_method_context() override {
-    return input_method_context_.get();
-  }
-
  private:
   bool CreateWindow();
 
@@ -75,9 +71,6 @@ class TizenWindowElementary : public TizenWindow {
   Evas_Smart_Cb rotation_changed_callback_;
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;
-
-  // The Tizen input method context. nullptr if not set.
-  std::unique_ptr<TizenInputMethodContext> input_method_context_;
 };
 
 }  // namespace flutter
