@@ -66,8 +66,8 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
   };
 
   std::unique_ptr<flutter::TizenViewBase> view =
-      std::make_unique<flutter::TizenViewElementary>(view_geometry,
-                                                     (Evas_Object*)(parent));
+      std::make_unique<flutter::TizenViewElementary>(
+          view_geometry, static_cast<Evas_Object*>(parent));
 
   auto flutter_view =
       std::make_unique<flutter::FlutterTizenView>(std::move(view));
@@ -89,7 +89,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
 
 void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view) {
   auto flutter_tizen_view = reinterpret_cast<flutter::FlutterTizenView*>(view);
-  return flutter_tizen_view->tizen_view()->GetRenderTarget();
+  return flutter_tizen_view->tizen_view_base()->GetRenderTarget();
 }
 
 void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
@@ -102,5 +102,5 @@ void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
       width,
       height,
   };
-  flutter_tizen_view->tizen_view()->OnGeometryChanged(view_geometry);
+  flutter_tizen_view->tizen_view_base()->OnGeometryChanged(view_geometry);
 }

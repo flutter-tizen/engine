@@ -537,7 +537,7 @@ void FlutterTizenEngine::OnUpdateSemanticsCustomActions(
       std::shared_ptr<FlutterPlatformWindowDelegateTizen> window =
           FlutterPlatformAppDelegateTizen::GetInstance().GetWindow().lock();
       TizenViewBase::Geometry geometry =
-          engine->view_->tizen_view()->GetRenderTargetGeometry();
+          engine->view_->tizen_view_base()->GetRenderTargetGeometry();
       window->SetGeometry(geometry.left, geometry.top, geometry.width,
                           geometry.height);
       window->SetRootNode(root);

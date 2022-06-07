@@ -316,8 +316,8 @@ void TizenViewElementary::BindKeys(const std::vector<std::string>& keys) {
   // However, it is necessary to bind a special key for each profile(in this
   // case). This part is modified after refactoring related to the key event
   // code.
-  Evas_Object* elm_win = (Evas_Object*)ecore_evas_data_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(image_)), "elm_win");
+  Evas_Object* elm_win = static_cast<Evas_Object*>(ecore_evas_data_get(
+      ecore_evas_ecore_evas_get(evas_object_evas_get(image_)), "elm_win"));
   if (elm_win) {
     for (const std::string& key : keys) {
       eext_win_keygrab_set(elm_win, key.c_str());

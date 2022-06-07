@@ -71,9 +71,10 @@ void FlutterDesktopEngineShutdown(FlutterDesktopEngineRef engine_ref) {
 
 void* FlutterDesktopPluginRegistrarGetNativeWindow(
     FlutterDesktopPluginRegistrarRef registrar) {
-  auto view_base = registrar->engine->view()->tizen_view();
-  if (view_base->GetType() == "window") {
-    auto window = reinterpret_cast<flutter::TizenWindow*>(view_base);
+  flutter::TizenViewBase* tizen_view_base =
+      registrar->engine->view()->tizen_view_base();
+  if (tizen_view_base->GetType() == "window") {
+    auto window = reinterpret_cast<flutter::TizenWindow*>(tizen_view_base);
     return window->GetWindowHandle();
   }
   return nullptr;

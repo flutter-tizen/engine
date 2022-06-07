@@ -26,7 +26,7 @@ class WindowChannel {
 
   std::unique_ptr<MethodChannel<EncodableValue>> channel_;
 
-  // A reference to the renderer object managed by FlutterTizenView.s
+  // A reference to the renderer object managed by FlutterTizenView.
   TizenWindow* window_;
 };
 

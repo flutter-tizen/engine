@@ -144,16 +144,19 @@ FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     FlutterDesktopEngineRef engine);
 
 // Creates a view that hosts and displays the given engine instance.
+// (@warning: This API is improving. There is no guarantee that exact result.)
 FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
     void* parent);
 
 // Returns a handle to evas object that the FlutterView is drawn to.
+// (@warning: This API is improving. There is no guarantee that exact result.)
 FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
     FlutterDesktopViewRef view);
 
 // Resize the FlutterView.
+// (@warning: This API is improving. There is no guarantee that exact result.)
 FLUTTER_EXPORT void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
                                                  int32_t width,
                                                  int32_t height);

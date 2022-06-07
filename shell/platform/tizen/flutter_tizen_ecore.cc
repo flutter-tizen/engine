@@ -6,6 +6,7 @@
 
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_view.h"
+#include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_window_ecore_wl2.h"
 
 namespace {
@@ -57,18 +58,20 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
     void* parent) {
-  // Not supported.
-
+  // FIXME: Ecore WL2 renderer does not support this yet.
+  FT_UNIMPLEMENTED();
   return nullptr;
 }
 
 void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view) {
-  // Not supported.
+  // FIXME: Ecore WL2 renderer does not support this yet.
+  FT_UNIMPLEMENTED();
   return nullptr;
 }
 
 void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
                                   int32_t width,
                                   int32_t height) {
-  // Not supported.
+  // FIXME: Ecore WL2 renderer does not support this yet.
+  FT_UNIMPLEMENTED();
 }
