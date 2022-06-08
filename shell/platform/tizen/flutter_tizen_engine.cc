@@ -320,6 +320,12 @@ void FlutterTizenEngine::SendPlatformMessageResponse(
   embedder_api_.SendPlatformMessageResponse(engine_, handle, data, data_length);
 }
 
+void FlutterTizenEngine::SendKeyEvent(const FlutterKeyEvent& event,
+                                      FlutterKeyEventCallback callback,
+                                      void* user_data) {
+  embedder_api_.SendKeyEvent(engine_, &event, callback, user_data);
+}
+
 void FlutterTizenEngine::SendPointerEvent(const FlutterPointerEvent& event) {
   embedder_api_.SendPointerEvent(engine_, &event, 1);
 }

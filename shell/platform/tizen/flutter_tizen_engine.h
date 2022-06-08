@@ -135,6 +135,11 @@ class FlutterTizenEngine {
       const uint8_t* data,
       size_t data_length);
 
+  // Informs the engine of an incoming key event.
+  void SendKeyEvent(const FlutterKeyEvent& event,
+                    FlutterKeyEventCallback callback,
+                    void* user_data);
+
   // Informs the engine of an incoming pointer event.
   void SendPointerEvent(const FlutterPointerEvent& event);
 

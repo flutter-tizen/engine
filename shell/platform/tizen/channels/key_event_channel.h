@@ -5,6 +5,7 @@
 #ifndef EMBEDDER_KEY_EVENT_CHANNEL_H_
 #define EMBEDDER_KEY_EVENT_CHANNEL_H_
 
+#include <functional>
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"

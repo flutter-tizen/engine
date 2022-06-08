@@ -5,9 +5,10 @@
 
 #include "flutter_tizen_view.h"
 
+#include <iomanip>
+
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_view.h"
-#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace {
 
@@ -76,6 +77,11 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
       tizen_view_->input_method_context());
+
+  key_event_handler_ = std::make_unique<KeyEventHandler>(
+      [this](const auto& event, auto callback, void* user_data) {
+        return engine_->SendKeyEvent(event, callback, user_data);
+      });
 }
 
 void FlutterTizenView::CreateRenderSurface() {
@@ -238,11 +244,21 @@ void FlutterTizenView::OnKey(const char* key,
     }
   }
 
+  if (key_event_handler_) {
+    key_event_handler_->SendKey(
+        key, string, compose, modifiers, scan_code, is_down, [](bool handled) {
+          // TODO:
+          FT_LOG(Error) << "Handled by key_event_handler: " << handled;
+        });
+  }
+
   if (engine_->key_event_channel()) {
     engine_->key_event_channel()->SendKey(
         key, string, compose, modifiers, scan_code, is_down,
         [engine = engine_.get(), symbol = std::string(key),
          is_down](bool handled) {
+          // TODO:
+          FT_LOG(Error) << "Handled by key_event_channel: " << handled;
           if (handled) {
             return;
           }
