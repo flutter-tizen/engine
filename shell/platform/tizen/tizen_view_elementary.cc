@@ -140,6 +140,10 @@ void TizenViewElementary::RegisterEventHandlers() {
     if (self->view_) {
       if (self->event_layer_ == object) {
         auto* mouse_event = reinterpret_cast<Evas_Event_Mouse_Up*>(event_info);
+        if (self->scroll_hold_) {
+          elm_object_scroll_hold_pop(self->event_layer_);
+          self->scroll_hold_ = false;
+        }
         self->view_->OnPointerUp(mouse_event->canvas.x, mouse_event->canvas.y,
                                  mouse_event->timestamp,
                                  kFlutterPointerDeviceKindTouch,
@@ -150,23 +154,26 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_event_callback_add(event_layer_, EVAS_CALLBACK_MOUSE_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP],
                                  this);
-  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] = [](void* data, Evas* evas,
-                                                        Evas_Object* object,
-                                                        void* event_info) {
-    auto* self = reinterpret_cast<TizenViewElementary*>(data);
-    if (self->view_) {
-      if (self->event_layer_ == object) {
-        auto* mouse_event =
-            reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
-        mouse_event->event_flags = (Evas_Event_Flags)(mouse_event->event_flags &
-                                                      EVAS_EVENT_FLAG_ON_HOLD);
-        self->view_->OnPointerMove(
-            mouse_event->cur.canvas.x, mouse_event->cur.canvas.y,
-            mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
-            mouse_event->buttons);
-      }
-    }
-  };
+  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] =
+      [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
+        auto* self = reinterpret_cast<TizenViewElementary*>(data);
+        if (self->view_) {
+          if (self->event_layer_ == object) {
+            auto* mouse_event =
+                reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
+            mouse_event->event_flags = static_cast<Evas_Event_Flags>(
+                mouse_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
+            if (!self->scroll_hold_) {
+              elm_object_scroll_hold_push(self->event_layer_);
+              self->scroll_hold_ = true;
+            }
+            self->view_->OnPointerMove(
+                mouse_event->cur.canvas.x, mouse_event->cur.canvas.y,
+                mouse_event->timestamp, kFlutterPointerDeviceKindTouch,
+                mouse_event->buttons);
+          }
+        }
+      };
   evas_object_event_callback_add(
       event_layer_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE], this);
@@ -206,7 +213,8 @@ void TizenViewElementary::RegisterEventHandlers() {
       if (self->event_layer_ == object) {
         auto* key_event = reinterpret_cast<Evas_Event_Key_Down*>(event_info);
         int handled = false;
-        key_event->event_flags = EVAS_EVENT_FLAG_ON_HOLD;
+        key_event->event_flags = static_cast<Evas_Event_Flags>(
+            key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
         if (self->input_method_context_->IsInputPanelShown()) {
           handled =
               self->input_method_context_->HandleEvasEventKeyDown(key_event);
@@ -231,7 +239,8 @@ void TizenViewElementary::RegisterEventHandlers() {
           if (self->event_layer_ == object) {
             auto* key_event = reinterpret_cast<Evas_Event_Key_Up*>(event_info);
             int handled = false;
-            key_event->event_flags = EVAS_EVENT_FLAG_ON_HOLD;
+            key_event->event_flags = static_cast<Evas_Event_Flags>(
+                key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
             if (self->input_method_context_->IsInputPanelShown()) {
               handled =
                   self->input_method_context_->HandleEvasEventKeyUp(key_event);
@@ -278,6 +287,16 @@ TizenViewBase::Geometry TizenViewElementary::GetRenderTargetGeometry() {
 }
 
 void TizenViewElementary::SetRenderTargetGeometry(Geometry geometry) {
+  evas_object_resize(container_, geometry.width, geometry.height);
+  evas_object_size_hint_min_set(container_, geometry.width, geometry.height);
+  evas_object_size_hint_max_set(container_, geometry.width, geometry.height);
+  evas_object_move(container_, geometry.left, geometry.top);
+
+  evas_object_resize(event_layer_, geometry.width, geometry.height);
+  evas_object_size_hint_min_set(event_layer_, geometry.width, geometry.height);
+  evas_object_size_hint_max_set(event_layer_, geometry.width, geometry.height);
+  evas_object_move(event_layer_, geometry.left, geometry.top);
+
   evas_object_resize(image_, geometry.width, geometry.height);
   evas_object_size_hint_min_set(image_, geometry.width, geometry.height);
   evas_object_size_hint_max_set(image_, geometry.width, geometry.height);
