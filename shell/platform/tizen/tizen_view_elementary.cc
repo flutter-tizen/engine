@@ -79,18 +79,15 @@ bool TizenViewElementary::CreateView() {
     FT_LOG(Error) << "Failed to create an Evas object container.";
     return false;
   }
-
-  EvasObjectResize(container_, initial_width_, initial_height_);
   evas_object_size_hint_weight_set(container_, EVAS_HINT_EXPAND,
                                    EVAS_HINT_EXPAND);
-  evas_object_size_hint_align_set(container_, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
   image_ = evas_object_image_filled_add(evas_object_evas_get(container_));
   if (!image_) {
     FT_LOG(Error) << "Failed to create an Evas object image.";
     return false;
   }
-
+  evas_object_size_hint_align_set(image_, EVAS_HINT_FILL, EVAS_HINT_FILL);
   EvasObjectResize(image_, initial_width_, initial_height_);
   evas_object_image_size_set(image_, initial_width_, initial_height_);
   evas_object_image_alpha_set(image_, EINA_TRUE);
@@ -104,10 +101,11 @@ bool TizenViewElementary::CreateView() {
     FT_LOG(Error) << "Failed to create an event layer.";
     return false;
   }
-
+  evas_object_size_hint_weight_set(event_layer_, EVAS_HINT_EXPAND,
+                                   EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(event_layer_, EVAS_HINT_FILL, EVAS_HINT_FILL);
   elm_object_style_set(event_layer_, "transparent");
   evas_object_color_set(event_layer_, 0, 0, 0, 0);
-  EvasObjectResize(event_layer_, initial_width_, initial_height_);
   elm_table_pack(container_, event_layer_, 0, 0, 1, 1);
 
   return true;
@@ -292,12 +290,6 @@ TizenGeometry TizenViewElementary::GetRenderTargetGeometry() {
 }
 
 void TizenViewElementary::SetRenderTargetGeometry(TizenGeometry geometry) {
-  EvasObjectResize(container_, geometry.width, geometry.height);
-  evas_object_move(container_, geometry.left, geometry.top);
-
-  EvasObjectResize(event_layer_, geometry.width, geometry.height);
-  evas_object_move(event_layer_, geometry.left, geometry.top);
-
   EvasObjectResize(image_, geometry.width, geometry.height);
   evas_object_move(image_, geometry.left, geometry.top);
 }
