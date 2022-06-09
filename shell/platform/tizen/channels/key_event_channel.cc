@@ -1,4 +1,5 @@
 // Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -247,43 +248,14 @@ uint32_t Utf8ToUtf32CodePoint(const char* utf8) {
   return 0;
 }
 
-}  // namespace
+// The maximum number of pending events to keep before emitting a warning.
+constexpr int kMaxPendingEvents = 1000;
 
-KeyEventChannel::KeyEventChannel(BinaryMessenger* messenger,
-                                 SendEventHandler send_event)
-    : channel_(std::make_unique<BasicMessageChannel<rapidjson::Document>>(
-          messenger,
-          kChannelName,
-          &JsonMessageCodec::GetInstance())),
-      send_event_(send_event) {}
-
-KeyEventChannel::~KeyEventChannel() {}
-
-void KeyEventChannel::SendKey(const char* key,
-                              const char* string,
-                              const char* compose,
-                              uint32_t modifiers,
-                              uint32_t scan_code,
-                              bool is_down,
-                              std::function<void(bool)> callback) {
-  // TODO: callback handled
-  SendEmbedderEvent(
-      key, string, compose, modifiers, scan_code, is_down, [](bool handled) {
-        // TODO:
-        FT_LOG(Error) << "Handled by key_event_handler: " << handled;
-      });
-  SendChannelEvent(
-      key, string, compose, modifiers, scan_code, is_down, [](bool handled) {
-        // TODO:
-        FT_LOG(Error) << "Handled by key_event_channel: " << handled;
-      });
-}
-
-static uint64_t apply_id_plane(uint64_t logical_id, uint64_t plane) {
+uint64_t apply_id_plane(uint64_t logical_id, uint64_t plane) {
   return (logical_id & kValueMask) | plane;
 }
 
-static uint64_t event_to_physical_key(int scan_code) {
+uint64_t event_to_physical_key(int scan_code) {
   auto found = xkb_to_physical_key_map.find(scan_code);
   if (found != xkb_to_physical_key_map.end()) {
     return found->second;
@@ -304,7 +276,7 @@ const std::map<std::string, uint64_t> kKeySymbolToLogicalKeyCode = {
     {"Shift_L", 0x00200000102},     // shiftLeft
 };
 
-static uint64_t event_to_logical_key(const std::string& key) {
+uint64_t event_to_logical_key(const std::string& key) {
   auto found = kKeySymbolToLogicalKeyCode.find(key);
   if (found != kKeySymbolToLogicalKeyCode.end()) {
     return found->second;
@@ -313,13 +285,55 @@ static uint64_t event_to_logical_key(const std::string& key) {
   return apply_id_plane(0, kGtkPlane);
 }
 
+}  // namespace
+
+KeyEventChannel::KeyEventChannel(BinaryMessenger* messenger,
+                                 SendEventHandler send_event)
+    : channel_(std::make_unique<BasicMessageChannel<rapidjson::Document>>(
+          messenger,
+          kChannelName,
+          &JsonMessageCodec::GetInstance())),
+      send_event_(send_event) {}
+
+KeyEventChannel::~KeyEventChannel() {}
+
+void KeyEventChannel::SendKey(const char* key,
+                              const char* string,
+                              const char* compose,
+                              uint32_t modifiers,
+                              uint32_t scan_code,
+                              bool is_down,
+                              std::function<void(bool)> callback) {
+  uint64_t sequence_id = last_sequence_id_++;
+
+  PendingEvent pending;
+  pending.sequence_id = sequence_id;
+  pending.unreplied = 2;
+  pending.any_handled = false;
+  pending.callback = std::move(callback);
+
+  if (pending_events_.size() > kMaxPendingEvents) {
+    FT_LOG(Error)
+        << "There are " << pending_events_.size()
+        << " keyboard events that have not yet received a response from the "
+        << "framework. Are responses being sent?";
+  }
+  pending_events_.push_back(std::make_unique<PendingEvent>(pending));
+
+  // Send the key event through both the embedder API and the platform channel.
+  SendEmbedderEvent(key, string, compose, modifiers, scan_code, is_down,
+                    sequence_id);
+  SendChannelEvent(key, string, compose, modifiers, scan_code, is_down,
+                   sequence_id);
+}
+
 void KeyEventChannel::SendEmbedderEvent(const char* key,
                                         const char* string,
                                         const char* compose,
                                         uint32_t modifiers,
                                         uint32_t scan_code,
                                         bool is_down,
-                                        std::function<void(bool)> callback) {
+                                        uint64_t sequence_id) {
   FlutterKeyEventType type =
       is_down ? kFlutterKeyEventTypeDown : kFlutterKeyEventTypeUp;
   uint64_t physical_key = event_to_physical_key(scan_code);
@@ -348,28 +362,17 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
       .synthesized = false,
   };
 
-  uint64_t response_id = response_id_++;
-  PendingResponse pending{
-      .callback =
-          [this, callback = std::move(callback)](bool handled,
-                                                 uint64_t response_id) {
-            auto found = pending_responses_.find(response_id);
-            if (found != pending_responses_.end()) {
-              pending_responses_.erase(found);
-            }
-            callback(handled);
-          },
-      .response_id = response_id,
-  };
-  pending_responses_[response_id] = std::make_unique<PendingResponse>(pending);
-
   send_event_(
       key_data,
       [](bool handled, void* user_data) {
-        auto* pending = reinterpret_cast<PendingResponse*>(user_data);
-        pending->callback(handled, pending->response_id);
+        auto* callback =
+            reinterpret_cast<std::function<void(bool)>*>(user_data);
+        (*callback)(handled);
+        delete callback;
       },
-      pending_responses_[response_id].get());
+      new std::function<void(bool)>([this, sequence_id](bool handled) {
+        ResolvePendingEvent(sequence_id, handled);
+      }));
 }
 
 void KeyEventChannel::SendChannelEvent(const char* key,
@@ -378,7 +381,7 @@ void KeyEventChannel::SendChannelEvent(const char* key,
                                        uint32_t modifiers,
                                        uint32_t scan_code,
                                        bool is_down,
-                                       std::function<void(bool)> callback) {
+                                       uint64_t sequence_id) {
   auto iter1 = kSymbolToScanCode.find(key);
   if (iter1 != kSymbolToScanCode.end()) {
     scan_code = iter1->second;
@@ -415,15 +418,38 @@ void KeyEventChannel::SendChannelEvent(const char* key,
   } else {
     event.AddMember(kTypeKey, kKeyUp, allocator);
   }
-  channel_->Send(event, [callback = std::move(callback)](const uint8_t* reply,
-                                                         size_t reply_size) {
-    if (reply != nullptr) {
-      std::unique_ptr<rapidjson::Document> decoded =
-          JsonMessageCodec::GetInstance().DecodeMessage(reply, reply_size);
-      bool handled = (*decoded)[kHandledKey].GetBool();
-      callback(handled);
+  channel_->Send(
+      event, [this, sequence_id](const uint8_t* reply, size_t reply_size) {
+        if (reply != nullptr) {
+          std::unique_ptr<rapidjson::Document> decoded =
+              JsonMessageCodec::GetInstance().DecodeMessage(reply, reply_size);
+          bool handled = (*decoded)[kHandledKey].GetBool();
+          ResolvePendingEvent(sequence_id, handled);
+        }
+      });
+}
+
+void KeyEventChannel::ResolvePendingEvent(uint64_t sequence_id, bool handled) {
+  // Find the pending event from |sequence_id|.
+  for (auto iter = pending_events_.begin(); iter != pending_events_.end();
+       ++iter) {
+    if ((*iter)->sequence_id == sequence_id) {
+      PendingEvent& event = **iter;
+      event.any_handled = event.any_handled || handled;
+      event.unreplied -= 1;
+      assert(event.unreplied >= 0);
+      // If all delegates have replied, report if any of them handled the event.
+      if (event.unreplied == 0) {
+        std::unique_ptr<PendingEvent> event_ptr = std::move(*iter);
+        pending_events_.erase(iter);
+        event.callback(event.any_handled);
+      }
+      // Return here; |iter| can't do ++ after erase.
+      return;
     }
-  });
+  }
+  // The pending event should always be found.
+  assert(false);
 }
 
 }  // namespace flutter
