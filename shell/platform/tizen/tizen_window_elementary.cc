@@ -344,8 +344,7 @@ int32_t TizenWindowElementary::GetDpi() {
 }
 
 uintptr_t TizenWindowElementary::GetWindowId() {
-  return ecore_evas_window_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_)));
+  return elm_win_window_id_get(elm_win_);
 }
 
 void TizenWindowElementary::ResizeRenderTargetWithRotation(
