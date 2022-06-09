@@ -8,6 +8,7 @@
 
 #include <deque>
 #include <functional>
+#include <map>
 #include <memory>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/basic_message_channel.h"
@@ -58,7 +59,11 @@ class KeyEventChannel {
 
   // A self-incrementing integer used as the ID for the next entry for
   // |pending_events_|.
-  uint64_t last_sequence_id_;
+  uint64_t last_sequence_id_ = 0;
+
+  // A map from physical keys to logical keys, each entry indicating a pressed
+  // key.
+  std::map<uint64_t, uint64_t> pressing_records_;
 
   void SendEmbedderEvent(const char* key,
                          const char* string,

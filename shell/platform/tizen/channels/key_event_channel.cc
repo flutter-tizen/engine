@@ -7,7 +7,6 @@
 
 #include <codecvt>
 #include <iomanip>
-#include <map>
 #include <string>
 
 #include "flutter/shell/platform/common/json_message_codec.h"
@@ -321,11 +320,38 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
                                         uint32_t scan_code,
                                         bool is_down,
                                         uint64_t sequence_id) {
-  FlutterKeyEventType type =
-      is_down ? kFlutterKeyEventTypeDown : kFlutterKeyEventTypeUp;
   uint64_t physical_key = GetPhysicalKey(scan_code);
   uint64_t logical_key = GetLogicalKey(key);
   const char* character = is_down ? compose : nullptr;
+
+  uint64_t last_logical_record = 0;
+  auto iter = pressing_records_.find(physical_key);
+  if (iter != pressing_records_.end()) {
+    last_logical_record = iter->second;
+  }
+
+  FlutterKeyEventType type;
+  if (is_down) {
+    if (last_logical_record) {
+      // A key has been pressed that has the exact physical key as a currently
+      // pressed one. This can happen during repeated events.
+      type = kFlutterKeyEventTypeRepeat;
+    } else {
+      type = kFlutterKeyEventTypeDown;
+    }
+    pressing_records_[physical_key] = logical_key;
+  } else {
+    if (!last_logical_record) {
+      // The physical key has been released before. It might indicate a missed
+      // event due to loss of focus, or multiple keyboards pressed keys with the
+      // same physical key. Ignore the up event.
+      ResolvePendingEvent(sequence_id, true);
+      return;
+    } else {
+      type = kFlutterKeyEventTypeUp;
+    }
+    pressing_records_.erase(physical_key);
+  }
 
   FlutterKeyEvent event = {};
   event.struct_size = sizeof(FlutterKeyEvent),
@@ -335,7 +361,7 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
           .count());
   event.type = type;
   event.physical = physical_key;
-  event.logical = logical_key;
+  event.logical = last_logical_record != 0 ? last_logical_record : logical_key;
   event.character = character;
   event.synthesized = false;
 
