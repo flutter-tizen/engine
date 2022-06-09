@@ -25,12 +25,9 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine) {
-  flutter::TizenViewBase::Geometry window_geometry = {
-      window_properties.x,
-      window_properties.y,
-      window_properties.width,
-      window_properties.height,
-  };
+  flutter::TizenGeometry window_geometry = {
+      window_properties.x, window_properties.y, window_properties.width,
+      window_properties.height};
 
   std::unique_ptr<flutter::TizenWindow> window =
       std::make_unique<flutter::TizenWindowEcoreWl2>(
@@ -58,20 +55,17 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
     void* parent) {
-  // FIXME: Ecore WL2 renderer does not support this yet.
-  FT_UNIMPLEMENTED();
+  FT_LOG(Warn) << "Not applicable!";
   return nullptr;
 }
 
 void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view) {
-  // FIXME: Ecore WL2 renderer does not support this yet.
-  FT_UNIMPLEMENTED();
+  FT_LOG(Warn) << "Not applicable!";
   return nullptr;
 }
 
-void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
-                                  int32_t width,
-                                  int32_t height) {
-  // FIXME: Ecore WL2 renderer does not support this yet.
-  FT_UNIMPLEMENTED();
+void FlutterDesktopViewResize(FlutterDesktopViewRef view,
+                              int32_t width,
+                              int32_t height) {
+  FT_LOG(Warn) << "Not applicable!";
 }

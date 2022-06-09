@@ -16,18 +16,18 @@ namespace flutter {
 
 class TizenWindowElementary : public TizenWindow {
  public:
-  TizenWindowElementary(TizenViewBase::Geometry geometry,
+  TizenWindowElementary(TizenGeometry geometry,
                         bool transparent,
                         bool focusable,
                         bool top_level);
 
   ~TizenWindowElementary();
 
-  Geometry GetRenderTargetGeometry() override;
+  TizenGeometry GetRenderTargetGeometry() override;
 
-  void SetRenderTargetGeometry(Geometry geometry) override;
+  void SetRenderTargetGeometry(TizenGeometry geometry) override;
 
-  Geometry GetScreenGeometry() override;
+  TizenGeometry GetScreenGeometry() override;
 
   void* GetRenderTarget() override { return elm_win_; }
 
@@ -41,7 +41,7 @@ class TizenWindowElementary : public TizenWindow {
 
   void* GetWindowHandle() override { return elm_win_; }
 
-  void ResizeRenderTargetWithRotation(Geometry geometry,
+  void ResizeRenderTargetWithRotation(TizenGeometry geometry,
                                       int32_t angle) override;
 
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
@@ -50,7 +50,7 @@ class TizenWindowElementary : public TizenWindow {
 
   void Show() override;
 
-  void OnGeometryChanged(Geometry geometry) override;
+  void OnGeometryChanged(TizenGeometry geometry) override;
 
  private:
   bool CreateWindow();

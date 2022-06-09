@@ -41,9 +41,10 @@ void EvasObjectResize(Evas_Object* object, uint32_t width, uint32_t height) {
 
 namespace flutter {
 
-TizenViewElementary::TizenViewElementary(TizenViewBase::Geometry geometry,
+TizenViewElementary::TizenViewElementary(int width,
+                                         int height,
                                          Evas_Object* parent)
-    : TizenView(geometry), parent_(parent) {
+    : TizenView(width, height), parent_(parent) {
   if (!CreateView()) {
     FT_LOG(Error) << "Failed to create a platform view.";
     return;
@@ -56,6 +57,7 @@ TizenViewElementary::TizenViewElementary(TizenViewBase::Geometry geometry,
 
 TizenViewElementary::~TizenViewElementary() {
   UnregisterEventHandlers();
+  DestroyView();
 }
 
 bool TizenViewElementary::CreateView() {
@@ -65,34 +67,32 @@ bool TizenViewElementary::CreateView() {
   evas_object_geometry_get(parent_, nullptr, nullptr, &parent_width,
                            &parent_height);
 
-  if (initial_geometry_.width == 0) {
-    initial_geometry_.width = parent_width;
+  if (initial_width_ == 0) {
+    initial_width_ = parent_width;
   }
-  if (initial_geometry_.height == 0) {
-    initial_geometry_.height = parent_height;
+  if (initial_height_ == 0) {
+    initial_height_ = parent_height;
   }
 
   container_ = elm_table_add(parent_);
   if (!container_) {
-    FT_LOG(Error) << "Failed to create a evas object container.";
+    FT_LOG(Error) << "Failed to create an Evas object container.";
     return false;
   }
 
-  EvasObjectResize(container_, initial_geometry_.width,
-                   initial_geometry_.height);
+  EvasObjectResize(container_, initial_width_, initial_height_);
   evas_object_size_hint_weight_set(container_, EVAS_HINT_EXPAND,
                                    EVAS_HINT_EXPAND);
   evas_object_size_hint_align_set(container_, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
   image_ = evas_object_image_filled_add(evas_object_evas_get(container_));
   if (!image_) {
-    FT_LOG(Error) << "Failed to create a evas object image.";
+    FT_LOG(Error) << "Failed to create an Evas object image.";
     return false;
   }
 
-  EvasObjectResize(image_, initial_geometry_.width, initial_geometry_.height);
-  evas_object_image_size_set(image_, initial_geometry_.width,
-                             initial_geometry_.height);
+  EvasObjectResize(image_, initial_width_, initial_height_);
+  evas_object_image_size_set(image_, initial_width_, initial_height_);
   evas_object_image_alpha_set(image_, EINA_TRUE);
   elm_table_pack(container_, image_, 0, 0, 1, 1);
 
@@ -101,17 +101,22 @@ bool TizenViewElementary::CreateView() {
   // that can be used as event layer.
   event_layer_ = elm_button_add(container_);
   if (!event_layer_) {
-    FT_LOG(Error) << "Failed to create a event layer";
+    FT_LOG(Error) << "Failed to create an event layer.";
     return false;
   }
 
   elm_object_style_set(event_layer_, "transparent");
   evas_object_color_set(event_layer_, 0, 0, 0, 0);
-  EvasObjectResize(event_layer_, initial_geometry_.width,
-                   initial_geometry_.height);
+  EvasObjectResize(event_layer_, initial_width_, initial_height_);
   elm_table_pack(container_, event_layer_, 0, 0, 1, 1);
 
   return true;
+}
+
+void TizenViewElementary::DestroyView() {
+  evas_object_del(event_layer_);
+  evas_object_del(image_);
+  evas_object_del(container_);
 }
 
 void TizenViewElementary::RegisterEventHandlers() {
@@ -213,8 +218,8 @@ void TizenViewElementary::RegisterEventHandlers() {
       if (self->event_layer_ == object) {
         auto* key_event = reinterpret_cast<Evas_Event_Key_Down*>(event_info);
         int handled = false;
-        key_event->event_flags = static_cast<Evas_Event_Flags>(
-            key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
+        key_event->event_flags =
+            Evas_Event_Flags(key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
         if (self->input_method_context_->IsInputPanelShown()) {
           handled =
               self->input_method_context_->HandleEvasEventKeyDown(key_event);
@@ -239,8 +244,8 @@ void TizenViewElementary::RegisterEventHandlers() {
           if (self->event_layer_ == object) {
             auto* key_event = reinterpret_cast<Evas_Event_Key_Up*>(event_info);
             int handled = false;
-            key_event->event_flags = static_cast<Evas_Event_Flags>(
-                key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
+            key_event->event_flags = Evas_Event_Flags(key_event->event_flags |
+                                                      EVAS_EVENT_FLAG_ON_HOLD);
             if (self->input_method_context_->IsInputPanelShown()) {
               handled =
                   self->input_method_context_->HandleEvasEventKeyUp(key_event);
@@ -279,35 +284,22 @@ void TizenViewElementary::UnregisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
-TizenViewBase::Geometry TizenViewElementary::GetRenderTargetGeometry() {
-  Geometry result;
+TizenGeometry TizenViewElementary::GetRenderTargetGeometry() {
+  TizenGeometry result;
   evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
                            &result.height);
   return result;
 }
 
-void TizenViewElementary::SetRenderTargetGeometry(Geometry geometry) {
-  evas_object_resize(container_, geometry.width, geometry.height);
-  evas_object_size_hint_min_set(container_, geometry.width, geometry.height);
-  evas_object_size_hint_max_set(container_, geometry.width, geometry.height);
+void TizenViewElementary::SetRenderTargetGeometry(TizenGeometry geometry) {
+  EvasObjectResize(container_, geometry.width, geometry.height);
   evas_object_move(container_, geometry.left, geometry.top);
 
-  evas_object_resize(event_layer_, geometry.width, geometry.height);
-  evas_object_size_hint_min_set(event_layer_, geometry.width, geometry.height);
-  evas_object_size_hint_max_set(event_layer_, geometry.width, geometry.height);
+  EvasObjectResize(event_layer_, geometry.width, geometry.height);
   evas_object_move(event_layer_, geometry.left, geometry.top);
 
-  evas_object_resize(image_, geometry.width, geometry.height);
-  evas_object_size_hint_min_set(image_, geometry.width, geometry.height);
-  evas_object_size_hint_max_set(image_, geometry.width, geometry.height);
+  EvasObjectResize(image_, geometry.width, geometry.height);
   evas_object_move(image_, geometry.left, geometry.top);
-}
-
-TizenViewBase::Geometry TizenViewElementary::GetScreenGeometry() {
-  Geometry result;
-  evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
-                           &result.height);
-  return result;
 }
 
 int32_t TizenViewElementary::GetDpi() {
@@ -323,7 +315,7 @@ uintptr_t TizenViewElementary::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(image_)));
 }
 
-void TizenViewElementary::ResizeRenderTargetWithRotation(Geometry geometry,
+void TizenViewElementary::ResizeRenderTargetWithRotation(TizenGeometry geometry,
                                                          int32_t angle) {
   TizenRendererEvasGL* renderer_evas_gl =
       reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
@@ -331,12 +323,8 @@ void TizenViewElementary::ResizeRenderTargetWithRotation(Geometry geometry,
 }
 
 void TizenViewElementary::BindKeys(const std::vector<std::string>& keys) {
-  // Views do not need to have window info.
-  // However, it is necessary to bind a special key for each profile(in this
-  // case). This part is modified after refactoring related to the key event
-  // code.
   Evas_Object* elm_win = static_cast<Evas_Object*>(ecore_evas_data_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(image_)), "elm_win"));
+      ecore_evas_ecore_evas_get(evas_object_evas_get(parent_)), "elm_win"));
   if (elm_win) {
     for (const std::string& key : keys) {
       eext_win_keygrab_set(elm_win, key.c_str());
@@ -350,7 +338,7 @@ void TizenViewElementary::Show() {
   evas_object_show(event_layer_);
 }
 
-void TizenViewElementary::OnGeometryChanged(Geometry geometry) {
+void TizenViewElementary::OnGeometryChanged(TizenGeometry geometry) {
   SetRenderTargetGeometry(geometry);
   view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }

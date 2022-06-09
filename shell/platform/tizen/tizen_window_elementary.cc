@@ -35,7 +35,7 @@ uint32_t EvasModifierToEcoreEventModifiers(const Evas_Modifier* evas_modifier) {
 
 namespace flutter {
 
-TizenWindowElementary::TizenWindowElementary(TizenViewBase::Geometry geometry,
+TizenWindowElementary::TizenWindowElementary(TizenGeometry geometry,
                                              bool transparent,
                                              bool focusable,
                                              bool top_level)
@@ -305,16 +305,16 @@ void TizenWindowElementary::UnregisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
-TizenViewBase::Geometry TizenWindowElementary::GetRenderTargetGeometry() {
+TizenGeometry TizenWindowElementary::GetRenderTargetGeometry() {
   // FIXME : evas_object_geometry_get() and ecore_wl2_window_geometry_get() are
   // not equivalent.
-  Geometry result;
+  TizenGeometry result;
   evas_object_geometry_get(elm_win_, &result.left, &result.top, &result.width,
                            &result.height);
   return result;
 }
 
-void TizenWindowElementary::SetRenderTargetGeometry(Geometry geometry) {
+void TizenWindowElementary::SetRenderTargetGeometry(TizenGeometry geometry) {
   evas_object_resize(elm_win_, geometry.width, geometry.height);
   evas_object_move(elm_win_, geometry.left, geometry.top);
 
@@ -322,8 +322,8 @@ void TizenWindowElementary::SetRenderTargetGeometry(Geometry geometry) {
   evas_object_move(image_, geometry.left, geometry.top);
 }
 
-TizenViewBase::Geometry TizenWindowElementary::GetScreenGeometry() {
-  Geometry result;
+TizenGeometry TizenWindowElementary::GetScreenGeometry() {
+  TizenGeometry result;
   Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
   ecore_evas_screen_geometry_get(ecore_evas, nullptr, nullptr, &result.width,
@@ -348,8 +348,9 @@ uintptr_t TizenWindowElementary::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_)));
 }
 
-void TizenWindowElementary::ResizeRenderTargetWithRotation(Geometry geometry,
-                                                           int32_t angle) {
+void TizenWindowElementary::ResizeRenderTargetWithRotation(
+    TizenGeometry geometry,
+    int32_t angle) {
   TizenRendererEvasGL* renderer_evas_gl =
       reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
   renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
@@ -373,7 +374,7 @@ void TizenWindowElementary::Show() {
   evas_object_show(elm_win_);
 }
 
-void TizenWindowElementary::OnGeometryChanged(Geometry geometry) {
+void TizenWindowElementary::OnGeometryChanged(TizenGeometry geometry) {
   SetRenderTargetGeometry(geometry);
   view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }

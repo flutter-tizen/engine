@@ -144,22 +144,26 @@ FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     FlutterDesktopEngineRef engine);
 
 // Creates a view that hosts and displays the given engine instance.
-// (@warning: This API is improving. There is no guarantee that exact result.)
+//
+// The type of parent should be Evas_Object*, Cast Evas_Object* to void*.
+// @warning This API is a work-in-progress and may change.
 FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
     FlutterDesktopEngineRef engine,
     void* parent);
 
 // Returns a handle to evas object that the FlutterView is drawn to.
-// (@warning: This API is improving. There is no guarantee that exact result.)
+//
+// Cast the returned void* to Evas_Object*.
+// @warning This API is a work-in-progress and may change.
 FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
     FlutterDesktopViewRef view);
 
 // Resize the FlutterView.
-// (@warning: This API is improving. There is no guarantee that exact result.)
-FLUTTER_EXPORT void FlutterDesktopViewResizeView(FlutterDesktopViewRef view,
-                                                 int32_t width,
-                                                 int32_t height);
+// @warning This API is a work-in-progress and may change.
+FLUTTER_EXPORT void FlutterDesktopViewResize(FlutterDesktopViewRef view,
+                                             int32_t width,
+                                             int32_t height);
 
 // ========== Plugin Registrar (extensions) ==========
 

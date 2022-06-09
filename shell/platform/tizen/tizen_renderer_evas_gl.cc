@@ -26,7 +26,7 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
                                         int32_t width,
                                         int32_t height) {
   evas_gl_ = evas_gl_new(
-      evas_object_evas_get(static_cast<Evas_Object*>(render_target_display)));
+      evas_object_evas_get(static_cast<Evas_Object*>(render_target)));
   if (!evas_gl_) {
     FT_LOG(Error) << "Could not create an Evas GL object.";
     return false;
@@ -58,7 +58,7 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
   Evas_Native_Surface native_surface;
   evas_gl_native_surface_get(evas_gl_, gl_surface_, &native_surface);
 
-  image_ = static_cast<Evas_Object*>(render_target_display);
+  image_ = static_cast<Evas_Object*>(render_target);
   evas_object_image_native_surface_set(image_, &native_surface);
 
   evas_object_image_pixels_get_callback_set(

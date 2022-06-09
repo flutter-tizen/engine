@@ -18,35 +18,35 @@ namespace flutter {
 
 class TizenViewElementary : public TizenView {
  public:
-  TizenViewElementary(TizenViewBase::Geometry geometry, Evas_Object* parent);
+  TizenViewElementary(int width, int height, Evas_Object* parent);
 
   ~TizenViewElementary();
 
-  Geometry GetRenderTargetGeometry() override;
+  TizenGeometry GetRenderTargetGeometry() override;
 
-  void SetRenderTargetGeometry(Geometry geometry) override;
+  void SetRenderTargetGeometry(TizenGeometry geometry) override;
 
-  Geometry GetScreenGeometry() override;
+  void* GetRenderTarget() override { return image_; }
 
-  void* GetRenderTarget() override { return container_; }
-
-  void* GetRenderTargetDisplay() override { return image_; }
+  void* GetRenderTargetContainer() override { return container_; }
 
   int32_t GetDpi() override;
 
   uintptr_t GetWindowId() override;
 
-  void ResizeRenderTargetWithRotation(Geometry geometry,
+  void ResizeRenderTargetWithRotation(TizenGeometry geometry,
                                       int32_t angle) override;
 
   void BindKeys(const std::vector<std::string>& keys) override;
 
   void Show() override;
 
-  void OnGeometryChanged(Geometry geometry) override;
+  void OnGeometryChanged(TizenGeometry geometry) override;
 
  private:
   bool CreateView();
+
+  void DestroyView();
 
   void RegisterEventHandlers();
 

@@ -6,7 +6,7 @@
 #ifndef EMBEDDER_TIZEN_VIEW_H_
 #define EMBEDDER_TIZEN_VIEW_H_
 
-#include <cstdint>
+#include <string>
 
 #include "flutter/shell/platform/tizen/tizen_view_base.h"
 
@@ -19,13 +19,16 @@ class TizenView : public TizenViewBase {
   TizenView() = default;
   virtual ~TizenView() = default;
 
-  std::string GetType() override { return "view"; };
+  TizenViewType GetType() override { return TizenViewType::kView; };
+
+  virtual void* GetRenderTargetContainer() = 0;
 
  protected:
-  explicit TizenView(TizenViewBase::Geometry geometry)
-      : initial_geometry_(geometry) {}
+  explicit TizenView(int width, int height)
+      : initial_width_(width), initial_height_(height) {}
 
-  TizenViewBase::Geometry initial_geometry_ = {0, 0, 0, 0};
+  int initial_width_ = 0;
+  int initial_height_ = 0;
 };
 
 }  // namespace flutter

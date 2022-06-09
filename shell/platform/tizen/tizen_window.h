@@ -6,11 +6,11 @@
 #ifndef EMBEDDER_TIZEN_WINDOW_H_
 #define EMBEDDER_TIZEN_WINDOW_H_
 
-#include "flutter/shell/platform/tizen/tizen_view_base.h"
-
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "flutter/shell/platform/tizen/tizen_view_base.h"
 
 namespace flutter {
 
@@ -27,10 +27,15 @@ class TizenWindow : public TizenViewBase {
 
   virtual void SetPreferredOrientations(const std::vector<int>& rotations);
 
-  std::string GetType() override { return "window"; };
+  virtual void* GetRenderTargetDisplay() = 0;
+
+  // Returns the geometry of the display screen.
+  virtual TizenGeometry GetScreenGeometry() = 0;
+
+  TizenViewType GetType() override { return TizenViewType::kWindow; };
 
  protected:
-  explicit TizenWindow(TizenViewBase::Geometry geometry,
+  explicit TizenWindow(TizenGeometry geometry,
                        bool transparent,
                        bool focusable,
                        bool top_level)
@@ -39,7 +44,7 @@ class TizenWindow : public TizenViewBase {
         focusable_(focusable),
         top_level_(top_level) {}
 
-  TizenViewBase::Geometry initial_geometry_ = {0, 0, 0, 0};
+  TizenGeometry initial_geometry_ = {0, 0, 0, 0};
   bool transparent_ = false;
   bool focusable_ = false;
   bool top_level_ = false;

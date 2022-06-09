@@ -7,6 +7,7 @@
 #define EMBEDDER_TIZEN_VIEW_BASE_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,31 +17,28 @@ namespace flutter {
 
 class FlutterTizenView;
 
+struct TizenGeometry {
+  int32_t left = 0, top = 0, width = 0, height = 0;
+};
+
+enum class TizenViewType { kView, kWindow };
+
 class TizenViewBase {
  public:
-  struct Geometry {
-    int32_t left = 0, top = 0, width = 0, height = 0;
-  };
-
   TizenViewBase() = default;
   virtual ~TizenViewBase() = default;
 
-  // Returns a valid pointer the platform object that rendering can be bound to
-  // by rendering backend.
+  // Returns a pointer to the platform object that rendering can be bound to
+  // by the rendering backend.
   virtual void* GetRenderTarget() = 0;
-
-  virtual void* GetRenderTargetDisplay() = 0;
 
   virtual uintptr_t GetWindowId() = 0;
 
   // Returns the geometry of the current render target.
-  virtual Geometry GetRenderTargetGeometry() = 0;
+  virtual TizenGeometry GetRenderTargetGeometry() = 0;
 
   // Set the geometry of the current render target.
-  virtual void SetRenderTargetGeometry(Geometry geometry) = 0;
-
-  // Returns the geometry of the display screen.
-  virtual Geometry GetScreenGeometry() = 0;
+  virtual void SetRenderTargetGeometry(TizenGeometry geometry) = 0;
 
   // Returns the dpi of the screen.
   virtual int32_t GetDpi() = 0;
@@ -51,16 +49,16 @@ class TizenViewBase {
 
   virtual void BindKeys(const std::vector<std::string>& keys) = 0;
 
-  virtual void ResizeRenderTargetWithRotation(Geometry geometry,
+  virtual void ResizeRenderTargetWithRotation(TizenGeometry geometry,
                                               int32_t degree) = 0;
 
   // FIXME
   // This is a temporary implementation that is only used by the window channel.
-  virtual void OnGeometryChanged(Geometry geometry) = 0;
+  virtual void OnGeometryChanged(TizenGeometry geometry) = 0;
 
   virtual void Show() = 0;
 
-  virtual std::string GetType() = 0;
+  virtual TizenViewType GetType() = 0;
 
   TizenInputMethodContext* input_method_context() {
     return input_method_context_.get();
