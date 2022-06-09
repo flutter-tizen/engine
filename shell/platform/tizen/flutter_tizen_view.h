@@ -7,6 +7,7 @@
 #define EMBEDDER_FLUTTER_TIZEN_VIEW_H_
 
 #include <memory>
+#include <string>
 
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/plugin_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
@@ -14,7 +15,7 @@
 #include "flutter/shell/platform/tizen/channels/text_input_channel.h"
 #include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
-#include "flutter/shell/platform/tizen/key_event_handler.h"
+#include "flutter/shell/platform/tizen/tizen_view_base.h"
 
 namespace flutter {
 
@@ -140,9 +141,6 @@ class FlutterTizenView {
 
   // A plugin that implements the Flutter textinput channel.
   std::unique_ptr<TextInputChannel> text_input_channel_;
-
-  // TODO: Rename?
-  std::unique_ptr<KeyEventHandler> key_event_handler_;
 
   // The current view rotation degree.
   int32_t rotation_degree_ = 0;
