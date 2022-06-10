@@ -46,10 +46,15 @@ uint64_t ApplyPlaneToId(uint64_t id, uint64_t plane) {
   return (id & kValueMask) | plane;
 }
 
-uint64_t GetPhysicalKey(int scan_code) {
-  auto iter = kScanCodeToPhysicalKeyCode.find(scan_code);
-  if (iter != kScanCodeToPhysicalKeyCode.end()) {
-    return iter->second;
+uint64_t GetPhysicalKey(int scan_code, const char* key) {
+  auto iter_override = kSymbolToScanCode.find(key);
+  if (iter_override != kSymbolToScanCode.end()) {
+    scan_code = iter_override->second;
+  }
+
+  auto iter_keymap = kScanCodeToPhysicalKeyCode.find(scan_code);
+  if (iter_keymap != kScanCodeToPhysicalKeyCode.end()) {
+    return iter_keymap->second;
   }
   return ApplyPlaneToId(scan_code, kGtkPlane);
 }
@@ -113,15 +118,15 @@ void KeyEventChannel::SendChannelEvent(const char* key,
                                        uint32_t scan_code,
                                        bool is_down,
                                        uint64_t sequence_id) {
-  auto iter1 = kSymbolToScanCode.find(key);
-  if (iter1 != kSymbolToScanCode.end()) {
-    scan_code = iter1->second;
+  auto iter_override = kSymbolToScanCode.find(key);
+  if (iter_override != kSymbolToScanCode.end()) {
+    scan_code = iter_override->second;
   }
 
   uint32_t key_code = 0;
-  auto iter2 = kScanCodeToGtkKeyCode.find(scan_code);
-  if (iter2 != kScanCodeToGtkKeyCode.end()) {
-    key_code = iter2->second;
+  auto iter_keymap = kScanCodeToGtkKeyCode.find(scan_code);
+  if (iter_keymap != kScanCodeToGtkKeyCode.end()) {
+    key_code = iter_keymap->second;
   }
 
   int gtk_modifiers = 0;
@@ -167,7 +172,7 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
                                         uint32_t scan_code,
                                         bool is_down,
                                         uint64_t sequence_id) {
-  uint64_t physical_key = GetPhysicalKey(scan_code);
+  uint64_t physical_key = GetPhysicalKey(scan_code, key);
   uint64_t logical_key = GetLogicalKey(key);
   const char* character = is_down ? string : nullptr;
 

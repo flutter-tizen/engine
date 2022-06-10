@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 
-// Maps special TV key symbols to standard XKB scan codes.
+// Maps device-specific key symbols to XKB scan codes.
 //
 // The values are originally defined in:
 // - xkb-tizen-data/tizen_key_layout.txt.tv
