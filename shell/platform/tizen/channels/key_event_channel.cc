@@ -54,7 +54,7 @@ uint64_t GetPhysicalKey(int scan_code) {
   return ApplyPlaneToId(scan_code, kGtkPlane);
 }
 
-uint64_t GetLogicalKey(const std::string& key) {
+uint64_t GetLogicalKey(const char* key) {
   auto iter = kSymbolToLogicalKeyCode.find(key);
   if (iter != kSymbolToLogicalKeyCode.end()) {
     return iter->second;
@@ -85,8 +85,9 @@ void KeyEventChannel::SendKey(const char* key,
   uint64_t sequence_id = last_sequence_id_++;
 
   PendingEvent pending;
-  // The |callback| will be called when both handlers (the platform channel and
-  // the embedder API) have replied.
+  // This event will be sent through the embedder API and also the platform
+  // channel, and |callback| will be called when both responses have been
+  // received.
   pending.unreplied = 2;
   pending.any_handled = false;
   pending.callback = std::move(callback);
@@ -131,8 +132,8 @@ void KeyEventChannel::SendChannelEvent(const char* key,
   }
 
   uint32_t unicode_scalar_values = 0;
-  if (compose) {
-    unicode_scalar_values = Utf8ToUtf32CodePoint(compose);
+  if (string) {
+    unicode_scalar_values = Utf8ToUtf32CodePoint(string);
   }
 
   rapidjson::Document event(rapidjson::kObjectType);
@@ -168,7 +169,7 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
                                         uint64_t sequence_id) {
   uint64_t physical_key = GetPhysicalKey(scan_code);
   uint64_t logical_key = GetLogicalKey(key);
-  const char* character = is_down ? compose : nullptr;
+  const char* character = is_down ? string : nullptr;
 
   uint64_t last_logical_record = 0;
   auto iter = pressing_records_.find(physical_key);
