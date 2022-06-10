@@ -345,6 +345,19 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
       // The physical key has been released before. It might indicate a missed
       // event due to loss of focus, or multiple keyboards pressed keys with the
       // same physical key. Ignore the up event.
+      FlutterKeyEvent empty_event = {
+          .struct_size = sizeof(FlutterKeyEvent),
+          .timestamp = static_cast<double>(
+              std::chrono::duration_cast<std::chrono::microseconds>(
+                  std::chrono::steady_clock::now().time_since_epoch())
+                  .count()),
+          .type = kFlutterKeyEventTypeDown,
+          .physical = 0,
+          .logical = 0,
+          .character = "",
+          .synthesized = false,
+      };
+      send_event_(empty_event, nullptr, nullptr);
       ResolvePendingEvent(sequence_id, true);
       return;
     } else {
