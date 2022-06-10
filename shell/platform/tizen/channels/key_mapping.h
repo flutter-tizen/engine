@@ -8,13 +8,6 @@
 #include <map>
 #include <string>
 
-// Maps device-specific key symbols to XKB scan codes.
-//
-// The values are originally defined in:
-// - xkb-tizen-data/tizen_key_layout.txt.tv
-// - flutter/keyboard_maps.dart (kLinuxToPhysicalKey)
-extern std::map<std::string, uint32_t> kSymbolToScanCode;
-
 // Maps XKB scan codes to GTK key codes.
 //
 // The values are originally defined in:
@@ -43,7 +36,7 @@ const uint64_t kValueMask = 0x000ffffffff;
 // The plane value for keys which have a Unicode representation.
 const uint64_t kUnicodePlane = 0x00000000000;
 
-// The plane value for the private keys defined by the GTK embedding.
-const uint64_t kGtkPlane = 0x01500000000;
+// The plane value for private keys defined by the Tizen platform.
+const uint64_t kTizenPlane = 0x02000000000;
 
 #endif  // EMBEDDER_KEY_MAPPING_H_

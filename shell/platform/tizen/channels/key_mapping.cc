@@ -4,14 +4,6 @@
 
 #include "key_mapping.h"
 
-std::map<std::string, uint32_t> kSymbolToScanCode = {
-    {"XF86AudioPlay", 0x000000d7},       // mediaPlay
-    {"XF86AudioPlayPause", 0x000000ac},  // mediaPlayPause
-    {"XF86Menu", 0x00000087},            // contextMenu
-    {"XF86PlayBack", 0x000000ac},        // mediaPlayPause
-    {"XF86SysMenu", 0x00000087},         // contextMenu
-};
-
 std::map<uint32_t, uint32_t> kScanCodeToGtkKeyCode = {
     {0x00000009, 65307},      // escape
     {0x0000000a, 49},         // digit1
@@ -618,6 +610,11 @@ std::map<std::string, uint64_t> kSymbolToLogicalKeyCode = {
     {"XF86Stop", 0x00100000c07},              // browserStop
     {"XF86ChannelDown", 0x00100000d0a},       // channelDown
     {"XF86ChannelUp", 0x00100000d0b},         // channelUp
+    {"XF86Red", 0x00100000d0c},               // colorF0Red
+    {"XF86Green", 0x00100000d0d},             // colorF1Green
+    {"XF86Yellow", 0x00100000d0e},            // colorF2Yellow
+    {"XF86Blue", 0x00100000d0f},              // colorF3Blue
+    {"XF86Caption", 0x00100000d12},           // closedCaptionToggle
     {"XF86Info", 0x00100000d25},              // info
     {"XF86ChannelList", 0x00100000d28},       // listProgram
     {"XF86AudioForward", 0x00100000d2c},      // mediaFastForward
@@ -627,8 +624,10 @@ std::map<std::string, uint64_t> kSymbolToLogicalKeyCode = {
     {"XF86AudioRewind", 0x00100000d31},       // mediaRewind
     {"XF86AudioRandomPlay", 0x00100000d3d},   // randomToggle
     {"XF86Subtitle", 0x00100000d47},          // subtitle
+    {"XF86Display", 0x00100000d4a},           // tvInput
     {"XF86MediaTopMenu", 0x00100000d55},      // mediaTopMenu
     {"XF86PreviousChannel", 0x00100000d59},   // navigatePrevious
+    {"XF863D", 0x00100001101},                // tv3DMode
     {"XF86Suspend", 0x00200000000},           // suspend
     {"XF86Sleep", 0x00200000002},             // sleep
     {"yen", 0x00200000022},                   // intlYen
@@ -643,6 +642,9 @@ std::map<std::string, uint64_t> kSymbolToLogicalKeyCode = {
     {"KP_Enter", 0x0020000020d},              // numpadEnter
     {"KP_Multiply", 0x0020000022a},           // numpadMultiply
     {"KP_Add", 0x0020000022b},                // numpadAdd
+    {"KP_Subtract", 0x0020000022d},           // numpadSubtract
+    {"KP_Decimal", 0x0020000022e},            // numpadDecimal
+    {"KP_Divide", 0x0020000022f},             // numpadDivide
     {"KP_0", 0x00200000230},                  // numpad0
     {"KP_1", 0x00200000231},                  // numpad1
     {"KP_2", 0x00200000232},                  // numpad2
@@ -656,7 +658,6 @@ std::map<std::string, uint64_t> kSymbolToLogicalKeyCode = {
     {"KP_Equal", 0x0020000023d},              // numpadEqual
     {"XF86Menu", 0x00100000505},              // contextMenu
     {"XF86Home", 0x00100000306},              // home
-    {"XF86SysMenu", 0x00100000d43},           // settings
     {"XF86LowerChannel", 0x00100000d0a},      // channelDown
     {"XF86RaiseChannel", 0x00100000d0b},      // channelUp
     {"XF86ChannelGuide", 0x00100000d22},      // guide

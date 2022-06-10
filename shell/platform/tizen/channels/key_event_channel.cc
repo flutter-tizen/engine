@@ -47,16 +47,11 @@ uint64_t ApplyPlaneToId(uint64_t id, uint64_t plane) {
 }
 
 uint64_t GetPhysicalKey(int scan_code, const char* key) {
-  auto iter_override = kSymbolToScanCode.find(key);
-  if (iter_override != kSymbolToScanCode.end()) {
-    scan_code = iter_override->second;
+  auto iter = kScanCodeToPhysicalKeyCode.find(scan_code);
+  if (iter != kScanCodeToPhysicalKeyCode.end()) {
+    return iter->second;
   }
-
-  auto iter_keymap = kScanCodeToPhysicalKeyCode.find(scan_code);
-  if (iter_keymap != kScanCodeToPhysicalKeyCode.end()) {
-    return iter_keymap->second;
-  }
-  return ApplyPlaneToId(scan_code, kGtkPlane);
+  return ApplyPlaneToId(scan_code, kTizenPlane);
 }
 
 uint64_t GetLogicalKey(const char* key) {
@@ -65,7 +60,7 @@ uint64_t GetLogicalKey(const char* key) {
     return iter->second;
   }
   // No logical ID is available. Default to 0.
-  return ApplyPlaneToId(0, kGtkPlane);
+  return ApplyPlaneToId(0, kTizenPlane);
 }
 
 }  // namespace
@@ -118,15 +113,10 @@ void KeyEventChannel::SendChannelEvent(const char* key,
                                        uint32_t scan_code,
                                        bool is_down,
                                        uint64_t sequence_id) {
-  auto iter_override = kSymbolToScanCode.find(key);
-  if (iter_override != kSymbolToScanCode.end()) {
-    scan_code = iter_override->second;
-  }
-
   uint32_t key_code = 0;
-  auto iter_keymap = kScanCodeToGtkKeyCode.find(scan_code);
-  if (iter_keymap != kScanCodeToGtkKeyCode.end()) {
-    key_code = iter_keymap->second;
+  auto iter = kScanCodeToGtkKeyCode.find(scan_code);
+  if (iter != kScanCodeToGtkKeyCode.end()) {
+    key_code = iter->second;
   }
 
   int gtk_modifiers = 0;

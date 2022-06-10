@@ -21,21 +21,22 @@ constexpr double kProfileFactor = 2.0;
 constexpr double kProfileFactor = 1.0;
 #endif
 
+constexpr char kSysMenuKey[] = "XF86SysMenu";
 constexpr char kBackKey[] = "XF86Back";
 constexpr char kExitKey[] = "XF86Exit";
 
 // Keys that should always be handled by the app first but not by the system.
 const std::vector<std::string> kBindableSystemKeys = {
-    "XF86Menu",           "XF86Back",        "XF86AudioPlay",
-    "XF86AudioPause",     "XF86AudioStop",   "XF86AudioNext",
-    "XF86AudioPrev",      "XF86AudioRewind", "XF86AudioForward",
-    "XF86AudioPlayPause", "XF86AudioRecord", "XF86LowerChannel",
-    "XF86RaiseChannel",   "XF86ChannelList", "XF86PreviousChannel",
-    "XF86SysMenu",        "XF86SimpleMenu",  "XF86History",
-    "XF86Favorites",      "XF86Info",        "XF86Red",
-    "XF86Green",          "XF86Yellow",      "XF86Blue",
-    "XF86Subtitle",       "XF86PlayBack",    "XF86ChannelGuide",
-    "XF86Caption",        "XF86Exit",
+    "XF86Menu",           "XF86Back",         "XF86AudioPlay",
+    "XF86AudioPause",     "XF86AudioStop",    "XF86AudioNext",
+    "XF86AudioPrev",      "XF86AudioRewind",  "XF86AudioForward",
+    "XF86AudioPlayPause", "XF86AudioRecord",  "XF86LowerChannel",
+    "XF86RaiseChannel",   "XF86ChannelList",  "XF86PreviousChannel",
+    "XF86SimpleMenu",     "XF86History",      "XF86Favorites",
+    "XF86Info",           "XF86Red",          "XF86Green",
+    "XF86Yellow",         "XF86Blue",         "XF86Subtitle",
+    "XF86PlayBack",       "XF86ChannelGuide", "XF86Caption",
+    "XF86Exit",
 };
 
 }  // namespace
@@ -222,6 +223,11 @@ void FlutterTizenView::OnKey(const char* key,
   if (is_down) {
     FT_LOG(Info) << "Key symbol: " << key << ", code: 0x" << std::setw(8)
                  << std::setfill('0') << std::right << std::hex << scan_code;
+  }
+
+  // Do not handle the TV system menu key.
+  if (strcmp(key, kSysMenuKey) == 0) {
+    return;
   }
 
   if (text_input_channel_) {
