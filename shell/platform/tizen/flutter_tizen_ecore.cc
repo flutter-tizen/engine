@@ -59,12 +59,12 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
   return nullptr;
 }
 
-void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view) {
+void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view_ref) {
   FT_LOG(Warn) << "Not applicable!";
   return nullptr;
 }
 
-void FlutterDesktopViewResize(FlutterDesktopViewRef view,
+void FlutterDesktopViewResize(FlutterDesktopViewRef view_ref,
                               int32_t width,
                               int32_t height) {
   FT_LOG(Warn) << "Not applicable!";

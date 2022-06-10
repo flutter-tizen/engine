@@ -1,5 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -282,14 +281,14 @@ void TizenViewElementary::UnregisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
-TizenGeometry TizenViewElementary::GetRenderTargetGeometry() {
+TizenGeometry TizenViewElementary::GetGeometry() {
   TizenGeometry result;
   evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
                            &result.height);
   return result;
 }
 
-void TizenViewElementary::SetRenderTargetGeometry(TizenGeometry geometry) {
+void TizenViewElementary::SetGeometry(TizenGeometry geometry) {
   EvasObjectResize(image_, geometry.width, geometry.height);
   evas_object_move(image_, geometry.left, geometry.top);
 }
@@ -307,8 +306,8 @@ uintptr_t TizenViewElementary::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(image_)));
 }
 
-void TizenViewElementary::ResizeRenderTargetWithRotation(TizenGeometry geometry,
-                                                         int32_t angle) {
+void TizenViewElementary::ResizeWithRotation(TizenGeometry geometry,
+                                             int32_t angle) {
   TizenRendererEvasGL* renderer_evas_gl =
       reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
   renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
@@ -331,7 +330,7 @@ void TizenViewElementary::Show() {
 }
 
 void TizenViewElementary::OnGeometryChanged(TizenGeometry geometry) {
-  SetRenderTargetGeometry(geometry);
+  SetGeometry(geometry);
   view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }
 

@@ -1,5 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,9 +18,9 @@ class TizenView : public TizenViewBase {
   TizenView() = default;
   virtual ~TizenView() = default;
 
-  TizenViewType GetType() override { return TizenViewType::kView; };
-
   virtual void* GetRenderTargetContainer() = 0;
+
+  TizenViewType GetType() override { return TizenViewType::kView; };
 
  protected:
   explicit TizenView(int width, int height)

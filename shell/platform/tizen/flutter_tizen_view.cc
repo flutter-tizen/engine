@@ -76,7 +76,7 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
 
 void FlutterTizenView::CreateRenderSurface() {
   if (engine_ && engine_->renderer()) {
-    TizenGeometry geometry = tizen_view_->GetRenderTargetGeometry();
+    TizenGeometry geometry = tizen_view_->GetGeometry();
     if (tizen_view_->GetType() == TizenViewType::kWindow) {
       auto* window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
       engine_->renderer()->CreateSurface(window->GetRenderTarget(),
@@ -128,8 +128,7 @@ void FlutterTizenView::OnResize(int32_t left,
     std::swap(width, height);
   }
 
-  tizen_view_->ResizeRenderTargetWithRotation({left, top, width, height},
-                                              rotation_degree_);
+  tizen_view_->ResizeWithRotation({left, top, width, height}, rotation_degree_);
   SendWindowMetrics(left, top, width, height, 0.0);
 }
 
@@ -137,7 +136,7 @@ void FlutterTizenView::OnRotate(int32_t degree) {
   rotation_degree_ = degree;
   // Compute renderer transformation based on the angle of rotation.
   double rad = (360 - rotation_degree_) * M_PI / 180;
-  TizenGeometry geometry = tizen_view_->GetRenderTargetGeometry();
+  TizenGeometry geometry = tizen_view_->GetGeometry();
   int32_t width = geometry.width;
   int32_t height = geometry.height;
 
@@ -161,8 +160,8 @@ void FlutterTizenView::OnRotate(int32_t degree) {
     std::swap(width, height);
   }
 
-  tizen_view_->ResizeRenderTargetWithRotation(
-      {geometry.left, geometry.top, width, height}, rotation_degree_);
+  tizen_view_->ResizeWithRotation({geometry.left, geometry.top, width, height},
+                                  rotation_degree_);
 
   // Window position does not change on rotation regardless of its orientation.
   SendWindowMetrics(geometry.left, geometry.top, width, height, 0.0);
@@ -273,7 +272,7 @@ void FlutterTizenView::SendInitialGeometry() {
     auto* window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
     OnRotate(window->GetRotation());
   } else {
-    TizenGeometry geometry = tizen_view_->GetRenderTargetGeometry();
+    TizenGeometry geometry = tizen_view_->GetGeometry();
     SendWindowMetrics(geometry.left, geometry.top, geometry.width,
                       geometry.height, 0.0);
   }
@@ -312,7 +311,7 @@ void FlutterTizenView::SendFlutterPointerEvent(
     size_t timestamp,
     FlutterPointerDeviceKind device_kind,
     int device_id) {
-  TizenGeometry geometry = tizen_view_->GetRenderTargetGeometry();
+  TizenGeometry geometry = tizen_view_->GetGeometry();
   double new_x = x, new_y = y;
 
   if (rotation_degree_ == 90) {

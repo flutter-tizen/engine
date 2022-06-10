@@ -1,5 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,9 +22,9 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   ~TizenWindowEcoreWl2();
 
-  TizenGeometry GetRenderTargetGeometry() override;
+  TizenGeometry GetGeometry() override;
 
-  void SetRenderTargetGeometry(TizenGeometry geometry) override;
+  void SetGeometry(TizenGeometry geometry) override;
 
   TizenGeometry GetScreenGeometry() override;
 
@@ -41,8 +40,7 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void* GetWindowHandle() override { return ecore_wl2_window_; }
 
-  void ResizeRenderTargetWithRotation(TizenGeometry geometry,
-                                      int32_t angle) override;
+  void ResizeWithRotation(TizenGeometry geometry, int32_t angle) override;
 
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
 

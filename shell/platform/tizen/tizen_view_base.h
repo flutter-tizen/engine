@@ -1,5 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -34,11 +33,11 @@ class TizenViewBase {
 
   virtual uintptr_t GetWindowId() = 0;
 
-  // Returns the geometry of the current render target.
-  virtual TizenGeometry GetRenderTargetGeometry() = 0;
+  // Returns the geometry of the view.
+  virtual TizenGeometry GetGeometry() = 0;
 
-  // Set the geometry of the current render target.
-  virtual void SetRenderTargetGeometry(TizenGeometry geometry) = 0;
+  // Set the geometry of the view.
+  virtual void SetGeometry(TizenGeometry geometry) = 0;
 
   // Returns the dpi of the screen.
   virtual int32_t GetDpi() = 0;
@@ -49,8 +48,7 @@ class TizenViewBase {
 
   virtual void BindKeys(const std::vector<std::string>& keys) = 0;
 
-  virtual void ResizeRenderTargetWithRotation(TizenGeometry geometry,
-                                              int32_t degree) = 0;
+  virtual void ResizeWithRotation(TizenGeometry geometry, int32_t degree) = 0;
 
   // FIXME
   // This is a temporary implementation that is only used by the window channel.

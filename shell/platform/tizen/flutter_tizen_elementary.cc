@@ -80,8 +80,12 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
 
 void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view_ref) {
   auto* view = reinterpret_cast<flutter::FlutterTizenView*>(view_ref);
-  auto* tizen_view = reinterpret_cast<flutter::TizenView*>(view->tizen_view());
-  return tizen_view->GetRenderTargetContainer();
+  if (view->tizen_view()->GetType() == flutter::TizenViewType::kView) {
+    auto* tizen_view =
+        reinterpret_cast<flutter::TizenView*>(view->tizen_view());
+    return tizen_view->GetRenderTargetContainer();
+  }
+  return nullptr;
 }
 
 void FlutterDesktopViewResize(FlutterDesktopViewRef view_ref,

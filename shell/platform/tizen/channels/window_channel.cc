@@ -35,7 +35,7 @@ void WindowChannel::HandleMethodCall(
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "getWindowGeometry") {
-    TizenGeometry geometry = window_->GetRenderTargetGeometry();
+    TizenGeometry geometry = window_->GetGeometry();
     EncodableMap map;
     map[EncodableValue("x")] = EncodableValue(geometry.left);
     map[EncodableValue("y")] = EncodableValue(geometry.top);
@@ -57,9 +57,9 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> width(arguments, "width");
     EncodableValueHolder<int32_t> height(arguments, "height");
 
-    TizenGeometry geometry = window_->GetRenderTargetGeometry();
-    // FIXME: Use SetRenderTargetGeometry() instead of OnGeometryChanged()
-    // After the SetRenderTargetGeometry was successfully executed, I expected a
+    TizenGeometry geometry = window_->GetGeometry();
+    // FIXME: Use SetGeometry() instead of OnGeometryChanged()
+    // After the SetGeometry was successfully executed, I expected a
     // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
     window_->OnGeometryChanged({
         x ? *x : geometry.left,

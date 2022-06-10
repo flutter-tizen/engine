@@ -1,5 +1,4 @@
 // Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -22,9 +21,9 @@ class TizenViewElementary : public TizenView {
 
   ~TizenViewElementary();
 
-  TizenGeometry GetRenderTargetGeometry() override;
+  TizenGeometry GetGeometry() override;
 
-  void SetRenderTargetGeometry(TizenGeometry geometry) override;
+  void SetGeometry(TizenGeometry geometry) override;
 
   void* GetRenderTarget() override { return image_; }
 
@@ -34,8 +33,7 @@ class TizenViewElementary : public TizenView {
 
   uintptr_t GetWindowId() override;
 
-  void ResizeRenderTargetWithRotation(TizenGeometry geometry,
-                                      int32_t angle) override;
+  void ResizeWithRotation(TizenGeometry geometry, int32_t angle) override;
 
   void BindKeys(const std::vector<std::string>& keys) override;
 
