@@ -1,12 +1,10 @@
 // Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #ifndef EMBEDDER_KEY_EVENT_CHANNEL_H_
 #define EMBEDDER_KEY_EVENT_CHANNEL_H_
 
-#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
@@ -20,10 +18,8 @@ namespace flutter {
 
 class KeyEventChannel {
  public:
-  using SendEventHandler =
-      std::function<void(const FlutterKeyEvent& /* event */,
-                         FlutterKeyEventCallback /* callback */,
-                         void* /* user_data */)>;
+  using SendEventHandler = std::function<
+      void(const FlutterKeyEvent&, FlutterKeyEventCallback, void*)>;
 
   explicit KeyEventChannel(BinaryMessenger* messenger,
                            SendEventHandler send_event);
@@ -42,20 +38,17 @@ class KeyEventChannel {
   SendEventHandler send_event_;
 
   struct PendingEvent {
-    // Self-incrementing ID attached to an event sent to the framework.
-    uint64_t sequence_id;
-    // The number of delegates (either the embedder API or the platform channel)
-    // that haven't replied.
+    // The number of handlers that haven't replied.
     size_t unreplied;
-    // Whether any replied delegates reported true (handled).
+    // Whether any replied handlers reported true (handled).
     bool any_handled;
-    // Where to report the delegates' result to.
+    // Where to report the handlers' result to.
     std::function<void(bool)> callback;
   };
 
-  // The queue of key events that have been sent to the framework but have not
-  // yet received a response.
-  std::deque<std::unique_ptr<PendingEvent>> pending_events_;
+  // Key events that have been sent to the framework but have not yet received
+  // a response, indexed by sequence IDs.
+  std::map<uint64_t, std::unique_ptr<PendingEvent>> pending_events_;
 
   // A self-incrementing integer used as the ID for the next entry for
   // |pending_events_|.

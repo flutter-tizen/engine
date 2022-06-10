@@ -1,5 +1,4 @@
 // Copyright 2020 Samsung Electronics Co., Ltd. All rights reserved.
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -267,7 +266,7 @@ uint64_t GetLogicalKey(const std::string& key) {
   if (found != kKeySymbolToLogicalKeyCode.end()) {
     return found->second;
   }
-  // Default to 0 since no logical ID is available.
+  // No logical ID is available, thus default to 0.
   return ApplyPlaneToId(0, kGtkPlane);
 }
 
@@ -293,7 +292,8 @@ void KeyEventChannel::SendKey(const char* key,
   uint64_t sequence_id = last_sequence_id_++;
 
   PendingEvent pending;
-  pending.sequence_id = sequence_id;
+  // The |callback| will be called when both handlers (the platform channel and
+  // the embedder API) have replied.
   pending.unreplied = 2;
   pending.any_handled = false;
   pending.callback = std::move(callback);
@@ -304,91 +304,12 @@ void KeyEventChannel::SendKey(const char* key,
         << " keyboard events that have not yet received a response from the "
         << "framework. Are responses being sent?";
   }
-  pending_events_.push_back(std::make_unique<PendingEvent>(pending));
+  pending_events_[sequence_id] = std::make_unique<PendingEvent>(pending);
 
-  // Send the key event through both the embedder API and the platform channel.
   SendEmbedderEvent(key, string, compose, modifiers, scan_code, is_down,
                     sequence_id);
   SendChannelEvent(key, string, compose, modifiers, scan_code, is_down,
                    sequence_id);
-}
-
-void KeyEventChannel::SendEmbedderEvent(const char* key,
-                                        const char* string,
-                                        const char* compose,
-                                        uint32_t modifiers,
-                                        uint32_t scan_code,
-                                        bool is_down,
-                                        uint64_t sequence_id) {
-  uint64_t physical_key = GetPhysicalKey(scan_code);
-  uint64_t logical_key = GetLogicalKey(key);
-  const char* character = is_down ? compose : nullptr;
-
-  uint64_t last_logical_record = 0;
-  auto iter = pressing_records_.find(physical_key);
-  if (iter != pressing_records_.end()) {
-    last_logical_record = iter->second;
-  }
-
-  FlutterKeyEventType type;
-  if (is_down) {
-    if (last_logical_record) {
-      // A key has been pressed that has the exact physical key as a currently
-      // pressed one. This can happen during repeated events.
-      type = kFlutterKeyEventTypeRepeat;
-    } else {
-      type = kFlutterKeyEventTypeDown;
-    }
-    pressing_records_[physical_key] = logical_key;
-  } else {
-    if (!last_logical_record) {
-      // The physical key has been released before. It might indicate a missed
-      // event due to loss of focus, or multiple keyboards pressed keys with the
-      // same physical key. Ignore the up event.
-      FlutterKeyEvent empty_event = {
-          .struct_size = sizeof(FlutterKeyEvent),
-          .timestamp = static_cast<double>(
-              std::chrono::duration_cast<std::chrono::microseconds>(
-                  std::chrono::steady_clock::now().time_since_epoch())
-                  .count()),
-          .type = kFlutterKeyEventTypeDown,
-          .physical = 0,
-          .logical = 0,
-          .character = "",
-          .synthesized = false,
-      };
-      send_event_(empty_event, nullptr, nullptr);
-      ResolvePendingEvent(sequence_id, true);
-      return;
-    } else {
-      type = kFlutterKeyEventTypeUp;
-    }
-    pressing_records_.erase(physical_key);
-  }
-
-  FlutterKeyEvent event = {};
-  event.struct_size = sizeof(FlutterKeyEvent),
-  event.timestamp = static_cast<double>(
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::steady_clock::now().time_since_epoch())
-          .count());
-  event.type = type;
-  event.physical = physical_key;
-  event.logical = last_logical_record != 0 ? last_logical_record : logical_key;
-  event.character = character;
-  event.synthesized = false;
-
-  send_event_(
-      event,
-      [](bool handled, void* user_data) {
-        auto* callback =
-            reinterpret_cast<std::function<void(bool)>*>(user_data);
-        (*callback)(handled);
-        delete callback;
-      },
-      new std::function<void(bool)>([this, sequence_id](bool handled) {
-        ResolvePendingEvent(sequence_id, handled);
-      }));
 }
 
 void KeyEventChannel::SendChannelEvent(const char* key,
@@ -445,24 +366,83 @@ void KeyEventChannel::SendChannelEvent(const char* key,
       });
 }
 
-void KeyEventChannel::ResolvePendingEvent(uint64_t sequence_id, bool handled) {
-  // Find the pending event from |sequence_id|.
-  for (auto iter = pending_events_.begin(); iter != pending_events_.end();
-       ++iter) {
-    if ((*iter)->sequence_id == sequence_id) {
-      PendingEvent& event = **iter;
-      event.any_handled = event.any_handled || handled;
-      event.unreplied -= 1;
-      assert(event.unreplied >= 0);
-      // If all delegates have replied, report if any of them handled the event.
-      if (event.unreplied == 0) {
-        std::unique_ptr<PendingEvent> event_ptr = std::move(*iter);
-        pending_events_.erase(iter);
-        event.callback(event.any_handled);
-      }
-      // Return here; |iter| can't do ++ after erase.
-      return;
+void KeyEventChannel::SendEmbedderEvent(const char* key,
+                                        const char* string,
+                                        const char* compose,
+                                        uint32_t modifiers,
+                                        uint32_t scan_code,
+                                        bool is_down,
+                                        uint64_t sequence_id) {
+  uint64_t physical_key = GetPhysicalKey(scan_code);
+  uint64_t logical_key = GetLogicalKey(key);
+  const char* character = is_down ? compose : nullptr;
+
+  uint64_t last_logical_record = 0;
+  auto iter = pressing_records_.find(physical_key);
+  if (iter != pressing_records_.end()) {
+    last_logical_record = iter->second;
+  }
+
+  FlutterKeyEventType type;
+  if (is_down) {
+    if (last_logical_record) {
+      // A key has been pressed that has the exact physical key as a currently
+      // pressed one. This can happen during repeated events.
+      type = kFlutterKeyEventTypeRepeat;
+    } else {
+      type = kFlutterKeyEventTypeDown;
     }
+    pressing_records_[physical_key] = logical_key;
+  } else {
+    if (!last_logical_record) {
+      // The physical key has been released before. It might indicate a missed
+      // event due to loss of focus, or multiple keyboards pressed keys with the
+      // same physical key. Ignore the up event.
+      ResolvePendingEvent(sequence_id, true);
+      return;
+    } else {
+      type = kFlutterKeyEventTypeUp;
+    }
+    pressing_records_.erase(physical_key);
+  }
+
+  FlutterKeyEvent event = {};
+  event.struct_size = sizeof(FlutterKeyEvent),
+  event.timestamp = static_cast<double>(
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count());
+  event.type = type;
+  event.physical = physical_key;
+  event.logical = last_logical_record != 0 ? last_logical_record : logical_key;
+  event.character = character;
+  event.synthesized = false;
+
+  send_event_(
+      event,
+      [](bool handled, void* user_data) {
+        auto* callback =
+            reinterpret_cast<std::function<void(bool)>*>(user_data);
+        (*callback)(handled);
+        delete callback;
+      },
+      new std::function<void(bool)>([this, sequence_id](bool handled) {
+        ResolvePendingEvent(sequence_id, handled);
+      }));
+}
+
+void KeyEventChannel::ResolvePendingEvent(uint64_t sequence_id, bool handled) {
+  auto iter = pending_events_.find(sequence_id);
+  if (iter != pending_events_.end()) {
+    PendingEvent* event = iter->second.get();
+    event->any_handled = event->any_handled || handled;
+    event->unreplied -= 1;
+    // If all handlers have replied, report if any of them handled the event.
+    if (event->unreplied == 0) {
+      event->callback(event->any_handled);
+      pending_events_.erase(iter);
+    }
+    return;
   }
   // The pending event should always be found.
   assert(false);
