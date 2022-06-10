@@ -178,13 +178,13 @@ std::map<uint32_t, uint32_t> kScanCodeToGtkKeyCode = {
 };
 
 std::map<int, int> kEcoreModifierToGtkModifier = {
-    {0x0001, 1 << 0},   // SHIFT (modifierShift)
-    {0x0002, 1 << 2},   // CTRL (modifierControl)
-    {0x0004, 1 << 3},   // ALT (modifierMod1)
-    {0x0008, 1 << 26},  // WIN (modifierMeta)
-    {0x0010, 0},        // SCROLL (undefined)
-    {0x0020, 1 << 4},   // NUM (modifierMod2)
-    {0x0040, 1 << 1},   // CAPS (modifierCapsLock)
+    {0x0001, 1 << 0},   // SHIFT -> modifierShift
+    {0x0002, 1 << 2},   // CTRL -> modifierControl
+    {0x0004, 1 << 3},   // ALT -> modifierMod1
+    {0x0008, 1 << 26},  // WIN -> modifierMeta
+    {0x0010, 0},        // SCROLL -> undefined
+    {0x0020, 1 << 4},   // NUM -> modifierMod2
+    {0x0040, 1 << 1},   // CAPS -> modifierCapsLock
 };
 
 std::map<uint64_t, uint64_t> kScanCodeToPhysicalKeyCode = {

@@ -5,7 +5,6 @@
 #include "key_event_channel.h"
 
 #include <codecvt>
-#include <iomanip>
 #include <string>
 
 #include "flutter/shell/platform/common/json_message_codec.h"
@@ -46,7 +45,7 @@ uint64_t ApplyPlaneToId(uint64_t id, uint64_t plane) {
   return (id & kValueMask) | plane;
 }
 
-uint64_t GetPhysicalKey(int scan_code, const char* key) {
+uint64_t GetPhysicalKey(int scan_code) {
   auto iter = kScanCodeToPhysicalKeyCode.find(scan_code);
   if (iter != kScanCodeToPhysicalKeyCode.end()) {
     return iter->second;
@@ -85,9 +84,9 @@ void KeyEventChannel::SendKey(const char* key,
   uint64_t sequence_id = last_sequence_id_++;
 
   PendingEvent pending;
-  // This event will be sent through the embedder API and also the platform
-  // channel, and |callback| will be called when both responses have been
-  // received.
+  // This event is sent through the embedder API (KeyEvent) and the platform
+  // channel (RawKeyEvent) simultaneously, and |callback| will be called once
+  // responses are received from both of them.
   pending.unreplied = 2;
   pending.any_handled = false;
   pending.callback = std::move(callback);
@@ -102,6 +101,9 @@ void KeyEventChannel::SendKey(const char* key,
 
   SendEmbedderEvent(key, string, compose, modifiers, scan_code, is_down,
                     sequence_id);
+  // The channel-based API (RawKeyEvent) is deprecated and |SendChannelEvent|
+  // will be removed in the future. This class (KeyEventChannel) itself will
+  // also be renamed and refactored then.
   SendChannelEvent(key, string, compose, modifiers, scan_code, is_down,
                    sequence_id);
 }
@@ -162,7 +164,7 @@ void KeyEventChannel::SendEmbedderEvent(const char* key,
                                         uint32_t scan_code,
                                         bool is_down,
                                         uint64_t sequence_id) {
-  uint64_t physical_key = GetPhysicalKey(scan_code, key);
+  uint64_t physical_key = GetPhysicalKey(scan_code);
   uint64_t logical_key = GetLogicalKey(key);
   const char* character = is_down ? string : nullptr;
 
@@ -234,7 +236,7 @@ void KeyEventChannel::ResolvePendingEvent(uint64_t sequence_id, bool handled) {
     return;
   }
   // The pending event should always be found.
-  assert(false);
+  FT_ASSERT_NOT_REACHED();
 }
 
 }  // namespace flutter

@@ -13,13 +13,19 @@
 // The values are originally defined in:
 // - flutter/keyboard_maps.dart (kLinuxToPhysicalKey)
 // - flutter/keyboard_maps.dart (kGtkToLogicalKey)
+//
+// Provided only for backward compatibility. This will be removed after the
+// legacy RawKeyboard API is removed from the framework in the future.
 extern std::map<uint32_t, uint32_t> kScanCodeToGtkKeyCode;
 
-// Mapping from Ecore modifiers to GTK modifiers.
+// Maps Ecore modifiers to GTK modifiers.
 //
 // The values are originally defined in:
 // - efl/Ecore_Input.h
 // - flutter/raw_keyboard_linux.dart (GtkKeyHelper)
+//
+// Provided only for backward compatibility. This will be removed after the
+// legacy RawKeyboard API is removed from the framework in the future.
 extern std::map<int, int> kEcoreModifierToGtkModifier;
 
 // Maps XKB scan codes to Flutter's physical key codes.
