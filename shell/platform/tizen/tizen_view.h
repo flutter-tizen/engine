@@ -23,11 +23,11 @@ class TizenView : public TizenViewBase {
   TizenViewType GetType() override { return TizenViewType::kView; };
 
  protected:
-  explicit TizenView(uint32_t width, uint32_t height)
+  explicit TizenView(int32_t width, int32_t height)
       : initial_width_(width), initial_height_(height) {}
 
-  uint32_t initial_width_ = 0;
-  uint32_t initial_height_ = 0;
+  int32_t initial_width_ = 0;
+  int32_t initial_height_ = 0;
 };
 
 }  // namespace flutter

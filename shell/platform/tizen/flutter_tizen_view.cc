@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 
 #include "flutter_tizen_view.h"
+
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_view.h"
 #include "flutter/shell/platform/tizen/tizen_window.h"

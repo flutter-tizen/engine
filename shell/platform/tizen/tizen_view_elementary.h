@@ -20,7 +20,7 @@ namespace flutter {
 
 class TizenViewElementary : public TizenView {
  public:
-  TizenViewElementary(uint32_t width, uint32_t height, Evas_Object* parent);
+  TizenViewElementary(int32_t width, int32_t height, Evas_Object* parent);
 
   ~TizenViewElementary();
 

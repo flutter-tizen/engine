@@ -30,7 +30,7 @@ uint32_t EvasModifierToEcoreEventModifiers(const Evas_Modifier* evas_modifier) {
   return modifiers;
 }
 
-void EvasObjectResize(Evas_Object* object, uint32_t width, uint32_t height) {
+void EvasObjectResize(Evas_Object* object, int32_t width, int32_t height) {
   evas_object_resize(object, width, height);
   evas_object_size_hint_min_set(object, width, height);
   evas_object_size_hint_max_set(object, width, height);
@@ -40,8 +40,8 @@ void EvasObjectResize(Evas_Object* object, uint32_t width, uint32_t height) {
 
 namespace flutter {
 
-TizenViewElementary::TizenViewElementary(uint32_t width,
-                                         uint32_t height,
+TizenViewElementary::TizenViewElementary(int32_t width,
+                                         int32_t height,
                                          Evas_Object* parent)
     : TizenView(width, height), parent_(parent) {
   if (!CreateView()) {
