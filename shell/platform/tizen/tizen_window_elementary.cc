@@ -4,11 +4,11 @@
 
 #include "tizen_window_elementary.h"
 
-#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
-#include "flutter/shell/platform/tizen/logger.h"
-
 #include <efl_extension.h>
 #include <ui/efl_util.h>
+
+#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace {
 

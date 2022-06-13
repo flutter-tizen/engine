@@ -5,11 +5,15 @@
 #ifndef EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
 #define EMBEDDER_TIZEN_WINDOW_ECORE_WL2_H_
 
-#include "flutter/shell/platform/tizen/tizen_window.h"
-
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
 #include <tizen-extension-client-protocol.h>
+
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace flutter {
 

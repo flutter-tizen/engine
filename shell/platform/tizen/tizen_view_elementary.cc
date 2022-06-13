@@ -4,11 +4,11 @@
 
 #include "tizen_view_elementary.h"
 
-#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
-#include "flutter/shell/platform/tizen/logger.h"
-
 #include <efl_extension.h>
 #include <ui/efl_util.h>
+
+#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
+#include "flutter/shell/platform/tizen/logger.h"
 
 namespace {
 
@@ -40,8 +40,8 @@ void EvasObjectResize(Evas_Object* object, uint32_t width, uint32_t height) {
 
 namespace flutter {
 
-TizenViewElementary::TizenViewElementary(int width,
-                                         int height,
+TizenViewElementary::TizenViewElementary(uint32_t width,
+                                         uint32_t height,
                                          Evas_Object* parent)
     : TizenView(width, height), parent_(parent) {
   if (!CreateView()) {
@@ -156,6 +156,7 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_event_callback_add(event_layer_, EVAS_CALLBACK_MOUSE_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP],
                                  this);
+
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);

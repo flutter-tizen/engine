@@ -5,19 +5,22 @@
 #ifndef EMBEDDER_TIZEN_VIEW_ELEMENTARY_H_
 #define EMBEDDER_TIZEN_VIEW_ELEMENTARY_H_
 
-#include "flutter/shell/platform/tizen/tizen_view.h"
-
 #define EFL_BETA_API_SUPPORT
 #include <Ecore.h>
 #include <Elementary.h>
 
+#include <cstdint>
+#include <string>
 #include <unordered_map>
+#include <vector>
+
+#include "flutter/shell/platform/tizen/tizen_view.h"
 
 namespace flutter {
 
 class TizenViewElementary : public TizenView {
  public:
-  TizenViewElementary(int width, int height, Evas_Object* parent);
+  TizenViewElementary(uint32_t width, uint32_t height, Evas_Object* parent);
 
   ~TizenViewElementary();
 

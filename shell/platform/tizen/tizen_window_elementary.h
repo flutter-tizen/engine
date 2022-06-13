@@ -5,11 +5,14 @@
 #ifndef EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
 #define EMBEDDER_TIZEN_WINDOW_ELEMENTARY_H_
 
-#include "flutter/shell/platform/tizen/tizen_window.h"
-
 #include <Elementary.h>
 
+#include <cstdint>
+#include <string>
 #include <unordered_map>
+#include <vector>
+
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace flutter {
 

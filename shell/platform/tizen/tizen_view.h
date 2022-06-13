@@ -5,7 +5,7 @@
 #ifndef EMBEDDER_TIZEN_VIEW_H_
 #define EMBEDDER_TIZEN_VIEW_H_
 
-#include <string>
+#include <cstdint>
 
 #include "flutter/shell/platform/tizen/tizen_view_base.h"
 
@@ -23,11 +23,11 @@ class TizenView : public TizenViewBase {
   TizenViewType GetType() override { return TizenViewType::kView; };
 
  protected:
-  explicit TizenView(int width, int height)
+  explicit TizenView(uint32_t width, uint32_t height)
       : initial_width_(width), initial_height_(height) {}
 
-  int initial_width_ = 0;
-  int initial_height_ = 0;
+  uint32_t initial_width_ = 0;
+  uint32_t initial_height_ = 0;
 };
 
 }  // namespace flutter

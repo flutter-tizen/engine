@@ -6,7 +6,6 @@
 #define EMBEDDER_TIZEN_WINDOW_H_
 
 #include <cstdint>
-#include <string>
 #include <vector>
 
 #include "flutter/shell/platform/tizen/tizen_view_base.h"
