@@ -164,7 +164,7 @@ void TizenViewElementary::RegisterEventHandlers() {
           if (self->event_layer_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
-            mouse_event->event_flags = static_cast<Evas_Event_Flags>(
+            mouse_event->event_flags = Evas_Event_Flags(
                 mouse_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
             if (!self->scroll_hold_) {
               elm_object_scroll_hold_push(self->event_layer_);
