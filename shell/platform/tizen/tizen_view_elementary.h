@@ -38,8 +38,6 @@ class TizenViewElementary : public TizenView {
 
   void ResizeWithRotation(TizenGeometry geometry, int32_t angle) override;
 
-  void BindKeys(const std::vector<std::string>& keys) override;
-
   void Show() override;
 
   void OnGeometryChanged(TizenGeometry geometry) override;

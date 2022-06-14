@@ -46,8 +46,6 @@ class TizenViewBase {
   // view such as key presses, mouse position updates etc.
   void SetView(FlutterTizenView* view) { view_ = view; }
 
-  virtual void BindKeys(const std::vector<std::string>& keys) = 0;
-
   virtual void ResizeWithRotation(TizenGeometry geometry, int32_t degree) = 0;
 
   // FIXME

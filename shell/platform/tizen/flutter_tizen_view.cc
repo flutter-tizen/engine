@@ -45,7 +45,11 @@ namespace flutter {
 FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenViewBase> tizen_view)
     : tizen_view_(std::move(tizen_view)) {
   tizen_view_->SetView(this);
-  tizen_view_->BindKeys(kBindableSystemKeys);
+
+  if (tizen_view_->GetType() == TizenViewType::kWindow) {
+    auto* window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
+    window->BindKeys(kBindableSystemKeys);
+  }
 }
 
 FlutterTizenView::~FlutterTizenView() {}

@@ -314,16 +314,6 @@ void TizenViewElementary::ResizeWithRotation(TizenGeometry geometry,
   renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
 }
 
-void TizenViewElementary::BindKeys(const std::vector<std::string>& keys) {
-  Evas_Object* elm_win = static_cast<Evas_Object*>(ecore_evas_data_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(parent_)), "elm_win"));
-  if (elm_win) {
-    for (const std::string& key : keys) {
-      eext_win_keygrab_set(elm_win, key.c_str());
-    }
-  }
-}
-
 void TizenViewElementary::Show() {
   evas_object_show(container_);
   evas_object_show(image_);
