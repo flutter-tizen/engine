@@ -239,9 +239,8 @@ bool FlutterTizenEngine::RunEngine() {
     texture_registrar_ = std::make_unique<FlutterTizenTextureRegistrar>(this);
     key_event_channel_ = std::make_unique<KeyEventChannel>(
         internal_plugin_registrar_->messenger(),
-        [this](const auto& event, auto callback, void* user_data) {
-          SendKeyEvent(event, callback, user_data);
-        });
+        [this](const FlutterKeyEvent& event, FlutterKeyEventCallback callback,
+               void* user_data) { SendKeyEvent(event, callback, user_data); });
     navigation_channel_ = std::make_unique<NavigationChannel>(
         internal_plugin_registrar_->messenger());
     platform_view_channel_ = std::make_unique<PlatformViewChannel>(

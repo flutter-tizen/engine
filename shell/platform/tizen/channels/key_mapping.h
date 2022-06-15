@@ -5,6 +5,7 @@
 #ifndef EMBEDDER_KEY_MAPPING_H_
 #define EMBEDDER_KEY_MAPPING_H_
 
+#include <cstdint>
 #include <map>
 #include <string>
 
@@ -38,9 +39,6 @@ extern std::map<std::string, uint64_t> kSymbolToLogicalKeyCode;
 
 // Mask for the 32-bit value portion of the key code.
 const uint64_t kValueMask = 0x000ffffffff;
-
-// The plane value for keys which have a Unicode representation.
-const uint64_t kUnicodePlane = 0x00000000000;
 
 // The plane value for private keys defined by the Tizen platform.
 const uint64_t kTizenPlane = 0x02000000000;

@@ -18,8 +18,9 @@ namespace flutter {
 
 class KeyEventChannel {
  public:
-  using SendEventHandler = std::function<
-      void(const FlutterKeyEvent&, FlutterKeyEventCallback, void*)>;
+  using SendEventHandler = std::function<void(const FlutterKeyEvent& event,
+                                              FlutterKeyEventCallback callback,
+                                              void* user_data)>;
 
   explicit KeyEventChannel(BinaryMessenger* messenger,
                            SendEventHandler send_event);
