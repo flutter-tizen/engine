@@ -52,7 +52,9 @@ FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenViewBase> tizen_view)
   }
 }
 
-FlutterTizenView::~FlutterTizenView() {}
+FlutterTizenView::~FlutterTizenView() {
+  DestroyRenderSurface();
+}
 
 void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   engine_ = std::move(engine);
