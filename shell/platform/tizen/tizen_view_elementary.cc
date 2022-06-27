@@ -264,21 +264,21 @@ void TizenViewElementary::RegisterEventHandlers() {
 
 void TizenViewElementary::UnregisterEventHandlers() {
   evas_object_event_callback_del(
-      image_, EVAS_CALLBACK_MOUSE_DOWN,
+      event_layer_, EVAS_CALLBACK_MOUSE_DOWN,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN]);
   evas_object_event_callback_del(
-      image_, EVAS_CALLBACK_MOUSE_UP,
+      event_layer_, EVAS_CALLBACK_MOUSE_UP,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP]);
   evas_object_event_callback_del(
-      image_, EVAS_CALLBACK_MOUSE_MOVE,
+      event_layer_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE]);
   evas_object_event_callback_del(
-      image_, EVAS_CALLBACK_MOUSE_WHEEL,
+      event_layer_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL]);
   evas_object_event_callback_del(
-      container_, EVAS_CALLBACK_KEY_DOWN,
+      event_layer_, EVAS_CALLBACK_KEY_DOWN,
       evas_object_callbacks_[EVAS_CALLBACK_KEY_DOWN]);
-  evas_object_event_callback_del(container_, EVAS_CALLBACK_KEY_UP,
+  evas_object_event_callback_del(event_layer_, EVAS_CALLBACK_KEY_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
 }
 
