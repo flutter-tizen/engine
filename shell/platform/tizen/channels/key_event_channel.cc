@@ -31,7 +31,7 @@ constexpr char kKeyDown[] = "keydown";
 constexpr char kGtkToolkit[] = "gtk";
 constexpr char kLinuxKeyMap[] = "linux";
 
-constexpr int kMaxPendingEvents = 1000;
+constexpr size_t kMaxPendingEvents = 1000;
 
 uint32_t Utf8ToUtf32CodePoint(const char* utf8) {
   std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
@@ -45,7 +45,7 @@ uint64_t ApplyPlaneToId(uint64_t id, uint64_t plane) {
   return (id & kValueMask) | plane;
 }
 
-uint64_t GetPhysicalKey(int scan_code) {
+uint64_t GetPhysicalKey(uint32_t scan_code) {
   auto iter = kScanCodeToPhysicalKeyCode.find(scan_code);
   if (iter != kScanCodeToPhysicalKeyCode.end()) {
     return iter->second;

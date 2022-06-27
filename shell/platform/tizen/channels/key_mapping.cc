@@ -187,7 +187,7 @@ std::map<int, int> kEcoreModifierToGtkModifier = {
     {0x0040, 1 << 1},   // CAPS -> modifierCapsLock
 };
 
-std::map<uint64_t, uint64_t> kScanCodeToPhysicalKeyCode = {
+std::map<uint32_t, uint64_t> kScanCodeToPhysicalKeyCode = {
     {0x00000009, 0x00070029},  // escape
     {0x0000000a, 0x0007001e},  // digit1
     {0x0000000b, 0x0007001f},  // digit2

@@ -32,7 +32,7 @@ extern std::map<int, int> kEcoreModifierToGtkModifier;
 // Maps XKB scan codes to Flutter's physical key codes.
 //
 // This is a copy of the Linux embedder's |xkb_to_physical_key_map|.
-extern std::map<uint64_t, uint64_t> kScanCodeToPhysicalKeyCode;
+extern std::map<uint32_t, uint64_t> kScanCodeToPhysicalKeyCode;
 
 // Maps Tizen key symbols to Flutter's logical key codes.
 extern std::map<std::string, uint64_t> kSymbolToLogicalKeyCode;
