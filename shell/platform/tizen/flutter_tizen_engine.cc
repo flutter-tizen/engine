@@ -92,7 +92,6 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
 
 FlutterTizenEngine::~FlutterTizenEngine() {
   StopEngine();
-  renderer_ = nullptr;
 }
 
 bool FlutterTizenEngine::RunEngine() {
