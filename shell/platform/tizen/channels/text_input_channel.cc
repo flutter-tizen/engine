@@ -303,43 +303,11 @@ void TextInputChannel::SendStateUpdate() {
 bool TextInputChannel::HandleKey(const char* key,
                                  const char* string,
                                  uint32_t modifires) {
-  bool shift = modifires & ECORE_SHIFT;
   bool needs_update = false;
   std::string key_str = key;
 
-  if (key_str == "Left") {
-    if (shift) {
-      TextRange selection = active_model_->selection();
-      needs_update = active_model_->SetSelection(
-          TextRange(selection.base(), selection.extent() - 1));
-    } else {
-      needs_update = active_model_->MoveCursorBack();
-    }
-  } else if (key_str == "Right") {
-    if (shift) {
-      TextRange selection = active_model_->selection();
-      needs_update = active_model_->SetSelection(
-          TextRange(selection.base(), selection.extent() + 1));
-    } else {
-      needs_update = active_model_->MoveCursorForward();
-    }
-  } else if (key_str == "End") {
-    if (shift) {
-      needs_update = active_model_->SelectToEnd();
-    } else {
-      needs_update = active_model_->MoveCursorToEnd();
-    }
-  } else if (key_str == "Home") {
-    if (shift) {
-      needs_update = active_model_->SelectToBeginning();
-    } else {
-      needs_update = active_model_->MoveCursorToBeginning();
-    }
-  } else if (key_str == "BackSpace") {
-    needs_update = active_model_->Backspace();
-  } else if (key_str == "Delete") {
-    needs_update = active_model_->Delete();
-  } else if (string && strlen(string) == 1 && IsAsciiPrintableKey(string[0])) {
+  if (string && strlen(string) == 1 && IsAsciiPrintableKey(string[0])) {
+    // This is a fallback for printable keys not handled by IMF.
     active_model_->AddCodePoint(string[0]);
     needs_update = true;
   } else if (key_str == "Return") {

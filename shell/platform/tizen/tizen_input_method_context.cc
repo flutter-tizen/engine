@@ -347,13 +347,14 @@ void TizenInputMethodContext::SetInputPanelOptions() {
 }
 
 bool TizenInputMethodContext::ShouldIgnoreKey(std::string key, bool is_ime) {
-  // The keys below should be handled in the text_input_channel.
+  // The below keys should be handled by the flutter framework.
   if (is_ime && (key == "Left" || key == "Right" || key == "Up" ||
                  key == "Down" || key == "End" || key == "Home" ||
                  key == "BackSpace" || key == "Delete")) {
     return true;
   }
 #ifdef TV_PROFILE
+  // The Select key should be handled in the TextInputChannel.
   if (is_ime && key == "Select") {
     return true;
   }

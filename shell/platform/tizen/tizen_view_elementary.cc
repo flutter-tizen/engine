@@ -215,7 +215,7 @@ void TizenViewElementary::RegisterEventHandlers() {
     if (self->view_) {
       if (self->event_layer_ == object) {
         auto* key_event = reinterpret_cast<Evas_Event_Key_Down*>(event_info);
-        int handled = false;
+        bool handled = false;
         key_event->event_flags =
             Evas_Event_Flags(key_event->event_flags | EVAS_EVENT_FLAG_ON_HOLD);
         if (self->input_method_context_->IsInputPanelShown()) {
@@ -241,7 +241,7 @@ void TizenViewElementary::RegisterEventHandlers() {
         if (self->view_) {
           if (self->event_layer_ == object) {
             auto* key_event = reinterpret_cast<Evas_Event_Key_Up*>(event_info);
-            int handled = false;
+            bool handled = false;
             key_event->event_flags = Evas_Event_Flags(key_event->event_flags |
                                                       EVAS_EVENT_FLAG_ON_HOLD);
             if (self->input_method_context_->IsInputPanelShown()) {

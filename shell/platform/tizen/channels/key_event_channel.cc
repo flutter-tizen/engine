@@ -62,6 +62,27 @@ uint64_t GetLogicalKey(const char* key) {
   return ApplyPlaneToId(0, kTizenPlane);
 }
 
+uint32_t GetFallbackScanCodeFromKey(std::string key) {
+  // Some of the scan codes are 0 when keys event occur from the software
+  // keyboard. then the key_event_channel cannot handle the key event.
+  // to avoid this, use a valid scan codes.
+  int scan_code = 0;
+
+  // The following keys can be emitted from the software keyboard and have a
+  // scan code with 0 value.
+  const std::map<std::string, uint32_t> kKeyToScanCode = {
+      {"BackSpace", 0x00000016}, {"Up", 0x0000006f},   {"Left", 0x00000071},
+      {"Right", 0x00000072},     {"Down", 0x00000074},
+  };
+
+  auto iter1 = kKeyToScanCode.find(key);
+  if (iter1 != kKeyToScanCode.end()) {
+    scan_code = iter1->second;
+  }
+
+  return scan_code;
+}
+
 }  // namespace
 
 KeyEventChannel::KeyEventChannel(BinaryMessenger* messenger,
@@ -98,6 +119,10 @@ void KeyEventChannel::SendKey(const char* key,
         << "framework. Are responses being sent?";
   }
   pending_events_[sequence_id] = std::make_unique<PendingEvent>(pending);
+
+  if (scan_code == 0) {
+    scan_code = GetFallbackScanCodeFromKey(key);
+  }
 
   SendEmbedderEvent(key, string, compose, modifiers, scan_code, is_down,
                     sequence_id);
