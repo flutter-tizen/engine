@@ -62,11 +62,10 @@ uint64_t GetLogicalKey(const char* key) {
   return ApplyPlaneToId(0, kTizenPlane);
 }
 
-uint32_t GetFallbackScanCodeFromKey(std::string key) {
-  // Some of the scan codes are 0 when keys event occur from the software
-  // keyboard. then the key_event_channel cannot handle the key event.
-  // to avoid this, use a valid scan codes.
-  int scan_code = 0;
+uint32_t GetFallbackScanCodeFromKey(const std::string& key) {
+  // Some of scan codes are 0 when key events occur from the software
+  // keyboard, and key_event_channel cannot handle the key events.
+  // To avoid this, use a valid scan code.
 
   // The following keys can be emitted from the software keyboard and have a
   // scan code with 0 value.
@@ -75,12 +74,11 @@ uint32_t GetFallbackScanCodeFromKey(std::string key) {
       {"Right", 0x00000072},     {"Down", 0x00000074},
   };
 
-  auto iter1 = kKeyToScanCode.find(key);
-  if (iter1 != kKeyToScanCode.end()) {
-    scan_code = iter1->second;
+  auto iter = kKeyToScanCode.find(key);
+  if (iter != kKeyToScanCode.end()) {
+    return iter->second;
   }
-
-  return scan_code;
+  return 0;
 }
 
 }  // namespace
