@@ -148,7 +148,9 @@ void PlatformChannel::HandleMethodCall(
 }
 
 void PlatformChannel::SystemNavigatorPop() {
-  ui_app_exit();
+  if (window_) {
+    ui_app_exit();
+  }
 }
 
 void PlatformChannel::PlaySystemSound(const std::string& sound_type) {
