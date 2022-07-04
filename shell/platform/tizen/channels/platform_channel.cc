@@ -29,6 +29,8 @@ constexpr char kHapticFeedbackVibrateMethod[] = "HapticFeedback.vibrate";
 constexpr char kSystemNavigatorPopMethod[] = "SystemNavigator.pop";
 constexpr char kRestoreSystemUiOverlaysMethod[] =
     "SystemChrome.restoreSystemUIOverlays";
+constexpr char kSetApplicationSwitcherDescriptionMethod[] =
+    "SystemChrome.setApplicationSwitcherDescription";
 constexpr char kSetEnabledSystemUiOverlaysMethod[] =
     "SystemChrome.setEnabledSystemUIOverlays";
 constexpr char kSetPreferredOrientationsMethod[] =
@@ -124,6 +126,8 @@ void PlatformChannel::HandleMethodCall(
     result->Success(document);
   } else if (method == kRestoreSystemUiOverlaysMethod) {
     RestoreSystemUiOverlays();
+    result->Success();
+  } else if (method == kSetApplicationSwitcherDescriptionMethod) {
     result->Success();
   } else if (method == kSetEnabledSystemUiOverlaysMethod) {
     const rapidjson::Document& list = arguments[0];
