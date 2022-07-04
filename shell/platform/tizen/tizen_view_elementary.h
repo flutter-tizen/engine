@@ -36,8 +36,6 @@ class TizenViewElementary : public TizenView {
 
   uintptr_t GetWindowId() override;
 
-  void ResizeWithRotation(TizenGeometry geometry, int32_t angle) override;
-
   void Show() override;
 
  private:

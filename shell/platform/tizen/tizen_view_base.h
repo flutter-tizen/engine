@@ -11,10 +11,11 @@
 #include <vector>
 
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
+#include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
 namespace flutter {
 
-class FlutterTizenView;
+class TizenViewEventHandlerDelegate;
 
 struct TizenGeometry {
   int32_t left = 0, top = 0, width = 0, height = 0;
@@ -44,9 +45,7 @@ class TizenViewBase {
 
   // Sets the delegate used to communicate state changes from render target to
   // view such as key presses, mouse position updates etc.
-  void SetView(FlutterTizenView* view) { view_ = view; }
-
-  virtual void ResizeWithRotation(TizenGeometry geometry, int32_t degree) = 0;
+  void SetView(TizenViewEventHandlerDelegate* view) { view_ = view; }
 
   virtual void Show() = 0;
 
@@ -57,7 +56,7 @@ class TizenViewBase {
   }
 
  protected:
-  FlutterTizenView* view_ = nullptr;
+  TizenViewEventHandlerDelegate* view_ = nullptr;
 
   // The Tizen input method context. nullptr if not set.
   std::unique_ptr<TizenInputMethodContext> input_method_context_;

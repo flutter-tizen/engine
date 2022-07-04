@@ -43,8 +43,6 @@ class TizenWindowElementary : public TizenWindow {
 
   void* GetWindowHandle() override { return elm_win_; }
 
-  void ResizeWithRotation(TizenGeometry geometry, int32_t angle) override;
-
   void SetPreferredOrientations(const std::vector<int>& rotations) override;
 
   void BindKeys(const std::vector<std::string>& keys) override;

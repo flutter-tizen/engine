@@ -334,15 +334,6 @@ uintptr_t TizenViewElementary::GetWindowId() {
       ecore_evas_ecore_evas_get(evas_object_evas_get(image_)));
 }
 
-void TizenViewElementary::ResizeWithRotation(TizenGeometry geometry,
-                                             int32_t angle) {
-  SetGeometry(geometry);
-
-  TizenRendererEvasGL* renderer_evas_gl =
-      reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
-  renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
-}
-
 void TizenViewElementary::Show() {
   evas_object_show(container_);
   evas_object_show(image_);

@@ -47,7 +47,7 @@ class TizenRendererEvasGL : public TizenRenderer {
 
   void MarkPixelsDirty();
 
-  void ResizeSurface(int32_t width, int32_t height);
+  void ResizeSurface(int32_t width, int32_t height) override;
 
  private:
   Evas_GL* evas_gl_ = nullptr;

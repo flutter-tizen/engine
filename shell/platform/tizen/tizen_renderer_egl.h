@@ -40,6 +40,8 @@ class TizenRendererEgl : public TizenRenderer {
 
   bool IsSupportedExtension(const char* name) override;
 
+  void ResizeSurface(int32_t width, int32_t height) override;
+
  private:
   bool ChooseEGLConfiguration();
 

@@ -38,6 +38,8 @@ class TizenRenderer {
 
   virtual bool IsSupportedExtension(const char* name) = 0;
 
+  virtual void ResizeSurface(int32_t width, int32_t height) = 0;
+
  protected:
   bool is_valid_ = false;
 };

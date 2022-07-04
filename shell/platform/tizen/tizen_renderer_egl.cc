@@ -271,6 +271,10 @@ bool TizenRendererEgl::IsSupportedExtension(const char* name) {
   return strstr(egl_extension_str_.c_str(), name);
 }
 
+void TizenRendererEgl::ResizeSurface(int32_t width, int32_t height) {
+  // Do nothing.
+}
+
 void* TizenRendererEgl::OnProcResolver(const char* name) {
   auto address = eglGetProcAddress(name);
   if (address != nullptr) {

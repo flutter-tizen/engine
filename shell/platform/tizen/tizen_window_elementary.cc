@@ -150,6 +150,22 @@ void TizenWindowElementary::RegisterEventHandlers() {
   evas_object_smart_callback_add(elm_win_, "rotation,changed",
                                  rotation_changed_callback_, this);
 
+  evas_object_callbacks_[EVAS_CALLBACK_RESIZE] =
+      [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
+        auto* self = reinterpret_cast<TizenWindowElementary*>(data);
+        if (self->view_) {
+          if (self->elm_win_ == object) {
+            int32_t width = 0, height = 0;
+            evas_object_geometry_get(object, nullptr, nullptr, &width, &height);
+
+            self->view_->OnResize(0, 0, width, height);
+          }
+        }
+      };
+  evas_object_event_callback_add(elm_win_, EVAS_CALLBACK_RESIZE,
+                                 evas_object_callbacks_[EVAS_CALLBACK_RESIZE],
+                                 this);
+
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
@@ -344,13 +360,6 @@ int32_t TizenWindowElementary::GetDpi() {
 
 uintptr_t TizenWindowElementary::GetWindowId() {
   return elm_win_window_id_get(elm_win_);
-}
-
-void TizenWindowElementary::ResizeWithRotation(TizenGeometry geometry,
-                                               int32_t angle) {
-  TizenRendererEvasGL* renderer_evas_gl =
-      reinterpret_cast<TizenRendererEvasGL*>(view_->engine()->renderer());
-  renderer_evas_gl->ResizeSurface(geometry.width, geometry.height);
 }
 
 void TizenWindowElementary::SetPreferredOrientations(

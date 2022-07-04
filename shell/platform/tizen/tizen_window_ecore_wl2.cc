@@ -394,6 +394,14 @@ void TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
   // only after calling `ecore_wl2_window_position_set`. Call a more appropriate
   // API that flushes geometry settings to the compositor.
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
+
+  FT_LOG(Error) << "geometry.left[" << geometry.left << "]";
+  FT_LOG(Error) << "geometry.top[" << geometry.top << "]";
+  FT_LOG(Error) << "geometry.width[" << geometry.width << "]";
+  FT_LOG(Error) << "geometry.height[" << geometry.height << "]";
+  ecore_wl2_egl_window_resize_with_rotation(
+      ecore_wl2_egl_window_, geometry.left, geometry.top, geometry.width,
+      geometry.height, GetRotation());
 }
 
 TizenGeometry TizenWindowEcoreWl2::GetScreenGeometry() {
@@ -418,13 +426,6 @@ int32_t TizenWindowEcoreWl2::GetDpi() {
 
 uintptr_t TizenWindowEcoreWl2::GetWindowId() {
   return ecore_wl2_window_id_get(ecore_wl2_window_);
-}
-
-void TizenWindowEcoreWl2::ResizeWithRotation(TizenGeometry geometry,
-                                             int32_t angle) {
-  ecore_wl2_egl_window_resize_with_rotation(
-      ecore_wl2_egl_window_, geometry.left, geometry.top, geometry.width,
-      geometry.height, angle);
 }
 
 void TizenWindowEcoreWl2::SetPreferredOrientations(
