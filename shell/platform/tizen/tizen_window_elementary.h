@@ -51,8 +51,6 @@ class TizenWindowElementary : public TizenWindow {
 
   void Show() override;
 
-  void OnGeometryChanged(TizenGeometry geometry) override;
-
  private:
   bool CreateWindow();
 

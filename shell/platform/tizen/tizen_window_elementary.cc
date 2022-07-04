@@ -371,11 +371,6 @@ void TizenWindowElementary::Show() {
   evas_object_show(elm_win_);
 }
 
-void TizenWindowElementary::OnGeometryChanged(TizenGeometry geometry) {
-  SetGeometry(geometry);
-  view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
-}
-
 void TizenWindowElementary::PrepareInputMethod() {
   input_method_context_ =
       std::make_unique<TizenInputMethodContext>(GetWindowId());

@@ -444,9 +444,7 @@ void TizenWindowEcoreWl2::Show() {
   ecore_wl2_window_show(ecore_wl2_window_);
 }
 
-void TizenWindowEcoreWl2::OnGeometryChanged(TizenGeometry geometry) {
-  // This implementation mimics the situation in which the handler of
-  // ECORE_WL2_EVENT_WINDOW_CONFIGURE is called.
+void TizenWindowEcoreWl2::HandleSetWindowGeometry(TizenGeometry geometry) {
   SetGeometry(geometry);
   view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }

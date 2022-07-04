@@ -7,6 +7,9 @@
 #include "flutter/shell/platform/common/client_wrapper/include/flutter/standard_method_codec.h"
 #include "flutter/shell/platform/tizen/channels/encodable_value_holder.h"
 #include "flutter/shell/platform/tizen/logger.h"
+#ifndef TIZEN_RENDERER_EVAS_GL
+#include "flutter/shell/platform/tizen/tizen_window_ecore_wl2.h"
+#endif
 
 namespace flutter {
 
@@ -58,10 +61,10 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> height(arguments, "height");
 
     TizenGeometry geometry = window_->GetGeometry();
-    // FIXME: Use SetGeometry() instead of OnGeometryChanged()
-    // After the SetGeometry was successfully executed, I expected a
-    // handler of ECORE_WL2_EVENT_WINDOW_CONFIGURE  to be called, but it didn't.
-    window_->OnGeometryChanged({
+    // FIXME: Use SetGeometry() instead of HandleSetWindowGeometry()
+    // If the windows resize callback is implemented properly, that callback
+    // should be called after resizing.
+    reinterpret_cast<TizenWindowEcoreWl2*>(window_)->HandleSetWindowGeometry({
         x ? *x : geometry.left,
         y ? *y : geometry.top,
         width ? *width : geometry.width,

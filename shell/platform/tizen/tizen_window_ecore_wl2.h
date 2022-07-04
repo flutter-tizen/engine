@@ -52,7 +52,9 @@ class TizenWindowEcoreWl2 : public TizenWindow {
 
   void Show() override;
 
-  void OnGeometryChanged(TizenGeometry geometry) override;
+  // FIXME: Don't use this method except for window channel.
+  // This is a temporary solution.
+  void HandleSetWindowGeometry(TizenGeometry geometry);
 
  private:
   bool CreateWindow();

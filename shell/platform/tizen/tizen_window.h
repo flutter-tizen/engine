@@ -30,8 +30,6 @@ class TizenWindow : public TizenViewBase {
   // Returns the geometry of the display screen.
   virtual TizenGeometry GetScreenGeometry() = 0;
 
-  virtual void OnGeometryChanged(TizenGeometry geometry) = 0;
-
   virtual void BindKeys(const std::vector<std::string>& keys) = 0;
 
   TizenViewType GetType() override { return TizenViewType::kWindow; };
