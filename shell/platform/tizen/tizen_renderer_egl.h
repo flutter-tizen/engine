@@ -55,7 +55,6 @@ class TizenRendererEgl : public TizenRenderer {
   EGLSurface egl_resource_surface_ = EGL_NO_SURFACE;
 
   std::string egl_extension_str_;
-  void* render_target_ = nullptr;
 };
 
 }  // namespace flutter

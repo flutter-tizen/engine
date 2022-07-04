@@ -218,7 +218,6 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           if (configure_event->win == self->GetWindowId()) {
             self->view_->OnResize(configure_event->x, configure_event->y,
                                   configure_event->w, configure_event->h);
-            ecore_wl2_window_commit(self->ecore_wl2_window_, EINA_FALSE);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -388,17 +387,14 @@ TizenGeometry TizenWindowEcoreWl2::GetGeometry() {
 }
 
 void TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
-  ecore_wl2_window_geometry_set(ecore_wl2_window_, geometry.left, geometry.top,
-                                geometry.width, geometry.height);
+  ecore_wl2_window_rotation_geometry_set(ecore_wl2_window_, GetRotation(),
+                                         geometry.left, geometry.top,
+                                         geometry.width, geometry.height);
   // FIXME: The changes set in `ecore_wl2_window_geometry_set` seems to apply
   // only after calling `ecore_wl2_window_position_set`. Call a more appropriate
   // API that flushes geometry settings to the compositor.
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
 
-  FT_LOG(Error) << "geometry.left[" << geometry.left << "]";
-  FT_LOG(Error) << "geometry.top[" << geometry.top << "]";
-  FT_LOG(Error) << "geometry.width[" << geometry.width << "]";
-  FT_LOG(Error) << "geometry.height[" << geometry.height << "]";
   ecore_wl2_egl_window_resize_with_rotation(
       ecore_wl2_egl_window_, geometry.left, geometry.top, geometry.width,
       geometry.height, GetRotation());
@@ -443,11 +439,6 @@ void TizenWindowEcoreWl2::BindKeys(const std::vector<std::string>& keys) {
 
 void TizenWindowEcoreWl2::Show() {
   ecore_wl2_window_show(ecore_wl2_window_);
-}
-
-void TizenWindowEcoreWl2::HandleSetWindowGeometry(TizenGeometry geometry) {
-  SetGeometry(geometry);
-  view_->OnResize(geometry.left, geometry.top, geometry.width, geometry.height);
 }
 
 void TizenWindowEcoreWl2::SetTizenPolicyNotificationLevel(int level) {
