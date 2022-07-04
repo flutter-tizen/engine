@@ -27,6 +27,11 @@ FlutterDesktopEngineRef HandleForEngine(flutter::FlutterTizenEngine* engine) {
   return reinterpret_cast<FlutterDesktopEngineRef>(engine);
 }
 
+// Returns the view corresponding to the given opaque API handle.
+flutter::FlutterTizenView* ViewFromHandle(FlutterDesktopViewRef view) {
+  return reinterpret_cast<flutter::FlutterTizenView*>(view);
+}
+
 // Returns the texture registrar corresponding to the given opaque API handle.
 flutter::FlutterTizenTextureRegistrar* TextureRegistrarFromHandle(
     FlutterDesktopTextureRegistrarRef ref) {
@@ -174,6 +179,12 @@ void FlutterDesktopEngineNotifyAppIsPaused(FlutterDesktopEngineRef engine) {
 
 void FlutterDesktopEngineNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsDetached();
+}
+
+void FlutterDesktopViewResize(FlutterDesktopViewRef view,
+                              int32_t width,
+                              int32_t height) {
+  ViewFromHandle(view)->Resize(width, height);
 }
 
 void FlutterDesktopRegisterViewFactory(

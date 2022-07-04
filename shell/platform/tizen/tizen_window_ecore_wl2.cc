@@ -216,6 +216,11 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
           auto* configure_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Configure*>(event);
           if (configure_event->win == self->GetWindowId()) {
+            ecore_wl2_egl_window_resize_with_rotation(
+                self->ecore_wl2_egl_window_, configure_event->x,
+                configure_event->y, configure_event->w, configure_event->h,
+                self->GetRotation());
+
             self->view_->OnResize(configure_event->x, configure_event->y,
                                   configure_event->w, configure_event->h);
             return ECORE_CALLBACK_DONE;
@@ -394,10 +399,6 @@ void TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
   // only after calling `ecore_wl2_window_position_set`. Call a more appropriate
   // API that flushes geometry settings to the compositor.
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
-
-  ecore_wl2_egl_window_resize_with_rotation(
-      ecore_wl2_egl_window_, geometry.left, geometry.top, geometry.width,
-      geometry.height, GetRotation());
 }
 
 TizenGeometry TizenWindowEcoreWl2::GetScreenGeometry() {

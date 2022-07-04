@@ -41,6 +41,8 @@ class FlutterTizenView : public TizenViewEventHandlerDelegate {
   // Destroys current rendering surface if one has been allocated.
   void DestroyRenderSurface();
 
+  void Resize(int32_t width, int32_t height);
+
   // Callbacks for clearing context, settings context and swapping buffers,
   // these are typically called on an engine-controlled (non-platform) thread.
   bool OnMakeCurrent();

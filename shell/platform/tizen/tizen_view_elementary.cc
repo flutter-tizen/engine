@@ -30,7 +30,9 @@ uint32_t EvasModifierToEcoreEventModifiers(const Evas_Modifier* evas_modifier) {
   return modifiers;
 }
 
-void EvasObjectResize(Evas_Object* object, int32_t width, int32_t height) {
+void EvasObjectResizeWithMinMaxHint(Evas_Object* object,
+                                    int32_t width,
+                                    int32_t height) {
   evas_object_resize(object, width, height);
   evas_object_size_hint_min_set(object, width, height);
   evas_object_size_hint_max_set(object, width, height);
@@ -80,6 +82,7 @@ bool TizenViewElementary::CreateView() {
   }
   evas_object_size_hint_weight_set(container_, EVAS_HINT_EXPAND,
                                    EVAS_HINT_EXPAND);
+  EvasObjectResizeWithMinMaxHint(container_, initial_width_, initial_height_);
 
   image_ = evas_object_image_filled_add(evas_object_evas_get(container_));
   if (!image_) {
@@ -87,8 +90,10 @@ bool TizenViewElementary::CreateView() {
     return false;
   }
   evas_object_size_hint_align_set(image_, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  EvasObjectResizeWithMinMaxHint(image_, initial_width_, initial_height_);
   evas_object_image_size_set(image_, initial_width_, initial_height_);
   evas_object_image_alpha_set(image_, EINA_TRUE);
+
   elm_table_pack(container_, image_, 0, 0, 1, 1);
 
   // FIXME: Button widgets can receive both mouse events and key events. But the
@@ -106,8 +111,6 @@ bool TizenViewElementary::CreateView() {
   evas_object_color_set(event_layer_, 0, 0, 0, 0);
   elm_table_pack(container_, event_layer_, 0, 0, 1, 1);
 
-  SetGeometry(TizenGeometry{0, 0, initial_width_, initial_height_});
-
   return true;
 }
 
@@ -123,10 +126,16 @@ void TizenViewElementary::RegisterEventHandlers() {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
         if (self->view_) {
           if (self->container_ == object) {
-            int32_t width = 0, height = 0;
-            evas_object_geometry_get(object, nullptr, nullptr, &width, &height);
+            int32_t x = 0, y = 0, width = 0, height = 0;
+            evas_object_geometry_get(self->container_, &x, &y, &width, &height);
 
-            self->view_->OnResize(0, 0, width, height);
+            evas_object_size_hint_min_set(self->container_, width, height);
+            evas_object_size_hint_max_set(self->container_, width, height);
+
+            EvasObjectResizeWithMinMaxHint(self->image_, width, height);
+            evas_object_move(self->image_, x, y);
+
+            self->view_->OnResize(x, y, width, height);
           }
         }
       };
@@ -313,11 +322,7 @@ TizenGeometry TizenViewElementary::GetGeometry() {
 }
 
 void TizenViewElementary::SetGeometry(TizenGeometry geometry) {
-  EvasObjectResize(image_, geometry.width, geometry.height);
-  evas_object_move(image_, geometry.left, geometry.top);
-  evas_object_image_size_set(image_, geometry.width, geometry.height);
-
-  EvasObjectResize(container_, geometry.width, geometry.height);
+  EvasObjectResizeWithMinMaxHint(container_, geometry.width, geometry.height);
   evas_object_move(container_, geometry.left, geometry.top);
 }
 

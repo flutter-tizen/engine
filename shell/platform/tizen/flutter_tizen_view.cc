@@ -103,6 +103,13 @@ void FlutterTizenView::DestroyRenderSurface() {
   }
 }
 
+void FlutterTizenView::Resize(int32_t width, int32_t height) {
+  TizenGeometry geometry = tizen_view_->GetGeometry();
+  geometry.width = width;
+  geometry.height = height;
+  tizen_view_->SetGeometry(geometry);
+}
+
 bool FlutterTizenView::OnMakeCurrent() {
   return engine_->renderer()->OnMakeCurrent();
 }

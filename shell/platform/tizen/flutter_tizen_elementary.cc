@@ -87,10 +87,3 @@ void* FlutterDesktopViewGetEvasObject(FlutterDesktopViewRef view_ref) {
   }
   return nullptr;
 }
-
-void FlutterDesktopViewResize(FlutterDesktopViewRef view_ref,
-                              int32_t width,
-                              int32_t height) {
-  auto* view = reinterpret_cast<flutter::FlutterTizenView*>(view_ref);
-  view->OnResize(0, 0, width, height);
-}

@@ -67,7 +67,7 @@ bool TizenWindowElementary::CreateWindow() {
 
   // Please uncomment below and enable setWindowGeometry of window channel when
   // Tizen 5.5 or later was chosen as default.
-  // elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
+  elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
 
   Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
@@ -155,8 +155,11 @@ void TizenWindowElementary::RegisterEventHandlers() {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
         if (self->view_) {
           if (self->elm_win_ == object) {
-            int32_t width = 0, height = 0;
-            evas_object_geometry_get(object, nullptr, nullptr, &width, &height);
+            int32_t x = 0, y = 0, width = 0, height = 0;
+            evas_object_geometry_get(object, &x, &y, &width, &height);
+
+            evas_object_resize(self->image_, width, height);
+            evas_object_move(self->image_, x, y);
 
             self->view_->OnResize(0, 0, width, height);
           }
@@ -332,9 +335,6 @@ TizenGeometry TizenWindowElementary::GetGeometry() {
 void TizenWindowElementary::SetGeometry(TizenGeometry geometry) {
   evas_object_resize(elm_win_, geometry.width, geometry.height);
   evas_object_move(elm_win_, geometry.left, geometry.top);
-
-  evas_object_resize(image_, geometry.width, geometry.height);
-  evas_object_move(image_, geometry.left, geometry.top);
 }
 
 TizenGeometry TizenWindowElementary::GetScreenGeometry() {
