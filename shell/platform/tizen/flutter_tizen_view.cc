@@ -342,8 +342,8 @@ void FlutterTizenView::SendFlutterPointerEvent(
   FlutterPointerEvent event = {};
   event.struct_size = sizeof(event);
   event.phase = phase;
-  event.x = new_x - geometry.left;
-  event.y = new_y - geometry.top;
+  event.x = new_x;
+  event.y = new_y;
   if (delta_x != 0 || delta_y != 0) {
     event.signal_kind = kFlutterPointerSignalKindScroll;
   }
