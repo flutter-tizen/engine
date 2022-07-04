@@ -16,14 +16,15 @@
 #include "flutter/shell/platform/tizen/channels/window_channel.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/tizen_view_base.h"
+#include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
 namespace flutter {
 
-class FlutterTizenView {
+class FlutterTizenView : public TizenViewEventHandlerDelegate {
  public:
   FlutterTizenView(std::unique_ptr<TizenViewBase> tizen_view);
 
-  ~FlutterTizenView();
+  virtual ~FlutterTizenView();
 
   // Configures the window instance with an instance of a running Flutter
   // engine.
@@ -51,27 +52,30 @@ class FlutterTizenView {
 
   void* OnProcResolver(const char* name);
 
-  void OnResize(int32_t left, int32_t top, int32_t width, int32_t height);
+  void OnResize(int32_t left,
+                int32_t top,
+                int32_t width,
+                int32_t height) override;
 
-  void OnRotate(int32_t degree);
+  void OnRotate(int32_t degree) override;
 
   void OnPointerMove(double x,
                      double y,
                      size_t timestamp,
                      FlutterPointerDeviceKind device_kind,
-                     int32_t device_id);
+                     int32_t device_id) override;
 
   void OnPointerDown(double x,
                      double y,
                      size_t timestamp,
                      FlutterPointerDeviceKind device_kind,
-                     int32_t device_id);
+                     int32_t device_id) override;
 
   void OnPointerUp(double x,
                    double y,
                    size_t timestamp,
                    FlutterPointerDeviceKind device_kind,
-                   int32_t device_id);
+                   int32_t device_id) override;
 
   void OnScroll(double x,
                 double y,
@@ -80,22 +84,22 @@ class FlutterTizenView {
                 int scroll_offset_multiplier,
                 size_t timestamp,
                 FlutterPointerDeviceKind device_kind,
-                int32_t device_id);
+                int32_t device_id) override;
 
   void OnKey(const char* key,
              const char* string,
              const char* compose,
              uint32_t modifiers,
              uint32_t scan_code,
-             bool is_down);
+             bool is_down) override;
 
-  void OnComposeBegin();
+  void OnComposeBegin() override;
 
-  void OnComposeChange(const std::string& str, int cursor_pos);
+  void OnComposeChange(const std::string& str, int cursor_pos) override;
 
-  void OnComposeEnd();
+  void OnComposeEnd() override;
 
-  void OnCommit(const std::string& str);
+  void OnCommit(const std::string& str) override;
 
   FlutterTransformation GetFlutterTransformation() {
     return flutter_transformation_;
