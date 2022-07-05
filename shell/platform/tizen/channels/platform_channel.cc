@@ -128,6 +128,7 @@ void PlatformChannel::HandleMethodCall(
     RestoreSystemUiOverlays();
     result->Success();
   } else if (method == kSetApplicationSwitcherDescriptionMethod) {
+    // Not supported on Tizen. Ignore.
     result->Success();
   } else if (method == kSetEnabledSystemUiOverlaysMethod) {
     const rapidjson::Document& list = arguments[0];
