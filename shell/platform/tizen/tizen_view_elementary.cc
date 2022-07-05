@@ -126,16 +126,16 @@ void TizenViewElementary::RegisterEventHandlers() {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
         if (self->view_delegate_) {
           if (self->container_ == object) {
-            int32_t x = 0, y = 0, width = 0, height = 0;
-            evas_object_geometry_get(self->container_, &x, &y, &width, &height);
+            int32_t width = 0, height = 0;
+            evas_object_geometry_get(self->container_, nullptr, nullptr, &width,
+                                     &height);
 
             evas_object_size_hint_min_set(self->container_, width, height);
             evas_object_size_hint_max_set(self->container_, width, height);
 
             EvasObjectResizeWithMinMaxHint(self->image_, width, height);
-            evas_object_move(self->image_, x, y);
 
-            self->view_delegate_->OnResize(x, y, width, height);
+            self->view_delegate_->OnResize(0, 0, width, height);
           }
         }
       };
