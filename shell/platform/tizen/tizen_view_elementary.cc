@@ -7,8 +7,8 @@
 #include <efl_extension.h>
 #include <ui/efl_util.h>
 
-#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
 namespace {
 
@@ -124,7 +124,7 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_RESIZE] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           if (self->container_ == object) {
             int32_t x = 0, y = 0, width = 0, height = 0;
             evas_object_geometry_get(self->container_, &x, &y, &width, &height);
@@ -135,7 +135,7 @@ void TizenViewElementary::RegisterEventHandlers() {
             EvasObjectResizeWithMinMaxHint(self->image_, width, height);
             evas_object_move(self->image_, x, y);
 
-            self->view_->OnResize(x, y, width, height);
+            self->view_delegate_->OnResize(x, y, width, height);
           }
         }
       };
@@ -146,12 +146,12 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           if (self->event_layer_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Down*>(event_info);
             TizenGeometry geometry = self->GetGeometry();
-            self->view_->OnPointerDown(
+            self->view_delegate_->OnPointerDown(
                 mouse_event->canvas.x - geometry.left,
                 mouse_event->canvas.y - geometry.top, mouse_event->timestamp,
                 kFlutterPointerDeviceKindTouch, mouse_event->button);
@@ -166,7 +166,7 @@ void TizenViewElementary::RegisterEventHandlers() {
                                                       Evas_Object* object,
                                                       void* event_info) {
     auto* self = reinterpret_cast<TizenViewElementary*>(data);
-    if (self->view_) {
+    if (self->view_delegate_) {
       if (self->event_layer_ == object) {
         auto* mouse_event = reinterpret_cast<Evas_Event_Mouse_Up*>(event_info);
         if (self->scroll_hold_) {
@@ -174,7 +174,7 @@ void TizenViewElementary::RegisterEventHandlers() {
           self->scroll_hold_ = false;
         }
         TizenGeometry geometry = self->GetGeometry();
-        self->view_->OnPointerUp(
+        self->view_delegate_->OnPointerUp(
             mouse_event->canvas.x - geometry.left,
             mouse_event->canvas.y - geometry.top, mouse_event->timestamp,
             kFlutterPointerDeviceKindTouch, mouse_event->button);
@@ -189,7 +189,7 @@ void TizenViewElementary::RegisterEventHandlers() {
                                                         Evas_Object* object,
                                                         void* event_info) {
     auto* self = reinterpret_cast<TizenViewElementary*>(data);
-    if (self->view_) {
+    if (self->view_delegate_) {
       if (self->event_layer_ == object) {
         auto* mouse_event =
             reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
@@ -200,7 +200,7 @@ void TizenViewElementary::RegisterEventHandlers() {
           self->scroll_hold_ = true;
         }
         TizenGeometry geometry = self->GetGeometry();
-        self->view_->OnPointerMove(
+        self->view_delegate_->OnPointerMove(
             mouse_event->cur.canvas.x - geometry.left,
             mouse_event->cur.canvas.y - geometry.top, mouse_event->timestamp,
             kFlutterPointerDeviceKindTouch, mouse_event->buttons);
@@ -214,7 +214,7 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           if (self->event_layer_ == object) {
             auto* wheel_event =
                 reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event_info);
@@ -227,7 +227,7 @@ void TizenViewElementary::RegisterEventHandlers() {
               delta_x += wheel_event->z;
             }
             TizenGeometry geometry = self->GetGeometry();
-            self->view_->OnScroll(
+            self->view_delegate_->OnScroll(
                 wheel_event->x - geometry.left, wheel_event->y - geometry.top,
                 delta_x, delta_y, kScrollOffsetMultiplier,
                 wheel_event->timestamp, kFlutterPointerDeviceKindTouch, 0);
@@ -242,7 +242,7 @@ void TizenViewElementary::RegisterEventHandlers() {
                                                       Evas_Object* object,
                                                       void* event_info) {
     auto* self = reinterpret_cast<TizenViewElementary*>(data);
-    if (self->view_) {
+    if (self->view_delegate_) {
       if (self->event_layer_ == object) {
         auto* key_event = reinterpret_cast<Evas_Event_Key_Down*>(event_info);
         bool handled = false;
@@ -253,7 +253,7 @@ void TizenViewElementary::RegisterEventHandlers() {
               self->input_method_context_->HandleEvasEventKeyDown(key_event);
         }
         if (!handled) {
-          self->view_->OnKey(
+          self->view_delegate_->OnKey(
               key_event->key, key_event->string, key_event->compose,
               EvasModifierToEcoreEventModifiers(key_event->modifiers),
               key_event->keycode, true);
@@ -268,7 +268,7 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_callbacks_[EVAS_CALLBACK_KEY_UP] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           if (self->event_layer_ == object) {
             auto* key_event = reinterpret_cast<Evas_Event_Key_Up*>(event_info);
             bool handled = false;
@@ -279,7 +279,7 @@ void TizenViewElementary::RegisterEventHandlers() {
                   self->input_method_context_->HandleEvasEventKeyUp(key_event);
             }
             if (!handled) {
-              self->view_->OnKey(
+              self->view_delegate_->OnKey(
                   key_event->key, key_event->string, key_event->compose,
                   EvasModifierToEcoreEventModifiers(key_event->modifiers),
                   key_event->keycode, false);
@@ -351,14 +351,15 @@ void TizenViewElementary::PrepareInputMethod() {
 
   // Set input method callbacks.
   input_method_context_->SetOnPreeditStart(
-      [this]() { view_->OnComposeBegin(); });
+      [this]() { view_delegate_->OnComposeBegin(); });
   input_method_context_->SetOnPreeditChanged(
       [this](std::string str, int cursor_pos) {
-        view_->OnComposeChange(str, cursor_pos);
+        view_delegate_->OnComposeChange(str, cursor_pos);
       });
-  input_method_context_->SetOnPreeditEnd([this]() { view_->OnComposeEnd(); });
+  input_method_context_->SetOnPreeditEnd(
+      [this]() { view_delegate_->OnComposeEnd(); });
   input_method_context_->SetOnCommit(
-      [this](std::string str) { view_->OnCommit(str); });
+      [this](std::string str) { view_delegate_->OnCommit(str); });
 }
 
 }  // namespace flutter

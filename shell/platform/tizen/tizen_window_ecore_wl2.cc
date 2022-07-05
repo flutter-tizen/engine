@@ -8,8 +8,8 @@
 #include <dlfcn.h>
 #endif
 
-#include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
 namespace {
 
@@ -191,12 +191,12 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_WL2_EVENT_WINDOW_ROTATE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* rotation_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Rotation*>(event);
           if (rotation_event->win == self->GetWindowId()) {
             int32_t degree = rotation_event->angle;
-            self->view_->OnRotate(degree);
+            self->view_delegate_->OnRotate(degree);
             TizenGeometry geometry = self->GetGeometry();
             ecore_wl2_window_rotation_change_done_send(
                 self->ecore_wl2_window_, rotation_event->rotation,
@@ -212,7 +212,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_WL2_EVENT_WINDOW_CONFIGURE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* configure_event =
               reinterpret_cast<Ecore_Wl2_Event_Window_Configure*>(event);
           if (configure_event->win == self->GetWindowId()) {
@@ -221,8 +221,9 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
                 configure_event->y, configure_event->w, configure_event->h,
                 self->GetRotation());
 
-            self->view_->OnResize(configure_event->x, configure_event->y,
-                                  configure_event->w, configure_event->h);
+            self->view_delegate_->OnResize(
+                configure_event->x, configure_event->y, configure_event->w,
+                configure_event->h);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -234,11 +235,11 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_BUTTON_DOWN,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* button_event =
               reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
           if (button_event->window == self->GetWindowId()) {
-            self->view_->OnPointerDown(
+            self->view_delegate_->OnPointerDown(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -252,11 +253,11 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_BUTTON_UP,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* button_event =
               reinterpret_cast<Ecore_Event_Mouse_Button*>(event);
           if (button_event->window == self->GetWindowId()) {
-            self->view_->OnPointerUp(
+            self->view_delegate_->OnPointerUp(
                 button_event->x, button_event->y, button_event->timestamp,
                 kFlutterPointerDeviceKindTouch, button_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -270,10 +271,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_MOVE,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* move_event = reinterpret_cast<Ecore_Event_Mouse_Move*>(event);
           if (move_event->window == self->GetWindowId()) {
-            self->view_->OnPointerMove(
+            self->view_delegate_->OnPointerMove(
                 move_event->x, move_event->y, move_event->timestamp,
                 kFlutterPointerDeviceKindTouch, move_event->multi.device);
             return ECORE_CALLBACK_DONE;
@@ -287,7 +288,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_MOUSE_WHEEL,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* wheel_event = reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event);
           if (wheel_event->window == self->GetWindowId()) {
             double delta_x = 0.0;
@@ -299,10 +300,10 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
               delta_x += wheel_event->z;
             }
 
-            self->view_->OnScroll(wheel_event->x, wheel_event->y, delta_x,
-                                  delta_y, kScrollOffsetMultiplier,
-                                  wheel_event->timestamp,
-                                  kFlutterPointerDeviceKindTouch, 0);
+            self->view_delegate_->OnScroll(
+                wheel_event->x, wheel_event->y, delta_x, delta_y,
+                kScrollOffsetMultiplier, wheel_event->timestamp,
+                kFlutterPointerDeviceKindTouch, 0);
             return ECORE_CALLBACK_DONE;
           }
         }
@@ -314,7 +315,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_KEY_DOWN,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
             bool handled = false;
@@ -323,9 +324,9 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
                   key_event, true);
             }
             if (!handled) {
-              self->view_->OnKey(key_event->key, key_event->string,
-                                 key_event->compose, key_event->modifiers,
-                                 key_event->keycode, true);
+              self->view_delegate_->OnKey(
+                  key_event->key, key_event->string, key_event->compose,
+                  key_event->modifiers, key_event->keycode, true);
             }
             return ECORE_CALLBACK_DONE;
           }
@@ -338,7 +339,7 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
       ECORE_EVENT_KEY_UP,
       [](void* data, int type, void* event) -> Eina_Bool {
         auto* self = reinterpret_cast<TizenWindowEcoreWl2*>(data);
-        if (self->view_) {
+        if (self->view_delegate_) {
           auto* key_event = reinterpret_cast<Ecore_Event_Key*>(event);
           if (key_event->window == self->GetWindowId()) {
             bool handled = false;
@@ -347,9 +348,9 @@ void TizenWindowEcoreWl2::RegisterEventHandlers() {
                   key_event, false);
             }
             if (!handled) {
-              self->view_->OnKey(key_event->key, key_event->string,
-                                 key_event->compose, key_event->modifiers,
-                                 key_event->keycode, false);
+              self->view_delegate_->OnKey(
+                  key_event->key, key_event->string, key_event->compose,
+                  key_event->modifiers, key_event->keycode, false);
             }
             return ECORE_CALLBACK_DONE;
           }
@@ -479,14 +480,15 @@ void TizenWindowEcoreWl2::PrepareInputMethod() {
 
   // Set input method callbacks.
   input_method_context_->SetOnPreeditStart(
-      [this]() { view_->OnComposeBegin(); });
+      [this]() { view_delegate_->OnComposeBegin(); });
   input_method_context_->SetOnPreeditChanged(
       [this](std::string str, int cursor_pos) {
-        view_->OnComposeChange(str, cursor_pos);
+        view_delegate_->OnComposeChange(str, cursor_pos);
       });
-  input_method_context_->SetOnPreeditEnd([this]() { view_->OnComposeEnd(); });
+  input_method_context_->SetOnPreeditEnd(
+      [this]() { view_delegate_->OnComposeEnd(); });
   input_method_context_->SetOnCommit(
-      [this](std::string str) { view_->OnCommit(str); });
+      [this](std::string str) { view_delegate_->OnCommit(str); });
 }
 
 }  // namespace flutter

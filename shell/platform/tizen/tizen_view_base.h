@@ -45,7 +45,9 @@ class TizenViewBase {
 
   // Sets the delegate used to communicate state changes from render target to
   // view such as key presses, mouse position updates etc.
-  void SetView(TizenViewEventHandlerDelegate* view) { view_ = view; }
+  void SetView(TizenViewEventHandlerDelegate* view_delegate) {
+    view_delegate_ = view_delegate;
+  }
 
   virtual void Show() = 0;
 
@@ -56,7 +58,7 @@ class TizenViewBase {
   }
 
  protected:
-  TizenViewEventHandlerDelegate* view_ = nullptr;
+  TizenViewEventHandlerDelegate* view_delegate_ = nullptr;
 
   // The Tizen input method context. nullptr if not set.
   std::unique_ptr<TizenInputMethodContext> input_method_context_;
