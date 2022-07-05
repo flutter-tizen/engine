@@ -67,7 +67,7 @@ bool TizenWindowElementary::CreateWindow() {
 
   // Please uncomment below and enable setWindowGeometry of window channel when
   // Tizen 5.5 or later was chosen as default.
-  elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
+  // elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
 
   Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
