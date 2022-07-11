@@ -316,7 +316,7 @@ void TizenViewElementary::UnregisterEventHandlers() {
 
 TizenGeometry TizenViewElementary::GetGeometry() {
   TizenGeometry result;
-  evas_object_geometry_get(image_, &result.left, &result.top, &result.width,
+  evas_object_geometry_get(container_, &result.left, &result.top, &result.width,
                            &result.height);
   return result;
 }
@@ -328,7 +328,7 @@ void TizenViewElementary::SetGeometry(TizenGeometry geometry) {
 
 int32_t TizenViewElementary::GetDpi() {
   Ecore_Evas* ecore_evas =
-      ecore_evas_ecore_evas_get(evas_object_evas_get(image_));
+      ecore_evas_ecore_evas_get(evas_object_evas_get(container_));
   int32_t xdpi, ydpi;
   ecore_evas_screen_dpi_get(ecore_evas, &xdpi, &ydpi);
   return xdpi;
@@ -336,7 +336,7 @@ int32_t TizenViewElementary::GetDpi() {
 
 uintptr_t TizenViewElementary::GetWindowId() {
   return ecore_evas_window_get(
-      ecore_evas_ecore_evas_get(evas_object_evas_get(image_)));
+      ecore_evas_ecore_evas_get(evas_object_evas_get(container_)));
 }
 
 void TizenViewElementary::Show() {

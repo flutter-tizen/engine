@@ -6,7 +6,6 @@
 #ifndef EMBEDDER_TIZEN_VIEW_EVENT_HANDLER_DELEGATE_H_
 #define EMBEDDER_TIZEN_VIEW_EVENT_HANDLER_DELEGATE_H_
 
-#include <memory>
 #include <string>
 
 #include "flutter/shell/platform/embedder/embedder.h"

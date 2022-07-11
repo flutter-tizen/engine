@@ -60,6 +60,7 @@ bool TizenRendererEgl::CreateSurface(void* render_target,
 
   {
     const EGLint attribs[] = {EGL_NONE};
+
     auto* egl_window =
         static_cast<EGLNativeWindowType*>(ecore_wl2_egl_window_native_get(
             static_cast<Ecore_Wl2_Egl_Window*>(render_target)));
