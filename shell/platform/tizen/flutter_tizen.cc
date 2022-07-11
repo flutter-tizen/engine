@@ -181,6 +181,11 @@ void FlutterDesktopEngineNotifyAppIsDetached(FlutterDesktopEngineRef engine) {
   EngineFromHandle(engine)->lifecycle_channel()->AppIsDetached();
 }
 
+void FlutterDesktopViewDestroy(FlutterDesktopViewRef view_ref) {
+  flutter::FlutterTizenView* view = ViewFromHandle(view_ref);
+  delete view;
+}
+
 void FlutterDesktopViewResize(FlutterDesktopViewRef view,
                               int32_t width,
                               int32_t height) {

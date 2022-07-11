@@ -138,12 +138,12 @@ FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsDetached(
 
 // ========== View ==========
 
-// Creates a view that hosts and displays the given engine instance.
+// Creates the view that hosts and displays the given engine instance.
 FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine);
 
-// Creates a view that hosts and displays the given engine instance.
+// Creates the view that hosts and displays the given engine instance.
 //
 // The type of parent should be Evas_Object*, Cast Evas_Object* to void*.
 // @warning This API is a work-in-progress and may change.
@@ -152,6 +152,12 @@ FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     FlutterDesktopEngineRef engine,
     void* parent);
 
+// Destroys the view.
+//
+// The engine owned by the view will also be shut down implicitly.
+// @warning This API is a work-in-progress and may change.
+FLUTTER_EXPORT void FlutterDesktopViewDestroy(FlutterDesktopViewRef view);
+
 // Returns a handle to evas object that the FlutterView is drawn to.
 //
 // Cast the returned void* to Evas_Object*.
@@ -159,7 +165,7 @@ FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
 FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
     FlutterDesktopViewRef view);
 
-// Resize the FlutterView.
+// Resize the view.
 // @warning This API is a work-in-progress and may change.
 FLUTTER_EXPORT void FlutterDesktopViewResize(FlutterDesktopViewRef view,
                                              int32_t width,
