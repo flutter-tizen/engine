@@ -138,12 +138,12 @@ FLUTTER_EXPORT void FlutterDesktopEngineNotifyAppIsDetached(
 
 // ========== View ==========
 
-// Creates the view that hosts and displays the given engine instance.
+// Creates a view that hosts and displays the given engine instance.
 FLUTTER_EXPORT FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
     const FlutterDesktopWindowProperties& window_properties,
     FlutterDesktopEngineRef engine);
 
-// Creates the view that hosts and displays the given engine instance.
+// Creates a view that hosts and displays the given engine instance.
 //
 // The type of parent should be Evas_Object*, Cast Evas_Object* to void*.
 // @warning This API is a work-in-progress and may change.
