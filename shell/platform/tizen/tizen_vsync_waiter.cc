@@ -37,10 +37,6 @@ TizenVsyncWaiter::~TizenVsyncWaiter() {
   }
 }
 
-void TizenVsyncWaiter::SetTdmClient(TdmClient* tdm_client) {
-  tdm_client_ = tdm_client;
-}
-
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
   Send(kMessageRequestVblank, baton);
 }
@@ -66,23 +62,24 @@ void TizenVsyncWaiter::Send(int event, intptr_t baton) {
 }
 
 void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
-  TizenVsyncWaiter* tizen_vsync_waiter =
-      reinterpret_cast<TizenVsyncWaiter*>(data);
-  TdmClient tdm_client(tizen_vsync_waiter->engine_);
-  tizen_vsync_waiter->SetTdmClient(&tdm_client);
-  if (!tdm_client.IsValid()) {
+  TizenVsyncWaiter* self = reinterpret_cast<TizenVsyncWaiter*>(data);
+  self->SetTdmClient(std::make_unique<TdmClient>(self->engine_));
+
+  TdmClient* tdm_client = self->tdm_client_.get();
+  if (!tdm_client->IsValid()) {
     FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
     return;
   }
+
   Eina_Thread_Queue* vblank_thread_queue = eina_thread_queue_new();
   if (!vblank_thread_queue) {
     FT_LOG(Error) << "Invalid vblank thread queue.";
     ecore_thread_cancel(thread);
     return;
   }
+  self->vblank_thread_queue_ = vblank_thread_queue;
 
-  tizen_vsync_waiter->vblank_thread_queue_ = vblank_thread_queue;
   while (!ecore_thread_check(thread)) {
     void* ref;
     Msg* msg;
@@ -96,8 +93,9 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     if (msg->event == kMessageQuit) {
       break;
     }
-    tdm_client.WaitVblank(msg->baton);
+    tdm_client->WaitVblank(msg->baton);
   }
+
   if (vblank_thread_queue) {
     eina_thread_queue_free(vblank_thread_queue);
   }
