@@ -20,8 +20,9 @@ typedef struct {
   intptr_t baton;
 } Msg;
 
-TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
-    : engine_(engine) {
+TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
+  tdm_client_ = std::make_unique<TdmClient>(engine);
+
   vblank_thread_ = ecore_thread_feedback_run(RequestVblankLoop, nullptr,
                                              nullptr, nullptr, this, EINA_TRUE);
 }
@@ -63,7 +64,6 @@ void TizenVsyncWaiter::Send(int event, intptr_t baton) {
 
 void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* self = reinterpret_cast<TizenVsyncWaiter*>(data);
-  self->SetTdmClient(std::make_unique<TdmClient>(self->engine_));
 
   TdmClient* tdm_client = self->tdm_client_.get();
   if (!tdm_client->IsValid()) {

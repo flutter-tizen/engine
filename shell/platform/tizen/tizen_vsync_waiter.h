@@ -52,18 +52,14 @@ class TizenVsyncWaiter {
 
   void AsyncWaitForVsync(intptr_t baton);
 
-  void SetTdmClient(std::unique_ptr<TdmClient> tdm_client) {
-    tdm_client_ = std::move(tdm_client);
-  }
-
  private:
   void Send(int event, intptr_t baton);
+
   static void RequestVblankLoop(void* data, Ecore_Thread* thread);
 
+  std::unique_ptr<TdmClient> tdm_client_;
   Ecore_Thread* vblank_thread_ = nullptr;
   Eina_Thread_Queue* vblank_thread_queue_ = nullptr;
-  FlutterTizenEngine* engine_ = nullptr;
-  std::unique_ptr<TdmClient> tdm_client_;
 };
 
 }  // namespace flutter
