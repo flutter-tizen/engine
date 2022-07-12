@@ -27,8 +27,8 @@ struct Message {
 TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
   tdm_client_ = std::make_unique<TdmClient>(engine);
 
-  vblank_thread_ = ecore_thread_feedback_run(RequestVblankLoop, nullptr,
-                                             nullptr, nullptr, this, EINA_TRUE);
+  vblank_thread_ = ecore_thread_feedback_run(RunVblankLoop, nullptr, nullptr,
+                                             nullptr, this, EINA_TRUE);
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
@@ -65,7 +65,7 @@ void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
   eina_thread_queue_send_done(vblank_thread_queue_, ref);
 }
 
-void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
+void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* self = reinterpret_cast<TizenVsyncWaiter*>(data);
 
   TdmClient* tdm_client = self->tdm_client_.get();
@@ -93,7 +93,7 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
     }
     intptr_t baton = message->baton;
     eina_thread_queue_wait_done(vblank_thread_queue, ref);
-    tdm_client->WaitVblank(baton);
+    tdm_client->AwaitVblank(baton);
   }
 
   if (vblank_thread_queue) {
@@ -142,7 +142,7 @@ void TdmClient::OnEngineStop() {
   engine_ = nullptr;
 }
 
-void TdmClient::WaitVblank(intptr_t baton) {
+void TdmClient::AwaitVblank(intptr_t baton) {
   baton_ = baton;
   tdm_error error = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
   if (error != TDM_ERROR_NONE) {
