@@ -33,11 +33,11 @@ class TdmClient {
 
  private:
   std::mutex engine_mutex_;
-  tdm_client* client_{nullptr};
-  tdm_client_output* output_{nullptr};
-  tdm_client_vblank* vblank_{nullptr};
-  FlutterTizenEngine* engine_{nullptr};
-  intptr_t baton_{0};
+  tdm_client* client_ = nullptr;
+  tdm_client_output* output_ = nullptr;
+  tdm_client_vblank* vblank_ = nullptr;
+  FlutterTizenEngine* engine_ = nullptr;
+  intptr_t baton_ = 0;
 };
 
 class TizenVsyncWaiter {
@@ -50,10 +50,11 @@ class TizenVsyncWaiter {
  private:
   void Send(int event, intptr_t baton);
   static void RequestVblankLoop(void* data, Ecore_Thread* thread);
-  Ecore_Thread* vblank_thread_{nullptr};
-  Eina_Thread_Queue* vblank_thread_queue_{nullptr};
-  FlutterTizenEngine* engine_{nullptr};
-  TdmClient* tdm_client_{nullptr};
+
+  Ecore_Thread* vblank_thread_ = nullptr;
+  Eina_Thread_Queue* vblank_thread_queue_ = nullptr;
+  FlutterTizenEngine* engine_ = nullptr;
+  TdmClient* tdm_client_ = nullptr;
 };
 
 }  // namespace flutter
