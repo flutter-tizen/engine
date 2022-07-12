@@ -85,19 +85,15 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
 
   while (!ecore_thread_check(thread)) {
     void* ref;
-    Message* message;
-    message = static_cast<Message*>(
+    Message* message = static_cast<Message*>(
         eina_thread_queue_wait(vblank_thread_queue, &ref));
-    if (message) {
-      eina_thread_queue_wait_done(vblank_thread_queue, ref);
-    } else {
-      FT_LOG(Error) << "Received a null message.";
-      continue;
-    }
     if (message->event == kMessageQuit) {
+      eina_thread_queue_wait_done(vblank_thread_queue, ref);
       break;
     }
-    tdm_client->WaitVblank(message->baton);
+    intptr_t baton = message->baton;
+    eina_thread_queue_wait_done(vblank_thread_queue, ref);
+    tdm_client->WaitVblank(baton);
   }
 
   if (vblank_thread_queue) {
