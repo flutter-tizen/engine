@@ -16,11 +16,11 @@ namespace {
 constexpr int kMessageQuit = -1;
 constexpr int kMessageRequestVblank = 0;
 
-typedef struct {
+struct Message {
   Eina_Thread_Queue_Msg head;
   int event;
   intptr_t baton;
-} Msg;
+};
 
 }  // namespace
 
@@ -32,10 +32,10 @@ TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  if (tdm_client_) {
-    tdm_client_->OnEngineStop();
-  }
-  Send(kMessageQuit, 0);
+  tdm_client_->OnEngineStop();
+
+  SendMessage(kMessageQuit, 0);
+
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
@@ -43,10 +43,10 @@ TizenVsyncWaiter::~TizenVsyncWaiter() {
 }
 
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
-  Send(kMessageRequestVblank, baton);
+  SendMessage(kMessageRequestVblank, baton);
 }
 
-void TizenVsyncWaiter::Send(int event, intptr_t baton) {
+void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
   if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
     FT_LOG(Error) << "Invalid vblank thread.";
     return;
@@ -57,12 +57,11 @@ void TizenVsyncWaiter::Send(int event, intptr_t baton) {
     return;
   }
 
-  Msg* msg;
   void* ref;
-  msg = static_cast<Msg*>(
-      eina_thread_queue_send(vblank_thread_queue_, sizeof(Msg), &ref));
-  msg->event = event;
-  msg->baton = baton;
+  Message* message = static_cast<Message*>(
+      eina_thread_queue_send(vblank_thread_queue_, sizeof(Message), &ref));
+  message->event = event;
+  message->baton = baton;
   eina_thread_queue_send_done(vblank_thread_queue_, ref);
 }
 
@@ -86,18 +85,19 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
 
   while (!ecore_thread_check(thread)) {
     void* ref;
-    Msg* msg;
-    msg = static_cast<Msg*>(eina_thread_queue_wait(vblank_thread_queue, &ref));
-    if (msg) {
+    Message* message;
+    message = static_cast<Message*>(
+        eina_thread_queue_wait(vblank_thread_queue, &ref));
+    if (message) {
       eina_thread_queue_wait_done(vblank_thread_queue, ref);
     } else {
       FT_LOG(Error) << "Received a null message.";
       continue;
     }
-    if (msg->event == kMessageQuit) {
+    if (message->event == kMessageQuit) {
       break;
     }
-    tdm_client->WaitVblank(msg->baton);
+    tdm_client->WaitVblank(message->baton);
   }
 
   if (vblank_thread_queue) {

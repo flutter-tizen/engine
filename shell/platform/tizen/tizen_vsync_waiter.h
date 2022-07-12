@@ -53,7 +53,7 @@ class TizenVsyncWaiter {
   void AsyncWaitForVsync(intptr_t baton);
 
  private:
-  void Send(int event, intptr_t baton);
+  void SendMessage(int event, intptr_t baton);
 
   static void RequestVblankLoop(void* data, Ecore_Thread* thread);
 
