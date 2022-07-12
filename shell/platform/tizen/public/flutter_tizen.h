@@ -165,7 +165,7 @@ FLUTTER_EXPORT void FlutterDesktopViewDestroy(FlutterDesktopViewRef view);
 FLUTTER_EXPORT void* FlutterDesktopViewGetEvasObject(
     FlutterDesktopViewRef view);
 
-// Resize the view.
+// Resizes the view.
 // @warning This API is a work-in-progress and may change.
 FLUTTER_EXPORT void FlutterDesktopViewResize(FlutterDesktopViewRef view,
                                              int32_t width,
