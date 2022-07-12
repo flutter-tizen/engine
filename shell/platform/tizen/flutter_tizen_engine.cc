@@ -259,8 +259,9 @@ bool FlutterTizenEngine::StopEngine() {
     if (platform_view_channel_) {
       platform_view_channel_->Dispose();
     }
-    if (plugin_registrar_destruction_callback_) {
-      plugin_registrar_destruction_callback_(plugin_registrar_.get());
+    for (const auto& [callback, registrar] :
+         plugin_registrar_destruction_callbacks_) {
+      callback(registrar);
     }
 #ifndef TIZEN_RENDERER_EVAS_GL
     tizen_vsync_waiter_.reset();
@@ -276,9 +277,10 @@ void FlutterTizenEngine::SetView(FlutterTizenView* view) {
   view_ = view;
 }
 
-void FlutterTizenEngine::SetPluginRegistrarDestructionCallback(
-    FlutterDesktopOnPluginRegistrarDestroyed callback) {
-  plugin_registrar_destruction_callback_ = callback;
+void FlutterTizenEngine::AddPluginRegistrarDestructionCallback(
+    FlutterDesktopOnPluginRegistrarDestroyed callback,
+    FlutterDesktopPluginRegistrarRef registrar) {
+  plugin_registrar_destruction_callbacks_[callback] = registrar;
 }
 
 bool FlutterTizenEngine::SendPlatformMessage(

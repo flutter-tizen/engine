@@ -117,9 +117,10 @@ class FlutterTizenEngine {
   }
 #endif
 
-  // Sets |callback| to be called when the plugin registrar is destroyed.
-  void SetPluginRegistrarDestructionCallback(
-      FlutterDesktopOnPluginRegistrarDestroyed callback);
+  // Registers |callback| to be called when the plugin registrar is destroyed.
+  void AddPluginRegistrarDestructionCallback(
+      FlutterDesktopOnPluginRegistrarDestroyed callback,
+      FlutterDesktopPluginRegistrarRef registrar);
 
   // Sends the given message to the engine, calling |reply| with |user_data|
   // when a reponse is received from the engine if they are non-null.
@@ -238,10 +239,11 @@ class FlutterTizenEngine {
   // The texture registrar.
   std::unique_ptr<FlutterTizenTextureRegistrar> texture_registrar_;
 
-  // A callback to be called when the engine (and thus the plugin registrar)
-  // is being destroyed.
-  FlutterDesktopOnPluginRegistrarDestroyed
-      plugin_registrar_destruction_callback_{nullptr};
+  // Callbacks to be called when the engine (and thus the plugin registrar) is
+  // being destroyed.
+  std::map<FlutterDesktopOnPluginRegistrarDestroyed,
+           FlutterDesktopPluginRegistrarRef>
+      plugin_registrar_destruction_callbacks_;
 
 #ifndef WEARABLE_PROFILE
   // The accessibility bridge for the Tizen platform.

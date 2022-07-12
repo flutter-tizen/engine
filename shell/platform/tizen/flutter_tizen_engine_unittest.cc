@@ -188,5 +188,31 @@ TEST_F(FlutterTizenEngineTest, SendPlatformMessageWithResponse) {
   EXPECT_TRUE(send_message_called);
 }
 
+TEST_F(FlutterTizenEngineTest, AddPluginRegistrarDestructionCallback) {
+  EngineModifier modifier(engine_);
+
+  engine_->RunEngine();
+
+  // Verify that destruction handlers don't overwrite each other.
+  int result1 = 0;
+  int result2 = 0;
+  engine_->AddPluginRegistrarDestructionCallback(
+      [](FlutterDesktopPluginRegistrarRef ref) {
+        auto result = reinterpret_cast<int*>(ref);
+        *result = 1;
+      },
+      reinterpret_cast<FlutterDesktopPluginRegistrarRef>(&result1));
+  engine_->AddPluginRegistrarDestructionCallback(
+      [](FlutterDesktopPluginRegistrarRef ref) {
+        auto result = reinterpret_cast<int*>(ref);
+        *result = 2;
+      },
+      reinterpret_cast<FlutterDesktopPluginRegistrarRef>(&result2));
+
+  engine_->StopEngine();
+  EXPECT_EQ(result1, 1);
+  EXPECT_EQ(result2, 2);
+}
+
 }  // namespace testing
 }  // namespace flutter

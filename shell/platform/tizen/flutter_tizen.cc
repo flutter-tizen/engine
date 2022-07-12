@@ -113,7 +113,7 @@ FlutterDesktopMessengerRef FlutterDesktopPluginRegistrarGetMessenger(
 void FlutterDesktopPluginRegistrarSetDestructionHandler(
     FlutterDesktopPluginRegistrarRef registrar,
     FlutterDesktopOnPluginRegistrarDestroyed callback) {
-  registrar->engine->SetPluginRegistrarDestructionCallback(callback);
+  registrar->engine->AddPluginRegistrarDestructionCallback(callback, registrar);
 }
 
 bool FlutterDesktopMessengerSend(FlutterDesktopMessengerRef messenger,
