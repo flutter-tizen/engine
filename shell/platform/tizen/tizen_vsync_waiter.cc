@@ -104,19 +104,19 @@ void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
 TdmClient::TdmClient(FlutterTizenEngine* engine) {
   tdm_error ret;
   client_ = tdm_client_create(&ret);
-  if (ret != TDM_ERROR_NONE && client_ != NULL) {
+  if (ret != TDM_ERROR_NONE) {
     FT_LOG(Error) << "Failed to create a TDM client.";
     return;
   }
 
   output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
-  if (ret != TDM_ERROR_NONE && output_ != NULL) {
+  if (ret != TDM_ERROR_NONE) {
     FT_LOG(Error) << "Could not obtain the default client output.";
     return;
   }
 
   vblank_ = tdm_client_output_create_vblank(output_, &ret);
-  if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
+  if (ret != TDM_ERROR_NONE) {
     FT_LOG(Error) << "Failed to create a vblank object.";
     return;
   }
@@ -144,9 +144,9 @@ void TdmClient::OnEngineStop() {
 
 void TdmClient::AwaitVblank(intptr_t baton) {
   baton_ = baton;
-  tdm_error error = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
-  if (error != TDM_ERROR_NONE) {
-    FT_LOG(Error) << "tdm_client_vblank_wait() failed.";
+  tdm_error ret = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
+  if (ret != TDM_ERROR_NONE) {
+    FT_LOG(Error) << "tdm_client_vblank_wait failed with error: " << ret;
     return;
   }
   tdm_client_handle_events(client_);
@@ -162,14 +162,14 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                unsigned int tv_sec,
                                unsigned int tv_usec,
                                void* user_data) {
-  TdmClient* client = reinterpret_cast<TdmClient*>(user_data);
-  FT_ASSERT(client != nullptr);
-  std::lock_guard<std::mutex> lock(client->engine_mutex_);
-  if (client->engine_) {
+  TdmClient* self = reinterpret_cast<TdmClient*>(user_data);
+  FT_ASSERT(self != nullptr);
+  std::lock_guard<std::mutex> lock(self->engine_mutex_);
+  if (self->engine_) {
     uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
     uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-    client->engine_->OnVsync(client->baton_, frame_start_time_nanos,
-                             frame_target_time_nanos);
+    self->engine_->OnVsync(self->baton_, frame_start_time_nanos,
+                           frame_target_time_nanos);
   }
 }
 
