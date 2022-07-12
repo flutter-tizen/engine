@@ -21,8 +21,6 @@ class TdmClient {
   TdmClient(FlutterTizenEngine* engine);
   virtual ~TdmClient();
 
-  bool CreateTdm();
-  void DestroyTdm();
   bool IsValid();
   void WaitVblank(intptr_t baton);
   void OnEngineStop();

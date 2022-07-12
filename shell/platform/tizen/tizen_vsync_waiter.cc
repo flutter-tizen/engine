@@ -102,14 +102,39 @@ void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
 }
 
 TdmClient::TdmClient(FlutterTizenEngine* engine) {
-  if (!CreateTdm()) {
-    FT_LOG(Error) << "CreateTdm() failed.";
+  tdm_error ret;
+  client_ = tdm_client_create(&ret);
+  if (ret != TDM_ERROR_NONE && client_ != NULL) {
+    FT_LOG(Error) << "Failed to create a TDM client.";
+    return;
   }
+
+  output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
+  if (ret != TDM_ERROR_NONE && output_ != NULL) {
+    FT_LOG(Error) << "Could not obtain the default client output.";
+    return;
+  }
+
+  vblank_ = tdm_client_output_create_vblank(output_, &ret);
+  if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
+    FT_LOG(Error) << "Failed to create a vblank object.";
+    return;
+  }
+  tdm_client_vblank_set_enable_fake(vblank_, 1);
+
   engine_ = engine;
 }
 
 TdmClient::~TdmClient() {
-  DestroyTdm();
+  if (vblank_) {
+    tdm_client_vblank_destroy(vblank_);
+    vblank_ = nullptr;
+  }
+  output_ = nullptr;
+  if (client_) {
+    tdm_client_destroy(client_);
+    client_ = nullptr;
+  }
 }
 
 void TdmClient::OnEngineStop() {
@@ -125,42 +150,6 @@ void TdmClient::WaitVblank(intptr_t baton) {
     return;
   }
   tdm_client_handle_events(client_);
-}
-
-bool TdmClient::CreateTdm() {
-  tdm_error ret;
-  client_ = tdm_client_create(&ret);
-  if (ret != TDM_ERROR_NONE && client_ != NULL) {
-    FT_LOG(Error) << "Failed to create a TDM client.";
-    return false;
-  }
-
-  output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
-  if (ret != TDM_ERROR_NONE && output_ != NULL) {
-    FT_LOG(Error) << "Could not obtain the default client output.";
-    return false;
-  }
-
-  vblank_ = tdm_client_output_create_vblank(output_, &ret);
-  if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    FT_LOG(Error) << "Failed to create a vblank object.";
-    return false;
-  }
-
-  tdm_client_vblank_set_enable_fake(vblank_, 1);
-  return true;
-}
-
-void TdmClient::DestroyTdm() {
-  if (vblank_) {
-    tdm_client_vblank_destroy(vblank_);
-    vblank_ = nullptr;
-  }
-  output_ = nullptr;
-  if (client_) {
-    tdm_client_destroy(client_);
-    client_ = nullptr;
-  }
 }
 
 bool TdmClient::IsValid() {
