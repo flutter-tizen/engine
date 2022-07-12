@@ -9,16 +9,20 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
-static const int kMessageQuit = -1;
-static const int kMessageRequestVblank = 0;
-
 namespace flutter {
+
+namespace {
+
+constexpr int kMessageQuit = -1;
+constexpr int kMessageRequestVblank = 0;
 
 typedef struct {
   Eina_Thread_Queue_Msg head;
   int event;
   intptr_t baton;
 } Msg;
+
+}  // namespace
 
 TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
   tdm_client_ = std::make_unique<TdmClient>(engine);

@@ -11,15 +11,15 @@
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
+namespace flutter {
+
 namespace {
 
-static const int kScrollDirectionVertical = 0;
-static const int kScrollDirectionHorizontal = 1;
-static const int kScrollOffsetMultiplier = 20;
+constexpr int kScrollDirectionVertical = 0;
+constexpr int kScrollDirectionHorizontal = 1;
+constexpr int kScrollOffsetMultiplier = 20;
 
 }  // namespace
-
-namespace flutter {
 
 TizenWindowEcoreWl2::TizenWindowEcoreWl2(TizenGeometry geometry,
                                          bool transparent,
