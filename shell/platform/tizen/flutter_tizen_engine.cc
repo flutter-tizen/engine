@@ -266,6 +266,7 @@ bool FlutterTizenEngine::StopEngine() {
     tizen_vsync_waiter_.reset();
 #endif
     FlutterEngineResult result = embedder_api_.Shutdown(engine_);
+    view_ = nullptr;
     engine_ = nullptr;
     return (result == kSuccess);
   }

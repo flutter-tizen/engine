@@ -54,6 +54,7 @@ FlutterTizenView::FlutterTizenView(std::unique_ptr<TizenViewBase> tizen_view)
 }
 
 FlutterTizenView::~FlutterTizenView() {
+  engine_->StopEngine();
   DestroyRenderSurface();
 }
 
