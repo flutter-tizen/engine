@@ -66,7 +66,7 @@ void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
 }
 
 void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
-  TizenVsyncWaiter* self = reinterpret_cast<TizenVsyncWaiter*>(data);
+  auto* self = reinterpret_cast<TizenVsyncWaiter*>(data);
 
   std::weak_ptr<TdmClient> tdm_client = self->tdm_client_;
   if (!tdm_client.lock()->IsValid()) {
@@ -165,7 +165,7 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                unsigned int tv_sec,
                                unsigned int tv_usec,
                                void* user_data) {
-  TdmClient* self = reinterpret_cast<TdmClient*>(user_data);
+  auto* self = reinterpret_cast<TdmClient*>(user_data);
   FT_ASSERT(self != nullptr);
 
   std::lock_guard<std::mutex> lock(self->engine_mutex_);
