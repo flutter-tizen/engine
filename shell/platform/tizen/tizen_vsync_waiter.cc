@@ -25,7 +25,7 @@ struct Message {
 }  // namespace
 
 TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
-  tdm_client_ = std::make_unique<TdmClient>(engine);
+  tdm_client_ = std::make_shared<TdmClient>(engine);
 
   vblank_thread_ = ecore_thread_feedback_run(RunVblankLoop, nullptr, nullptr,
                                              nullptr, this, EINA_TRUE);
@@ -68,8 +68,8 @@ void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
 void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
   TizenVsyncWaiter* self = reinterpret_cast<TizenVsyncWaiter*>(data);
 
-  TdmClient* tdm_client = self->tdm_client_.get();
-  if (!tdm_client->IsValid()) {
+  std::weak_ptr<TdmClient> tdm_client = self->tdm_client_;
+  if (!tdm_client.lock()->IsValid()) {
     FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
     return;
@@ -93,7 +93,11 @@ void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
     }
     intptr_t baton = message->baton;
     eina_thread_queue_wait_done(vblank_thread_queue, ref);
-    tdm_client->AwaitVblank(baton);
+
+    if (tdm_client.expired()) {
+      break;
+    }
+    tdm_client.lock()->AwaitVblank(baton);
   }
 
   if (vblank_thread_queue) {
@@ -163,6 +167,7 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                void* user_data) {
   TdmClient* self = reinterpret_cast<TdmClient*>(user_data);
   FT_ASSERT(self != nullptr);
+
   std::lock_guard<std::mutex> lock(self->engine_mutex_);
   if (self->engine_) {
     uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;

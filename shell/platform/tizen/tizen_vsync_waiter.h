@@ -24,7 +24,6 @@ class TdmClient {
 
   bool IsValid();
   void AwaitVblank(intptr_t baton);
-  void OnEngineStop();
 
  private:
   static void VblankCallback(tdm_client_vblank* vblank,
@@ -56,7 +55,7 @@ class TizenVsyncWaiter {
 
   static void RunVblankLoop(void* data, Ecore_Thread* thread);
 
-  std::unique_ptr<TdmClient> tdm_client_;
+  std::shared_ptr<TdmClient> tdm_client_;
   Ecore_Thread* vblank_thread_ = nullptr;
   Eina_Thread_Queue* vblank_thread_queue_ = nullptr;
 };
