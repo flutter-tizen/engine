@@ -26,7 +26,7 @@ class TizenViewElementary : public TizenView {
 
   TizenGeometry GetGeometry() override;
 
-  void SetGeometry(TizenGeometry geometry) override;
+  bool SetGeometry(TizenGeometry geometry) override;
 
   void* GetRenderTarget() override { return image_; }
 

@@ -85,20 +85,15 @@ config("rootstrap_include_dirs") {
   ]
 }
 
-config("evas_gl_renderer") {
-  defines = [ "TIZEN_RENDERER_EVAS_GL" ]
-}
-
 # Template for the embedder build. Used to generate embedders for different
 # device profiles.
 #
-# If use_evas_gl_renderer is provided as true, the Evas_GL renderer is used,
-# otherwise the Ecore_Wl2 renderer is used.
+# If the target profile is wearable, only the Evas GL renderer is supported.
+# Otherwise, both the Evas GL and EGL renderers are supported.
 template("embedder") {
   forward_variables_from(invoker,
                          [
                            "target_type",
-                           "use_evas_gl_renderer",
                            "defines",
                          ])
 
@@ -120,10 +115,10 @@ template("embedder") {
       "channels/settings_channel.cc",
       "channels/text_input_channel.cc",
       "channels/window_channel.cc",
-      "external_texture_pixel_gl.cc",
-      "external_texture_surface_gl.cc",
+      "external_texture_surface_evas_gl.cc",
       "flutter_project_bundle.cc",
       "flutter_tizen.cc",
+      "flutter_tizen_elementary.cc",
       "flutter_tizen_engine.cc",
       "flutter_tizen_texture_registrar.cc",
       "flutter_tizen_view.cc",
@@ -132,6 +127,9 @@ template("embedder") {
       "tizen_event_loop.cc",
       "tizen_input_method_context.cc",
       "tizen_renderer.cc",
+      "tizen_renderer_evas_gl.cc",
+      "tizen_view_elementary.cc",
+      "tizen_window_elementary.cc",
     ]
 
     if (target_name != "flutter_tizen_wearable") {
@@ -152,12 +150,14 @@ template("embedder") {
       "capi-ui-efl-util",
       "dlog",
       "ecore",
+      "ecore_evas",
       "ecore_imf",
       "ecore_imf_evas",
       "ecore_input",
       "efl-extension",
       "eina",
       "elementary",
+      "evas",
       "feedback",
       "tbm",
       "tdm-client",
@@ -187,24 +187,9 @@ template("embedder") {
       "//flutter:config",
     ]
 
-    if (use_evas_gl_renderer) {
+    if (target_name != "flutter_tizen_wearable") {
       sources += [
-        "flutter_tizen_elementary.cc",
-        "tizen_renderer_evas_gl.cc",
-        "tizen_view_elementary.cc",
-        "tizen_window_elementary.cc",
-      ]
-
-      libs += [
-        "ecore_evas",
-        "elementary",
-        "evas",
-      ]
-
-      public_configs += [ ":evas_gl_renderer" ]
-    } else {
-      sources += [
-        "flutter_tizen_ecore.cc",
+        "external_texture_surface_egl.cc",
         "tizen_renderer_egl.cc",
         "tizen_vsync_waiter.cc",
         "tizen_window_ecore_wl2.cc",
@@ -235,35 +220,30 @@ template("embedder") {
 
 embedder("flutter_tizen_mobile") {
   target_type = "shared_library"
-  use_evas_gl_renderer = false
 
   defines = [ "MOBILE_PROFILE" ]
 }
 
 embedder("flutter_tizen_wearable") {
   target_type = "shared_library"
-  use_evas_gl_renderer = true
 
   defines = [ "WEARABLE_PROFILE" ]
 }
 
 embedder("flutter_tizen_tv") {
   target_type = "shared_library"
-  use_evas_gl_renderer = false
 
   defines = [ "TV_PROFILE" ]
 }
 
 embedder("flutter_tizen_common") {
   target_type = "shared_library"
-  use_evas_gl_renderer = false
 
   defines = [ "COMMON_PROFILE" ]
 }
 
 embedder("flutter_tizen_source") {
   target_type = "source_set"
-  use_evas_gl_renderer = false
 
   defines = []
 }

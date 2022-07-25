@@ -11,24 +11,17 @@
 #include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
 
-#ifdef TIZEN_RENDERER_EVAS_GL
-#include <Evas_GL.h>
-#else
-#include <GLES2/gl2.h>
-#endif
-
 namespace flutter {
 
 enum class ExternalTextureExtensionType { kNone, kNativeSurface, kDmaBuffer };
 
 struct ExternalTextureGLState {
-  GLuint gl_texture;
+  uint32_t gl_texture;
   ExternalTextureExtensionType gl_extension;
 };
 
 static std::atomic_long next_texture_id = {1};
 
-// An adaptation class of flutter engine and external texture interface.
 class ExternalTexture {
  public:
   ExternalTexture(ExternalTextureExtensionType gl_extension =

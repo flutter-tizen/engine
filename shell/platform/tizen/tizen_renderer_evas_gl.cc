@@ -6,7 +6,8 @@
 
 #include "tizen_evas_gl_helper.h"
 
-// g_evas_gl is shared with ExternalTexturePixelGL and ExternalTextureSurfaceGL.
+// g_evas_gl is shared with ExternalTextureSurfaceEGL and
+// ExternalTextureSurfaceEvasGL.
 Evas_GL* g_evas_gl = nullptr;
 
 EVAS_GL_GLOBAL_GLES2_DEFINE();
@@ -15,7 +16,9 @@ EVAS_GL_GLOBAL_GLES2_DEFINE();
 
 namespace flutter {
 
-TizenRendererEvasGL::TizenRendererEvasGL() {}
+TizenRendererEvasGL::TizenRendererEvasGL() {
+  type_ = FlutterDesktopRendererType::kEvasGL;
+}
 
 TizenRendererEvasGL::~TizenRendererEvasGL() {
   DestroySurface();

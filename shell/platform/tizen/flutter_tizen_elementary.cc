@@ -7,7 +7,6 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/tizen_view_elementary.h"
-#include "flutter/shell/platform/tizen/tizen_window_elementary.h"
 
 namespace {
 
@@ -21,35 +20,6 @@ FlutterDesktopViewRef HandleForView(flutter::FlutterTizenView* view) {
 }
 
 }  // namespace
-
-FlutterDesktopViewRef FlutterDesktopViewCreateFromNewWindow(
-    const FlutterDesktopWindowProperties& window_properties,
-    FlutterDesktopEngineRef engine) {
-  flutter::TizenGeometry window_geometry = {
-      window_properties.x, window_properties.y, window_properties.width,
-      window_properties.height};
-
-  std::unique_ptr<flutter::TizenWindow> window =
-      std::make_unique<flutter::TizenWindowElementary>(
-          window_geometry, window_properties.transparent,
-          window_properties.focusable, window_properties.top_level);
-
-  auto view = std::make_unique<flutter::FlutterTizenView>(std::move(window));
-
-  // Take ownership of the engine, starting it if necessary.
-  view->SetEngine(
-      std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
-  view->CreateRenderSurface();
-  if (!view->engine()->IsRunning()) {
-    if (!view->engine()->RunEngine()) {
-      return nullptr;
-    }
-  }
-
-  view->SendInitialGeometry();
-
-  return HandleForView(view.release());
-}
 
 FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
     const FlutterDesktopViewProperties& view_properties,
@@ -66,7 +36,7 @@ FlutterDesktopViewRef FlutterDesktopViewCreateFromElmParent(
   // Take ownership of the engine, starting it if necessary.
   view->SetEngine(
       std::unique_ptr<flutter::FlutterTizenEngine>(EngineFromHandle(engine)));
-  view->CreateRenderSurface();
+  view->CreateRenderSurface(FlutterDesktopRendererType::kEvasGL);
   if (!view->engine()->IsRunning()) {
     if (!view->engine()->RunEngine()) {
       return nullptr;

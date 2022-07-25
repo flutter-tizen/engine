@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "public/flutter_tizen.h"
+
 namespace flutter {
 
 class TizenRenderer {
@@ -23,6 +25,8 @@ class TizenRenderer {
   virtual void DestroySurface() = 0;
 
   bool IsValid() { return is_valid_; }
+
+  FlutterDesktopRendererType type() { return type_; }
 
   virtual bool OnMakeCurrent() = 0;
 
@@ -42,6 +46,8 @@ class TizenRenderer {
 
  protected:
   bool is_valid_ = false;
+
+  FlutterDesktopRendererType type_;
 };
 
 }  // namespace flutter

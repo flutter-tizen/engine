@@ -12,11 +12,13 @@
 #ifndef WEARABLE_PROFILE
 #include "flutter/shell/platform/tizen/accessibility_bridge_delegate_tizen.h"
 #include "flutter/shell/platform/tizen/flutter_platform_node_delegate_tizen.h"
+#include "flutter/shell/platform/tizen/tizen_renderer_egl.h"
 #endif
 #include "flutter/shell/platform/tizen/flutter_tizen_view.h"
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/system_utils.h"
 #include "flutter/shell/platform/tizen/tizen_input_method_context.h"
+#include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
 
 namespace flutter {
 
@@ -24,9 +26,7 @@ namespace {
 
 // Unique number associated with platform tasks.
 constexpr size_t kPlatformTaskRunnerIdentifier = 1;
-#ifdef TIZEN_RENDERER_EVAS_GL
 constexpr size_t kRenderTaskRunnerIdentifier = 2;
-#endif
 
 // Converts a LanguageInfo struct to a FlutterLocale struct. |info| must outlive
 // the returned value, since the returned FlutterLocale has pointers into it.
@@ -65,22 +65,6 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
         }
       });
 
-#ifdef TIZEN_RENDERER_EVAS_GL
-  renderer_ = std::make_unique<TizenRendererEvasGL>();
-
-  render_loop_ = std::make_unique<TizenRenderEventLoop>(
-      std::this_thread::get_id(),  // main thread
-      embedder_api_.GetCurrentTime,
-      [this](const auto* task) {
-        if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
-          FT_LOG(Error) << "Could not post an engine task.";
-        }
-      },
-      renderer_.get());
-#else
-  renderer_ = std::make_unique<TizenRendererEgl>();
-#endif
-
   messenger_ = std::make_unique<FlutterDesktopMessenger>();
   messenger_->engine = this;
   message_dispatcher_ =
@@ -92,6 +76,28 @@ FlutterTizenEngine::FlutterTizenEngine(const FlutterProjectBundle& project)
 
 FlutterTizenEngine::~FlutterTizenEngine() {
   StopEngine();
+}
+
+void FlutterTizenEngine::CreateRenderer(
+    FlutterDesktopRendererType renderer_type) {
+  if (renderer_type == FlutterDesktopRendererType::kEvasGL) {
+    renderer_ = std::make_unique<TizenRendererEvasGL>();
+
+    render_loop_ = std::make_unique<TizenRenderEventLoop>(
+        std::this_thread::get_id(),  // main thread
+        embedder_api_.GetCurrentTime,
+        [this](const auto* task) {
+          if (embedder_api_.RunTask(this->engine_, task) != kSuccess) {
+            FT_LOG(Error) << "Could not post an engine task.";
+          }
+        },
+        renderer_.get());
+  }
+#ifndef WEARABLE_PROFILE
+  else {
+    renderer_ = std::make_unique<TizenRendererEgl>();
+  }
+#endif
 }
 
 bool FlutterTizenEngine::RunEngine() {
@@ -152,9 +158,9 @@ bool FlutterTizenEngine::RunEngine() {
   custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
   custom_task_runners.platform_task_runner = &platform_task_runner;
 
-#ifdef TIZEN_RENDERER_EVAS_GL
   FlutterTaskRunnerDescription render_task_runner = {};
-  if (IsHeaded()) {
+
+  if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEvasGL) {
     render_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
     render_task_runner.user_data = render_loop_.get();
     render_task_runner.runs_task_on_current_thread_callback =
@@ -168,7 +174,6 @@ bool FlutterTizenEngine::RunEngine() {
     render_task_runner.identifier = kRenderTaskRunnerIdentifier;
     custom_task_runners.render_task_runner = &render_task_runner;
   }
-#endif
 
   FlutterProjectArgs args = {};
   args.struct_size = sizeof(FlutterProjectArgs);
@@ -198,8 +203,9 @@ bool FlutterTizenEngine::RunEngine() {
   args.update_semantics_node_callback = OnUpdateSemanticsNode;
   args.update_semantics_custom_action_callback = OnUpdateSemanticsCustomActions;
 #endif
-#ifndef TIZEN_RENDERER_EVAS_GL
-  if (IsHeaded()) {
+
+#ifndef WEARABLE_PROFILE
+  if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEGL) {
     tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
     args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
       reinterpret_cast<FlutterTizenEngine*>(user_data)
@@ -263,8 +269,11 @@ bool FlutterTizenEngine::StopEngine() {
          plugin_registrar_destruction_callbacks_) {
       callback(registrar);
     }
-#ifndef TIZEN_RENDERER_EVAS_GL
-    tizen_vsync_waiter_.reset();
+
+#ifndef WEARABLE_PROFILE
+    if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEGL) {
+      tizen_vsync_waiter_.reset();
+    }
 #endif
     FlutterEngineResult result = embedder_api_.Shutdown(engine_);
     view_ = nullptr;

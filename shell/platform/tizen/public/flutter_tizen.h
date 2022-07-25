@@ -25,6 +25,13 @@ typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;
 struct FlutterDesktopView;
 typedef struct FlutterDesktopView* FlutterDesktopViewRef;
 
+typedef enum {
+  // The renderer based on EvasGL.
+  kEvasGL,
+  // The renderer based on EGL.
+  kEGL,
+} FlutterDesktopRendererType;
+
 // Properties for configuring the initial settings of a Flutter window.
 typedef struct {
   // The x-coordinate of the top left corner of the window.
@@ -41,6 +48,8 @@ typedef struct {
   bool focusable;
   // Whether the window should be on top layer or not.
   bool top_level;
+  // The renderer type of the engine.
+  FlutterDesktopRendererType renderer_type;
 } FlutterDesktopWindowProperties;
 
 // Properties for configuring the initial settings of a Flutter view.

@@ -2,21 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "external_texture_surface_gl.h"
+#include "external_texture_surface_egl.h"
 
-#include <tbm_surface.h>
-
-#ifdef TIZEN_RENDERER_EVAS_GL
-#include "tizen_evas_gl_helper.h"
-extern Evas_GL* g_evas_gl;
-EVAS_GL_GLOBAL_GLES2_DECLARE();
-#else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl32.h>
-
 #include <tbm_bufmgr.h>
+#include <tbm_surface.h>
 #include <tbm_surface_internal.h>
 #ifndef EGL_DMA_BUF_PLANE3_FD_EXT
 #define EGL_DMA_BUF_PLANE3_FD_EXT 0x3440
@@ -27,13 +21,12 @@ EVAS_GL_GLOBAL_GLES2_DECLARE();
 #ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
 #define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
 #endif
-#endif
 
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
-ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
+ExternalTextureSurfaceEGL::ExternalTextureSurfaceEGL(
     ExternalTextureExtensionType gl_extension,
     FlutterDesktopGpuBufferTextureCallback texture_callback,
     void* user_data)
@@ -41,14 +34,14 @@ ExternalTextureSurfaceGL::ExternalTextureSurfaceGL(
       texture_callback_(texture_callback),
       user_data_(user_data) {}
 
-ExternalTextureSurfaceGL::~ExternalTextureSurfaceGL() {
+ExternalTextureSurfaceEGL::~ExternalTextureSurfaceEGL() {
   if (state_->gl_texture != 0) {
-    glDeleteTextures(1, &state_->gl_texture);
+    glDeleteTextures(1, static_cast<GLuint*>(&state_->gl_texture));
   }
   state_.release();
 }
 
-bool ExternalTextureSurfaceGL::PopulateTexture(
+bool ExternalTextureSurfaceEGL::PopulateTexture(
     size_t width,
     size_t height,
     FlutterOpenGLTexture* opengl_texture) {
@@ -81,46 +74,6 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     return false;
   }
 
-#ifdef TIZEN_RENDERER_EVAS_GL
-  EvasGLImage egl_src_image = nullptr;
-  if (state_->gl_extension == ExternalTextureExtensionType::kNativeSurface) {
-    int attribs[] = {EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0};
-    egl_src_image = evasglCreateImageForContext(
-        g_evas_gl, evas_gl_current_context_get(g_evas_gl),
-        EVAS_GL_NATIVE_SURFACE_TIZEN, tbm_surface, attribs);
-  } else if (state_->gl_extension == ExternalTextureExtensionType::kDmaBuffer) {
-    FT_LOG(Error)
-        << "EGL_EXT_image_dma_buf_import is not supported this renderer.";
-    if (gpu_buffer->release_callback) {
-      gpu_buffer->release_callback(gpu_buffer->release_context);
-    }
-    return false;
-  }
-  if (!egl_src_image) {
-    if (gpu_buffer->release_callback) {
-      gpu_buffer->release_callback(gpu_buffer->release_context);
-    }
-    return false;
-  }
-  if (state_->gl_texture == 0) {
-    glGenTextures(1, &state_->gl_texture);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
-                    GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
-                    GL_CLAMP_TO_BORDER);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  } else {
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
-  }
-  glEvasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, egl_src_image);
-  if (egl_src_image) {
-    evasglDestroyImage(egl_src_image);
-  }
-#else
   PFNEGLCREATEIMAGEKHRPROC n_eglCreateImageKHR =
       reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
           eglGetProcAddress("eglCreateImageKHR"));
@@ -184,8 +137,9 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     return false;
   }
   if (state_->gl_texture == 0) {
-    glGenTextures(1, &state_->gl_texture);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+    glGenTextures(1, static_cast<GLuint*>(&state_->gl_texture));
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES,
+                  static_cast<GLuint>(state_->gl_texture));
     // set the texture wrapping parameters
     glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
                     GL_CLAMP_TO_BORDER);
@@ -195,7 +149,8 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
     glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   } else {
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, state_->gl_texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES,
+                  static_cast<GLuint>(state_->gl_texture));
   }
   PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
       reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
@@ -207,7 +162,6 @@ bool ExternalTextureSurfaceGL::PopulateTexture(
             eglGetProcAddress("eglDestroyImageKHR"));
     n_eglDestroyImageKHR(eglGetCurrentDisplay(), egl_src_image);
   }
-#endif
   opengl_texture->target = GL_TEXTURE_EXTERNAL_OES;
   opengl_texture->name = state_->gl_texture;
   opengl_texture->format = GL_RGBA8;

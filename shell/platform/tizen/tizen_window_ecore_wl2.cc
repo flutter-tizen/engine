@@ -392,7 +392,7 @@ TizenGeometry TizenWindowEcoreWl2::GetGeometry() {
   return result;
 }
 
-void TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
+bool TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
   ecore_wl2_window_rotation_geometry_set(ecore_wl2_window_, GetRotation(),
                                          geometry.left, geometry.top,
                                          geometry.width, geometry.height);
@@ -400,6 +400,7 @@ void TizenWindowEcoreWl2::SetGeometry(TizenGeometry geometry) {
   // only after calling `ecore_wl2_window_position_set`. Call a more appropriate
   // API that flushes geometry settings to the compositor.
   ecore_wl2_window_position_set(ecore_wl2_window_, geometry.left, geometry.top);
+  return true;
 }
 
 TizenGeometry TizenWindowEcoreWl2::GetScreenGeometry() {

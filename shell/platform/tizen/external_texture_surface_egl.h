@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
-#define EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#ifndef EMBEDDER_EXTERNAL_TEXTURE_SURFACE_EGL_H_
+#define EMBEDDER_EXTERNAL_TEXTURE_SURFACE_EGL_H_
 
 #include "flutter/shell/platform/common/public/flutter_texture_registrar.h"
 #include "flutter/shell/platform/embedder/embedder.h"
@@ -11,15 +11,14 @@
 
 namespace flutter {
 
-// An adaptation class of flutter engine and external texture interface.
-class ExternalTextureSurfaceGL : public ExternalTexture {
+class ExternalTextureSurfaceEGL : public ExternalTexture {
  public:
-  ExternalTextureSurfaceGL(
+  ExternalTextureSurfaceEGL(
       ExternalTextureExtensionType gl_extension,
       FlutterDesktopGpuBufferTextureCallback texture_callback,
       void* user_data);
 
-  virtual ~ExternalTextureSurfaceGL();
+  virtual ~ExternalTextureSurfaceEGL();
 
   // Accepts texture buffer copy request from the Flutter engine.
   // When the user side marks the texture_id as available, the Flutter engine
@@ -39,4 +38,4 @@ class ExternalTextureSurfaceGL : public ExternalTexture {
 
 }  // namespace flutter
 
-#endif  // EMBEDDER_EXTERNAL_TEXTURE_SURFACE_GL_H_
+#endif  // EMBEDDER_EXTERNAL_TEXTURE_SURFACE_EGL_H_

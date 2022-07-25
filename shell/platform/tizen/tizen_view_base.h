@@ -36,7 +36,7 @@ class TizenViewBase {
   virtual TizenGeometry GetGeometry() = 0;
 
   // Set the geometry of the view.
-  virtual void SetGeometry(TizenGeometry geometry) = 0;
+  virtual bool SetGeometry(TizenGeometry geometry) = 0;
 
   // Returns the dpi of the screen.
   virtual int32_t GetDpi() = 0;

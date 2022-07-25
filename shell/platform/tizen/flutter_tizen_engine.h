@@ -27,10 +27,7 @@
 #include "flutter/shell/platform/tizen/public/flutter_tizen.h"
 #include "flutter/shell/platform/tizen/tizen_event_loop.h"
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
-#ifdef TIZEN_RENDERER_EVAS_GL
-#include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
-#else
-#include "flutter/shell/platform/tizen/tizen_renderer_egl.h"
+#ifndef WEARABLE_PROFILE
 #include "flutter/shell/platform/tizen/tizen_vsync_waiter.h"
 #endif
 
@@ -61,6 +58,9 @@ class FlutterTizenEngine {
   // Prevent copying.
   FlutterTizenEngine(FlutterTizenEngine const&) = delete;
   FlutterTizenEngine& operator=(FlutterTizenEngine const&) = delete;
+
+  // Creates a GL renderer from the given type.
+  void CreateRenderer(FlutterDesktopRendererType renderer_type);
 
   // Starts running the engine with the given entrypoint. If null, defaults to
   // main().
@@ -279,14 +279,12 @@ class FlutterTizenEngine {
   // The event loop for the main thread that allows for delayed task execution.
   std::unique_ptr<TizenPlatformEventLoop> event_loop_;
 
-#ifdef TIZEN_RENDERER_EVAS_GL
   std::unique_ptr<TizenRenderEventLoop> render_loop_;
-#endif
 
   // An interface between the Flutter rasterizer and the platform.
   std::unique_ptr<TizenRenderer> renderer_;
 
-#ifndef TIZEN_RENDERER_EVAS_GL
+#ifndef WEARABLE_PROFILE
   // The vsync waiter for the embedder.
   std::unique_ptr<TizenVsyncWaiter> tizen_vsync_waiter_;
 #endif

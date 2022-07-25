@@ -7,9 +7,7 @@
 
 #include <utility>
 
-#ifdef TIZEN_RENDERER_EVAS_GL
 #include "flutter/shell/platform/tizen/tizen_renderer_evas_gl.h"
-#endif
 
 namespace flutter {
 
@@ -110,7 +108,6 @@ void TizenPlatformEventLoop::OnTaskExpired() {
   expired_tasks_.clear();
 }
 
-#ifdef TIZEN_RENDERER_EVAS_GL
 TizenRenderEventLoop::TizenRenderEventLoop(std::thread::id main_thread_id,
                                            CurrentTimeProc get_current_time,
                                            TaskExpiredCallback on_task_expired,
@@ -138,6 +135,5 @@ void TizenRenderEventLoop::OnTaskExpired() {
     has_pending_renderer_callback_ = true;
   }
 }
-#endif  // TIZEN_RENDERER_EVAS_GL
 
 }  // namespace flutter

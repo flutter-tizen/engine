@@ -43,10 +43,6 @@ void WindowChannel::HandleMethodCall(
     map[EncodableValue("height")] = EncodableValue(geometry.height);
     result->Success(EncodableValue(map));
   } else if (method_name == "setWindowGeometry") {
-#ifdef TIZEN_RENDERER_EVAS_GL
-    FT_LOG(Error) << "setWindowGeometry is not supported on Evas GL.";
-    result->NotImplemented();
-#else
     const auto* arguments = std::get_if<EncodableMap>(method_call.arguments());
     if (!arguments) {
       result->Error("Invalid arguments");
@@ -58,14 +54,16 @@ void WindowChannel::HandleMethodCall(
     EncodableValueHolder<int32_t> height(arguments, "height");
 
     TizenGeometry geometry = window_->GetGeometry();
-    window_->SetGeometry({
-        x ? *x : geometry.left,
-        y ? *y : geometry.top,
-        width ? *width : geometry.width,
-        height ? *height : geometry.height,
-    });
-    result->Success();
-#endif
+    if (window_->SetGeometry({
+            x ? *x : geometry.left,
+            y ? *y : geometry.top,
+            width ? *width : geometry.width,
+            height ? *height : geometry.height,
+        })) {
+      result->Success();
+    } else {
+      result->NotImplemented();
+    }
   } else if (method_name == "getScreenGeometry") {
     TizenGeometry geometry = window_->GetScreenGeometry();
     EncodableMap map;

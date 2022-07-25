@@ -8,7 +8,6 @@
 #include <functional>
 
 #include <Elementary.h>
-#include <Evas_GL.h>
 
 #include "flutter/shell/platform/tizen/tizen_renderer.h"
 

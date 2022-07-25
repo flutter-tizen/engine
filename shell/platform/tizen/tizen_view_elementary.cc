@@ -321,9 +321,10 @@ TizenGeometry TizenViewElementary::GetGeometry() {
   return result;
 }
 
-void TizenViewElementary::SetGeometry(TizenGeometry geometry) {
+bool TizenViewElementary::SetGeometry(TizenGeometry geometry) {
   EvasObjectResizeWithMinMaxHint(container_, geometry.width, geometry.height);
   evas_object_move(container_, geometry.left, geometry.top);
+  return true;
 }
 
 int32_t TizenViewElementary::GetDpi() {

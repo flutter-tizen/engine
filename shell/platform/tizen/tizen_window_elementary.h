@@ -27,7 +27,7 @@ class TizenWindowElementary : public TizenWindow {
 
   TizenGeometry GetGeometry() override;
 
-  void SetGeometry(TizenGeometry geometry) override;
+  bool SetGeometry(TizenGeometry geometry) override;
 
   TizenGeometry GetScreenGeometry() override;
 

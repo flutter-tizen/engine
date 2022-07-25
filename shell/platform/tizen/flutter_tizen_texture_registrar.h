@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "flutter/shell/platform/tizen/external_texture.h"
+#include "flutter/shell/platform/tizen/public/flutter_tizen.h"
 
 namespace flutter {
 
@@ -46,7 +47,8 @@ class FlutterTizenTextureRegistrar {
                        FlutterOpenGLTexture* texture);
 
   std::unique_ptr<ExternalTexture> CreateExternalTexture(
-      const FlutterDesktopTextureInfo* info);
+      const FlutterDesktopTextureInfo* info,
+      FlutterDesktopRendererType renderer_type);
 
  private:
   FlutterTizenEngine* engine_ = nullptr;

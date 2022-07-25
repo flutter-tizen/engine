@@ -84,7 +84,12 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
       tizen_view_->input_method_context());
 }
 
-void FlutterTizenView::CreateRenderSurface() {
+void FlutterTizenView::CreateRenderSurface(
+    FlutterDesktopRendererType renderer_type) {
+  if (engine_) {
+    engine_->CreateRenderer(renderer_type);
+  }
+
   if (engine_ && engine_->renderer()) {
     TizenGeometry geometry = tizen_view_->GetGeometry();
     if (tizen_view_->GetType() == TizenViewType::kWindow) {

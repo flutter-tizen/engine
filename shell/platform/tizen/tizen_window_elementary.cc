@@ -332,9 +332,9 @@ TizenGeometry TizenWindowElementary::GetGeometry() {
   return result;
 }
 
-void TizenWindowElementary::SetGeometry(TizenGeometry geometry) {
-  evas_object_resize(elm_win_, geometry.width, geometry.height);
-  evas_object_move(elm_win_, geometry.left, geometry.top);
+bool TizenWindowElementary::SetGeometry(TizenGeometry geometry) {
+  FT_LOG(Error) << "SetGeometry is not supported.";
+  return false;
 }
 
 TizenGeometry TizenWindowElementary::GetScreenGeometry() {

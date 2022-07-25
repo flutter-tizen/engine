@@ -88,7 +88,6 @@ class TizenPlatformEventLoop : public TizenEventLoop {
   virtual void OnTaskExpired() override;
 };
 
-#ifdef TIZEN_RENDERER_EVAS_GL
 class TizenRenderer;
 
 class TizenRenderEventLoop : public TizenEventLoop {
@@ -105,7 +104,6 @@ class TizenRenderEventLoop : public TizenEventLoop {
   TizenRenderer* renderer_{nullptr};
   std::atomic_bool has_pending_renderer_callback_{false};
 };
-#endif  // TIZEN_RENDERER_EVAS_GL
 
 }  // namespace flutter
 
