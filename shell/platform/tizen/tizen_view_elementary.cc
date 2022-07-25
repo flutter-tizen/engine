@@ -10,11 +10,13 @@
 #include "flutter/shell/platform/tizen/logger.h"
 #include "flutter/shell/platform/tizen/tizen_view_event_handler_delegate.h"
 
+namespace flutter {
+
 namespace {
 
-static const int kScrollDirectionVertical = 0;
-static const int kScrollDirectionHorizontal = 1;
-static const int kScrollOffsetMultiplier = 20;
+constexpr int kScrollDirectionVertical = 0;
+constexpr int kScrollDirectionHorizontal = 1;
+constexpr int kScrollOffsetMultiplier = 20;
 
 uint32_t EvasModifierToEcoreEventModifiers(const Evas_Modifier* evas_modifier) {
   uint32_t modifiers = 0;
@@ -39,8 +41,6 @@ void EvasObjectResizeWithMinMaxHint(Evas_Object* object,
 }
 
 }  // namespace
-
-namespace flutter {
 
 TizenViewElementary::TizenViewElementary(int32_t width,
                                          int32_t height,

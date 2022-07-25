@@ -9,43 +9,44 @@
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
-static const int kMessageQuit = -1;
-static const int kMessageRequestVblank = 0;
-
 namespace flutter {
 
-typedef struct {
+namespace {
+
+constexpr int kMessageQuit = -1;
+constexpr int kMessageRequestVblank = 0;
+
+struct Message {
   Eina_Thread_Queue_Msg head;
   int event;
   intptr_t baton;
-} Msg;
+};
 
-TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
-    : engine_(engine) {
-  vblank_thread_ = ecore_thread_feedback_run(RequestVblankLoop, nullptr,
-                                             nullptr, nullptr, this, EINA_TRUE);
+}  // namespace
+
+TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
+  tdm_client_ = std::make_shared<TdmClient>(engine);
+
+  vblank_thread_ = ecore_thread_feedback_run(RunVblankLoop, nullptr, nullptr,
+                                             nullptr, this, EINA_TRUE);
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  if (tdm_client_) {
-    tdm_client_->OnEngineStop();
-  }
-  Send(kMessageQuit, 0);
+  tdm_client_.reset();
+
+  SendMessage(kMessageQuit, 0);
+
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
   }
 }
 
-void TizenVsyncWaiter::SetTdmClient(TdmClient* tdm_client) {
-  tdm_client_ = tdm_client;
-}
-
 void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
-  Send(kMessageRequestVblank, baton);
+  SendMessage(kMessageRequestVblank, baton);
 }
 
-void TizenVsyncWaiter::Send(int event, intptr_t baton) {
+void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
   if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
     FT_LOG(Error) << "Invalid vblank thread.";
     return;
@@ -56,104 +57,83 @@ void TizenVsyncWaiter::Send(int event, intptr_t baton) {
     return;
   }
 
-  Msg* msg;
   void* ref;
-  msg = static_cast<Msg*>(
-      eina_thread_queue_send(vblank_thread_queue_, sizeof(Msg), &ref));
-  msg->event = event;
-  msg->baton = baton;
+  Message* message = static_cast<Message*>(
+      eina_thread_queue_send(vblank_thread_queue_, sizeof(Message), &ref));
+  message->event = event;
+  message->baton = baton;
   eina_thread_queue_send_done(vblank_thread_queue_, ref);
 }
 
-void TizenVsyncWaiter::RequestVblankLoop(void* data, Ecore_Thread* thread) {
-  TizenVsyncWaiter* tizen_vsync_waiter =
-      reinterpret_cast<TizenVsyncWaiter*>(data);
-  TdmClient tdm_client(tizen_vsync_waiter->engine_);
-  tizen_vsync_waiter->SetTdmClient(&tdm_client);
-  if (!tdm_client.IsValid()) {
+void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
+  auto* self = reinterpret_cast<TizenVsyncWaiter*>(data);
+
+  std::weak_ptr<TdmClient> tdm_client = self->tdm_client_;
+  if (!tdm_client.lock()->IsValid()) {
     FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
     return;
   }
+
   Eina_Thread_Queue* vblank_thread_queue = eina_thread_queue_new();
   if (!vblank_thread_queue) {
     FT_LOG(Error) << "Invalid vblank thread queue.";
     ecore_thread_cancel(thread);
     return;
   }
+  self->vblank_thread_queue_ = vblank_thread_queue;
 
-  tizen_vsync_waiter->vblank_thread_queue_ = vblank_thread_queue;
   while (!ecore_thread_check(thread)) {
     void* ref;
-    Msg* msg;
-    msg = static_cast<Msg*>(eina_thread_queue_wait(vblank_thread_queue, &ref));
-    if (msg) {
+    Message* message = static_cast<Message*>(
+        eina_thread_queue_wait(vblank_thread_queue, &ref));
+    if (message->event == kMessageQuit) {
       eina_thread_queue_wait_done(vblank_thread_queue, ref);
-    } else {
-      FT_LOG(Error) << "Received a null message.";
-      continue;
-    }
-    if (msg->event == kMessageQuit) {
       break;
     }
-    tdm_client.WaitVblank(msg->baton);
+    intptr_t baton = message->baton;
+    eina_thread_queue_wait_done(vblank_thread_queue, ref);
+
+    if (tdm_client.expired()) {
+      break;
+    }
+    tdm_client.lock()->AwaitVblank(baton);
   }
+
   if (vblank_thread_queue) {
     eina_thread_queue_free(vblank_thread_queue);
   }
 }
 
 TdmClient::TdmClient(FlutterTizenEngine* engine) {
-  if (!CreateTdm()) {
-    FT_LOG(Error) << "CreateTdm() failed.";
+  tdm_error ret;
+  client_ = tdm_client_create(&ret);
+  if (ret != TDM_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to create a TDM client.";
+    return;
   }
+
+  output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
+  if (ret != TDM_ERROR_NONE) {
+    FT_LOG(Error) << "Could not obtain the default client output.";
+    return;
+  }
+
+  vblank_ = tdm_client_output_create_vblank(output_, &ret);
+  if (ret != TDM_ERROR_NONE) {
+    FT_LOG(Error) << "Failed to create a vblank object.";
+    return;
+  }
+  tdm_client_vblank_set_enable_fake(vblank_, 1);
+
   engine_ = engine;
 }
 
 TdmClient::~TdmClient() {
-  DestroyTdm();
-}
-
-void TdmClient::OnEngineStop() {
-  std::lock_guard<std::mutex> lock(engine_mutex_);
-  engine_ = nullptr;
-}
-
-void TdmClient::WaitVblank(intptr_t baton) {
-  baton_ = baton;
-  tdm_error error = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
-  if (error != TDM_ERROR_NONE) {
-    FT_LOG(Error) << "tdm_client_vblank_wait() failed.";
-    return;
+  {
+    std::lock_guard<std::mutex> lock(engine_mutex_);
+    engine_ = nullptr;
   }
-  tdm_client_handle_events(client_);
-}
-
-bool TdmClient::CreateTdm() {
-  tdm_error ret;
-  client_ = tdm_client_create(&ret);
-  if (ret != TDM_ERROR_NONE && client_ != NULL) {
-    FT_LOG(Error) << "Failed to create a TDM client.";
-    return false;
-  }
-
-  output_ = tdm_client_get_output(client_, const_cast<char*>("default"), &ret);
-  if (ret != TDM_ERROR_NONE && output_ != NULL) {
-    FT_LOG(Error) << "Could not obtain the default client output.";
-    return false;
-  }
-
-  vblank_ = tdm_client_output_create_vblank(output_, &ret);
-  if (ret != TDM_ERROR_NONE && vblank_ != NULL) {
-    FT_LOG(Error) << "Failed to create a vblank object.";
-    return false;
-  }
-
-  tdm_client_vblank_set_enable_fake(vblank_, 1);
-  return true;
-}
-
-void TdmClient::DestroyTdm() {
   if (vblank_) {
     tdm_client_vblank_destroy(vblank_);
     vblank_ = nullptr;
@@ -163,6 +143,16 @@ void TdmClient::DestroyTdm() {
     tdm_client_destroy(client_);
     client_ = nullptr;
   }
+}
+
+void TdmClient::AwaitVblank(intptr_t baton) {
+  baton_ = baton;
+  tdm_error ret = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
+  if (ret != TDM_ERROR_NONE) {
+    FT_LOG(Error) << "tdm_client_vblank_wait failed with error: " << ret;
+    return;
+  }
+  tdm_client_handle_events(client_);
 }
 
 bool TdmClient::IsValid() {
@@ -175,14 +165,15 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
                                unsigned int tv_sec,
                                unsigned int tv_usec,
                                void* user_data) {
-  TdmClient* client = reinterpret_cast<TdmClient*>(user_data);
-  FT_ASSERT(client != nullptr);
-  std::lock_guard<std::mutex> lock(client->engine_mutex_);
-  if (client->engine_) {
+  auto* self = reinterpret_cast<TdmClient*>(user_data);
+  FT_ASSERT(self != nullptr);
+
+  std::lock_guard<std::mutex> lock(self->engine_mutex_);
+  if (self->engine_) {
     uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
     uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
-    client->engine_->OnVsync(client->baton_, frame_start_time_nanos,
-                             frame_target_time_nanos);
+    self->engine_->OnVsync(self->baton_, frame_start_time_nanos,
+                           frame_target_time_nanos);
   }
 }
 
