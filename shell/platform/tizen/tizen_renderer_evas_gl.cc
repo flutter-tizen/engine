@@ -85,14 +85,18 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
 }
 
 void TizenRendererEvasGL::DestroySurface() {
-  evas_gl_surface_destroy(evas_gl_, gl_surface_);
-  evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
+  if (evas_gl_) {
+    evas_gl_surface_destroy(evas_gl_, gl_surface_);
+    evas_gl_surface_destroy(evas_gl_, gl_resource_surface_);
 
-  evas_gl_context_destroy(evas_gl_, gl_context_);
-  evas_gl_context_destroy(evas_gl_, gl_resource_context_);
+    evas_gl_context_destroy(evas_gl_, gl_context_);
+    evas_gl_context_destroy(evas_gl_, gl_resource_context_);
 
-  evas_gl_config_free(gl_config_);
-  evas_gl_free(evas_gl_);
+    evas_gl_config_free(gl_config_);
+    evas_gl_free(evas_gl_);
+
+    evas_gl_ = nullptr;
+  }
 }
 
 bool TizenRendererEvasGL::OnMakeCurrent() {
