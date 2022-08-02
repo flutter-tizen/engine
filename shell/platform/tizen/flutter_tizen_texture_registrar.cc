@@ -8,8 +8,10 @@
 #include <mutex>
 
 #ifndef WEARABLE_PROFILE
+#include "flutter/shell/platform/tizen/external_texture_pixel_egl.h"
 #include "flutter/shell/platform/tizen/external_texture_surface_egl.h"
 #endif
+#include "flutter/shell/platform/tizen/external_texture_pixel_evas_gl.h"
 #include "flutter/shell/platform/tizen/external_texture_surface_evas_gl.h"
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
@@ -102,8 +104,18 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
     FlutterDesktopRendererType renderer_type) {
   switch (texture_info->type) {
     case kFlutterDesktopPixelBufferTexture:
-      FT_UNIMPLEMENTED();
+      if (renderer_type == FlutterDesktopRendererType::kEvasGL) {
+        return std::make_unique<ExternalTexturePixelEvasGL>(
+            texture_info->pixel_buffer_config.callback,
+            texture_info->pixel_buffer_config.user_data);
+      }
+#ifndef WEARABLE_PROFILE
+      return std::make_unique<ExternalTexturePixelEGL>(
+          texture_info->pixel_buffer_config.callback,
+          texture_info->pixel_buffer_config.user_data);
+#else
       return nullptr;
+#endif
     case kFlutterDesktopGpuBufferTexture:
       ExternalTextureExtensionType gl_extension =
           ExternalTextureExtensionType::kNone;
@@ -115,7 +127,7 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
                      "EGL_EXT_image_dma_buf_import")) {
         gl_extension = ExternalTextureExtensionType::kDmaBuffer;
       }
-      if (FlutterDesktopRendererType::kEvasGL == renderer_type) {
+      if (renderer_type == FlutterDesktopRendererType::kEvasGL) {
         return std::make_unique<ExternalTextureSurfaceEvasGL>(
             gl_extension, texture_info->gpu_buffer_config.callback,
             texture_info->gpu_buffer_config.user_data);

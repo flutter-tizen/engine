@@ -115,6 +115,7 @@ template("embedder") {
       "channels/settings_channel.cc",
       "channels/text_input_channel.cc",
       "channels/window_channel.cc",
+      "external_texture_pixel_evas_gl.cc",
       "external_texture_surface_evas_gl.cc",
       "flutter_project_bundle.cc",
       "flutter_tizen.cc",
@@ -160,10 +161,7 @@ template("embedder") {
       "evas",
       "feedback",
       "tbm",
-      "tdm-client",
       "wayland-client",
-      "EGL",
-      "GLESv2",
     ]
 
     if (target_name == "flutter_tizen_common") {
@@ -189,6 +187,7 @@ template("embedder") {
 
     if (target_name != "flutter_tizen_wearable") {
       sources += [
+        "external_texture_pixel_egl.cc",
         "external_texture_surface_egl.cc",
         "tizen_renderer_egl.cc",
         "tizen_vsync_waiter.cc",
@@ -197,7 +196,10 @@ template("embedder") {
 
       libs += [
         "ecore_wl2",
+        "tdm-client",
         "tizen-extension-client",
+        "EGL",
+        "GLESv2",
       ]
     }
 
