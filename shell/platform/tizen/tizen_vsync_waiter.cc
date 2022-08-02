@@ -171,7 +171,7 @@ void TdmClient::VblankCallback(tdm_client_vblank* vblank,
   std::lock_guard<std::mutex> lock(self->engine_mutex_);
   if (self->engine_) {
     uint64_t frame_start_time_nanos = tv_sec * 1e9 + tv_usec * 1e3;
-    uint64_t frame_target_time_nanos = 16.6 * 1e6 + frame_start_time_nanos;
+    uint64_t frame_target_time_nanos = frame_start_time_nanos + 16.6 * 1e6;
     self->engine_->OnVsync(self->baton_, frame_start_time_nanos,
                            frame_target_time_nanos);
   }

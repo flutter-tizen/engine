@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "public/flutter_tizen.h"
+#include "flutter/shell/platform/tizen/public/flutter_tizen.h"
 
 namespace flutter {
 

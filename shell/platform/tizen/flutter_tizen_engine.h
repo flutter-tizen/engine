@@ -286,7 +286,7 @@ class FlutterTizenEngine {
 
 #ifndef WEARABLE_PROFILE
   // The vsync waiter for the embedder.
-  std::unique_ptr<TizenVsyncWaiter> tizen_vsync_waiter_;
+  std::unique_ptr<TizenVsyncWaiter> vsync_waiter_;
 #endif
 };
 

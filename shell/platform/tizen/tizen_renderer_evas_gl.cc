@@ -4,15 +4,13 @@
 
 #include "tizen_renderer_evas_gl.h"
 
-#include "tizen_evas_gl_helper.h"
+#include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_evas_gl_helper.h"
 
 // g_evas_gl is shared with ExternalTextureSurfaceEGL and
 // ExternalTextureSurfaceEvasGL.
 Evas_GL* g_evas_gl = nullptr;
-
 EVAS_GL_GLOBAL_GLES2_DEFINE();
-
-#include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
@@ -81,6 +79,7 @@ bool TizenRendererEvasGL::CreateSurface(void* render_target,
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT);
   OnPresent();
+
   return true;
 }
 

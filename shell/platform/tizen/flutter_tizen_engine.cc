@@ -199,26 +199,24 @@ bool FlutterTizenEngine::RunEngine() {
         engine->message_dispatcher_->HandleMessage(message);
       };
   args.custom_task_runners = &custom_task_runners;
-#ifndef WEARABLE_PROFILE
-  args.update_semantics_node_callback = OnUpdateSemanticsNode;
-  args.update_semantics_custom_action_callback = OnUpdateSemanticsCustomActions;
-#endif
-
-#ifndef WEARABLE_PROFILE
-  if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEGL) {
-    tizen_vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
-    args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
-      reinterpret_cast<FlutterTizenEngine*>(user_data)
-          ->tizen_vsync_waiter_->AsyncWaitForVsync(baton);
-    };
-  }
-#endif
   if (aot_data_) {
     args.aot_data = aot_data_.get();
   }
   if (!project_->custom_dart_entrypoint().empty()) {
     args.custom_dart_entrypoint = project_->custom_dart_entrypoint().c_str();
   }
+#ifndef WEARABLE_PROFILE
+  args.update_semantics_node_callback = OnUpdateSemanticsNode;
+  args.update_semantics_custom_action_callback = OnUpdateSemanticsCustomActions;
+
+  if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEGL) {
+    vsync_waiter_ = std::make_unique<TizenVsyncWaiter>(this);
+    args.vsync_callback = [](void* user_data, intptr_t baton) -> void {
+      auto* engine = reinterpret_cast<FlutterTizenEngine*>(user_data);
+      engine->vsync_waiter_->AsyncWaitForVsync(baton);
+    };
+  }
+#endif
 
   FlutterRendererConfig renderer_config = GetRendererConfig();
 
@@ -269,10 +267,9 @@ bool FlutterTizenEngine::StopEngine() {
          plugin_registrar_destruction_callbacks_) {
       callback(registrar);
     }
-
 #ifndef WEARABLE_PROFILE
-    if (IsHeaded() && renderer_->type() == FlutterDesktopRendererType::kEGL) {
-      tizen_vsync_waiter_.reset();
+    if (vsync_waiter_) {
+      vsync_waiter_.reset();
     }
 #endif
     FlutterEngineResult result = embedder_api_.Shutdown(engine_);

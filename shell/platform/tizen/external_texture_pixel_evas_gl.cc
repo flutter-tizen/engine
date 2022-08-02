@@ -4,7 +4,8 @@
 
 #include "external_texture_pixel_evas_gl.h"
 
-#include "tizen_evas_gl_helper.h"
+#include "flutter/shell/platform/tizen/tizen_evas_gl_helper.h"
+
 extern Evas_GL* g_evas_gl;
 EVAS_GL_GLOBAL_GLES2_DECLARE();
 
