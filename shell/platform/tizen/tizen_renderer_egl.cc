@@ -27,7 +27,7 @@ bool TizenRendererEgl::CreateSurface(void* render_target,
                                      int32_t height) {
   egl_display_ = eglGetDisplay(static_cast<wl_display*>(render_target_display));
 
-  if (EGL_NO_DISPLAY == egl_display_) {
+  if (egl_display_ == EGL_NO_DISPLAY) {
     PrintEGLError();
     FT_LOG(Error) << "Could not get EGL display.";
     return false;

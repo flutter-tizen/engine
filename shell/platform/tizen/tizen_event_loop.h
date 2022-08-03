@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "flutter/shell/platform/embedder/embedder.h"
+#include "flutter/shell/platform/tizen/tizen_renderer.h"
 
 namespace flutter {
 
@@ -69,10 +70,10 @@ class TizenEventLoop {
   std::priority_queue<Task, std::deque<Task>, Task::Comparer> task_queue_;
   std::vector<Task> expired_tasks_;
   std::mutex expired_tasks_mutex_;
-  std::atomic<std::uint64_t> task_order_{0};
+  std::atomic<std::uint64_t> task_order_ = 0;
 
  private:
-  Ecore_Pipe* ecore_pipe_;
+  Ecore_Pipe* ecore_pipe_ = nullptr;
 
   // Returns a TaskTimePoint computed from the given target time from Flutter.
   TaskTimePoint TimePointFromFlutterTime(uint64_t flutter_target_time_nanos);
@@ -88,8 +89,6 @@ class TizenPlatformEventLoop : public TizenEventLoop {
   virtual void OnTaskExpired() override;
 };
 
-class TizenRenderer;
-
 class TizenRenderEventLoop : public TizenEventLoop {
  public:
   TizenRenderEventLoop(std::thread::id main_thread_id,
@@ -101,8 +100,8 @@ class TizenRenderEventLoop : public TizenEventLoop {
   virtual void OnTaskExpired() override;
 
  private:
-  TizenRenderer* renderer_{nullptr};
-  std::atomic_bool has_pending_renderer_callback_{false};
+  TizenRenderer* renderer_ = nullptr;
+  std::atomic_bool has_pending_renderer_callback_ = false;
 };
 
 }  // namespace flutter
