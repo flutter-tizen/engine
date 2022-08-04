@@ -19,11 +19,11 @@ class TizenWindow : public TizenViewBase {
   TizenWindow() = default;
   virtual ~TizenWindow() = default;
 
-  virtual void* GetWindowHandle();
+  virtual void* GetWindowHandle() = 0;
 
   virtual int32_t GetRotation() = 0;
 
-  virtual void SetPreferredOrientations(const std::vector<int>& rotations);
+  virtual void SetPreferredOrientations(const std::vector<int>& rotations) = 0;
 
   virtual void* GetRenderTargetDisplay() = 0;
 
