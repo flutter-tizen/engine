@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Linker script that hides symbols with the prefix "FT_" so that global freetype
-# symbols referenced by Skia are not overriden by an external shared library at
-# runtime.
-
+# Never export symbols internally used by the engine (such as FT_*).
 {
   global:
-    *;
+    kFlutter*;
+    kDart*;
+    FlutterEngine*;
+    FlutterPlatformMessage*;
   local:
-    FT_*;
+    *;
 };
