@@ -173,7 +173,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
         if (self->view_delegate_) {
-          if (self->elm_win_ == object) {
+          if (self->image_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Down*>(event_info);
             self->view_delegate_->OnPointerDown(
@@ -184,7 +184,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
         }
       };
   evas_object_event_callback_add(
-      elm_win_, EVAS_CALLBACK_MOUSE_DOWN,
+      image_, EVAS_CALLBACK_MOUSE_DOWN,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN], this);
 
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP] = [](void* data, Evas* evas,
@@ -192,7 +192,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
                                                       void* event_info) {
     auto* self = reinterpret_cast<TizenWindowElementary*>(data);
     if (self->view_delegate_) {
-      if (self->elm_win_ == object) {
+      if (self->image_ == object) {
         auto* mouse_event = reinterpret_cast<Evas_Event_Mouse_Up*>(event_info);
         self->view_delegate_->OnPointerUp(
             mouse_event->canvas.x, mouse_event->canvas.y,
@@ -201,7 +201,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
       }
     }
   };
-  evas_object_event_callback_add(elm_win_, EVAS_CALLBACK_MOUSE_UP,
+  evas_object_event_callback_add(image_, EVAS_CALLBACK_MOUSE_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP],
                                  this);
 
@@ -209,7 +209,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
         if (self->view_delegate_) {
-          if (self->elm_win_ == object) {
+          if (self->image_ == object) {
             auto* mouse_event =
                 reinterpret_cast<Evas_Event_Mouse_Move*>(event_info);
             self->view_delegate_->OnPointerMove(
@@ -220,14 +220,14 @@ void TizenWindowElementary::RegisterEventHandlers() {
         }
       };
   evas_object_event_callback_add(
-      elm_win_, EVAS_CALLBACK_MOUSE_MOVE,
+      image_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE], this);
 
   evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL] =
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenWindowElementary*>(data);
         if (self->view_delegate_) {
-          if (self->elm_win_ == object) {
+          if (self->image_ == object) {
             auto* wheel_event =
                 reinterpret_cast<Ecore_Event_Mouse_Wheel*>(event_info);
             double delta_x = 0.0;
@@ -247,7 +247,7 @@ void TizenWindowElementary::RegisterEventHandlers() {
         }
       };
   evas_object_event_callback_add(
-      elm_win_, EVAS_CALLBACK_MOUSE_WHEEL,
+      image_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL], this);
 
   evas_object_callbacks_[EVAS_CALLBACK_KEY_DOWN] = [](void* data, Evas* evas,
@@ -359,7 +359,8 @@ int32_t TizenWindowElementary::GetDpi() {
 }
 
 uintptr_t TizenWindowElementary::GetWindowId() {
-  return elm_win_window_id_get(elm_win_);
+  return ecore_evas_window_get(
+      ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_)));
 }
 
 void TizenWindowElementary::SetPreferredOrientations(
