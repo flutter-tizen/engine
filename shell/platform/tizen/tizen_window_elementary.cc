@@ -305,17 +305,18 @@ void TizenWindowElementary::UnregisterEventHandlers() {
                                  rotation_changed_callback_);
 
   evas_object_event_callback_del(
-      elm_win_, EVAS_CALLBACK_MOUSE_DOWN,
+      image_, EVAS_CALLBACK_MOUSE_DOWN,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_DOWN]);
   evas_object_event_callback_del(
-      elm_win_, EVAS_CALLBACK_MOUSE_UP,
+      image_, EVAS_CALLBACK_MOUSE_UP,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_UP]);
   evas_object_event_callback_del(
-      elm_win_, EVAS_CALLBACK_MOUSE_MOVE,
+      image_, EVAS_CALLBACK_MOUSE_MOVE,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_MOVE]);
   evas_object_event_callback_del(
-      elm_win_, EVAS_CALLBACK_MOUSE_WHEEL,
+      image_, EVAS_CALLBACK_MOUSE_WHEEL,
       evas_object_callbacks_[EVAS_CALLBACK_MOUSE_WHEEL]);
+
   evas_object_event_callback_del(
       elm_win_, EVAS_CALLBACK_KEY_DOWN,
       evas_object_callbacks_[EVAS_CALLBACK_KEY_DOWN]);
