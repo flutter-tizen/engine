@@ -241,6 +241,7 @@ jobs:
             --target-triple _ \
             --runtime-mode=${{ matrix.mode }} \
             --disable-desktop-embeddings
+          rm -f src/out/$OUTPUT_NAME/clang_x64/gen_snapshot
           ninja -C src/out/$OUTPUT_NAME clang_x64/gen_snapshot
 
           src/flutter/ci/tizen/cache-checksum.sh save src/out/$OUTPUT_NAME
