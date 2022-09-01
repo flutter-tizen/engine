@@ -82,7 +82,7 @@ vars = {
   "checkout_llvm": False,
 
   # Setup Git hooks by default.
-  "setup_githooks": True,
+  "setup_githooks": False,
 }
 
 gclient_gn_args_file = 'src/third_party/dart/build/config/gclient_args.gni'
