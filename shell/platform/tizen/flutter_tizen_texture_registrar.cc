@@ -25,8 +25,8 @@ FlutterTizenTextureRegistrar::FlutterTizenTextureRegistrar(
 int64_t FlutterTizenTextureRegistrar::RegisterTexture(
     const FlutterDesktopTextureInfo* texture_info) {
   if (texture_info->type != kFlutterDesktopPixelBufferTexture &&
-      texture_info->type != kFlutterDesktopGpuBufferTexture) {
-    FT_LOG(Error) << "Attempted to register texture of unsupport type.";
+      texture_info->type != kFlutterDesktopGpuSurfaceTexture) {
+    FT_LOG(Error) << "Attempted to register texture of unsupported type.";
     return -1;
   }
 
@@ -37,9 +37,9 @@ int64_t FlutterTizenTextureRegistrar::RegisterTexture(
     }
   }
 
-  if (texture_info->type == kFlutterDesktopGpuBufferTexture) {
-    if (!texture_info->gpu_buffer_config.callback) {
-      FT_LOG(Error) << "Invalid GPU buffer texture callback.";
+  if (texture_info->type == kFlutterDesktopGpuSurfaceTexture) {
+    if (!texture_info->gpu_surface_config.callback) {
+      FT_LOG(Error) << "Invalid GPU surface texture callback.";
       return -1;
     }
   }
@@ -116,7 +116,7 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
 #else
       return nullptr;
 #endif
-    case kFlutterDesktopGpuBufferTexture:
+    case kFlutterDesktopGpuSurfaceTexture:
       ExternalTextureExtensionType gl_extension =
           ExternalTextureExtensionType::kNone;
       if (engine_->renderer() && engine_->renderer()->IsSupportedExtension(
@@ -129,13 +129,13 @@ FlutterTizenTextureRegistrar::CreateExternalTexture(
       }
       if (renderer_type == FlutterDesktopRendererType::kEvasGL) {
         return std::make_unique<ExternalTextureSurfaceEvasGL>(
-            gl_extension, texture_info->gpu_buffer_config.callback,
-            texture_info->gpu_buffer_config.user_data);
+            gl_extension, texture_info->gpu_surface_config.callback,
+            texture_info->gpu_surface_config.user_data);
       }
 #ifndef WEARABLE_PROFILE
       return std::make_unique<ExternalTextureSurfaceEGL>(
-          gl_extension, texture_info->gpu_buffer_config.callback,
-          texture_info->gpu_buffer_config.user_data);
+          gl_extension, texture_info->gpu_surface_config.callback,
+          texture_info->gpu_surface_config.user_data);
 #else
       return nullptr;
 #endif

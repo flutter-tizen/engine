@@ -28,7 +28,7 @@ namespace flutter {
 
 ExternalTextureSurfaceEGL::ExternalTextureSurfaceEGL(
     ExternalTextureExtensionType gl_extension,
-    FlutterDesktopGpuBufferTextureCallback texture_callback,
+    FlutterDesktopGpuSurfaceTextureCallback texture_callback,
     void* user_data)
     : ExternalTexture(gl_extension),
       texture_callback_(texture_callback),
@@ -48,28 +48,28 @@ bool ExternalTextureSurfaceEGL::PopulateTexture(
   if (!texture_callback_) {
     return false;
   }
-  const FlutterDesktopGpuBuffer* gpu_buffer =
+  const FlutterDesktopGpuSurfaceDescriptor* gpu_surface =
       texture_callback_(width, height, user_data_);
-  if (!gpu_buffer) {
-    FT_LOG(Info) << "gpu_buffer is null for texture ID: " << texture_id_;
+  if (!gpu_surface) {
+    FT_LOG(Info) << "gpu_surface is null for texture ID: " << texture_id_;
     return false;
   }
 
-  if (!gpu_buffer->buffer) {
+  if (!gpu_surface->handle) {
     FT_LOG(Info) << "tbm_surface is null for texture ID: " << texture_id_;
-    if (gpu_buffer->release_callback) {
-      gpu_buffer->release_callback(gpu_buffer->release_context);
+    if (gpu_surface->release_callback) {
+      gpu_surface->release_callback(gpu_surface->release_context);
     }
     return false;
   }
   const tbm_surface_h tbm_surface =
-      reinterpret_cast<tbm_surface_h>(const_cast<void*>(gpu_buffer->buffer));
+      reinterpret_cast<tbm_surface_h>(gpu_surface->handle);
 
   tbm_surface_info_s info;
   if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
     FT_LOG(Info) << "tbm_surface is invalid for texture ID: " << texture_id_;
-    if (gpu_buffer->release_callback) {
-      gpu_buffer->release_callback(gpu_buffer->release_context);
+    if (gpu_surface->release_callback) {
+      gpu_surface->release_callback(gpu_surface->release_context);
     }
     return false;
   }
@@ -131,8 +131,8 @@ bool ExternalTextureSurfaceEGL::PopulateTexture(
       FT_LOG(Error) << "Either EGL_TIZEN_image_native_surface or "
                        "EGL_EXT_image_dma_buf_import shoule be supported.";
     }
-    if (gpu_buffer->release_callback) {
-      gpu_buffer->release_callback(gpu_buffer->release_context);
+    if (gpu_surface->release_callback) {
+      gpu_surface->release_callback(gpu_surface->release_context);
     }
     return false;
   }
@@ -169,8 +169,8 @@ bool ExternalTextureSurfaceEGL::PopulateTexture(
   opengl_texture->user_data = nullptr;
   opengl_texture->width = width;
   opengl_texture->height = height;
-  if (gpu_buffer->release_callback) {
-    gpu_buffer->release_callback(gpu_buffer->release_context);
+  if (gpu_surface->release_callback) {
+    gpu_surface->release_callback(gpu_surface->release_context);
   }
   return true;
 }

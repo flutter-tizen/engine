@@ -15,7 +15,7 @@ class ExternalTextureSurfaceEvasGL : public ExternalTexture {
  public:
   ExternalTextureSurfaceEvasGL(
       ExternalTextureExtensionType gl_extension,
-      FlutterDesktopGpuBufferTextureCallback texture_callback,
+      FlutterDesktopGpuSurfaceTextureCallback texture_callback,
       void* user_data);
 
   virtual ~ExternalTextureSurfaceEvasGL();
@@ -32,7 +32,7 @@ class ExternalTextureSurfaceEvasGL : public ExternalTexture {
                        FlutterOpenGLTexture* opengl_texture) override;
 
  private:
-  FlutterDesktopGpuBufferTextureCallback texture_callback_ = nullptr;
+  FlutterDesktopGpuSurfaceTextureCallback texture_callback_ = nullptr;
   void* user_data_ = nullptr;
 };
 

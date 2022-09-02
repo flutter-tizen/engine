@@ -54,10 +54,12 @@ TEST_F(FlutterTizenTextureRegistrarTest, RegisterUnregisterTexture) {
   FlutterTizenTextureRegistrar registrar(engine_);
 
   FlutterDesktopTextureInfo texture_info = {};
-  texture_info.type = kFlutterDesktopGpuBufferTexture;
-  texture_info.gpu_buffer_config.callback =
+  texture_info.type = kFlutterDesktopGpuSurfaceTexture;
+  texture_info.gpu_surface_config.callback =
       [](size_t width, size_t height,
-         void* user_data) -> const FlutterDesktopGpuBuffer* { return nullptr; };
+         void* user_data) -> const FlutterDesktopGpuSurfaceDescriptor* {
+    return nullptr;
+  };
 
   int64_t registered_texture_id = 0;
   bool register_called = false;
