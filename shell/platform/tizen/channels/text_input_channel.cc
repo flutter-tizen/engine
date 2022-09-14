@@ -168,6 +168,15 @@ void TextInputChannel::HandleMethodCall(
       input_action_ = input_action_iter->value.GetString();
     }
 
+    text_capitalization_ = "";
+    auto text_capitalization_iter =
+        client_config.FindMember("textCapitalization");
+    if (text_capitalization_iter != client_config.MemberEnd() &&
+        text_capitalization_iter->value.IsString()) {
+      text_capitalization_ = text_capitalization_iter->value.GetString();
+      input_method_context_->SetAutocapitalType(text_capitalization_);
+    }
+
     input_type_ = "";
     auto input_type_info_iter = client_config.FindMember(kTextInputType);
     if (input_type_info_iter != client_config.MemberEnd() &&

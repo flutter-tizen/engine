@@ -256,6 +256,21 @@ void TizenInputMethodContext::SetInputPanelLayoutVariation(bool is_signed,
   ecore_imf_context_input_panel_layout_variation_set(imf_context_, variation);
 }
 
+void TizenInputMethodContext::SetAutocapitalType(const std::string& type) {
+  Ecore_IMF_Autocapital_Type autocapital_type = ECORE_IMF_AUTOCAPITAL_TYPE_NONE;
+
+  if (type == "TextCapitalization.characters") {
+    autocapital_type = ECORE_IMF_AUTOCAPITAL_TYPE_ALLCHARACTER;
+  } else if (type == "TextCapitalization.words") {
+    autocapital_type = ECORE_IMF_AUTOCAPITAL_TYPE_WORD;
+  } else if (type == "TextCapitalization.sentences") {
+    autocapital_type = ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE;
+  } else if (type == "TextCapitalization.none") {
+    autocapital_type = ECORE_IMF_AUTOCAPITAL_TYPE_NONE;
+  }
+  ecore_imf_context_autocapital_type_set(imf_context_, autocapital_type);
+}
+
 void TizenInputMethodContext::RegisterEventCallbacks() {
   FT_ASSERT(imf_context_);
 

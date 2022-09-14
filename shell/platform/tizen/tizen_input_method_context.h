@@ -49,6 +49,8 @@ class TizenInputMethodContext {
 
   void SetInputPanelLayoutVariation(bool is_signed, bool is_decimal);
 
+  void SetAutocapitalType(const std::string& type);
+
   void SetOnCommit(OnCommit callback) { on_commit_ = callback; }
 
   void SetOnPreeditChanged(OnPreeditChanged callback) {

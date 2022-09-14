@@ -75,6 +75,10 @@ class TextInputChannel {
   // Keyboard type of the client. See available options:
   // https://api.flutter.dev/flutter/services/TextInputType-class.html
   std::string input_type_;
+
+  // Automatic text capitalization type. See available options:
+  // https://api.flutter.dev/flutter/services/TextCapitalization.html
+  std::string text_capitalization_ = "";
 };
 
 }  // namespace flutter
