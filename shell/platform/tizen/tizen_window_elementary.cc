@@ -65,9 +65,9 @@ bool TizenWindowElementary::CreateWindow() {
     return false;
   }
 
-  // Please uncomment below and enable setWindowGeometry of window channel when
-  // Tizen 5.5 or later was chosen as default.
-  // elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
+#ifndef WEARABLE_PROFILE
+  elm_win_aux_hint_add(elm_win_, "wm.policy.win.user.geometry", "1");
+#endif
 
   Ecore_Evas* ecore_evas =
       ecore_evas_ecore_evas_get(evas_object_evas_get(elm_win_));
@@ -334,8 +334,14 @@ TizenGeometry TizenWindowElementary::GetGeometry() {
 }
 
 bool TizenWindowElementary::SetGeometry(TizenGeometry geometry) {
+#ifndef WEARABLE_PROFILE
+  evas_object_resize(elm_win_, geometry.width, geometry.height);
+  evas_object_move(elm_win_, geometry.left, geometry.top);
+  return true;
+#else
   FT_LOG(Error) << "SetGeometry is not supported.";
   return false;
+#endif
 }
 
 TizenGeometry TizenWindowElementary::GetScreenGeometry() {
