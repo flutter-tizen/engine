@@ -24,6 +24,7 @@ constexpr char kUpdateEditingStateMethod[] =
     "TextInputClient.updateEditingState";
 constexpr char kPerformActionMethod[] = "TextInputClient.performAction";
 constexpr char kSetPlatformViewClient[] = "TextInput.setPlatformViewClient";
+constexpr char kTextCapitalization[] = "textCapitalization";
 constexpr char kTextInputAction[] = "inputAction";
 constexpr char kTextInputType[] = "inputType";
 constexpr char kTextInputTypeName[] = "name";
@@ -170,7 +171,7 @@ void TextInputChannel::HandleMethodCall(
 
     text_capitalization_ = "";
     auto text_capitalization_iter =
-        client_config.FindMember("textCapitalization");
+        client_config.FindMember(kTextCapitalization);
     if (text_capitalization_iter != client_config.MemberEnd() &&
         text_capitalization_iter->value.IsString()) {
       text_capitalization_ = text_capitalization_iter->value.GetString();
