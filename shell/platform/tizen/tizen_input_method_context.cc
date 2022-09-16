@@ -98,9 +98,8 @@ T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event) {
   imf_event.locks = EcoreInputModifiersToEcoreImfLocks(event->modifiers);
 
   if (event->dev) {
-    imf_event.dev_name = ecore_device_name_get(event->dev)
-                             ? ecore_device_name_get(event->dev)
-                             : "";
+    const char* device_name = ecore_device_name_get(event->dev);
+    imf_event.dev_name = device_name ? device_name : "";
     imf_event.dev_class =
         static_cast<Ecore_IMF_Device_Class>(ecore_device_class_get(event->dev));
     imf_event.dev_subclass = static_cast<Ecore_IMF_Device_Subclass>(
