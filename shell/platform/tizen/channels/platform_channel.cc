@@ -35,6 +35,8 @@ constexpr char kSetEnabledSystemUiOverlaysMethod[] =
     "SystemChrome.setEnabledSystemUIOverlays";
 constexpr char kSetPreferredOrientationsMethod[] =
     "SystemChrome.setPreferredOrientations";
+constexpr char kSetSystemUIOverlayStyleMethod[] =
+    "SystemChrome.setSystemUIOverlayStyle";
 
 constexpr char kTextKey[] = "text";
 constexpr char kValueKey[] = "value";
@@ -145,6 +147,9 @@ void PlatformChannel::HandleMethodCall(
       orientations.push_back(iter->GetString());
     }
     SetPreferredOrientations(orientations);
+    result->Success();
+  } else if (method == kSetSystemUIOverlayStyleMethod) {
+    // Not supported on Tizen. Ignore.
     result->Success();
   } else {
     FT_LOG(Info) << "Unimplemented method: " << method;
