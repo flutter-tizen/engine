@@ -70,8 +70,6 @@ class TizenInputMethodContext {
   void SetContextOptions();
   void SetInputPanelOptions();
 
-  bool ShouldIgnoreKey(std::string key, bool is_ime);
-
   Ecore_IMF_Context* imf_context_ = nullptr;
   OnCommit on_commit_;
   OnPreeditChanged on_preedit_changed_;

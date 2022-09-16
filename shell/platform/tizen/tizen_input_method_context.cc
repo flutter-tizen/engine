@@ -83,7 +83,7 @@ Ecore_IMF_Keyboard_Locks EcoreInputModifiersToEcoreImfLocks(
 }
 
 template <typename T>
-T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
+T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event) {
   T imf_event;
 
   imf_event.keyname = event->keyname;
@@ -91,11 +91,25 @@ T EcoreEventKeyToEcoreImfEvent(Ecore_Event_Key* event, const char* dev_name) {
   imf_event.string = event->string;
   imf_event.compose = event->compose;
   imf_event.timestamp = event->timestamp;
+  imf_event.keycode = event->keycode;
+
   imf_event.modifiers =
       EcoreInputModifiersToEcoreImfModifiers(event->modifiers);
   imf_event.locks = EcoreInputModifiersToEcoreImfLocks(event->modifiers);
-  imf_event.dev_name = dev_name;
-  imf_event.keycode = event->keycode;
+
+  if (event->dev) {
+    imf_event.dev_name = ecore_device_name_get(event->dev)
+                             ? ecore_device_name_get(event->dev)
+                             : "";
+    imf_event.dev_class =
+        static_cast<Ecore_IMF_Device_Class>(ecore_device_class_get(event->dev));
+    imf_event.dev_subclass = static_cast<Ecore_IMF_Device_Subclass>(
+        ecore_device_subclass_get(event->dev));
+  } else {
+    imf_event.dev_name = "";
+    imf_event.dev_class = ECORE_IMF_DEVICE_CLASS_NONE;
+    imf_event.dev_subclass = ECORE_IMF_DEVICE_SUBCLASS_NONE;
+  }
 
   return imf_event;
 }
@@ -144,30 +158,15 @@ bool TizenInputMethodContext::HandleEcoreEventKey(Ecore_Event_Key* event,
                                                   bool is_down) {
   FT_ASSERT(imf_context_);
   FT_ASSERT(event);
-#ifdef WEARABLE_PROFILE
-  // Hardware keyboard is not supported on watch devices.
-  const char* device_name = "ime";
-  bool is_ime = true;
-#else
-  const char* device_name = ecore_device_name_get(event->dev);
-  bool is_ime = device_name ? strcmp(device_name, "ime") == 0 : true;
-#endif
-
-  if (ShouldIgnoreKey(event->key, is_ime)) {
-    return false;
-  }
-
   if (is_down) {
     Ecore_IMF_Event_Key_Down imf_event =
-        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event,
-                                                               device_name);
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Down>(event);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_DOWN,
         reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
   } else {
     Ecore_IMF_Event_Key_Up imf_event =
-        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event,
-                                                             device_name);
+        EcoreEventKeyToEcoreImfEvent<Ecore_IMF_Event_Key_Up>(event);
     return ecore_imf_context_filter_event(
         imf_context_, ECORE_IMF_EVENT_KEY_UP,
         reinterpret_cast<Ecore_IMF_Event*>(&imf_event));
@@ -176,10 +175,6 @@ bool TizenInputMethodContext::HandleEcoreEventKey(Ecore_Event_Key* event,
 
 bool TizenInputMethodContext::HandleEvasEventKeyDown(
     Evas_Event_Key_Down* event) {
-  if (ShouldIgnoreKey(event->key, true)) {
-    return false;
-  }
-
   Ecore_IMF_Event_Key_Down imf_event;
   ecore_imf_evas_event_key_down_wrap(event, &imf_event);
 
@@ -189,10 +184,6 @@ bool TizenInputMethodContext::HandleEvasEventKeyDown(
 }
 
 bool TizenInputMethodContext::HandleEvasEventKeyUp(Evas_Event_Key_Up* event) {
-  if (ShouldIgnoreKey(event->key, true)) {
-    return false;
-  }
-
   Ecore_IMF_Event_Key_Up imf_event;
   ecore_imf_evas_event_key_up_wrap(event, &imf_event);
 
@@ -361,23 +352,6 @@ void TizenInputMethodContext::SetInputPanelOptions() {
       imf_context_, ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DEFAULT);
   ecore_imf_context_input_panel_language_set(
       imf_context_, ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC);
-}
-
-bool TizenInputMethodContext::ShouldIgnoreKey(std::string key, bool is_ime) {
-  // The below keys should be handled by the flutter framework.
-  if (is_ime && (key == "Left" || key == "Right" || key == "Up" ||
-                 key == "Down" || key == "End" || key == "Home" ||
-                 key == "BackSpace" || key == "Delete")) {
-    return true;
-  }
-#ifdef TV_PROFILE
-  // The Select key should be handled in the TextInputChannel.
-  if (is_ime && key == "Select") {
-    return true;
-  }
-#endif
-
-  return false;
 }
 
 }  // namespace flutter
