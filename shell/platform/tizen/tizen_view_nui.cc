@@ -74,6 +74,10 @@ void TizenViewNui::RequestRendering() {
   rendering_callback_->Trigger();
 }
 
+void TizenViewNui::Blur() {
+  FT_UNIMPLEMENTED();
+}
+
 void TizenViewNui::PrepareInputMethod() {
   input_method_context_ =
       std::make_unique<TizenInputMethodContext>(GetWindowId());

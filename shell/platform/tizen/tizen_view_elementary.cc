@@ -243,7 +243,7 @@ void TizenViewElementary::RegisterEventHandlers() {
                                                       void* event_info) {
     auto* self = reinterpret_cast<TizenViewElementary*>(data);
     if (self->view_delegate_) {
-      if (self->event_layer_ == object) {
+      if (self->event_layer_ == object && self->has_focus_) {
         auto* key_event = reinterpret_cast<Evas_Event_Key_Down*>(event_info);
         bool handled = false;
         key_event->event_flags =
@@ -269,7 +269,7 @@ void TizenViewElementary::RegisterEventHandlers() {
       [](void* data, Evas* evas, Evas_Object* object, void* event_info) {
         auto* self = reinterpret_cast<TizenViewElementary*>(data);
         if (self->view_delegate_) {
-          if (self->event_layer_ == object) {
+          if (self->event_layer_ == object && self->has_focus_) {
             auto* key_event = reinterpret_cast<Evas_Event_Key_Up*>(event_info);
             bool handled = false;
             key_event->event_flags = Evas_Event_Flags(key_event->event_flags |
@@ -290,6 +290,18 @@ void TizenViewElementary::RegisterEventHandlers() {
   evas_object_event_callback_add(event_layer_, EVAS_CALLBACK_KEY_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP],
                                  this);
+
+  evas_object_smart_callback_add(
+      event_layer_, "focused",
+      [](void* data, Evas_Object* object, void* event_info) {
+        auto* self = reinterpret_cast<TizenViewElementary*>(data);
+        if (self->view_delegate_) {
+          if (self->event_layer_ == object) {
+            self->has_focus_ = true;
+          }
+        }
+      },
+      this);
 }
 
 void TizenViewElementary::UnregisterEventHandlers() {

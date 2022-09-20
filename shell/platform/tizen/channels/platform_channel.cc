@@ -14,6 +14,8 @@
 #include "flutter/shell/platform/tizen/channels/tizen_shell.h"
 #endif
 #include "flutter/shell/platform/tizen/logger.h"
+#include "flutter/shell/platform/tizen/tizen_view.h"
+#include "flutter/shell/platform/tizen/tizen_window.h"
 
 namespace flutter {
 
@@ -62,12 +64,12 @@ std::string text_clipboard = "";
 }  // namespace
 
 PlatformChannel::PlatformChannel(BinaryMessenger* messenger,
-                                 TizenWindow* window)
+                                 TizenViewBase* view)
     : channel_(std::make_unique<MethodChannel<rapidjson::Document>>(
           messenger,
           kChannelName,
           &JsonMethodCodec::GetInstance())),
-      window_(window) {
+      view_(view) {
   channel_->SetMethodCallHandler(
       [this](const MethodCall<rapidjson::Document>& call,
              std::unique_ptr<MethodResult<rapidjson::Document>> result) {
@@ -156,8 +158,10 @@ void PlatformChannel::HandleMethodCall(
 }
 
 void PlatformChannel::SystemNavigatorPop() {
-  if (window_) {
+  if (view_->GetType() == TizenViewType::kWindow) {
     ui_app_exit();
+  } else {
+    reinterpret_cast<TizenView*>(view_)->Blur();
   }
 }
 
@@ -174,13 +178,13 @@ void PlatformChannel::HapticFeedbackVibrate(const std::string& feedback_type) {
 }
 
 void PlatformChannel::RestoreSystemUiOverlays() {
-  if (!window_) {
+  if (view_->GetType() != TizenViewType::kWindow) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(window_->GetWindowId());
+  shell.InitializeSoftkey(view_->GetWindowId());
 
   if (shell.IsSoftkeyShown()) {
     shell.ShowSoftkey();
@@ -192,13 +196,13 @@ void PlatformChannel::RestoreSystemUiOverlays() {
 
 void PlatformChannel::SetEnabledSystemUiOverlays(
     const std::vector<std::string>& overlays) {
-  if (!window_) {
+  if (view_->GetType() != TizenViewType::kWindow) {
     return;
   }
 
 #ifdef COMMON_PROFILE
   auto& shell = TizenShell::GetInstance();
-  shell.InitializeSoftkey(window_->GetWindowId());
+  shell.InitializeSoftkey(view_->GetWindowId());
 
   if (std::find(overlays.begin(), overlays.end(), kSystemUiOverlayBottom) !=
       overlays.end()) {
@@ -211,7 +215,7 @@ void PlatformChannel::SetEnabledSystemUiOverlays(
 
 void PlatformChannel::SetPreferredOrientations(
     const std::vector<std::string>& orientations) {
-  if (!window_) {
+  if (view_->GetType() != TizenViewType::kWindow) {
     return;
   }
 
@@ -230,7 +234,7 @@ void PlatformChannel::SetPreferredOrientations(
     // default.
     rotations = {0, 90, 180, 270};
   }
-  window_->SetPreferredOrientations(rotations);
+  reinterpret_cast<TizenWindow*>(view_)->SetPreferredOrientations(rotations);
 }
 
 }  // namespace flutter
