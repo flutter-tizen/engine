@@ -161,7 +161,7 @@ void PlatformChannel::SystemNavigatorPop() {
   if (view_->GetType() == TizenViewType::kWindow) {
     ui_app_exit();
   } else {
-    reinterpret_cast<TizenView*>(view_)->Blur();
+    reinterpret_cast<TizenView*>(view_)->Unfocus();
   }
 }
 

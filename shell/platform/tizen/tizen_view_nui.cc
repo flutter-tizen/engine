@@ -74,7 +74,7 @@ void TizenViewNui::RequestRendering() {
   rendering_callback_->Trigger();
 }
 
-void TizenViewNui::Blur() {
+void TizenViewNui::Unfocus() {
   FT_UNIMPLEMENTED();
 }
 

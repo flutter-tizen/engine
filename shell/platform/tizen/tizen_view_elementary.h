@@ -37,7 +37,7 @@ class TizenViewElementary : public TizenView {
 
   void Show() override;
 
-  void Blur() override { has_focus_ = false; };
+  void Unfocus() override { has_focus_ = false; };
 
  private:
   bool CreateView();

@@ -20,7 +20,7 @@ class TizenView : public TizenViewBase {
 
   TizenViewType GetType() override { return TizenViewType::kView; };
 
-  virtual void Blur() = 0;
+  virtual void Unfocus() = 0;
 
  protected:
   explicit TizenView(int32_t width, int32_t height)
