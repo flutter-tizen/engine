@@ -37,7 +37,7 @@ class TizenViewElementary : public TizenView {
 
   void Show() override;
 
-  void Unfocus() override { has_focus_ = false; };
+  void Unfocus() override { focused_ = false; };
 
  private:
   bool CreateView();
@@ -60,7 +60,7 @@ class TizenViewElementary : public TizenView {
   std::vector<Ecore_Event_Handler*> ecore_event_key_handlers_;
 
   bool scroll_hold_ = false;
-  bool has_focus_ = false;
+  bool focused_ = false;
 };
 
 }  // namespace flutter
