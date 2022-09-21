@@ -58,6 +58,7 @@ class TizenViewElementary : public TizenView {
   std::unordered_map<Evas_Callback_Type, Evas_Object_Event_Cb>
       evas_object_callbacks_;
   std::vector<Ecore_Event_Handler*> ecore_event_key_handlers_;
+  Evas_Smart_Cb focused_callback_ = nullptr;
 
   bool scroll_hold_ = false;
   bool focused_ = false;

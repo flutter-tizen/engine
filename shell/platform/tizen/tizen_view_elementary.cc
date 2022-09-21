@@ -291,17 +291,16 @@ void TizenViewElementary::RegisterEventHandlers() {
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP],
                                  this);
 
-  evas_object_smart_callback_add(
-      event_layer_, "focused",
-      [](void* data, Evas_Object* object, void* event_info) {
-        auto* self = reinterpret_cast<TizenViewElementary*>(data);
-        if (self->view_delegate_) {
-          if (self->event_layer_ == object) {
-            self->focused_ = true;
-          }
-        }
-      },
-      this);
+  focused_callback_ = [](void* data, Evas_Object* object, void* event_info) {
+    auto* self = reinterpret_cast<TizenViewElementary*>(data);
+    if (self->view_delegate_) {
+      if (self->event_layer_ == object) {
+        self->focused_ = true;
+      }
+    }
+  };
+  evas_object_smart_callback_add(event_layer_, "focused", focused_callback_,
+                                 this);
 }
 
 void TizenViewElementary::UnregisterEventHandlers() {
@@ -324,6 +323,7 @@ void TizenViewElementary::UnregisterEventHandlers() {
       evas_object_callbacks_[EVAS_CALLBACK_KEY_DOWN]);
   evas_object_event_callback_del(event_layer_, EVAS_CALLBACK_KEY_UP,
                                  evas_object_callbacks_[EVAS_CALLBACK_KEY_UP]);
+  evas_object_smart_callback_del(event_layer_, "focused", focused_callback_);
 }
 
 TizenGeometry TizenViewElementary::GetGeometry() {

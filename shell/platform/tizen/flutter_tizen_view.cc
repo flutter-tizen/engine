@@ -73,16 +73,14 @@ void FlutterTizenView::SetEngine(std::unique_ptr<FlutterTizenEngine> engine) {
   // Set up window dependent channels.
   BinaryMessenger* messenger = internal_plugin_registrar_->messenger();
 
-  platform_channel_ =
-      std::make_unique<PlatformChannel>(messenger, tizen_view_.get());
-
   if (tizen_view_->GetType() == TizenViewType::kWindow) {
     auto* window = reinterpret_cast<TizenWindow*>(tizen_view_.get());
     window_channel_ = std::make_unique<WindowChannel>(messenger, window);
   } else {
     window_channel_ = std::make_unique<WindowChannel>(messenger, nullptr);
   }
-
+  platform_channel_ =
+      std::make_unique<PlatformChannel>(messenger, tizen_view_.get());
   text_input_channel_ = std::make_unique<TextInputChannel>(
       internal_plugin_registrar_->messenger(),
       tizen_view_->input_method_context());
