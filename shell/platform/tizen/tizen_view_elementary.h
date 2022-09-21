@@ -37,8 +37,6 @@ class TizenViewElementary : public TizenView {
 
   void Show() override;
 
-  void Unfocus() override { focused_ = false; };
-
  private:
   bool CreateView();
 
@@ -61,7 +59,6 @@ class TizenViewElementary : public TizenView {
   Evas_Smart_Cb focused_callback_ = nullptr;
 
   bool scroll_hold_ = false;
-  bool focused_ = false;
 };
 
 }  // namespace flutter

@@ -42,8 +42,6 @@ class TizenViewNui : public TizenView {
 
   void RequestRendering();
 
-  void Unfocus() override;
-
  private:
   void RegisterEventHandlers();
 
