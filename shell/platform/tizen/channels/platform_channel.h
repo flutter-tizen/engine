@@ -36,7 +36,6 @@ class PlatformChannel {
   std::unique_ptr<MethodChannel<rapidjson::Document>> channel_;
 
   // A reference to the native view managed by FlutterTizenView.
-  // This can be nullptr if the engine is running in headless mode.
   TizenViewBase* view_;
 };
 
