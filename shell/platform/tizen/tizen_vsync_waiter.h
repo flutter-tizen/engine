@@ -5,25 +5,21 @@
 #ifndef EMBEDDER_TIZEN_VSYNC_WAITER_H_
 #define EMBEDDER_TIZEN_VSYNC_WAITER_H_
 
-#include <Ecore.h>
 #include <tdm_client.h>
 
 #include <memory>
 #include <mutex>
 
-#include "flutter/shell/platform/embedder/embedder.h"
-
 namespace flutter {
 
 class FlutterTizenEngine;
 
-class TdmClient {
+class TizenVsyncWaiter {
  public:
-  TdmClient(FlutterTizenEngine* engine);
-  virtual ~TdmClient();
+  TizenVsyncWaiter(FlutterTizenEngine* engine);
+  virtual ~TizenVsyncWaiter();
 
-  bool IsValid();
-  void AwaitVblank(intptr_t baton);
+  void AsyncWaitForVsync(intptr_t baton);
 
  private:
   static void VblankCallback(tdm_client_vblank* vblank,
@@ -41,23 +37,6 @@ class TdmClient {
   tdm_client_vblank* vblank_ = nullptr;
 
   intptr_t baton_ = 0;
-};
-
-class TizenVsyncWaiter {
- public:
-  TizenVsyncWaiter(FlutterTizenEngine* engine);
-  virtual ~TizenVsyncWaiter();
-
-  void AsyncWaitForVsync(intptr_t baton);
-
- private:
-  void SendMessage(int event, intptr_t baton);
-
-  static void RunVblankLoop(void* data, Ecore_Thread* thread);
-
-  std::shared_ptr<TdmClient> tdm_client_;
-  Ecore_Thread* vblank_thread_ = nullptr;
-  Eina_Thread_Queue* vblank_thread_queue_ = nullptr;
 };
 
 }  // namespace flutter

@@ -4,108 +4,13 @@
 
 #include "tizen_vsync_waiter.h"
 
-#include <eina_thread_queue.h>
-
 #include "flutter/shell/platform/tizen/flutter_tizen_engine.h"
 #include "flutter/shell/platform/tizen/logger.h"
 
 namespace flutter {
 
-namespace {
-
-constexpr int kMessageQuit = -1;
-constexpr int kMessageRequestVblank = 0;
-
-struct Message {
-  Eina_Thread_Queue_Msg head;
-  int event;
-  intptr_t baton;
-};
-
-}  // namespace
-
-TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
-  tdm_client_ = std::make_shared<TdmClient>(engine);
-
-  vblank_thread_ = ecore_thread_feedback_run(RunVblankLoop, nullptr, nullptr,
-                                             nullptr, this, EINA_TRUE);
-}
-
-TizenVsyncWaiter::~TizenVsyncWaiter() {
-  tdm_client_.reset();
-
-  SendMessage(kMessageQuit, 0);
-
-  if (vblank_thread_) {
-    ecore_thread_cancel(vblank_thread_);
-    vblank_thread_ = nullptr;
-  }
-}
-
-void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
-  SendMessage(kMessageRequestVblank, baton);
-}
-
-void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
-  if (!vblank_thread_ || ecore_thread_check(vblank_thread_)) {
-    FT_LOG(Error) << "Invalid vblank thread.";
-    return;
-  }
-
-  if (!vblank_thread_queue_) {
-    FT_LOG(Error) << "Invalid vblank thread queue.";
-    return;
-  }
-
-  void* ref;
-  Message* message = static_cast<Message*>(
-      eina_thread_queue_send(vblank_thread_queue_, sizeof(Message), &ref));
-  message->event = event;
-  message->baton = baton;
-  eina_thread_queue_send_done(vblank_thread_queue_, ref);
-}
-
-void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
-  auto* self = reinterpret_cast<TizenVsyncWaiter*>(data);
-
-  std::weak_ptr<TdmClient> tdm_client = self->tdm_client_;
-  if (!tdm_client.lock()->IsValid()) {
-    FT_LOG(Error) << "Invalid tdm_client.";
-    ecore_thread_cancel(thread);
-    return;
-  }
-
-  Eina_Thread_Queue* vblank_thread_queue = eina_thread_queue_new();
-  if (!vblank_thread_queue) {
-    FT_LOG(Error) << "Invalid vblank thread queue.";
-    ecore_thread_cancel(thread);
-    return;
-  }
-  self->vblank_thread_queue_ = vblank_thread_queue;
-
-  while (!ecore_thread_check(thread)) {
-    void* ref;
-    Message* message = static_cast<Message*>(
-        eina_thread_queue_wait(vblank_thread_queue, &ref));
-    if (message->event == kMessageQuit) {
-      eina_thread_queue_wait_done(vblank_thread_queue, ref);
-      break;
-    }
-    intptr_t baton = message->baton;
-    eina_thread_queue_wait_done(vblank_thread_queue, ref);
-
-    if (tdm_client.expired()) {
-      break;
-    }
-    tdm_client.lock()->AwaitVblank(baton);
-  }
-
-  if (vblank_thread_queue) {
-    eina_thread_queue_free(vblank_thread_queue);
-  }
-}
-
-TdmClient::TdmClient(FlutterTizenEngine* engine) {
+TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
+    : engine_(engine) {
   tdm_error ret;
   client_ = tdm_client_create(&ret);
   if (ret != TDM_ERROR_NONE) {
@@ -125,27 +30,28 @@ TdmClient::TdmClient(FlutterTizenEngine* engine) {
     return;
   }
   tdm_client_vblank_set_enable_fake(vblank_, 1);
-
-  engine_ = engine;
 }
 
-TdmClient::~TdmClient() {
+TizenVsyncWaiter::~TizenVsyncWaiter() {
   {
     std::lock_guard<std::mutex> lock(engine_mutex_);
     engine_ = nullptr;
   }
+
   if (vblank_) {
     tdm_client_vblank_destroy(vblank_);
     vblank_ = nullptr;
   }
+
   output_ = nullptr;
+
   if (client_) {
     tdm_client_destroy(client_);
     client_ = nullptr;
   }
 }
 
-void TdmClient::AwaitVblank(intptr_t baton) {
+void TizenVsyncWaiter::AsyncWaitForVsync(intptr_t baton) {
   baton_ = baton;
   tdm_error ret = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
   if (ret != TDM_ERROR_NONE) {
@@ -155,17 +61,13 @@ void TdmClient::AwaitVblank(intptr_t baton) {
   tdm_client_handle_events(client_);
 }
 
-bool TdmClient::IsValid() {
-  return vblank_ && client_;
-}
-
-void TdmClient::VblankCallback(tdm_client_vblank* vblank,
-                               tdm_error error,
-                               unsigned int sequence,
-                               unsigned int tv_sec,
-                               unsigned int tv_usec,
-                               void* user_data) {
-  auto* self = reinterpret_cast<TdmClient*>(user_data);
+void TizenVsyncWaiter::VblankCallback(tdm_client_vblank* vblank,
+                                      tdm_error error,
+                                      unsigned int sequence,
+                                      unsigned int tv_sec,
+                                      unsigned int tv_usec,
+                                      void* user_data) {
+  auto* self = reinterpret_cast<TizenVsyncWaiter*>(user_data);
   FT_ASSERT(self != nullptr);
 
   std::lock_guard<std::mutex> lock(self->engine_mutex_);
