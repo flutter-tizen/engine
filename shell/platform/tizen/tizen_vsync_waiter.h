@@ -8,7 +8,6 @@
 #include <Ecore.h>
 #include <tdm_client.h>
 
-#include <memory>
 #include <mutex>
 
 #include "flutter/shell/platform/embedder/embedder.h"
@@ -23,6 +22,7 @@ class TdmClient {
   virtual ~TdmClient();
 
   bool IsValid();
+  void OnEngineStop();
   void AwaitVblank(intptr_t baton);
 
  private:
@@ -53,9 +53,12 @@ class TizenVsyncWaiter {
  private:
   void SendMessage(int event, intptr_t baton);
 
+  void SetTdmClient(TdmClient* tdm_client) { tdm_client_ = tdm_client; }
+
   static void RunVblankLoop(void* data, Ecore_Thread* thread);
 
-  std::shared_ptr<TdmClient> tdm_client_;
+  FlutterTizenEngine* engine_ = nullptr;
+  TdmClient* tdm_client_ = nullptr;
   Ecore_Thread* vblank_thread_ = nullptr;
   Eina_Thread_Queue* vblank_thread_queue_ = nullptr;
 };

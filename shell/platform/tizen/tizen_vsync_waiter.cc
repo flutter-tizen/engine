@@ -24,18 +24,17 @@ struct Message {
 
 }  // namespace
 
-TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine) {
-  tdm_client_ = std::make_shared<TdmClient>(engine);
-
+TizenVsyncWaiter::TizenVsyncWaiter(FlutterTizenEngine* engine)
+    : engine_(engine) {
   vblank_thread_ = ecore_thread_feedback_run(RunVblankLoop, nullptr, nullptr,
                                              nullptr, this, EINA_TRUE);
 }
 
 TizenVsyncWaiter::~TizenVsyncWaiter() {
-  tdm_client_.reset();
-
+  if (tdm_client_) {
+    tdm_client_->OnEngineStop();
+  }
   SendMessage(kMessageQuit, 0);
-
   if (vblank_thread_) {
     ecore_thread_cancel(vblank_thread_);
     vblank_thread_ = nullptr;
@@ -68,8 +67,9 @@ void TizenVsyncWaiter::SendMessage(int event, intptr_t baton) {
 void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
   auto* self = reinterpret_cast<TizenVsyncWaiter*>(data);
 
-  std::weak_ptr<TdmClient> tdm_client = self->tdm_client_;
-  if (!tdm_client.lock()->IsValid()) {
+  TdmClient tdm_client(self->engine_);
+  self->SetTdmClient(&tdm_client);
+  if (!tdm_client.IsValid()) {
     FT_LOG(Error) << "Invalid tdm_client.";
     ecore_thread_cancel(thread);
     return;
@@ -94,10 +94,7 @@ void TizenVsyncWaiter::RunVblankLoop(void* data, Ecore_Thread* thread) {
     intptr_t baton = message->baton;
     eina_thread_queue_wait_done(vblank_thread_queue, ref);
 
-    if (tdm_client.expired()) {
-      break;
-    }
-    tdm_client.lock()->AwaitVblank(baton);
+    tdm_client.AwaitVblank(baton);
   }
 
   if (vblank_thread_queue) {
@@ -130,10 +127,6 @@ TdmClient::TdmClient(FlutterTizenEngine* engine) {
 }
 
 TdmClient::~TdmClient() {
-  {
-    std::lock_guard<std::mutex> lock(engine_mutex_);
-    engine_ = nullptr;
-  }
   if (vblank_) {
     tdm_client_vblank_destroy(vblank_);
     vblank_ = nullptr;
@@ -145,6 +138,15 @@ TdmClient::~TdmClient() {
   }
 }
 
+bool TdmClient::IsValid() {
+  return vblank_ && client_;
+}
+
+void TdmClient::OnEngineStop() {
+  std::lock_guard<std::mutex> lock(engine_mutex_);
+  engine_ = nullptr;
+}
+
 void TdmClient::AwaitVblank(intptr_t baton) {
   baton_ = baton;
   tdm_error ret = tdm_client_vblank_wait(vblank_, 1, VblankCallback, this);
@@ -153,10 +155,6 @@ void TdmClient::AwaitVblank(intptr_t baton) {
     return;
   }
   tdm_client_handle_events(client_);
-}
-
-bool TdmClient::IsValid() {
-  return vblank_ && client_;
 }
 
 void TdmClient::VblankCallback(tdm_client_vblank* vblank,
