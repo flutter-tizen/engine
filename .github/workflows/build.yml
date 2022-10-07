@@ -3,14 +3,14 @@ name: Build
 on:
   push:
     branches:
-      - "flutter-*-tizen"
+      - flutter-*-tizen
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository_owner }}/build-engine:latest
+      image: ghcr.io/flutter-tizen/tizen-tools:latest
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -33,6 +33,7 @@ jobs:
             mode: profile
 
     env:
+      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
@@ -48,9 +49,19 @@ jobs:
           restore-keys: |
             out-build-${{ env.OUTPUT_NAME }}-
 
+      - name: install depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$PWD/depot_tools" >> $GITHUB_PATH
+
       - name: gclient sync
         run: |
-          src/flutter/ci/tizen/gclient-prepare-sync.sh --reduce-deps --shallow-sync
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          sed -i -e '/src\/ios_tools/,+2d' src/flutter/DEPS
+          sed -i -e '/src\/third_party\/angle/,+2d' src/flutter/DEPS
+          sed -i -e '/src\/fuchsia\/sdk/,+9d' src/flutter/DEPS
+          PYTHONPATH="$PWD/depot_tools" python3 src/flutter/ci/tizen/gclient-shallow-sync.py src/flutter/DEPS
           gclient sync -v --no-history --shallow
 
       - name: verify formatting
@@ -121,7 +132,7 @@ jobs:
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v3
-        if: (matrix.arch == 'arm' || matrix.arch == 'arm64') && matrix.mode != 'debug'
+        if: matrix.mode != 'debug'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
           path: src/out/${{ env.OUTPUT_NAME }}/clang_x64/gen_snapshot
@@ -136,6 +147,7 @@ jobs:
         mode: [release, profile]
 
     env:
+      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
@@ -195,6 +207,7 @@ jobs:
         mode: [release, profile]
 
     env:
+      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
@@ -211,12 +224,11 @@ jobs:
 
       - name: install depot_tools
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
           echo "$PWD/depot_tools" >> $GITHUB_PATH
 
       - name: install required packages
-        run: |
-          brew install md5sha1sum
+        run: brew install md5sha1sum
 
       - name: gclient sync
         run: |
@@ -276,11 +288,9 @@ jobs:
           name: tizen-arm-unittests
 
       - name: run unittests
-        env:
-          IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/tizen-headed-armv7l
         run: |
           chmod +x flutter_tizen_unittests
-          docker run --rm -t -v `pwd`:/root ${IMAGE_TAG} /root/flutter_tizen_unittests
+          docker run --rm -t -v $PWD:/root ghcr.io/flutter-tizen/tizen-headed-armv7l /root/flutter_tizen_unittests
 
   release:
     needs: [windows-build, macos-build, test]
