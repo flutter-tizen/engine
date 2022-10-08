@@ -33,7 +33,6 @@ jobs:
             mode: profile
 
     env:
-      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
@@ -147,7 +146,6 @@ jobs:
         mode: [release, profile]
 
     env:
-      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
@@ -207,7 +205,6 @@ jobs:
         mode: [release, profile]
 
     env:
-      DEPOT_TOOLS_UPDATE: 0
       OUTPUT_NAME: linux_${{ matrix.mode }}_${{ matrix.arch }}
 
     steps:
