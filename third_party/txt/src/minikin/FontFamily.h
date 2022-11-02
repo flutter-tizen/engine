@@ -140,7 +140,9 @@ class FontFamily {
   static bool analyzeStyle(const std::shared_ptr<MinikinFont>& typeface,
                            int* weight,
                            bool* italic);
-  FakedFont getClosestMatch(FontStyle style) const;
+  FakedFont getClosestMatch(FontStyle style,
+                            uint32_t codepoint = 0,
+                            uint32_t variationSelector = 0) const;
 
   uint32_t langId() const { return mLangId; }
   int variant() const { return mVariant; }

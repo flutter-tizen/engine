@@ -13,12 +13,12 @@
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
-  return {"Ubuntu", "Cantarell", "DejaVu Sans", "Liberation Sans", "Arial"};
+  return {"TizenDefaultFont", "SamsungOneUI"};
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data) {
 #ifdef FLUTTER_USE_FONTCONFIG
-  return SkFontMgr_New_FontConfig(nullptr);
+  return SkFontMgr::RefDefault();
 #else
   return SkFontMgr_New_Custom_Directory("/usr/share/fonts/");
 #endif

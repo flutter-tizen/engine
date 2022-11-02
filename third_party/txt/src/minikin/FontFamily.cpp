@@ -146,15 +146,28 @@ static FontFakery computeFakery(FontStyle wanted, FontStyle actual) {
   return FontFakery(isFakeBold, isFakeItalic);
 }
 
-FakedFont FontFamily::getClosestMatch(FontStyle style) const {
+FakedFont FontFamily::getClosestMatch(
+    FontStyle style,
+    uint32_t codepoint /* = 0 */,
+    uint32_t variationSelector /* = 0 */) const {
   const Font* bestFont = nullptr;
-  int bestMatch = 0;
+  int bestMatch = INT_MAX;
   for (size_t i = 0; i < mFonts.size(); i++) {
     const Font& font = mFonts[i];
     int match = computeMatch(font.style, style);
-    if (i == 0 || match < bestMatch) {
-      bestFont = &font;
-      bestMatch = match;
+    bool result = false;
+    if (codepoint != 0) {
+      hb_font_t* hbFont = getHbFontLocked(font.typeface.get());
+      uint32_t unusedGlyph = 0;
+      result =
+          hb_font_get_glyph(hbFont, codepoint, variationSelector, &unusedGlyph);
+      hb_font_destroy(hbFont);
+    }
+    if (codepoint == 0 || (codepoint != 0 && result)) {
+      if (match < bestMatch) {
+        bestFont = &font;
+        bestMatch = match;
+      }
     }
   }
   if (bestFont != nullptr) {
