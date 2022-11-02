@@ -99,7 +99,7 @@ vars = {
   "checkout_llvm": False,
 
   # Setup Git hooks by default.
-  "setup_githooks": True,
+  "setup_githooks": False,
 
   # Upstream URLs for third party dependencies, used in
   # determining common ancestor commit for vulnerability scanning

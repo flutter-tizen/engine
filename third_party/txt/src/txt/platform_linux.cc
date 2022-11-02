@@ -7,7 +7,7 @@
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies() {
-  return {"Ubuntu", "Cantarell", "DejaVu Sans", "Liberation Sans", "Arial"};
+  return {"TizenDefaultFont", "SamsungOneUI"};
 }
 
 sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data) {
