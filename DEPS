@@ -105,7 +105,7 @@ vars = {
   "checkout_llvm": False,
 
   # Setup Git hooks by default.
-  'setup_githooks': True,
+  'setup_githooks': False,
 
   # When this is true, the goma client will be downloaded from cipd, and
   # the engine build will prefer to use this client over a client that is
