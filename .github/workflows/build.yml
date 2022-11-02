@@ -1,0 +1,230 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flutter-tizen/build-engine:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    strategy:
+      matrix:
+        arch: [arm, arm64, x86]
+        mode: [debug, release, profile]
+        include:
+          - arch: arm
+            triple: arm-linux-gnueabi
+          - arch: arm64
+            triple: aarch64-linux-gnu
+          - arch: x86
+            triple: i686-linux-gnu
+        exclude:
+          - arch: x86
+            mode: release
+          - arch: x86
+            mode: profile
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: src/flutter
+          fetch-depth: 0
+
+      - uses: actions/cache@v3
+        with:
+          path: /tizen_tools/sysroot
+          key: sysroot
+
+      - name: Install depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$PWD/depot_tools" >> $GITHUB_PATH
+
+      - name: Run gclient sync
+        run: |
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_dart_sdk=False --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: Generate sysroot
+        run: src/flutter/ci/tizen/generate_sysroot.py --out /tizen_tools/sysroot
+
+      - name: Build
+        run: |
+          src/flutter/tools/gn \
+            --target-os linux \
+            --linux-cpu ${{ matrix.arch }} \
+            --no-goma \
+            --target-toolchain /tizen_tools/toolchains \
+            --target-sysroot /tizen_tools/sysroot/${{ matrix.arch }} \
+            --target-triple ${{ matrix.triple }} \
+            --runtime-mode ${{ matrix.mode }} \
+            --enable-fontconfig \
+            --disable-desktop-embeddings \
+            --target-dir build
+          ninja -C src/out/build flutter_engine_library
+          cp -f src/third_party/icu/flutter/icudtl.dat src/out/build
+
+      - name: Build gen_snapshot
+        if: ${{ matrix.mode != 'debug' }}
+        run: ninja -C src/out/build clang_x64/gen_snapshot
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}
+          path: |
+            src/out/build/libflutter_engine.so
+            src/out/build/icudtl.dat
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'push' }}
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_symbols
+          path: src/out/build/so.unstripped/libflutter_engine.so
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ matrix.mode != 'debug' }}
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_linux-x64
+          path: src/out/build/clang_x64/gen_snapshot
+          if-no-files-found: error
+
+  windows-build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    steps:
+      - name: Run git checkout
+        run: |
+          mkdir C:\workspace\engine\src\flutter
+          cd C:\workspace\engine\src\flutter
+          git config --global core.autocrlf true
+          git init --quiet
+          git remote add origin https://github.com/${{ github.repository }}
+          git fetch --depth 1 origin ${{ github.sha }}
+          git checkout FETCH_HEAD
+
+      - name: Environment setup
+        run: |
+          Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Force
+          echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $Env:GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $Env:GITHUB_ENV
+          echo "WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10" >> $Env:GITHUB_ENV
+
+      - name: Install depot_tools
+        run: |
+          Invoke-WebRequest -Uri https://storage.googleapis.com/chrome-infra/depot_tools.zip -OutFile depot_tools.zip
+          7z x -y -o"C:\workspace\depot_tools" .\depot_tools.zip
+          echo "C:\workspace\depot_tools" >> $Env:GITHUB_PATH
+
+      - name: Run gclient sync
+        working-directory: C:\workspace\engine
+        run: |
+          gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_dart_sdk=False --deps-file=src/flutter/DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: Build
+        working-directory: C:\workspace\engine\src
+        run: |
+          python3 .\flutter\tools\gn `
+            --linux `
+            --linux-cpu=${{ matrix.arch }} `
+            --runtime-mode=${{ matrix.mode }} `
+            --no-goma `
+            --target-dir build
+          ninja -C .\out\build gen_snapshot
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_windows-x64
+          path: C:\workspace\engine\src\out\build\gen_snapshot.exe
+          if-no-files-found: error
+
+  macos-build:
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: src/flutter
+          fetch-depth: 0
+
+      - name: Install depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$PWD/depot_tools" >> $GITHUB_PATH
+
+      - name: Run gclient sync
+        run: |
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_dart_sdk=False --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: Build
+        run: |
+          # Change host_toolchain to mac/clang_x64.
+          sed -i "" "s|//build/toolchain/linux:clang_$host_cpu|//build/toolchain/mac:clang_$host_cpu|g" src/build/config/BUILDCONFIG.gn
+
+          # Pass dummy values to prevent using the default (Linux) toolchain.
+          src/flutter/tools/gn \
+            --linux \
+            --linux-cpu=${{ matrix.arch }} \
+            --no-goma \
+            --target-toolchain _ \
+            --target-sysroot _ \
+            --target-triple _ \
+            --runtime-mode=${{ matrix.mode }} \
+            --disable-desktop-embeddings \
+            --target-dir build
+          ninja -C src/out/build clang_x64/gen_snapshot
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-x64
+          path: src/out/build/clang_x64/gen_snapshot
+          if-no-files-found: error
+
+  release:
+    needs: [build, windows-build, macos-build]
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+
+      - name: Create archives
+        run: |
+          for name in tizen-*; do
+            7z a $name.zip ./$name/*
+          done
+
+      - name: Set variables
+        run: |
+          echo "SHORT_SHA=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
+          echo "VERSION=$(echo "${{ github.ref_name }}" | cut -d'-' -f2)" >> $GITHUB_ENV
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.VERSION }} (${{ env.SHORT_SHA }})
+          tag_name: ${{ env.SHORT_SHA }}
+          target_commitish: ${{ github.sha }}
+          files: tizen-*.zip
+          body: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
