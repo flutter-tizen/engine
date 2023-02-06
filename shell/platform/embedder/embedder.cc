@@ -330,7 +330,7 @@ InferOpenGLPlatformViewCreationCallback(
       return flutter::GLFBOInfo{
           .fbo_id = static_cast<uint32_t>(id),
           .partial_repaint_enabled = false,
-          .existing_damage = SkIRect::MakeEmpty(),
+          .existing_damage = std::nullopt,
       };
     }
 
