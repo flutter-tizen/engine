@@ -55,6 +55,9 @@ jobs:
 
       - name: Build
         run: |
+          # Ignore unsupported linker option.
+          sed -i "/-Wl,--undefined-version/d" src/build/config/compiler/BUILD.gn
+
           src/flutter/tools/gn \
             --target-os linux \
             --linux-cpu ${{ matrix.arch }} \
@@ -96,7 +99,7 @@ jobs:
           if-no-files-found: error
 
   windows-build:
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     strategy:
       matrix:
@@ -118,7 +121,7 @@ jobs:
         run: |
           Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Force
           echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $Env:GITHUB_ENV
-          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" >> $Env:GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $Env:GITHUB_ENV
           echo "WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10" >> $Env:GITHUB_ENV
 
       - name: Install depot_tools
@@ -129,6 +132,7 @@ jobs:
 
       - name: Run gclient sync
         working-directory: C:\workspace\engine
+        shell: powershell
         run: |
           gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
           gclient setdep --var=download_dart_sdk=False --deps-file=src/flutter/DEPS
@@ -152,7 +156,7 @@ jobs:
           if-no-files-found: error
 
   macos-build:
-    runs-on: macos-11
+    runs-on: macos-latest
 
     strategy:
       matrix:
