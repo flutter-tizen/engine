@@ -16,7 +16,7 @@
 #ifdef FML_OS_WIN
 using InternalHalf = uint16_t;
 #else
-using InternalHalf = _Float16;
+using InternalHalf = uint16_t;
 #endif
 
 namespace impeller {

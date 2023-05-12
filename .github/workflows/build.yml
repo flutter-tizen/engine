@@ -55,6 +55,9 @@ jobs:
 
       - name: Build
         run: |
+          # Ignore unsupported linker option.
+          sed -i "/-Wl,--undefined-version/d" src/build/config/compiler/BUILD.gn
+
           src/flutter/tools/gn \
             --target-os linux \
             --linux-cpu ${{ matrix.arch }} \
@@ -129,6 +132,7 @@ jobs:
 
       - name: Run gclient sync
         working-directory: C:\workspace\engine
+        shell: powershell
         run: |
           gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
           gclient setdep --var=download_dart_sdk=False --deps-file=src/flutter/DEPS
