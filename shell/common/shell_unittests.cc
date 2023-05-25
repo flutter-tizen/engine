@@ -14,10 +14,6 @@
 #include <utility>
 #include <vector>
 
-#if SHELL_ENABLE_GL
-#include <EGL/egl.h>
-#endif  // SHELL_ENABLE_GL
-
 #include "assets/directory_asset_bundle.h"
 #include "common/graphics/persistent_cache.h"
 #include "flutter/flow/layers/backdrop_filter_layer.h"
@@ -3955,11 +3951,6 @@ TEST_F(ShellTest, PictureToImageSync) {
           .rendering_backend = ShellTestPlatformView::BackendType::kGLBackend,
       }),
   });
-
-  AddNativeCallback("NativeOnBeforeToImageSync",
-                    CREATE_NATIVE_ENTRY([&](auto args) {
-                      // nop
-                    }));
 
   fml::CountDownLatch latch(2);
   AddNativeCallback("NotifyNative", CREATE_NATIVE_ENTRY([&](auto args) {
