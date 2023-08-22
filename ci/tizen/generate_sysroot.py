@@ -24,6 +24,8 @@ base_packages = [
 ]
 
 unified_packages = [
+  'fontconfig',
+  'fontconfig-devel',
   'freetype2-devel',
   'libpng-devel',
 ]
