@@ -169,6 +169,10 @@ jobs:
           path: src/flutter
           fetch-depth: 0
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
       - name: Install depot_tools
         run: |
           git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
