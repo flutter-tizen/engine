@@ -18,7 +18,7 @@ else
   cd llvm-project
   git init
   git remote add origin https://github.com/llvm/llvm-project.git
-  git fetch --depth=1 origin aaaf8e4c409f080f35ea227b20dc6ac8a45c2fa4
+  git fetch --depth=1 origin llvmorg-17.0.6
   git checkout FETCH_HEAD
 fi
 
@@ -33,7 +33,7 @@ cmake -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="$OUTPUT_DIR" \
   ../llvm
-ninja install
+ninja install -j$(nproc)
 
 # Create symbolic links to binutils.
 # See build/toolchain/custom/BUILD.gn for more information.

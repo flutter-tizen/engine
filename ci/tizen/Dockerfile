@@ -2,7 +2,7 @@
 ### Stage for building LLVM ###
 ###############################
 
-FROM ubuntu:20.04 AS llvm
+FROM ubuntu:22.04 AS llvm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -19,13 +19,13 @@ RUN /build_llvm.sh
 ### Create a release image ###
 ##############################
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y binutils-arm-linux-gnueabi binutils-aarch64-linux-gnu binutils-i686-linux-gnu && \
-    apt-get install -y git curl pkg-config ca-certificates python python3 python3-pip rpm2cpio cpio && \
+    apt-get install -y git curl pkg-config ca-certificates python3 python3-pip rpm2cpio cpio && \
     apt-get clean
 
 # Copy build artifacts from the previous stage.

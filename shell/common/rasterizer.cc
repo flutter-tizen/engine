@@ -319,8 +319,7 @@ std::unique_ptr<Rasterizer::GpuImageResult> Rasterizer::MakeSkiaGpuImage(
 // https://github.com/flutter/flutter/issues/108835
 #if FML_OS_LINUX
   return MakeBitmapImage(display_list, image_info);
-#endif
-
+#else
   std::unique_ptr<SnapshotDelegate::GpuImageResult> result;
   delegate_.GetIsGpuDisabledSyncSwitch()->Execute(
       fml::SyncSwitch::Handlers()
@@ -372,6 +371,7 @@ std::unique_ptr<Rasterizer::GpuImageResult> Rasterizer::MakeSkiaGpuImage(
                 texture, sk_ref_sp(context), nullptr, "");
           }));
   return result;
+#endif
 }
 
 sk_sp<DlImage> Rasterizer::MakeRasterSnapshot(sk_sp<DisplayList> display_list,
