@@ -18,6 +18,7 @@ base_packages = [
     'glibc',
     'glibc-devel',
     'libgcc',
+    'libstdc++',
     'linux-glibc-devel',
     'zlib-devel',
 ]
@@ -122,9 +123,9 @@ def main():
   parser.add_argument(
       '--api-version',
       metavar='VER',
-      default=5.5,
+      default=6.0,
       type=float,
-      help='Target API version (defaults to 5.5)'
+      help='Target API version (defaults to 6.0)'
   )
   args = parser.parse_args()
 
