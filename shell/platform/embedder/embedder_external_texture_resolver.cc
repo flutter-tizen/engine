@@ -4,7 +4,7 @@
 
 #include "flutter/shell/platform/embedder/embedder_external_texture_resolver.h"
 
-#ifdef SHELL_ENABLE_GL
+#if defined(SHELL_ENABLE_GL) && defined(IMPELLER_SUPPORTS_RENDERING)
 #include "flutter/shell/platform/embedder/embedder_external_texture_gl_impeller.h"
 #endif
 
@@ -30,13 +30,14 @@ std::unique_ptr<Texture>
 EmbedderExternalTextureResolver::ResolveExternalTexture(int64_t texture_id) {
 #ifdef SHELL_ENABLE_GL
   if (gl_callback_) {
+#ifdef IMPELLER_SUPPORTS_RENDERING
     if (enable_impeller_) {
       return std::make_unique<EmbedderExternalTextureGLImpeller>(texture_id,
                                                                  gl_callback_);
-    } else {
-      return std::make_unique<EmbedderExternalTextureGL>(texture_id,
-                                                         gl_callback_);
     }
+#endif
+    return std::make_unique<EmbedderExternalTextureGL>(texture_id,
+                                                       gl_callback_);
   }
 #endif
 
