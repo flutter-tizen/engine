@@ -26,7 +26,8 @@ class EmbedderExternalTextureResolver {
 
 #ifdef SHELL_ENABLE_GL
   explicit EmbedderExternalTextureResolver(
-      EmbedderExternalTextureGL::ExternalTextureCallback gl_callback);
+      EmbedderExternalTextureGL::ExternalTextureCallback gl_callback,
+      bool enable_impeller);
 #endif
 
 #ifdef SHELL_ENABLE_METAL
@@ -46,6 +47,7 @@ class EmbedderExternalTextureResolver {
 #ifdef SHELL_ENABLE_METAL
   EmbedderExternalTextureMetal::ExternalTextureCallback metal_callback_;
 #endif
+  bool enable_impeller_ = false;
 
   FML_DISALLOW_COPY_AND_ASSIGN(EmbedderExternalTextureResolver);
 };

@@ -124,6 +124,8 @@ template("embedder_source_set") {
 
       if (impeller_supports_rendering) {
         sources += [
+          "embedder_external_texture_gl_impeller.cc",
+          "embedder_external_texture_gl_impeller.h",
           "embedder_surface_gl_impeller.cc",
           "embedder_surface_gl_impeller.h",
         ]
