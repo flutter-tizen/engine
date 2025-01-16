@@ -156,6 +156,59 @@ jobs:
           if-no-files-found: error
 
   macos-build:
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/flutter
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install depot_tools
+        run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$PWD/depot_tools" >> $GITHUB_PATH
+
+      - name: Run gclient sync
+        run: |
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient setdep --var=download_dart_sdk=False --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          gclient sync -v --no-history --shallow
+
+      - name: Build
+        run: |
+          # Change host_toolchain to mac/clang_arm64.
+          sed -i "" "s|//build/toolchain/linux:clang_$host_cpu|//build/toolchain/mac:clang_$host_cpu|g" src/build/config/BUILDCONFIG.gn
+
+          # Pass dummy values to prevent using the default (Linux) toolchain.
+          src/flutter/tools/gn \
+            --linux \
+            --linux-cpu=${{ matrix.arch }} \
+            --no-goma \
+            --target-toolchain _ \
+            --target-sysroot _ \
+            --target-triple _ \
+            --runtime-mode=${{ matrix.mode }} \
+            --disable-desktop-embeddings \
+            --target-dir build
+          ninja -C src/out/build clang_arm64/gen_snapshot
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_darwin-arm64
+          path: src/out/build/clang_arm64/gen_snapshot
+          if-no-files-found: error
+
+  macos-intel-build:
     runs-on: macos-13
 
     strategy:
